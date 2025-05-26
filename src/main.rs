@@ -1,6 +1,7 @@
 #![allow(non_upper_case_globals)]
 
 pub mod doomstat;
+pub mod dstrings;
 pub mod m_argv;
 pub mod m_bbox;
 pub mod m_fixed;
