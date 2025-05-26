@@ -60,7 +60,8 @@ fn main() {
 		])
 		.no_default_flags(true)
 		.compiler("gcc")
-		.flags(["-m32", "-g", "-Wall", "-fpermissive", "-DNORMALUNIX", "-DLINUX"])
+		.flags(["-m32", "-g", "-fpermissive", "-DNORMALUNIX", "-DLINUX"])
+		.cargo_warnings(false)
 		.compile("xdoom");
 	println!("cargo::rerun-if-changed=linuxdoom-1.10");
 	println!("cargo::rustc-link-lib=Xext");
