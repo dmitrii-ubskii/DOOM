@@ -15,7 +15,6 @@ fn main() {
 			"linuxdoom-1.10/g_game.c",
 			"linuxdoom-1.10/m_menu.c",
 			"linuxdoom-1.10/m_misc.c",
-			"linuxdoom-1.10/m_bbox.c",
 			"linuxdoom-1.10/m_fixed.c",
 			"linuxdoom-1.10/m_cheat.c",
 			"linuxdoom-1.10/m_random.c",

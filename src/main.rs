@@ -2,6 +2,7 @@
 
 pub mod doomstat;
 pub mod m_argv;
+pub mod m_bbox;
 pub mod m_fixed;
 pub mod m_swap;
 pub mod r_sky;
