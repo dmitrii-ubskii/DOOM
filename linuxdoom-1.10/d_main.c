@@ -1057,7 +1057,7 @@ void D_DoomMain (void)
 	    "                      press enter to continue\n"
 	    "===========================================================================\n"
 	    );
-	getchar ();
+	// getchar ();
     }
 	
 
