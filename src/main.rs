@@ -2,6 +2,7 @@
 
 pub mod doomstat;
 pub mod dstrings;
+pub mod i_system;
 pub mod m_argv;
 pub mod m_bbox;
 pub mod m_fixed;
