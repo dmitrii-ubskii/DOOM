@@ -5,6 +5,7 @@ pub mod dstrings;
 pub mod m_argv;
 pub mod m_bbox;
 pub mod m_fixed;
+pub mod m_random;
 pub mod m_swap;
 pub mod r_sky;
 
