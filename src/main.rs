@@ -1,14 +1,20 @@
+#![allow(non_upper_case_globals)]
+
 pub mod doomstat;
+pub mod m_argv;
 
 use std::{
     env,
     ffi::{CString, c_char},
+    ptr::null,
 };
 
-unsafe extern "C" {
-    static mut myargc: i32;
-    static mut myargv: *const *const c_char;
+#[unsafe(no_mangle)]
+static mut myargc: i32 = 0;
+#[unsafe(no_mangle)]
+static mut myargv: *const *const c_char = null();
 
+unsafe extern "C" {
     fn D_DoomMain();
 }
 
