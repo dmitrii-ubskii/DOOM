@@ -3,8 +3,8 @@
 // Swap 16bit, that is, MSB and LSB byte.
 #[unsafe(no_mangle)]
 pub fn SwapSHORT(x: u16) -> u16 {
-    // No masking with 0xFF should be necessary.
-    x.rotate_left(8)
+	// No masking with 0xFF should be necessary.
+	x.rotate_left(8)
 }
 
 // Swapping 32bit.

@@ -13,5 +13,5 @@ pub static mut skytexturemid: i32 = 0;
 // Called whenever the view size changes.
 #[unsafe(no_mangle)]
 pub fn R_InitSkyMap() {
-    unsafe { skytexturemid = 100 * FRACUNIT }
+	unsafe { skytexturemid = 100 * FRACUNIT }
 }
