@@ -3,6 +3,8 @@
 pub mod doomstat;
 pub mod m_argv;
 pub mod m_swap;
+pub mod r_sky;
+	pub mod m_fixed;
 
 use std::{
     env,

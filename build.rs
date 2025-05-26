@@ -45,7 +45,6 @@ fn main() {
             "linuxdoom-1.10/r_main.c",
             "linuxdoom-1.10/r_plane.c",
             "linuxdoom-1.10/r_segs.c",
-            "linuxdoom-1.10/r_sky.c",
             "linuxdoom-1.10/r_things.c",
             "linuxdoom-1.10/w_wad.c",
             "linuxdoom-1.10/wi_stuff.c",
