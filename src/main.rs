@@ -2,6 +2,7 @@
 
 pub mod doomstat;
 pub mod m_argv;
+pub mod m_swap;
 
 use std::{
     env,
