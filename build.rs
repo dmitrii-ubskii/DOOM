@@ -1,8 +1,6 @@
 fn main() {
     cc::Build::new()
         .files([
-            "linuxdoom-1.10/doomdef.c",
-            "linuxdoom-1.10/doomstat.c",
             "linuxdoom-1.10/dstrings.c",
             "linuxdoom-1.10/i_system.c",
             "linuxdoom-1.10/i_sound.c",
