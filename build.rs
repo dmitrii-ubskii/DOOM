@@ -16,7 +16,6 @@ fn main() {
 			"linuxdoom-1.10/m_misc.c",
 			"linuxdoom-1.10/m_fixed.c",
 			"linuxdoom-1.10/m_cheat.c",
-			"linuxdoom-1.10/m_random.c",
 			"linuxdoom-1.10/am_map.c",
 			"linuxdoom-1.10/p_ceilng.c",
 			"linuxdoom-1.10/p_doors.c",
