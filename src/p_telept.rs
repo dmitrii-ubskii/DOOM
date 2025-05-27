@@ -19,7 +19,7 @@ unsafe extern "C" {
 	static thinkercap: thinker_t;
 	fn P_MobjThinker(_: *mut c_void);
 	fn P_TeleportMove(thing: *mut mobj_t, x: fixed_t, y: fixed_t) -> bool;
-	fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, type_: mobjtype_t) -> *mut mobj_t;
+	fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut mobj_t;
 	fn S_StartSound(origin: *mut c_void, sound_id: sfxenum_t);
 }
 
@@ -56,7 +56,7 @@ pub unsafe fn EV_Teleport(line: *mut line_t, side: i32, thing: *mut mobj_t) -> i
 					let m = &mut *(thinker as *mut _ as *mut mobj_t);
 
 					// not a teleportman
-					if m.type_ != mobjtype_t::MT_TELEPORTMAN {
+					if m.ty != mobjtype_t::MT_TELEPORTMAN {
 						thinker = &mut *thinker.next;
 						continue;
 					}

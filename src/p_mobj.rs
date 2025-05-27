@@ -202,7 +202,7 @@ pub struct mobj_t {
 	// If == validcount, already checked.
 	pub validcount: i32,
 
-	pub type_: mobjtype_t,
+	pub ty: mobjtype_t,
 	pub info: *mut mobjinfo_t, // &mobjinfo[mobj->type]
 
 	pub tics: i32, // state tic counter
