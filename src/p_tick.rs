@@ -58,18 +58,12 @@ pub unsafe fn P_RemoveThinker(thinker: *mut thinker_t) {
 	}
 }
 
-// P_AllocateThinker
-// Allocates memory and adds a new thinker at the end of the list.
-#[unsafe(no_mangle)]
-pub unsafe fn P_AllocateThinker(_thinker: *mut thinker_t) {}
-
 // P_RunThinkers
-#[unsafe(no_mangle)]
-pub fn P_RunThinkers() {
+fn run_thinkers() {
 	unsafe {
 		let mut currentthinker = &mut *thinkercap.next;
 
-		while currentthinker as *mut _ != &raw mut thinkercap {
+		while !std::ptr::eq(currentthinker, &raw mut thinkercap) {
 			if currentthinker.function.acv.is_none() {
 				// time to remove it
 				(*currentthinker.next).prev = currentthinker.prev;
@@ -116,7 +110,7 @@ pub fn P_Ticker() {
 			}
 		}
 
-		P_RunThinkers();
+		run_thinkers();
 		P_UpdateSpecials();
 		P_RespawnSpecials();
 

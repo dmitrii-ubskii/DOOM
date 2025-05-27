@@ -18,11 +18,10 @@ pub fn FixedDiv(a: fixed_t, b: fixed_t) -> fixed_t {
 	if (a.abs() >> 14) >= b.abs() {
 		return if (a ^ b) < 0 { i32::MIN } else { i32::MAX };
 	}
-	FixedDiv2(a, b)
+	fixed_div_2(a, b)
 }
 
-#[unsafe(no_mangle)]
-pub fn FixedDiv2(a: fixed_t, b: fixed_t) -> fixed_t {
+fn fixed_div_2(a: fixed_t, b: fixed_t) -> fixed_t {
 	let c = (a as f64) / (b as f64) * FRACUNIT as f64;
 
 	if !(-2147483648.0..2147483648.0).contains(&c) {
