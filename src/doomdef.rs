@@ -59,7 +59,7 @@ pub const SCREENHEIGHT: usize = 200;
 pub const MAXPLAYERS: usize = 4;
 
 // State updates, number of tics / second.
-pub const TICRATE: usize = 35;
+pub const TICRATE: i32 = 35;
 
 // The current state of the game: whether we are
 // playing, gazing at the intermission screen,
@@ -151,10 +151,10 @@ pub enum powertype_t {
 // Power up durations,
 //  how many seconds till expiration,
 //  assuming TICRATE is 35 ticks/second.
-pub const INVULNTICS: usize = 30 * TICRATE;
-pub const INVISTICS: usize = 60 * TICRATE;
-pub const INFRATICS: usize = 120 * TICRATE;
-pub const IRONTICS: usize = 60 * TICRATE;
+pub const INVULNTICS: i32 = 30 * TICRATE;
+pub const INVISTICS: i32 = 60 * TICRATE;
+pub const INFRATICS: i32 = 120 * TICRATE;
+pub const IRONTICS: i32 = 60 * TICRATE;
 
 // DOOM keyboard definition.
 // This is the stuff configured by Setup.Exe.
