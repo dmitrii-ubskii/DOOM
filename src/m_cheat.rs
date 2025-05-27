@@ -2,8 +2,6 @@
 
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::ffi::c_char;
-
 #[unsafe(no_mangle)]
 pub static mut firsttime: i32 = 1;
 pub static mut cheat_xlate_table: [u8; 256] = [0; 256];
