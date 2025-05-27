@@ -48,7 +48,9 @@ pub unsafe fn EV_Teleport(line: *mut line_t, side: i32, thing: *mut mobj_t) -> i
 				let mut thinker = &mut *thinkercap.next;
 				while !std::ptr::eq(thinker, &thinkercap) {
 					// not a mobj
-					if !std::ptr::fn_addr_eq(thinker.function.acp1, P_MobjThinker as actionf_p1) {
+					if (thinker.function.acp1)
+						.is_none_or(|f| !std::ptr::fn_addr_eq(f, P_MobjThinker as actionf_p1))
+					{
 						thinker = &mut *thinker.next;
 						continue;
 					}

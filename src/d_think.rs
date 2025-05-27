@@ -12,9 +12,9 @@ pub type actionf_p2 = unsafe extern "C" fn(*mut c_void, *mut c_void);
 
 #[repr(C)]
 pub union actionf_t {
-	pub acp1: actionf_p1,
-	pub acv: actionf_v,
-	pub acp2: actionf_p2,
+	pub acp1: Option<actionf_p1>,
+	pub acv: Option<actionf_v>,
+	pub acp2: Option<actionf_p2>,
 }
 
 // Historically, "think_t" is yet another

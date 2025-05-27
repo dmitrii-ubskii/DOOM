@@ -19,6 +19,7 @@ pub mod m_swap;
 pub mod p_mobj;
 pub mod p_pspr;
 pub mod p_telept;
+pub mod p_tick;
 pub mod r_defs;
 pub mod r_sky;
 pub mod sounds;
