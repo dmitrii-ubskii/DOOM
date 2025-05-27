@@ -1,15 +1,27 @@
 #![allow(non_upper_case_globals)]
 
+pub mod d_player;
+pub mod d_think;
+pub mod d_ticcmd;
+pub mod doomdata;
+pub mod doomdef;
 pub mod doomstat;
 pub mod dstrings;
 pub mod i_system;
+pub mod info;
 pub mod m_argv;
 pub mod m_bbox;
 pub mod m_cheat;
 pub mod m_fixed;
 pub mod m_random;
 pub mod m_swap;
+pub mod p_mobj;
+pub mod p_pspr;
+pub mod p_telept;
+pub mod r_defs;
 pub mod r_sky;
+pub mod sounds;
+pub mod tables;
 
 use std::{
 	env,
