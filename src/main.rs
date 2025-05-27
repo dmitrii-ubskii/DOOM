@@ -1,5 +1,6 @@
 #![allow(non_upper_case_globals)]
 
+pub mod d_items;
 pub mod d_player;
 pub mod d_think;
 pub mod d_ticcmd;
