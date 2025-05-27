@@ -1,4 +1,4 @@
-#![allow(non_snake_case)]
+#![allow(non_snake_case, clippy::missing_safety_doc)]
 
 use std::ffi::c_char;
 
@@ -9,8 +9,6 @@ unsafe extern "C" {
 }
 
 #[unsafe(no_mangle)]
-/// # Safety
-/// none
 pub unsafe fn M_CheckParm(check: *const c_char) -> i32 {
 	unsafe {
 		for i in 1..myargc {
