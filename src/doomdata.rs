@@ -153,6 +153,6 @@ pub struct mapthing_t {
 	x: i16,
 	y: i16,
 	angle: i16,
-	type_: i16,
+	ty: i16,
 	options: i16,
 }
