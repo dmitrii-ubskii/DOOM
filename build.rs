@@ -48,7 +48,6 @@ fn main() {
 			"linuxdoom-1.10/s_sound.c",
 			"linuxdoom-1.10/z_zone.c",
 			"linuxdoom-1.10/info.c",
-			"linuxdoom-1.10/sounds.c",
 		])
 		.no_default_flags(true)
 		.compiler("gcc")
