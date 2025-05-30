@@ -28,7 +28,7 @@ pub static mut prndindex: i32 = 0;
 
 // Which one is deterministic?
 #[unsafe(no_mangle)]
-pub fn P_Random() -> i32 {
+pub extern "C" fn P_Random() -> i32 {
 	unsafe {
 		prndindex = (prndindex + 1) & 0xff;
 		rndtable[prndindex as usize] as i32
@@ -36,7 +36,7 @@ pub fn P_Random() -> i32 {
 }
 
 #[unsafe(no_mangle)]
-pub fn M_Random() -> i32 {
+pub extern "C" fn M_Random() -> i32 {
 	unsafe {
 		rndindex = (rndindex + 1) & 0xff;
 		rndtable[rndindex as usize] as i32
@@ -44,7 +44,7 @@ pub fn M_Random() -> i32 {
 }
 
 #[unsafe(no_mangle)]
-pub fn M_ClearRandom() {
+pub extern "C" fn M_ClearRandom() {
 	unsafe {
 		rndindex = 0;
 		prndindex = 0;

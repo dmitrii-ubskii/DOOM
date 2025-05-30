@@ -8,13 +8,13 @@ pub const FRACBITS: i32 = 16;
 pub const FRACUNIT: i32 = 1 << FRACBITS;
 
 #[unsafe(no_mangle)]
-pub fn FixedMul(a: fixed_t, b: fixed_t) -> fixed_t {
+pub extern "C" fn FixedMul(a: fixed_t, b: fixed_t) -> fixed_t {
 	((a as i64 * b as i64) >> FRACBITS) as fixed_t
 }
 
 /// FixedDiv, C version.
 #[unsafe(no_mangle)]
-pub fn FixedDiv(a: fixed_t, b: fixed_t) -> fixed_t {
+pub extern "C" fn FixedDiv(a: fixed_t, b: fixed_t) -> fixed_t {
 	if (a.abs() >> 14) >= b.abs() {
 		return if (a ^ b) < 0 { i32::MIN } else { i32::MAX };
 	}

@@ -8,7 +8,7 @@ const BOXRIGHT: usize = 3;
 type fixed_t = i32;
 
 #[unsafe(no_mangle)]
-pub fn M_ClearBox(bbox: &mut [fixed_t; 4]) {
+pub extern "C" fn M_ClearBox(bbox: &mut [fixed_t; 4]) {
 	bbox[BOXTOP] = i32::MIN;
 	bbox[BOXRIGHT] = i32::MIN;
 	bbox[BOXBOTTOM] = i32::MAX;
@@ -16,7 +16,7 @@ pub fn M_ClearBox(bbox: &mut [fixed_t; 4]) {
 }
 
 #[unsafe(no_mangle)]
-pub fn M_AddToBox(bbox: &mut [fixed_t; 4], x: fixed_t, y: fixed_t) {
+pub extern "C" fn M_AddToBox(bbox: &mut [fixed_t; 4], x: fixed_t, y: fixed_t) {
 	if x < bbox[BOXLEFT] {
 		bbox[BOXLEFT] = x;
 	} else if x > bbox[BOXRIGHT] {

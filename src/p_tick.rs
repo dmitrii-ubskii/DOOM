@@ -28,7 +28,7 @@ unsafe extern "C" {
 
 // P_InitThinkers
 #[unsafe(no_mangle)]
-pub fn P_InitThinkers() {
+pub extern "C" fn P_InitThinkers() {
 	unsafe {
 		thinkercap.prev = &raw mut thinkercap;
 		thinkercap.next = &raw mut thinkercap;
@@ -38,7 +38,7 @@ pub fn P_InitThinkers() {
 // P_AddThinker
 // Adds a new thinker at the end of the list.
 #[unsafe(no_mangle)]
-pub unsafe fn P_AddThinker(thinker: *mut thinker_t) {
+pub unsafe extern "C" fn P_AddThinker(thinker: *mut thinker_t) {
 	unsafe {
 		(*thinkercap.prev).next = thinker;
 		let thinker_ref = &mut *thinker;
@@ -52,7 +52,7 @@ pub unsafe fn P_AddThinker(thinker: *mut thinker_t) {
 // Deallocation is lazy -- it will not actually be freed
 // until its thinking turn comes up.
 #[unsafe(no_mangle)]
-pub unsafe fn P_RemoveThinker(thinker: *mut thinker_t) {
+pub unsafe extern "C" fn P_RemoveThinker(thinker: *mut thinker_t) {
 	unsafe {
 		(*thinker).function.acv = None;
 	}
@@ -92,7 +92,7 @@ unsafe extern "C" {
 
 // P_Ticker
 #[unsafe(no_mangle)]
-pub fn P_Ticker() {
+pub extern "C" fn P_Ticker() {
 	unsafe {
 		// run the tic
 		if paused {

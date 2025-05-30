@@ -10,7 +10,7 @@ use crate::{d_ticcmd::ticcmd_t, doomdef::TICRATE};
 static mut mb_used: usize = 6;
 
 #[unsafe(no_mangle)]
-pub fn I_Tactile(_on: i32, _off: i32, _total: i32) {
+pub extern "C" fn I_Tactile(_on: i32, _off: i32, _total: i32) {
 	// UNUSED.
 }
 
@@ -18,12 +18,12 @@ pub fn I_Tactile(_on: i32, _off: i32, _total: i32) {
 static mut emptycmd: ticcmd_t =
 	ticcmd_t { forwardmove: 0, sidemove: 0, angleturn: 0, consistancy: 0, chatchar: 0, buttons: 0 };
 #[unsafe(no_mangle)]
-pub fn I_BaseTiccmd() -> *mut ticcmd_t {
+pub extern "C" fn I_BaseTiccmd() -> *mut ticcmd_t {
 	&raw mut emptycmd
 }
 
 #[unsafe(no_mangle)]
-pub unsafe fn I_ZoneBase(size: *mut usize) -> *mut u8 {
+pub unsafe extern "C" fn I_ZoneBase(size: *mut usize) -> *mut u8 {
 	unsafe {
 		*size = mb_used * 1024 * 1024;
 		malloc(*size) as _
@@ -33,7 +33,7 @@ pub unsafe fn I_ZoneBase(size: *mut usize) -> *mut u8 {
 // I_GetTime
 // returns time in 1/70th second tics
 #[unsafe(no_mangle)]
-pub fn I_GetTime() -> i32 {
+pub extern "C" fn I_GetTime() -> i32 {
 	let mut tp = timeval { tv_sec: 0, tv_usec: 0 };
 	static mut basetime: i32 = 0;
 
@@ -53,7 +53,7 @@ unsafe extern "C" {
 
 // I_Init
 #[unsafe(no_mangle)]
-pub fn I_Init() {
+pub extern "C" fn I_Init() {
 	unsafe {
 		I_InitSound();
 		//  I_InitGraphics();
@@ -70,7 +70,7 @@ unsafe extern "C" {
 
 // I_Quit
 #[unsafe(no_mangle)]
-pub fn I_Quit() {
+pub extern "C" fn I_Quit() {
 	unsafe {
 		D_QuitNetGame();
 		I_ShutdownSound();
@@ -82,7 +82,7 @@ pub fn I_Quit() {
 }
 
 #[unsafe(no_mangle)]
-pub fn I_WaitVBL(_count: i32) {
+pub extern "C" fn I_WaitVBL(_count: i32) {
 	// #ifdef SGI
 	//     sginap(1);
 	// #else
@@ -95,13 +95,13 @@ pub fn I_WaitVBL(_count: i32) {
 }
 
 #[unsafe(no_mangle)]
-pub fn I_BeginRead() {}
+pub extern "C" fn I_BeginRead() {}
 
 #[unsafe(no_mangle)]
-pub fn I_EndRead() {}
+pub extern "C" fn I_EndRead() {}
 
 #[unsafe(no_mangle)]
-pub fn I_AllocLow(length: usize) -> *mut u8 {
+pub extern "C" fn I_AllocLow(length: usize) -> *mut u8 {
 	unsafe {
 		let mem = malloc(length);
 		memset(mem, 0, length);

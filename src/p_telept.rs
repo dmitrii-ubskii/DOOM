@@ -25,7 +25,7 @@ unsafe extern "C" {
 
 // TELEPORTATION
 #[unsafe(no_mangle)]
-pub unsafe fn EV_Teleport(line: *mut line_t, side: i32, thing: *mut mobj_t) -> i32 {
+pub unsafe extern "C" fn EV_Teleport(line: *mut line_t, side: i32, thing: *mut mobj_t) -> i32 {
 	unsafe {
 		let thing = &mut *thing;
 
