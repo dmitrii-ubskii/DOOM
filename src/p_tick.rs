@@ -52,10 +52,8 @@ pub unsafe extern "C" fn P_AddThinker(thinker: *mut thinker_t) {
 // Deallocation is lazy -- it will not actually be freed
 // until its thinking turn comes up.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn P_RemoveThinker(thinker: *mut thinker_t) {
-	unsafe {
-		(*thinker).function.acv = None;
-	}
+pub unsafe extern "C" fn P_RemoveThinker(thinker: &mut thinker_t) {
+	thinker.function.acv = None;
 }
 
 // P_RunThinkers

@@ -25,24 +25,21 @@ unsafe extern "C" {
 
 // TELEPORTATION
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn EV_Teleport(line: *mut line_t, side: i32, thing: *mut mobj_t) -> i32 {
+pub unsafe extern "C" fn EV_Teleport(line: &mut line_t, side: i32, thing: &mut mobj_t) -> bool {
+	// don't teleport missiles
+	if thing.flags & MF_MISSILE != 0 {
+		return false;
+	}
+
+	// Don't teleport if hit back of line,
+	//  so you can get out of teleporter.
+	if side == 1 {
+		return false;
+	}
+
+	let tag = line.tag;
+
 	unsafe {
-		let thing = &mut *thing;
-
-		// don't teleport missiles
-		if thing.flags & MF_MISSILE != 0 {
-			return 0;
-		}
-
-		// Don't teleport if hit back of line,
-		//  so you can get out of teleporter.
-		if side == 1 {
-			return 0;
-		}
-
-		let line = &mut *line;
-
-		let tag = line.tag;
 		for i in 0..numsectors {
 			if (*sectors.add(i as usize)).tag == tag {
 				let mut thinker = &mut *thinkercap.next;
@@ -75,7 +72,7 @@ pub unsafe extern "C" fn EV_Teleport(line: *mut line_t, side: i32, thing: *mut m
 					let oldz = thing.z;
 
 					if !P_TeleportMove(thing, m.x, m.y) {
-						return 0;
+						return false;
 					}
 
 					thing.z = thing.floorz; //fixme: not needed?
@@ -107,11 +104,11 @@ pub unsafe extern "C" fn EV_Teleport(line: *mut line_t, side: i32, thing: *mut m
 					thing.momx = 0;
 					thing.momy = 0;
 					thing.momz = 0;
-					return 1;
+					return true;
 				}
 			}
 		}
-
-		0
 	}
+
+	false
 }

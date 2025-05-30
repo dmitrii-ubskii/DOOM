@@ -23,7 +23,7 @@ pub extern "C" fn I_BaseTiccmd() -> *mut ticcmd_t {
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn I_ZoneBase(size: *mut usize) -> *mut u8 {
+pub unsafe extern "C" fn I_ZoneBase(size: &mut usize) -> *mut u8 {
 	unsafe {
 		*size = mb_used * 1024 * 1024;
 		malloc(*size) as _
