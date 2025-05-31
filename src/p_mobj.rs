@@ -67,10 +67,10 @@ use crate::{
 	d_think::thinker_t,
 	doomdata::mapthing_t,
 	info::{mobjinfo_t, mobjtype_t, spritenum_t, state_t},
+	m_fixed::fixed_t,
 	r_defs::subsector_t,
 };
 
-type fixed_t = i32;
 type angle_t = u32;
 
 // Misc. mobj flags

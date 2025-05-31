@@ -5,13 +5,12 @@ use std::ffi::c_void;
 use crate::{
 	d_think::{actionf_p1, thinker_t},
 	info::mobjtype_t,
+	m_fixed::fixed_t,
 	p_mobj::{MF_MISSILE, mobj_t},
 	r_defs::{line_t, sector_t},
 	sounds::sfxenum_t,
 	tables::{ANGLETOFINESHIFT, finecosine, finesine},
 };
-
-type fixed_t = i32;
 
 unsafe extern "C" {
 	static numsectors: i32;

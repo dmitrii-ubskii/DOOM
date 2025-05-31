@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use crate::info::state_t;
+use crate::{info::state_t, m_fixed::fixed_t};
 
 // Frame flags:
 // handles maximum brightness (torches, muzzle flare, light sources)
@@ -16,8 +16,6 @@ pub enum psprnum_t {
 	ps_flash,
 	NUMPSPRITES,
 }
-
-type fixed_t = i32;
 
 #[repr(C)]
 pub struct pspdef_t {

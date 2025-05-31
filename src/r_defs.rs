@@ -5,12 +5,11 @@
 
 use std::ffi::c_void;
 
-use crate::{d_think::thinker_t, p_mobj::mobj_t};
+use crate::{d_think::thinker_t, m_fixed::fixed_t, p_mobj::mobj_t};
 
 // doomdef.h
 const SCREENWIDTH: usize = 320;
 
-type fixed_t = i32;
 type angle_t = u32;
 
 // Your plain vanilla vertex.
@@ -245,7 +244,7 @@ pub struct patch_t {
 	pub leftoffset: i16, // pixels to the left of origin
 	pub topoffset: i16,  // pixels below the origin
 	pub columnofs: [i32; 8], // only [width] used
-	                 // the [0] is &columnofs[width]
+	                     // the [0] is &columnofs[width]
 }
 
 // A vissprite_t is a thing

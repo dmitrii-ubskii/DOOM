@@ -2,7 +2,7 @@
 
 use crate::i_system::I_Error;
 
-type fixed_t = i32;
+pub type fixed_t = i32;
 
 pub const FRACBITS: i32 = 16;
 pub const FRACUNIT: i32 = 1 << FRACBITS;

@@ -18,13 +18,13 @@
 //
 //-----------------------------------------------------------------------------
 
+use crate::m_fixed::fixed_t;
+
 pub const FINEANGLES: usize = 8192;
 pub const FINEMASK: usize = FINEANGLES - 1;
 
 // 0x100000000 to 0x2000
 pub const ANGLETOFINESHIFT: usize = 19;
-
-type fixed_t = i32;
 
 unsafe extern "C" {
 	// Effective size is 10240.

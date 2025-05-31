@@ -17,11 +17,10 @@ use std::ffi::c_char;
 use crate::{
 	d_ticcmd::ticcmd_t,
 	doomdef::{MAXPLAYERS, ammotype_t, card_t, powertype_t, weapontype_t},
+	m_fixed::fixed_t,
 	p_mobj::mobj_t,
 	p_pspr::{pspdef_t, psprnum_t},
 };
-
-type fixed_t = i32;
 
 // Player states.
 #[repr(C)]
