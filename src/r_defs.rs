@@ -240,11 +240,11 @@ pub struct drawseg_t {
 // of patches.
 #[repr(C)]
 pub struct patch_t {
-	width: i16, // bounding box size
-	height: i16,
-	leftoffset: i16, // pixels to the left of origin
-	topoffset: i16,  // pixels below the origin
-	columnofs: [i32; 8], // only [width] used
+	pub width: i16, // bounding box size
+	pub height: i16,
+	pub leftoffset: i16, // pixels to the left of origin
+	pub topoffset: i16,  // pixels below the origin
+	pub columnofs: [i32; 8], // only [width] used
 	                 // the [0] is &columnofs[width]
 }
 
