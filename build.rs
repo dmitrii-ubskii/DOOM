@@ -25,7 +25,6 @@ fn main() {
 			"linuxdoom-1.10/p_plats.c",
 			"linuxdoom-1.10/p_pspr.c",
 			"linuxdoom-1.10/p_setup.c",
-			"linuxdoom-1.10/p_sight.c",
 			"linuxdoom-1.10/p_spec.c",
 			"linuxdoom-1.10/p_switch.c",
 			"linuxdoom-1.10/p_mobj.c",

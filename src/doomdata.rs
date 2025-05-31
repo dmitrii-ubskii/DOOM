@@ -63,7 +63,7 @@ pub const ML_BLOCKMONSTERS: u8 = 2;
 
 // Backside will not be present at all
 //  if not two sided.
-pub const ML_TWOSIDED: u8 = 4;
+pub const ML_TWOSIDED: i16 = 4;
 
 // If a texture is pegged, the texture will have
 // the end exposed to air held constant at the
@@ -127,7 +127,7 @@ pub struct mapseg_t {
 // BSP node structure.
 
 // Indicate a leaf.
-pub const NF_SUBSECTOR: u32 = 0x8000;
+pub const NF_SUBSECTOR: usize = 0x8000;
 
 #[repr(C)]
 pub struct mapnode_t {
@@ -149,10 +149,11 @@ pub struct mapnode_t {
 // Thing definition, position, orientation and type,
 // plus skill/visibility flags and attributes.
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct mapthing_t {
-	x: i16,
-	y: i16,
-	angle: i16,
-	ty: i16,
-	options: i16,
+	pub x: i16,
+	pub y: i16,
+	pub angle: i16,
+	pub ty: i16,
+	pub options: i16,
 }

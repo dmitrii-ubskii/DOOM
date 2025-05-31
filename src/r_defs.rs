@@ -5,20 +5,18 @@
 
 use std::ffi::c_void;
 
-use crate::{d_think::thinker_t, m_fixed::fixed_t, p_mobj::mobj_t};
+use crate::{d_think::thinker_t, m_fixed::fixed_t, p_mobj::mobj_t, tables::angle_t};
 
 // doomdef.h
 const SCREENWIDTH: usize = 320;
-
-type angle_t = u32;
 
 // Your plain vanilla vertex.
 // Note: transformed values not buffered locally,
 //  like some DOOM-alikes ("wt", "WebView") did.
 #[repr(C)]
 pub struct vertex_t {
-	x: fixed_t,
-	y: fixed_t,
+	pub x: fixed_t,
+	pub y: fixed_t,
 }
 
 // Each sector has a degenmobj_t in its center
@@ -153,37 +151,37 @@ pub struct subsector_t {
 // The LineSeg.
 #[repr(C)]
 pub struct seg_t {
-	v1: *mut vertex_t,
-	v2: *mut vertex_t,
+	pub v1: *mut vertex_t,
+	pub v2: *mut vertex_t,
 
-	offset: fixed_t,
+	pub offset: fixed_t,
 
-	angle: angle_t,
+	pub angle: angle_t,
 
-	sidedef: *mut side_t,
-	linedef: *mut line_t,
+	pub sidedef: *mut side_t,
+	pub linedef: *mut line_t,
 
 	// Sector references.
 	// Could be retrieved from linedef, too.
 	// backsector is NULL for one sided lines
-	frontsector: *mut sector_t,
-	backsector: *mut sector_t,
+	pub frontsector: *mut sector_t,
+	pub backsector: *mut sector_t,
 }
 
 // BSP node.
 #[repr(C)]
 pub struct node_t {
 	// Partition line.
-	x: fixed_t,
-	y: fixed_t,
-	dx: fixed_t,
-	dy: fixed_t,
+	pub x: fixed_t,
+	pub y: fixed_t,
+	pub dx: fixed_t,
+	pub dy: fixed_t,
 
 	// Bounding box for each child.
-	bbox: [[fixed_t; 4]; 2],
+	pub bbox: [[fixed_t; 4]; 2],
 
 	// If NF_SUBSECTOR its a subsector.
-	children: [u16; 2],
+	pub children: [u16; 2],
 }
 
 // posts are runs of non masked source pixels
@@ -203,7 +201,7 @@ pub type column_t = post_t;
 //  precalculating 24bpp lightmap/colormap LUT.
 //  from darkening PLAYPAL to all black.
 // Could even us emore than 32 levels.
-type lighttable_t = i8;
+pub type lighttable_t = i8;
 
 // ?
 #[repr(C)]

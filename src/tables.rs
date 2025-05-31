@@ -18,7 +18,7 @@
 //
 //-----------------------------------------------------------------------------
 
-use crate::m_fixed::fixed_t;
+use crate::m_fixed::{FRACBITS, fixed_t};
 
 pub const FINEANGLES: usize = 8192;
 pub const FINEMASK: usize = FINEANGLES - 1;
@@ -37,20 +37,19 @@ unsafe extern "C" {
 	pub static finetangent: [fixed_t; FINEANGLES / 2];
 }
 
-/*
 // Binary Angle Measument, BAM.
-pub const ANG45			0x20000000
-pub const ANG90			0x40000000
-pub const ANG180		0x80000000
-pub const ANG270		0xc0000000
+pub const ANG45: u32 = 0x20000000;
+pub const ANG90: u32 = 0x40000000;
+pub const ANG180: u32 = 0x80000000;
+pub const ANG270: u32 = 0xc0000000;
 
+pub const SLOPERANGE: usize = 2048;
+pub const SLOPEBITS: i32 = 11;
+pub const DBITS: i32 = FRACBITS - SLOPEBITS;
 
-pub const SLOPERANGE		2048
-pub const SLOPEBITS		11
-pub const DBITS			(FRACBITS-SLOPEBITS)
+pub type angle_t = u32;
 
-typedef unsigned angle_t;
-
+/*
 
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y

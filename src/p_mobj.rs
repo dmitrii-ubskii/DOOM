@@ -69,9 +69,8 @@ use crate::{
 	info::{mobjinfo_t, mobjtype_t, spritenum_t, state_t},
 	m_fixed::fixed_t,
 	r_defs::subsector_t,
+	tables::angle_t,
 };
-
-type angle_t = u32;
 
 // Misc. mobj flags
 

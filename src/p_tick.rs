@@ -1,12 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::ptr::null_mut;
-
-use crate::{
-	d_player::player_t,
-	d_think::{actionf_t, thinker_t},
-	doomdef::MAXPLAYERS,
-};
+use crate::{d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, p_local::thinkercap};
 
 #[unsafe(no_mangle)]
 static mut leveltime: i32 = 0;
@@ -16,11 +10,6 @@ static mut leveltime: i32 = 0;
 // so they can be operated on uniformly.
 // The actual structures will vary in size,
 // but the first element must be thinker_t.
-
-// Both the head and tail of the thinker list.
-#[unsafe(no_mangle)]
-static mut thinkercap: thinker_t =
-	thinker_t { prev: null_mut(), next: null_mut(), function: actionf_t { acv: None } };
 
 unsafe extern "C" {
 	fn Z_Free(_: *mut thinker_t);
