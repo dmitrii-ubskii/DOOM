@@ -4,7 +4,6 @@ use std::ptr::null_mut;
 
 use crate::{
 	d_think::{actionf_t, thinker_t},
-	doomdata::mapthing_t,
 	m_fixed::{FRACBITS, FRACUNIT, fixed_t},
 	p_mobj::mobj_t,
 	r_defs::line_t,

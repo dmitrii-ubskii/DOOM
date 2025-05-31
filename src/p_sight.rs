@@ -93,11 +93,9 @@ pub extern "C" fn P_CrossSubsector(num: i32) -> i32 {
 	let mut divl = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
 
 	unsafe {
-		// #ifdef RANGECHECK
-		// if num >= numsubsectors {
-		// 	I_Error(c"P_CrossSubsector: ss %i with numss = %i".as_ptr(), num, numsubsectors);
-		// }
-		// #endif
+		if num >= numsubsectors {
+			I_Error(c"P_CrossSubsector: ss %i with numss = %i".as_ptr(), num, numsubsectors);
+		}
 
 		let sub = &mut *subsectors.wrapping_add(num as usize);
 
