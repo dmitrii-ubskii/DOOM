@@ -155,8 +155,7 @@ pub extern "C" fn STlib_initNum(
 // A fairly efficient way to draw a number
 //  based on differences from the old number.
 // Note: worth the trouble?
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_drawNum(n: &mut st_number_t, _refresh: i32) {
+fn STlib_drawNum(n: &mut st_number_t, _refresh: i32) {
 	unsafe {
 		let mut numdigits = n.width;
 		let mut num = *n.num;

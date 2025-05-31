@@ -1,5 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
+use std::ffi::c_void;
+
 use crate::{d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, p_local::thinkercap};
 
 #[unsafe(no_mangle)]
@@ -12,7 +14,7 @@ static mut leveltime: i32 = 0;
 // but the first element must be thinker_t.
 
 unsafe extern "C" {
-	fn Z_Free(_: *mut thinker_t);
+	fn Z_Free(ptr: *mut c_void);
 }
 
 // P_InitThinkers
@@ -55,7 +57,7 @@ fn run_thinkers() {
 				// time to remove it
 				(*currentthinker.next).prev = currentthinker.prev;
 				(*currentthinker.prev).next = currentthinker.next;
-				Z_Free(currentthinker);
+				Z_Free(currentthinker as *mut thinker_t as *mut c_void);
 			} else if let Some(acp1) = currentthinker.function.acp1 {
 				acp1(currentthinker as *mut _ as _);
 			}
