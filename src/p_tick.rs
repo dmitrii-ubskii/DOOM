@@ -2,7 +2,10 @@
 
 use std::ffi::c_void;
 
-use crate::{d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, p_local::thinkercap};
+use crate::{
+	d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, p_local::thinkercap,
+	p_user::P_PlayerThink,
+};
 
 #[unsafe(no_mangle)]
 pub static mut leveltime: usize = 0;
@@ -71,10 +74,9 @@ unsafe extern "C" {
 	static netgame: i32;
 	static menuactive: i32;
 	static demoplayback: i32;
-	static mut players: [player_t; MAXPLAYERS];
-	static playeringame: [i32; MAXPLAYERS];
+	pub static mut players: [player_t; MAXPLAYERS];
+	pub static playeringame: [i32; MAXPLAYERS];
 	static consoleplayer: i32;
-	fn P_PlayerThink(_: &mut player_t);
 	fn P_UpdateSpecials();
 	fn P_RespawnSpecials();
 }

@@ -43,7 +43,7 @@ pub extern "C" fn I_GetTime() -> i32 {
 			basetime = tp.tv_sec;
 		}
 
-		(tp.tv_sec - basetime) * TICRATE + tp.tv_usec * TICRATE / 1000000
+		(tp.tv_sec - basetime) * TICRATE + tp.tv_usec * TICRATE / 1_000_000
 	}
 }
 

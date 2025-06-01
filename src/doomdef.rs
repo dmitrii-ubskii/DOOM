@@ -66,11 +66,14 @@ pub const TICRATE: i32 = 35;
 // playing, gazing at the intermission screen,
 // the game final animation, or a demo.
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum gamestate_t {
 	GS_LEVEL,
 	GS_INTERMISSION,
 	GS_FINALE,
 	GS_DEMOSCREEN,
+
+	None = -1,
 }
 
 // Difficulty/skill settings/filters.

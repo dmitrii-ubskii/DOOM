@@ -88,7 +88,13 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 //
 void D_DoomLoop (void);
 
+extern int             demosequence;
+extern int             pagetic;
+extern char                    *pagename;
+extern char            title[128];
 
+
+/*
 char*		wadfiles[MAXWADFILES];
 
 
@@ -100,7 +106,7 @@ boolean         fastparm;	// checkparm of -fast
 boolean         drone;
 
 boolean		singletics = false; // debug flag to cancel adaptiveness
-
+*/
 
 
 //extern int soundVolume;
@@ -109,6 +115,7 @@ boolean		singletics = false; // debug flag to cancel adaptiveness
 
 extern  boolean	inhelpscreens;
 
+/*
 skill_t		startskill;
 int             startepisode;
 int		startmap;
@@ -116,7 +123,6 @@ boolean		autostart;
 
 FILE*		debugfile;
 
-boolean		advancedemo;
 
 
 
@@ -124,6 +130,9 @@ boolean		advancedemo;
 char		wadfile[1024];		// primary wad file
 char		mapdir[1024];           // directory of development maps
 char		basedefault[1024];      // default file
+*/
+
+extern boolean		advancedemo;
 
 
 void D_CheckNetGame (void);
@@ -132,6 +141,7 @@ void G_BuildTiccmd (ticcmd_t* cmd);
 void D_DoAdvanceDemo (void);
 
 
+/*
 //
 // EVENT HANDLING
 //
@@ -154,7 +164,6 @@ void D_PostEvent (event_t* ev)
 }
 
 
-//
 // D_ProcessEvents
 // Send all the events of the given timestamp down the responder chain
 //
@@ -175,7 +184,7 @@ void D_ProcessEvents (void)
 	G_Responder (ev);
     }
 }
-
+*/
 
 
 
@@ -185,11 +194,12 @@ void D_ProcessEvents (void)
 //
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
-gamestate_t     wipegamestate = GS_DEMOSCREEN;
+// gamestate_t     wipegamestate = GS_DEMOSCREEN;
 extern  boolean setsizeneeded;
 extern  int             showMessages;
 void R_ExecuteSetViewSize (void);
 
+/*
 void D_Display (void)
 {
     static  boolean		viewactivestate = false;
@@ -445,6 +455,7 @@ void D_AdvanceDemo (void)
 {
     advancedemo = true;
 }
+*/
 
 
 //
@@ -519,7 +530,7 @@ void D_AdvanceDemo (void)
 
 
 
-//
+/*
 // D_StartTitle
 //
 void D_StartTitle (void)
@@ -528,7 +539,6 @@ void D_StartTitle (void)
     demosequence = -1;
     D_AdvanceDemo ();
 }
-
 
 
 
@@ -553,6 +563,7 @@ void D_AddFile (char *file)
 	
     wadfiles[numwadfiles] = newfile;
 }
+*/
 
 //
 // IdentifyVersion

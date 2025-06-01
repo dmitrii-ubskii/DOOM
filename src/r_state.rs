@@ -24,8 +24,8 @@ pub static mut colormaps: *mut lighttable_t = null_mut();
 
 #[unsafe(no_mangle)]
 pub static mut viewwidth: i32 = 0;
-#[unsafe(no_mangle)]
-pub static mut scaledviewwidth: i32 = 0;
+*/
+/*
 #[unsafe(no_mangle)]
 pub static mut viewheight: i32 = 0;
 

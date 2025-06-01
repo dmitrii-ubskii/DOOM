@@ -205,8 +205,7 @@ unsafe extern "C" {
 }
 
 // P_PlayerThink
-#[unsafe(no_mangle)]
-pub extern "C" fn P_PlayerThink(player: &mut player_t) {
+pub fn P_PlayerThink(player: &mut player_t) {
 	unsafe {
 		// fixme: do this in the cheat code
 		if player.cheats & cheat_t::CF_NOCLIP as i32 != 0 {
