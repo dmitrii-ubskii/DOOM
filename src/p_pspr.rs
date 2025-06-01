@@ -18,6 +18,7 @@ pub enum psprnum_t {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct pspdef_t {
 	state: *mut state_t, // a NULL state means not active
 	tics: i32,

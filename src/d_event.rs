@@ -1,0 +1,73 @@
+#![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
+
+// Event handling.
+// Input event types.
+#[repr(C)]
+pub enum evtype_t {
+	ev_keydown,
+	ev_keyup,
+	ev_mouse,
+	ev_joystick,
+}
+
+// Event structure.
+#[repr(C)]
+pub struct event_t {
+	pub ty: evtype_t,
+	pub data1: i32, // keys / mouse/joystick buttons
+	pub data2: i32, // mouse/joystick x move
+	pub data3: i32, // mouse/joystick y move
+}
+
+#[repr(C)]
+pub enum gameaction_t {
+	ga_nothing,
+	ga_loadlevel,
+	ga_newgame,
+	ga_loadgame,
+	ga_savegame,
+	ga_playdemo,
+	ga_completed,
+	ga_victory,
+	ga_worlddone,
+	ga_screenshot,
+}
+
+// Button/action code definitions.
+
+// Press "Fire".
+pub const BT_ATTACK: u8 = 1;
+// Use button; to open doors, activate switches.
+pub const BT_USE: u8 = 2;
+
+// Flag: game events; not really buttons.
+pub const BT_SPECIAL: u8 = 128;
+pub const BT_SPECIALMASK: u8 = 3;
+
+// Flag; weapon change pending.
+// If true; the next 3 bits hold weapon num.
+pub const BT_CHANGE: u8 = 4;
+// The 3bit weapon mask and shift; convenience.
+pub const BT_WEAPONMASK: u8 = 8 + 16 + 32;
+pub const BT_WEAPONSHIFT: u8 = 3;
+
+// Pause the game.
+pub const BTS_PAUSE: u8 = 1;
+// Save the game at each console.
+pub const BTS_SAVEGAME: u8 = 2;
+
+// Savegame slot numbers
+//  occupy the second byte of buttons.
+pub const BTS_SAVEMASK: u8 = 4 + 8 + 16;
+pub const BTS_SAVESHIFT: u8 = 2;
+
+// GLOBAL VARIABLES
+pub const MAXEVENTS: usize = 64;
+
+unsafe extern "C" {
+	pub static mut events: [event_t; MAXEVENTS];
+	pub static mut eventhead: i32;
+	pub static mut eventtail: i32;
+
+	pub static mut gameaction: gameaction_t;
+}

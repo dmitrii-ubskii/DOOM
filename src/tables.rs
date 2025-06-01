@@ -31,17 +31,17 @@ unsafe extern "C" {
 	pub static finesine: [fixed_t; 5 * FINEANGLES / 4];
 
 	// Re-use data, is just PI/2 pahse shift.
-	pub static finecosine: [fixed_t; 5 * FINEANGLES / 4];
+	pub static finecosine: *const fixed_t;
 
 	// Effective size is 4096.
 	pub static finetangent: [fixed_t; FINEANGLES / 2];
 }
 
 // Binary Angle Measument, BAM.
-pub const ANG45: u32 = 0x20000000;
-pub const ANG90: u32 = 0x40000000;
-pub const ANG180: u32 = 0x80000000;
-pub const ANG270: u32 = 0xc0000000;
+pub const ANG45: angle_t = 0x20000000;
+pub const ANG90: angle_t = 0x40000000;
+pub const ANG180: angle_t = 0x80000000;
+pub const ANG270: angle_t = 0xc0000000;
 
 pub const SLOPERANGE: usize = 2048;
 pub const SLOPEBITS: i32 = 11;

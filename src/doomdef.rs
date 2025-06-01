@@ -8,6 +8,7 @@ pub const VERSION: i32 = 110;
 // Game mode handling - identify IWAD version
 //  to handle IWAD dependend animations etc.
 #[repr(C)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum GameMode_t {
 	shareware,  // DOOM 1 shareware, E1, M9
 	registered, // DOOM 1 registered, E3, M27
@@ -108,6 +109,7 @@ pub enum card_t {
 //  including a marker indicating
 //  user has not changed weapon.
 #[repr(C)]
+#[derive(Debug,PartialEq, Eq, Clone, Copy)]
 pub enum weapontype_t {
 	wp_fist,
 	wp_pistol,

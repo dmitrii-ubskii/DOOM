@@ -302,7 +302,7 @@ pub struct spriteframe_t {
 	// If false use 0 for any position.
 	// Note: as eight entries are available,
 	//  we might as well insert the same name eight times.
-	rotate: bool,
+	rotate: i32,
 
 	// Lump to use for view angles 0-7.
 	lump: [i16; 8],

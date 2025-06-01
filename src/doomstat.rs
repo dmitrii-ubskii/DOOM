@@ -9,4 +9,4 @@ pub static mut gamemission: GameMission_t = GameMission_t::doom;
 #[unsafe(no_mangle)]
 pub static mut language: Language_t = Language_t::english;
 #[unsafe(no_mangle)]
-pub static mut modifiedgame: bool = false;
+pub static mut modifiedgame: i32 = 0;

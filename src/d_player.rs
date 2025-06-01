@@ -24,6 +24,7 @@ use crate::{
 
 // Player states.
 #[repr(C)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum playerstate_t {
 	// Playing or camping.
 	PST_LIVE,
@@ -46,6 +47,7 @@ pub enum cheat_t {
 
 // Extended player object info: player_t
 #[repr(C)]
+#[derive(Debug)]
 pub struct player_t {
 	pub mo: *mut mobj_t,
 	pub playerstate: playerstate_t,
@@ -71,8 +73,8 @@ pub struct player_t {
 
 	// Power ups. invinc and invis are tic counters.
 	pub powers: [i32; powertype_t::NUMPOWERS as usize],
-	pub cards: [bool; card_t::NUMCARDS as usize],
-	pub backpack: bool,
+	pub cards: [i32; card_t::NUMCARDS as usize],
+	pub backpack: i32,
 
 	// Frags, kills of other players.
 	pub frags: [i32; MAXPLAYERS],
@@ -81,7 +83,7 @@ pub struct player_t {
 	// Is wp_nochange if not changing.
 	pub pendingweapon: weapontype_t,
 
-	pub weaponowned: [bool; weapontype_t::NUMWEAPONS as usize],
+	pub weaponowned: [i32; weapontype_t::NUMWEAPONS as usize],
 	pub ammo: [i32; ammotype_t::NUMAMMO as usize],
 	pub maxammo: [i32; ammotype_t::NUMAMMO as usize],
 
@@ -126,14 +128,14 @@ pub struct player_t {
 	pub psprites: [pspdef_t; psprnum_t::NUMPSPRITES as usize],
 
 	// True if secret level has been done.
-	pub didsecret: bool,
+	pub didsecret: i32,
 }
 
 // INTERMISSION
 // Structure passed e.g. to WI_Start(wb)
 #[repr(C)]
 pub struct wbplayerstruct_t {
-	in_: bool, // whether the player is in game
+	in_: i32, // whether the player is in game
 
 	// Player stats, kills, collected items etc.
 	skills: i32,
@@ -149,7 +151,7 @@ pub struct wbstartstruct_t {
 	epsd: i32, // episode # (0-2)
 
 	// if true, splash the secret level
-	didsecret: bool,
+	didsecret: i32,
 
 	// previous and next levels, origin 0
 	last: i32,

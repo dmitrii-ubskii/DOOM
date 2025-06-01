@@ -1,5 +1,6 @@
 #![allow(non_upper_case_globals)]
 
+pub mod d_event;
 pub mod d_items;
 pub mod d_player;
 pub mod d_think;
@@ -25,6 +26,7 @@ pub mod p_sight;
 pub mod p_spec;
 pub mod p_telept;
 pub mod p_tick;
+pub mod p_user;
 pub mod r_defs;
 pub mod r_sky;
 pub mod r_state;

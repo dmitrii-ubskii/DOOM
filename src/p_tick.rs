@@ -5,7 +5,7 @@ use std::ffi::c_void;
 use crate::{d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, p_local::thinkercap};
 
 #[unsafe(no_mangle)]
-static mut leveltime: i32 = 0;
+pub static mut leveltime: usize = 0;
 
 // THINKERS
 // All thinkers should be allocated by Z_Malloc
@@ -67,12 +67,12 @@ fn run_thinkers() {
 }
 
 unsafe extern "C" {
-	static paused: bool;
-	static netgame: bool;
-	static menuactive: bool;
-	static demoplayback: bool;
+	static paused: i32;
+	static netgame: i32;
+	static menuactive: i32;
+	static demoplayback: i32;
 	static mut players: [player_t; MAXPLAYERS];
-	static playeringame: [bool; MAXPLAYERS];
+	static playeringame: [i32; MAXPLAYERS];
 	static consoleplayer: i32;
 	fn P_PlayerThink(_: &mut player_t);
 	fn P_UpdateSpecials();
@@ -84,17 +84,21 @@ unsafe extern "C" {
 pub extern "C" fn P_Ticker() {
 	unsafe {
 		// run the tic
-		if paused {
+		if paused != 0 {
 			return;
 		}
 
 		// pause if in menu and at least one tic has been run
-		if !netgame && menuactive && !demoplayback && players[consoleplayer as usize].viewz != 1 {
+		if netgame == 0
+			&& menuactive != 0
+			&& demoplayback == 0
+			&& players[consoleplayer as usize].viewz != 1
+		{
 			return;
 		}
 
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] {
+			if playeringame[i] != 0 {
 				P_PlayerThink(&mut players[i]);
 			}
 		}
