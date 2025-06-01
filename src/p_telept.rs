@@ -6,10 +6,10 @@ use crate::{
 	d_think::{actionf_p1, thinker_t},
 	info::mobjtype_t,
 	m_fixed::fixed_t,
-	p_mobj::{MF_MISSILE, mobj_t},
+	p_mobj::{mobj_t, MF_MISSILE},
 	r_defs::{line_t, sector_t},
 	sounds::sfxenum_t,
-	tables::{ANGLETOFINESHIFT, finecosine, finesine},
+	tables::{finecos, finesine, ANGLETOFINESHIFT},
 };
 
 unsafe extern "C" {
@@ -85,7 +85,7 @@ pub unsafe extern "C" fn EV_Teleport(line: &mut line_t, side: i32, thing: &mut m
 					S_StartSound(fog as _, sfxenum_t::sfx_telept);
 					let an = m.angle >> ANGLETOFINESHIFT;
 					fog = P_SpawnMobj(
-						m.x + 20 * *finecosine.wrapping_add(an as usize),
+						m.x + 20 * finecos(an as usize),
 						m.y + 20 * finesine[an as usize],
 						thing.z,
 						mobjtype_t::MT_TFOG,

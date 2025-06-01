@@ -10,9 +10,7 @@ use crate::{
 	p_local::VIEWHEIGHT,
 	p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW, mobj_t},
 	p_tick::leveltime,
-	tables::{
-		ANG90, ANG180, ANGLETOFINESHIFT, FINEANGLES, FINEMASK, angle_t, finecosine, finesine,
-	},
+	tables::{ANG90, ANG180, ANGLETOFINESHIFT, FINEANGLES, FINEMASK, angle_t, finecos, finesine},
 };
 
 // Index of the special effects (INVUL inverse) map.
@@ -32,7 +30,7 @@ fn P_Thrust(player: &mut player_t, mut angle: angle_t, mov: fixed_t) {
 	let angle = angle as usize;
 
 	unsafe {
-		(*player.mo).momx += FixedMul(mov, *finecosine.wrapping_add(angle));
+		(*player.mo).momx += FixedMul(mov, finecos(angle));
 		(*player.mo).momy += FixedMul(mov, finesine[angle]);
 	}
 }
@@ -276,7 +274,8 @@ pub extern "C" fn P_PlayerThink(player: &mut player_t) {
 				newweapon = weapontype_t::wp_supershotgun as u8;
 			}
 
-			if player.weaponowned[newweapon as usize] != 0 && newweapon != player.readyweapon as u8 {
+			if player.weaponowned[newweapon as usize] != 0 && newweapon != player.readyweapon as u8
+			{
 				// Do not go to plasma or BFG in shareware,
 				//  even if cheated.
 				if (newweapon != weapontype_t::wp_plasma as u8

@@ -109,7 +109,7 @@ pub enum card_t {
 //  including a marker indicating
 //  user has not changed weapon.
 #[repr(C)]
-#[derive(Debug,PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum weapontype_t {
 	wp_fist,
 	wp_pistol,
