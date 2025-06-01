@@ -21,8 +21,7 @@ use crate::{
 };
 
 // T_FireFlicker
-#[unsafe(no_mangle)]
-pub extern "C" fn T_FireFlicker(flick: &mut fireflicker_t) {
+fn T_FireFlicker(flick: &mut fireflicker_t) {
 	unsafe {
 		flick.count -= 1;
 		if (flick.count) != 0 {

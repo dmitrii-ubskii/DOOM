@@ -30,8 +30,7 @@ pub static mut sightcounts: [i32; 2] = [0; 2];
 
 // P_DivlineSide
 // Returns side 0 (front), 1 (back), or 2 (on).
-#[unsafe(no_mangle)]
-pub extern "C" fn P_DivlineSide(x: fixed_t, y: fixed_t, node: &mut divline_t) -> i32 {
+fn P_DivlineSide(x: fixed_t, y: fixed_t, node: &mut divline_t) -> i32 {
 	if node.dx == 0 {
 		if x == node.x {
 			return 2;
@@ -70,8 +69,7 @@ pub extern "C" fn P_DivlineSide(x: fixed_t, y: fixed_t, node: &mut divline_t) ->
 // Returns the fractional intercept point
 // along the first divline.
 // This is only called by the addthings and addlines traversers.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_InterceptVector2(v2: &mut divline_t, v1: &mut divline_t) -> fixed_t {
+fn P_InterceptVector2(v2: &mut divline_t, v1: &mut divline_t) -> fixed_t {
 	let den = FixedMul(v1.dy >> 8, v2.dx) - FixedMul(v1.dx >> 8, v2.dy);
 	if den == 0 {
 		//	I_Error ("P_InterceptVector: parallel");
@@ -88,8 +86,7 @@ unsafe extern "C" {
 // P_CrossSubsector
 // Returns true
 //  if strace crosses the given subsector successfully.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_CrossSubsector(num: i32) -> i32 {
+fn P_CrossSubsector(num: i32) -> i32 {
 	let mut divl = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
 
 	unsafe {
@@ -203,8 +200,7 @@ pub extern "C" fn P_CrossSubsector(num: i32) -> i32 {
 // P_CrossBSPNode
 // Returns true
 //  if strace crosses the given node successfully.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_CrossBSPNode(bspnum: usize) -> i32 {
+fn P_CrossBSPNode(bspnum: usize) -> i32 {
 	unsafe {
 		if bspnum & NF_SUBSECTOR != 0 {
 			if bspnum == usize::MAX {
