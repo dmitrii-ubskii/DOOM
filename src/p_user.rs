@@ -174,7 +174,7 @@ fn P_DeathThink(player: &mut player_t) {
 			let attacker = &mut *player.attacker;
 			let angle = R_PointToAngle2(mo.x, mo.y, attacker.x, attacker.y);
 
-			let delta = angle - mo.angle;
+			let delta = angle.wrapping_sub(mo.angle);
 
 			if delta < ANG5 || delta > -(ANG5 as i32) as u32 {
 				// Looking at killer,
