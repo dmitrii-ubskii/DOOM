@@ -22,6 +22,7 @@ pub struct event_t {
 }
 
 #[repr(C)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum gameaction_t {
 	ga_nothing,
 	ga_loadlevel,

@@ -6,7 +6,6 @@ fn main() {
 			"linuxdoom-1.10/i_video.c",
 			"linuxdoom-1.10/i_net.c",
 			"linuxdoom-1.10/f_finale.c",
-			"linuxdoom-1.10/d_main.c",
 			"linuxdoom-1.10/d_net.c",
 			"linuxdoom-1.10/g_game.c",
 			"linuxdoom-1.10/m_menu.c",

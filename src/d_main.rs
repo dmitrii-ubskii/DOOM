@@ -1,22 +1,38 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::{c_char, c_void},
+	env,
+	ffi::{CStr, CString, c_char, c_int, c_void},
+	io::stdout,
+	mem::transmute,
+	os::fd::AsRawFd,
 	ptr::{null, null_mut},
+	str::FromStr,
+};
+
+use libc::{
+	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fdopen, fread, fseek, ftell, malloc, memset,
+	mkdir, printf, setbuf, sprintf, strcpy,
 };
 
 use crate::{
+	d_englsh::{D_CDROM, D_DEVSTR},
 	d_event::{MAXEVENTS, event_t, eventhead, events, eventtail, gameaction, gameaction_t},
 	d_net::BACKUPTICS,
-	d_player::player_t,
+	d_player::{player_t, playerstate_t},
 	d_ticcmd::ticcmd_t,
-	doomdef::{GameMode_t, MAXPLAYERS, SCREENHEIGHT, SCREENWIDTH, gamestate_t, skill_t},
-	doomstat::gamemode,
+	doomdef::{
+		GameMode_t, Language_t, MAXPLAYERS, SCREENHEIGHT, SCREENWIDTH, VERSION, gamestate_t,
+		skill_t,
+	},
+	doomstat::{gamemode, language, modifiedgame},
 	f_wipe::{wipe_EndScreen, wipe_Melt, wipe_ScreenWipe, wipe_StartScreen},
-	i_system::I_GetTime,
+	i_system::{I_Error, I_GetTime, I_Init},
 	m_argv::M_CheckParm,
+	myargc, myargv,
 	p_tick::players,
 	r_defs::patch_t,
+	sounds::musicenum_t,
 	z_zone::PU_CACHE,
 };
 
@@ -322,7 +338,6 @@ unsafe extern "C" {
 	fn I_InitGraphics();
 	fn I_StartFrame();
 	fn I_StartTic();
-	fn D_DoAdvanceDemo();
 	fn M_Ticker();
 	fn G_Ticker();
 	fn TryRunTics();
@@ -339,7 +354,7 @@ pub extern "C" fn D_DoomLoop() {
 
 		if M_CheckParm(c"-debugfile".as_ptr()) != 0 {
 			let mut filename = [0; 20];
-			libc::sprintf(&raw mut filename[0], c"debug%i.txt".as_ptr(), consoleplayer);
+			sprintf(&raw mut filename[0], c"debug%i.txt".as_ptr(), consoleplayer);
 			libc::printf(c"debug output to: %s\n".as_ptr(), filename);
 			debugfile = libc::fopen(&raw mut filename[0], c"w".as_ptr());
 		}
@@ -390,7 +405,7 @@ pub static mut demosequence: i32 = 0;
 #[unsafe(no_mangle)]
 pub static mut pagetic: i32 = 0;
 #[unsafe(no_mangle)]
-pub static mut pagename: *mut c_char = null_mut();
+pub static mut pagename: *const c_char = null_mut();
 
 // D_PageTicker
 // Handles timing for warped projection
@@ -425,76 +440,82 @@ pub extern "C" fn D_AdvanceDemo() {
 	}
 }
 
-/*
+unsafe extern "C" {
+	static mut usergame: boolean;
+	fn G_DeferedPlayDemo(name: *const c_char);
+	fn S_StartMusic(music_id: musicenum_t);
+}
+
 // This cycles through the demo sequences.
 // FIXME - version dependend demo numbers?
-//
- void D_DoAdvanceDemo (void)
-{
-	players[consoleplayer].playerstate = PST_LIVE;  // not reborn
-	advancedemo = false;
-	usergame = false;               // no save / end game here
-	paused = false;
-	gameaction = ga_nothing;
+#[unsafe(no_mangle)]
+pub extern "C" fn D_DoAdvanceDemo() {
+	unsafe {
+		players[consoleplayer].playerstate = playerstate_t::PST_LIVE; // not reborn
+		advancedemo = 0;
+		usergame = 0; // no save / end game here
+		paused = 0;
+		gameaction = gameaction_t::ga_nothing;
 
-	if ( gamemode == retail )
-	  demosequence = (demosequence+1)%7;
-	else
-	  demosequence = (demosequence+1)%6;
+		if gamemode == GameMode_t::retail {
+			demosequence = (demosequence + 1) % 7;
+		} else {
+			demosequence = (demosequence + 1) % 6;
+		}
 
-	switch (demosequence)
-	{
-	  case 0:
-	if ( gamemode == commercial )
-		pagetic = 35 * 11;
-	else
-		pagetic = 170;
-	gamestate = GS_DEMOSCREEN;
-	pagename = "TITLEPIC";
-	if ( gamemode == commercial )
-	  S_StartMusic(mus_dm2ttl);
-	else
-	  S_StartMusic (mus_intro);
-	break;
-	  case 1:
-	G_DeferedPlayDemo ("demo1");
-	break;
-	  case 2:
-	pagetic = 200;
-	gamestate = GS_DEMOSCREEN;
-	pagename = "CREDIT";
-	break;
-	  case 3:
-	G_DeferedPlayDemo ("demo2");
-	break;
-	  case 4:
-	gamestate = GS_DEMOSCREEN;
-	if ( gamemode == commercial)
-	{
-		pagetic = 35 * 11;
-		pagename = "TITLEPIC";
-		S_StartMusic(mus_dm2ttl);
-	}
-	else
-	{
-		pagetic = 200;
+		match demosequence {
+			0 => {
+				if gamemode == GameMode_t::commercial {
+					pagetic = 35 * 11;
+				} else {
+					pagetic = 170;
+				}
+				gamestate = gamestate_t::GS_DEMOSCREEN;
+				pagename = c"TITLEPIC".as_ptr();
+				if gamemode == GameMode_t::commercial {
+					S_StartMusic(musicenum_t::mus_dm2ttl);
+				} else {
+					S_StartMusic(musicenum_t::mus_intro);
+				}
+			}
+			1 => {
+				G_DeferedPlayDemo(c"demo1".as_ptr());
+			}
+			2 => {
+				pagetic = 200;
+				gamestate = gamestate_t::GS_DEMOSCREEN;
+				pagename = c"CREDIT".as_ptr();
+			}
+			3 => {
+				G_DeferedPlayDemo(c"demo2".as_ptr());
+			}
+			4 => {
+				gamestate = gamestate_t::GS_DEMOSCREEN;
+				if gamemode == GameMode_t::commercial {
+					pagetic = 35 * 11;
+					pagename = c"TITLEPIC".as_ptr();
+					S_StartMusic(musicenum_t::mus_dm2ttl);
+				} else {
+					pagetic = 200;
 
-		if ( gamemode == retail )
-		  pagename = "CREDIT";
-		else
-		  pagename = "HELP2";
-	}
-	break;
-	  case 5:
-	G_DeferedPlayDemo ("demo3");
-	break;
-		// THE DEFINITIVE DOOM Special Edition demo
-	  case 6:
-	G_DeferedPlayDemo ("demo4");
-	break;
+					if gamemode == GameMode_t::retail {
+						pagename = c"CREDIT".as_ptr();
+					} else {
+						pagename = c"HELP2".as_ptr();
+					}
+				}
+			}
+			5 => {
+				G_DeferedPlayDemo(c"demo3".as_ptr());
+			}
+			// THE DEFINITIVE DOOM Special Edition demo
+			6 => {
+				G_DeferedPlayDemo(c"demo4".as_ptr());
+			}
+			_ => (),
+		}
 	}
 }
-*/
 
 // D_StartTitle
 #[unsafe(no_mangle)]
@@ -527,621 +548,666 @@ pub unsafe extern "C" fn D_AddFile(file: *const c_char) {
 	}
 }
 
-/*
-//
+macro_rules! devdata {
+	($s:literal) => {
+		concat!("devdata", $s, "\0").as_ptr() as *const i8
+	};
+}
+
+macro_rules! devmaps {
+	($s:literal) => {
+		concat!("devmaps", $s, "\0").as_ptr() as *const i8
+	};
+}
+
+macro_rules! tilde_devmaps {
+	($s:literal) => {
+		concat!("~", "devmaps", $s, "\0").as_ptr() as *const i8
+	};
+}
+
 // IdentifyVersion
 // Checks availability of IWAD files by name,
 // to determine whether registered/commercial features
 // should be executed (notably loading PWAD's).
-//
-void IdentifyVersion (void)
-{
+#[unsafe(no_mangle)]
+pub extern "C" fn IdentifyVersion() {
+	unsafe {
+		//#ifdef NORMALUNIX
+		let doomwaddir = env::var("DOOMWADDIR").unwrap_or_else(|_| ".".to_owned());
 
-	char*	doom1wad;
-	char*	doomwad;
-	char*	doomuwad;
-	char*	doom2wad;
+		// Commercial.
+		let doom2wad = format!("{doomwaddir}/doom2.wad\0");
 
-	char*	doom2fwad;
-	char*	plutoniawad;
-	char*	tntwad;
+		// Retail.
+		let doomuwad = format!("{doomwaddir}/doomu.wad\0");
 
-#ifdef NORMALUNIX
-	char *home;
-	char *doomwaddir;
-	doomwaddir = getenv("DOOMWADDIR");
-	if (!doomwaddir)
-	doomwaddir = ".";
+		// Registered.
+		let doomwad = format!("{doomwaddir}/doom.wad\0");
 
-	// Commercial.
-	doom2wad = malloc(strlen(doomwaddir)+1+9+1);
-	sprintf(doom2wad, "%s/doom2.wad", doomwaddir);
+		// Shareware.
+		let doom1wad = format!("{doomwaddir}/doom1.wad\0");
 
-	// Retail.
-	doomuwad = malloc(strlen(doomwaddir)+1+8+1);
-	sprintf(doomuwad, "%s/doomu.wad", doomwaddir);
+		// Bug, dear Shawn.
+		// Insufficient malloc, caused spurious realloc errors.
+		let plutoniawad = format!("{doomwaddir}/plutonia.wad\0");
 
-	// Registered.
-	doomwad = malloc(strlen(doomwaddir)+1+8+1);
-	sprintf(doomwad, "%s/doom.wad", doomwaddir);
+		let tntwad = format!("{doomwaddir}/tnt.wad\0");
 
-	// Shareware.
-	doom1wad = malloc(strlen(doomwaddir)+1+9+1);
-	sprintf(doom1wad, "%s/doom1.wad", doomwaddir);
+		// French stuff.
+		let doom2fwad = format!("{doomwaddir}/doom2f.wad\0");
 
-	 // Bug, dear Shawn.
-	// Insufficient malloc, caused spurious realloc errors.
-	plutoniawad = malloc(strlen(doomwaddir)+1+/*9*/12+1);
-	sprintf(plutoniawad, "%s/plutonia.wad", doomwaddir);
+		let Ok(home) = env::var("HOME") else {
+			I_Error(c"Please set $HOME to your home directory".as_ptr());
+		};
+		let home = CString::from_str(&home).unwrap();
+		sprintf(&raw mut basedefault[0], c"%s/.doomrc".as_ptr(), home.as_ptr());
+		//#endif
 
-	tntwad = malloc(strlen(doomwaddir)+1+9+1);
-	sprintf(tntwad, "%s/tnt.wad", doomwaddir);
-
-
-	// French stuff.
-	doom2fwad = malloc(strlen(doomwaddir)+1+10+1);
-	sprintf(doom2fwad, "%s/doom2f.wad", doomwaddir);
-
-	home = getenv("HOME");
-	if (!home)
-	  I_Error("Please set $HOME to your home directory");
-	sprintf(basedefault, "%s/.doomrc", home);
-#endif
-
-	if (M_CheckParm ("-shdev"))
-	{
-	gamemode = shareware;
-	devparm = true;
-	D_AddFile (DEVDATA"doom1.wad");
-	D_AddFile (DEVMAPS"data_se/texture1.lmp");
-	D_AddFile (DEVMAPS"data_se/pnames.lmp");
-	strcpy (basedefault,DEVDATA"default.cfg");
-	return;
-	}
-
-	if (M_CheckParm ("-regdev"))
-	{
-	gamemode = registered;
-	devparm = true;
-	D_AddFile (DEVDATA"doom.wad");
-	D_AddFile (DEVMAPS"data_se/texture1.lmp");
-	D_AddFile (DEVMAPS"data_se/texture2.lmp");
-	D_AddFile (DEVMAPS"data_se/pnames.lmp");
-	strcpy (basedefault,DEVDATA"default.cfg");
-	return;
-	}
-
-	if (M_CheckParm ("-comdev"))
-	{
-	gamemode = commercial;
-	devparm = true;
-	/* I don't bother
-	if(plutonia)
-		D_AddFile (DEVDATA"plutonia.wad");
-	else if(tnt)
-		D_AddFile (DEVDATA"tnt.wad");
-	else*/
-		D_AddFile (DEVDATA"doom2.wad");
-
-	D_AddFile (DEVMAPS"cdata/texture1.lmp");
-	D_AddFile (DEVMAPS"cdata/pnames.lmp");
-	strcpy (basedefault,DEVDATA"default.cfg");
-	return;
-	}
-
-	if ( !access (doom2fwad,R_OK) )
-	{
-	gamemode = commercial;
-	// C'est ridicule!
-	// Let's handle languages in config files, okay?
-	language = french;
-	printf("French version\n");
-	D_AddFile (doom2fwad);
-	return;
-	}
-
-	if ( !access (doom2wad,R_OK) )
-	{
-	gamemode = commercial;
-	D_AddFile (doom2wad);
-	return;
-	}
-
-	if ( !access (plutoniawad, R_OK ) )
-	{
-	  gamemode = commercial;
-	  D_AddFile (plutoniawad);
-	  return;
-	}
-
-	if ( !access ( tntwad, R_OK ) )
-	{
-	  gamemode = commercial;
-	  D_AddFile (tntwad);
-	  return;
-	}
-
-	if ( !access (doomuwad,R_OK) )
-	{
-	  gamemode = retail;
-	  D_AddFile (doomuwad);
-	  return;
-	}
-
-	if ( !access (doomwad,R_OK) )
-	{
-	  gamemode = registered;
-	  D_AddFile (doomwad);
-	  return;
-	}
-
-	if ( !access (doom1wad,R_OK) )
-	{
-	  gamemode = shareware;
-	  D_AddFile (doom1wad);
-	  return;
-	}
-
-	printf("Game mode indeterminate.\n");
-	gamemode = indetermined;
-
-	// We don't abort. Let's see what the PWAD contains.
-	//exit(1);
-	//I_Error ("Game mode indeterminate\n");
-}
-
-//
-// Find a Response File
-//
-void FindResponseFile (void)
-{
-	int             i;
-#define MAXARGVS        100
-
-	for (i = 1;i < myargc;i++)
-	if (myargv[i][0] == '@')
-	{
-		FILE *          handle;
-		int             size;
-		int             k;
-		int             index;
-		int             indexinfile;
-		char    *infile;
-		char    *file;
-		char    *moreargs[20];
-		char    *firstargv;
-
-		// READ THE RESPONSE FILE INTO MEMORY
-		handle = fopen (&myargv[i][1],"rb");
-		if (!handle)
-		{
-		printf ("\nNo such response file!");
-		exit(1);
+		if M_CheckParm(c"-shdev".as_ptr()) != 0 {
+			gamemode = GameMode_t::shareware;
+			devparm = 1;
+			D_AddFile(devdata!("doom1.wad"));
+			D_AddFile(devmaps!("data_se/texture1.lmp"));
+			D_AddFile(devmaps!("data_se/pnames.lmp"));
+			libc::strcpy(&raw mut basedefault[0], devdata!("default.cfg"));
+			return;
 		}
-		printf("Found response file %s!\n",&myargv[i][1]);
-		fseek (handle,0,SEEK_END);
-		size = ftell(handle);
-		fseek (handle,0,SEEK_SET);
-		file = malloc (size);
-		fread (file,size,1,handle);
-		fclose (handle);
 
-		// KEEP ALL CMDLINE ARGS FOLLOWING @RESPONSEFILE ARG
-		for (index = 0,k = i+1; k < myargc; k++)
-		moreargs[index++] = myargv[k];
+		if M_CheckParm(c"-regdev".as_ptr()) != 0 {
+			gamemode = GameMode_t::registered;
+			devparm = 1;
+			D_AddFile(devdata!("doom.wad"));
+			D_AddFile(devmaps!("data_se/texture1.lmp"));
+			D_AddFile(devmaps!("data_se/texture2.lmp"));
+			D_AddFile(devmaps!("data_se/pnames.lmp"));
+			libc::strcpy(&raw mut basedefault[0], devdata!("default.cfg"));
+			return;
+		}
 
-		firstargv = myargv[0];
-		myargv = malloc(sizeof(char *)*MAXARGVS);
-		memset(myargv,0,sizeof(char *)*MAXARGVS);
-		myargv[0] = firstargv;
+		if M_CheckParm(c"-comdev".as_ptr()) != 0 {
+			gamemode = GameMode_t::commercial;
+			devparm = 1;
+			D_AddFile(devdata!("doom2.wad"));
 
-		infile = file;
-		indexinfile = k = 0;
-		indexinfile++;  // SKIP PAST ARGV[0] (KEEP IT)
-		do
-		{
-		myargv[indexinfile++] = infile+k;
-		while(k < size &&
-			  ((*(infile+k)>= ' '+1) && (*(infile+k)<='z')))
-			k++;
-		*(infile+k) = 0;
-		while(k < size &&
-			  ((*(infile+k)<= ' ') || (*(infile+k)>'z')))
-			k++;
-		} while(k < size);
+			D_AddFile(devmaps!("cdata/texture1.lmp"));
+			D_AddFile(devmaps!("cdata/pnames.lmp"));
+			libc::strcpy(&raw mut basedefault[0], devdata!("default.cfg"));
+			return;
+		}
 
-		for (k = 0;k < index;k++)
-		myargv[indexinfile++] = moreargs[k];
-		myargc = indexinfile;
+		if access(doom2fwad.as_ptr() as *const i8, R_OK) == 0 {
+			gamemode = GameMode_t::commercial;
+			// C'est ridicule!
+			// Let's handle languages in config files, okay?
+			language = Language_t::french;
+			println!("French version");
+			D_AddFile(doom2fwad.as_ptr() as *const i8);
+			return;
+		}
 
-		// DISPLAY ARGS
-		printf("%d command-line args:\n",myargc);
-		for (k=1;k<myargc;k++)
-		printf("%s\n",myargv[k]);
+		if access(doom2wad.as_ptr() as *const i8, R_OK) == 0 {
+			gamemode = GameMode_t::commercial;
+			D_AddFile(doom2wad.as_ptr() as *const i8);
+			return;
+		}
 
-		break;
+		if (access(plutoniawad.as_ptr() as *const i8, R_OK)) == 0 {
+			gamemode = GameMode_t::commercial;
+			D_AddFile(plutoniawad.as_ptr() as *const i8);
+			return;
+		}
+
+		if (access(tntwad.as_ptr() as *const i8, R_OK)) == 0 {
+			gamemode = GameMode_t::commercial;
+			D_AddFile(tntwad.as_ptr() as *const i8);
+			return;
+		}
+
+		if (access(doomuwad.as_ptr() as *const i8, R_OK)) == 0 {
+			gamemode = GameMode_t::retail;
+			D_AddFile(doomuwad.as_ptr() as *const i8);
+			return;
+		}
+
+		if (access(doomwad.as_ptr() as *const i8, R_OK)) == 0 {
+			gamemode = GameMode_t::registered;
+			D_AddFile(doomwad.as_ptr() as *const i8);
+			return;
+		}
+
+		if (access(doom1wad.as_ptr() as *const i8, R_OK)) == 0 {
+			gamemode = GameMode_t::shareware;
+			D_AddFile(doom1wad.as_ptr() as *const i8);
+			return;
+		}
+
+		println!("Game mode indeterminate.");
+		gamemode = GameMode_t::indetermined;
+
+		// We don't abort. Let's see what the PWAD contains.
+		//exit(1);
+		//I_Error ("Game mode indeterminate\n");
 	}
 }
 
+// Find a Response File
+#[unsafe(no_mangle)]
+pub extern "C" fn FindResponseFile() {
+	unsafe {
+		const MAXARGVS: usize = 100;
 
-//
-// D_DoomMain
-//
-void D_DoomMain (void)
-{
-	int             p;
-	char                    file[256];
+		for i in 1..myargc {
+			let arg = *myargv.add(i);
+			if *arg == b'@' as i8 {
+				// READ THE RESPONSE FILE INTO MEMORY
+				let response_file = arg.wrapping_add(1);
+				let handle = libc::fopen(response_file, c"rb".as_ptr());
+				if handle.is_null() {
+					println!("\nNo such response file!");
+					libc::exit(1);
+				}
+				println!(
+					"Found response file {}!",
+					CStr::from_ptr(response_file).to_str().unwrap()
+				);
+				fseek(handle, 0, SEEK_END);
+				let size = ftell(handle) as usize;
+				fseek(handle, 0, SEEK_SET);
+				let file = libc::malloc(size) as *mut c_char;
+				fread(file as *mut c_void, size, 1, handle);
+				fclose(handle);
 
-	FindResponseFile ();
+				// KEEP ALL CMDLINE ARGS FOLLOWING @RESPONSEFILE ARG
+				let mut index = 0;
+				let mut moreargs = [null_mut(); 20];
+				for k in i + 1..myargc {
+					moreargs[index] = *myargv.wrapping_add(k);
+					index += 1;
+				}
 
-	IdentifyVersion ();
+				let firstargv = *myargv.wrapping_add(0);
+				myargv = malloc(size_of::<*const char>() * MAXARGVS) as *mut *mut c_char;
+				memset(myargv as *mut c_void, 0, size_of::<*const char>() * MAXARGVS);
+				*myargv = firstargv;
 
-	setbuf (stdout, NULL);
-	modifiedgame = false;
+				let infile = file;
+				let mut k = 0;
+				let mut indexinfile = 1; // SKIP PAST ARGV[0] (KEEP IT)
+				loop {
+					*myargv.wrapping_add(indexinfile) = infile.wrapping_add(k);
+					indexinfile += 1;
+					while k < size && (b' '..=b'z').contains(&(*infile.wrapping_add(k) as u8)) {
+						k += 1;
+					}
+					*infile.wrapping_add(k) = 0;
+					while k < size && !(b' '..=b'z').contains(&(*infile.wrapping_add(k) as u8)) {
+						k += 1;
+					}
+					if k >= size {
+						break;
+					}
+				}
 
-	nomonsters = M_CheckParm ("-nomonsters");
-	respawnparm = M_CheckParm ("-respawn");
-	fastparm = M_CheckParm ("-fast");
-	devparm = M_CheckParm ("-devparm");
-	if (M_CheckParm ("-altdeath"))
-	deathmatch = 2;
-	else if (M_CheckParm ("-deathmatch"))
-	deathmatch = 1;
+				for arg in moreargs.into_iter().take(index) {
+					*myargv.wrapping_add(indexinfile) = arg;
+					indexinfile += 1;
+				}
+				myargc = indexinfile;
 
-	switch ( gamemode )
-	{
-	  case retail:
-	sprintf (title,
-		 "                         "
-		 "The Ultimate DOOM Startup v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-	  case shareware:
-	sprintf (title,
-		 "                            "
-		 "DOOM Shareware Startup v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-	  case registered:
-	sprintf (title,
-		 "                            "
-		 "DOOM Registered Startup v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-	  case commercial:
-	sprintf (title,
-		 "                         "
-		 "DOOM 2: Hell on Earth v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-/*FIXME
-	   case pack_plut:
-	sprintf (title,
-		 "                   "
-		 "DOOM 2: Plutonia Experiment v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-	  case pack_tnt:
-	sprintf (title,
-		 "                     "
-		 "DOOM 2: TNT - Evilution v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-*/
-	  default:
-	sprintf (title,
-		 "                     "
-		 "Public DOOM - v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
+				// DISPLAY ARGS
+				#[allow(static_mut_refs)]
+				{
+					println!("{} command-line args:", myargc);
+				}
+				for k in 1..myargc {
+					println!("{}", CStr::from_ptr(*myargv.wrapping_add(k)).to_str().unwrap());
+				}
+
+				break;
+			}
+		}
 	}
+}
 
-	printf ("%s\n",title);
+unsafe extern "C" {
+	static mut deathmatch: boolean;
+	static mut singledemo: boolean;
+	static mut netgame: boolean;
+	static mut snd_SfxVolume: i32;
+	static mut snd_MusicVolume: i32;
+	fn V_Init();
+	fn M_LoadDefaults();
+	fn Z_Init();
+	fn W_InitMultipleFiles(wadfiles: *mut *mut c_char);
+	fn M_Init();
+	fn R_Init();
+	fn P_Init();
+	fn D_CheckNetGame();
+	fn S_Init(snd_SfxVolume: i32, snd_MusicVolume: i32);
+	fn HU_Init();
+	fn ST_Init();
+	fn G_RecordDemo(name: *mut c_char);
+	fn G_TimeDemo(name: *mut c_char);
+	fn G_LoadGame(name: *mut c_char);
+	fn G_InitNew(skill: skill_t, episode: i32, map: i32);
+}
 
-	if (devparm)
-	printf(D_DEVSTR);
-
-	if (M_CheckParm("-cdrom"))
-	{
-	printf(D_CDROM);
-	mkdir("c:\\doomdata",0);
-	strcpy (basedefault,"c:/doomdata/default.cfg");
-	}
-
-	// turbo option
-	if ( (p=M_CheckParm ("-turbo")) )
-	{
-	int     scale = 200;
-	extern int forwardmove[2];
-	extern int sidemove[2];
-
-	if (p<myargc-1)
-		scale = atoi (myargv[p+1]);
-	if (scale < 10)
-		scale = 10;
-	if (scale > 400)
-		scale = 400;
-	printf ("turbo scale: %i%%\n",scale);
-	forwardmove[0] = forwardmove[0]*scale/100;
-	forwardmove[1] = forwardmove[1]*scale/100;
-	sidemove[0] = sidemove[0]*scale/100;
-	sidemove[1] = sidemove[1]*scale/100;
-	}
-
-	// add any files specified on the command line with -file wadfile
-	// to the wad list
-	//
-	// convenience hack to allow -wart e m to add a wad file
-	// prepend a tilde to the filename so wadfile will be reloadable
-	p = M_CheckParm ("-wart");
-	if (p)
-	{
-	myargv[p][4] = 'p';     // big hack, change to -warp
-
-	// Map name handling.
-	switch (gamemode )
-	{
-	  case shareware:
-	  case retail:
-	  case registered:
-		sprintf (file,"~"DEVMAPS"E%cM%c.wad",
-			 myargv[p+1][0], myargv[p+2][0]);
-		printf("Warping to Episode %s, Map %s.\n",
-		   myargv[p+1],myargv[p+2]);
-		break;
-
-	  case commercial:
-	  default:
-		p = atoi (myargv[p+1]);
-		if (p<10)
-		  sprintf (file,"~"DEVMAPS"cdata/map0%i.wad", p);
-		else
-		  sprintf (file,"~"DEVMAPS"cdata/map%i.wad", p);
-		break;
-	}
-	D_AddFile (file);
-	}
-
-	p = M_CheckParm ("-file");
-	if (p)
-	{
-	// the parms after p are wadfile/lump names,
-	// until end of parms or another - preceded parm
-	modifiedgame = true;            // homebrew levels
-	while (++p != myargc && myargv[p][0] != '-')
-		D_AddFile (myargv[p]);
-	}
-
-	p = M_CheckParm ("-playdemo");
-
-	if (!p)
-	p = M_CheckParm ("-timedemo");
-
-	if (p && p < myargc-1)
-	{
-	sprintf (file,"%s.lmp", myargv[p+1]);
-	D_AddFile (file);
-	printf("Playing demo %s.lmp.\n",myargv[p+1]);
-	}
-
-	// get skill / episode / map from parms
-	startskill = sk_medium;
-	startepisode = 1;
-	startmap = 1;
-	autostart = false;
-
-
-	p = M_CheckParm ("-skill");
-	if (p && p < myargc-1)
-	{
-	startskill = myargv[p+1][0]-'1';
-	autostart = true;
-	}
-
-	p = M_CheckParm ("-episode");
-	if (p && p < myargc-1)
-	{
-	startepisode = myargv[p+1][0]-'0';
-	startmap = 1;
-	autostart = true;
-	}
-
-	p = M_CheckParm ("-timer");
-	if (p && p < myargc-1 && deathmatch)
-	{
-	int     time;
-	time = atoi(myargv[p+1]);
-	printf("Levels will end after %d minute",time);
-	if (time>1)
-		printf("s");
-	printf(".\n");
-	}
-
-	p = M_CheckParm ("-avg");
-	if (p && p < myargc-1 && deathmatch)
-	printf("Austin Virtual Gaming: Levels will end after 20 minutes\n");
-
-	p = M_CheckParm ("-warp");
-	if (p && p < myargc-1)
-	{
-	if (gamemode == commercial)
-		startmap = atoi (myargv[p+1]);
-	else
-	{
-		startepisode = myargv[p+1][0]-'0';
-		startmap = myargv[p+2][0]-'0';
-	}
-	autostart = true;
-	}
-
-	// init subsystems
-	printf ("V_Init: allocate screens.\n");
-	V_Init ();
-
-	printf ("M_LoadDefaults: Load system defaults.\n");
-	M_LoadDefaults ();              // load before initing other systems
-
-	printf ("Z_Init: Init zone memory allocation daemon. \n");
-	Z_Init ();
-
-	printf ("W_Init: Init WADfiles.\n");
-	W_InitMultipleFiles (wadfiles);
-
-
-	// Check for -file in shareware
-	if (modifiedgame)
-	{
-	// These are the lumps that will be checked in IWAD,
-	// if any one is not present, execution will be aborted.
-	char name[23][8]=
-	{
-		"e2m1","e2m2","e2m3","e2m4","e2m5","e2m6","e2m7","e2m8","e2m9",
-		"e3m1","e3m3","e3m3","e3m4","e3m5","e3m6","e3m7","e3m8","e3m9",
-		"dphoof","bfgga0","heada1","cybra1","spida1d1"
+macro_rules! cdrom_savegamename {
+	($s:literal) => {
+		concat!("c:\\doomdata\\doomsav", $s, "\0").as_ptr() as *const i8
 	};
-	int i;
-
-	if ( gamemode == shareware)
-		I_Error("\nYou cannot -file with the shareware "
-			"version. Register!");
-
-	// Check for fake IWAD with right name,
-	// but w/o all the lumps of the registered version.
-	if (gamemode == registered)
-		for (i = 0;i < 23; i++)
-		if (W_CheckNumForName(name[i])<0)
-			I_Error("\nThis is not the registered version.");
-	}
-
-	// Iff additonal PWAD files are used, print modified banner
-	if (modifiedgame)
-	{
-	/*m*/printf (
-		"===========================================================================\n"
-		"ATTENTION:  This version of DOOM has been modified.  If you would like to\n"
-		"get a copy of the original game, call 1-800-IDGAMES or see the readme file.\n"
-		"        You will not receive technical support for modified games.\n"
-		"                      press enter to continue\n"
-		"===========================================================================\n"
-		);
-	// getchar ();
-	}
-
-
-	// Check and print which version is executed.
-	switch ( gamemode )
-	{
-	  case shareware:
-	  case indetermined:
-	printf (
-		"===========================================================================\n"
-		"                                Shareware!\n"
-		"===========================================================================\n"
-	);
-	break;
-	  case registered:
-	  case retail:
-	  case commercial:
-	printf (
-		"===========================================================================\n"
-		"                 Commercial product - do not distribute!\n"
-		"         Please report software piracy to the SPA: 1-800-388-PIR8\n"
-		"===========================================================================\n"
-	);
-	break;
-
-	  default:
-	// Ouch.
-	break;
-	}
-
-	printf ("M_Init: Init miscellaneous info.\n");
-	M_Init ();
-
-	printf ("R_Init: Init DOOM refresh daemon - ");
-	R_Init ();
-
-	printf ("\nP_Init: Init Playloop state.\n");
-	P_Init ();
-
-	printf ("I_Init: Setting up machine state.\n");
-	I_Init ();
-
-	printf ("D_CheckNetGame: Checking network game status.\n");
-	D_CheckNetGame ();
-
-	printf ("S_Init: Setting up sound.\n");
-	S_Init (snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/ );
-
-	printf ("HU_Init: Setting up heads up display.\n");
-	HU_Init ();
-
-	printf ("ST_Init: Init status bar.\n");
-	ST_Init ();
-
-	// check for a driver that wants intermission stats
-	p = M_CheckParm ("-statcopy");
-	if (p && p<myargc-1)
-	{
-	// for statistics driver
-	extern  void*	statcopy;
-
-	statcopy = (void*)atoi(myargv[p+1]);
-	printf ("External statistics registered.\n");
-	}
-
-	// start the apropriate game based on parms
-	p = M_CheckParm ("-record");
-
-	if (p && p < myargc-1)
-	{
-	G_RecordDemo (myargv[p+1]);
-	autostart = true;
-	}
-
-	p = M_CheckParm ("-playdemo");
-	if (p && p < myargc-1)
-	{
-	singledemo = true;              // quit after one demo
-	G_DeferedPlayDemo (myargv[p+1]);
-	D_DoomLoop ();  // never returns
-	}
-
-	p = M_CheckParm ("-timedemo");
-	if (p && p < myargc-1)
-	{
-	G_TimeDemo (myargv[p+1]);
-	D_DoomLoop ();  // never returns
-	}
-
-	p = M_CheckParm ("-loadgame");
-	if (p && p < myargc-1)
-	{
-	if (M_CheckParm("-cdrom"))
-		sprintf(file, "c:\\doomdata\\"SAVEGAMENAME"%c.dsg",myargv[p+1][0]);
-	else
-		sprintf(file, SAVEGAMENAME"%c.dsg",myargv[p+1][0]);
-	G_LoadGame (file);
-	}
-
-
-	if ( gameaction != ga_loadgame )
-	{
-	if (autostart || netgame)
-		G_InitNew (startskill, startepisode, startmap);
-	else
-		D_StartTitle ();                // start up intro loop
-
-	}
-
-	D_DoomLoop ();  // never returns
 }
 
-*/
+macro_rules! savegamename {
+	($s:literal) => {
+		concat!("doomsav", $s, "\0").as_ptr() as *const i8
+	};
+}
+
+// D_DoomMain
+#[unsafe(no_mangle)]
+pub extern "C" fn D_DoomMain() {
+	unsafe {
+		// int			 p;
+		// char					file[256];
+
+		FindResponseFile();
+
+		IdentifyVersion();
+
+		//setbuf(stdout, NULL);
+		modifiedgame = 0;
+
+		nomonsters = M_CheckParm(c"-nomonsters".as_ptr()) as boolean;
+		respawnparm = M_CheckParm(c"-respawn".as_ptr()) as boolean;
+		fastparm = M_CheckParm(c"-fast".as_ptr()) as boolean;
+		devparm = M_CheckParm(c"-devparm".as_ptr()) as boolean;
+		if M_CheckParm(c"-altdeath".as_ptr()) != 0 {
+			deathmatch = 2;
+		} else if M_CheckParm(c"-deathmatch".as_ptr()) != 0 {
+			deathmatch = 1;
+		}
+
+		match gamemode {
+			GameMode_t::retail => {
+				sprintf(
+					&raw mut title[0],
+					c"						 The Ultimate DOOM Startup v%i.%i						   ".as_ptr(),
+					VERSION / 100,
+					VERSION % 100,
+				);
+			}
+			GameMode_t::shareware => {
+				sprintf(
+					&raw mut title[0],
+					c"							DOOM Shareware Startup v%i.%i						   ".as_ptr(),
+					VERSION / 100,
+					VERSION % 100,
+				);
+			}
+			GameMode_t::registered => {
+				sprintf(
+					&raw mut title[0],
+					c"							DOOM Registered Startup v%i.%i						   ".as_ptr(),
+					VERSION / 100,
+					VERSION % 100,
+				);
+			}
+			GameMode_t::commercial => {
+				sprintf(
+					&raw mut title[0],
+					c"						 DOOM 2: Hell on Earth v%i.%i						   ".as_ptr(),
+					VERSION / 100,
+					VERSION % 100,
+				);
+				/*FIXME
+				} GameMode_t::pack_plut => {
+				sprintf (&raw mut title[0],
+				c"				   ".as_ptr()
+				c"DOOM 2: Plutonia Experiment v%i.%i".as_ptr()
+				c"						   ".as_ptr(),
+				VERSION/100,VERSION%100);
+				break;
+				} GameMode_t::pack_tnt => {
+				sprintf (&raw mut title[0],
+				c"					 ".as_ptr()
+				c"DOOM 2: TNT - Evilution v%i.%i".as_ptr()
+				c"						   ".as_ptr(),
+				VERSION/100,VERSION%100);
+				break;
+				*/
+			}
+			_ => {
+				sprintf(
+					&raw mut title[0],
+					c"					 Public DOOM - v%i.%i						   ".as_ptr(),
+					VERSION / 100,
+					VERSION % 100,
+				);
+			}
+		}
+
+		printf(c"%s\n".as_ptr(), &raw const title[0]);
+
+		if devparm != 0 {
+			printf(D_DEVSTR.as_ptr());
+		}
+
+		if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
+			printf(D_CDROM.as_ptr());
+			mkdir(c"c:\\doomdata".as_ptr(), 0);
+			strcpy(&raw mut basedefault[0], c"c:/doomdata/default.cfg".as_ptr());
+		}
+
+		// turbo option
+		if let p @ 1.. = M_CheckParm(c"-turbo".as_ptr()) {
+			let mut scale = 200;
+
+			unsafe extern "C" {
+				static mut forwardmove: [i32; 2];
+				static mut sidemove: [i32; 2];
+			}
+
+			if p < myargc - 1 {
+				scale = atoi(*myargv.wrapping_add(p + 1));
+			}
+			scale = scale.clamp(10, 400);
+
+			printf(c"turbo scale: %i%%\n".as_ptr(), scale);
+			forwardmove[0] = forwardmove[0] * scale / 100;
+			forwardmove[1] = forwardmove[1] * scale / 100;
+			sidemove[0] = sidemove[0] * scale / 100;
+			sidemove[1] = sidemove[1] * scale / 100;
+		}
+
+		let mut file: [c_char; 256] = [0; 256];
+
+		// add any files specified on the command line with -file wadfile
+		// to the wad list
+		//
+		// convenience hack to allow -wart e m to add a wad file
+		// prepend a tilde to the filename so wadfile will be reloadable
+		let p = M_CheckParm(c"-wart".as_ptr());
+		if p != 0 {
+			*(*myargv.wrapping_add(p)).wrapping_add(4) = b'p' as i8; // big hack, change to -warp
+
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			let argvp2 = *myargv.wrapping_add(p + 2);
+
+			// Map name handling.
+			#[allow(clippy::wildcard_in_or_patterns)]
+			match gamemode {
+				GameMode_t::shareware | GameMode_t::retail | GameMode_t::registered => {
+					sprintf(
+						&raw mut file[0],
+						tilde_devmaps!("E%cM%c.wad"),
+						*argvp1 as c_int,
+						*argvp2 as c_int,
+					);
+					printf(c"Warping to Episode %s, Map %s.\n".as_ptr(), argvp1, argvp2);
+				}
+				GameMode_t::commercial | _ => {
+					let p = atoi(argvp1) as usize;
+					if p < 10 {
+						sprintf(&raw mut file[0], tilde_devmaps!("cdata/map0%i.wad"), p);
+					} else {
+						sprintf(&raw mut file[0], tilde_devmaps!("cdata/map%i.wad"), p);
+					}
+				}
+			}
+			D_AddFile(&raw const file[0]);
+		}
+
+		let mut p = M_CheckParm(c"-file".as_ptr());
+		if p != 0 {
+			// the parms after p are wadfile/lump names,
+			// until end of parms or another - preceded parm
+			modifiedgame = 1; // homebrew levels
+			loop {
+				p += 1;
+				if p == myargc || **myargv.wrapping_add(p) == b'-' as i8 {
+					break;
+				}
+				D_AddFile(*myargv.wrapping_add(p));
+			}
+		}
+
+		let mut p = M_CheckParm(c"-playdemo".as_ptr());
+
+		if p == 0 {
+			p = M_CheckParm(c"-timedemo".as_ptr());
+		}
+
+		if p > 0 && p < myargc - 1 {
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			sprintf(&raw mut file[0], c"%s.lmp".as_ptr(), argvp1);
+			D_AddFile(&raw const file[0]);
+			printf(c"Playing demo %s.lmp.\n".as_ptr(), argvp1);
+		}
+
+		// get skill / episode / map from parms
+		startskill = skill_t::sk_medium;
+		startepisode = 1;
+		startmap = 1;
+		autostart = 0;
+
+		let p = M_CheckParm(c"-skill".as_ptr());
+		if p != 0 && p < myargc - 1 {
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			startskill = transmute::<i32, skill_t>(*argvp1 as i32 - b'1' as i32);
+			autostart = 1;
+		}
+
+		let p = M_CheckParm(c"-episode".as_ptr());
+		if p != 0 && p < myargc - 1 {
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			startepisode = *argvp1 as i32 - b'0' as i32;
+			startmap = 1;
+			autostart = 1;
+		}
+
+		let p = M_CheckParm(c"-timer".as_ptr());
+		if p != 0 && p < myargc - 1 && deathmatch != 0 {
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			let time = atoi(argvp1);
+			printf(c"Levels will end after %d minute".as_ptr(), time);
+			if time > 1 {
+				printf(c"s".as_ptr());
+			}
+			printf(c".\n".as_ptr());
+		}
+
+		let p = M_CheckParm(c"-avg".as_ptr());
+		if p != 0 && p < myargc - 1 && deathmatch != 0 {
+			printf(c"Austin Virtual Gaming: Levels will end after 20 minutes\n".as_ptr());
+		}
+
+		let p = M_CheckParm(c"-warp".as_ptr());
+		if p != 0 && p < myargc - 1 {
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			let argvp2 = *myargv.wrapping_add(p + 2);
+			if gamemode == GameMode_t::commercial {
+				startmap = atoi(argvp1);
+			} else {
+				startepisode = *argvp1 as i32 - b'0' as i32;
+				startmap = *argvp2 as i32 - b'0' as i32;
+			}
+			autostart = 1;
+		}
+
+		// init subsystems
+		printf(c"V_Init: allocate screens.\n".as_ptr());
+		V_Init();
+
+		printf(c"M_LoadDefaults: Load system defaults.\n".as_ptr());
+		M_LoadDefaults(); // load before initing other systems
+
+		printf(c"Z_Init: Init zone memory allocation daemon. \n".as_ptr());
+		Z_Init();
+
+		printf(c"W_Init: Init WADfiles.\n".as_ptr());
+		W_InitMultipleFiles(&raw mut wadfiles[0]);
+
+		// Check for -file in shareware
+		if modifiedgame != 0 {
+			// These are the lumps that will be checked in IWAD,
+			// if any one is not present, execution will be aborted.
+			const name: [*const c_char; 23] = [
+				c"e2m1".as_ptr(),
+				c"e2m2".as_ptr(),
+				c"e2m3".as_ptr(),
+				c"e2m4".as_ptr(),
+				c"e2m5".as_ptr(),
+				c"e2m6".as_ptr(),
+				c"e2m7".as_ptr(),
+				c"e2m8".as_ptr(),
+				c"e2m9".as_ptr(),
+				c"e3m1".as_ptr(),
+				c"e3m3".as_ptr(),
+				c"e3m3".as_ptr(),
+				c"e3m4".as_ptr(),
+				c"e3m5".as_ptr(),
+				c"e3m6".as_ptr(),
+				c"e3m7".as_ptr(),
+				c"e3m8".as_ptr(),
+				c"e3m9".as_ptr(),
+				c"dphoof".as_ptr(),
+				c"bfgga0".as_ptr(),
+				c"heada1".as_ptr(),
+				c"cybra1".as_ptr(),
+				c"spida1d1".as_ptr(),
+			];
+
+			if gamemode == GameMode_t::shareware {
+				I_Error(c"\nYou cannot -file with the shareware version. Register!".as_ptr());
+			}
+
+			// Check for fake IWAD with right name,
+			// but w/o all the lumps of the registered version.
+			if gamemode == GameMode_t::registered {
+				for n in name {
+					if W_CheckNumForName(n) < 0 {
+						I_Error(c"\nThis is not the registered version.".as_ptr());
+					}
+				}
+			}
+		}
+
+		// Iff additonal PWAD files are used, print modified banner
+		if modifiedgame != 0 {
+			println!("===========================================================================");
+			println!("ATTENTION:  This version of DOOM has been modified.  If you would like to");
+			println!("get a copy of the original game, call 1-800-IDGAMES or see the readme file.");
+			println!("		You will not receive technical support for modified games.");
+			println!("					  press enter to continue");
+			println!("===========================================================================");
+			// getchar ();
+		}
+
+		// Check and print which version is executed.
+		match gamemode {
+			GameMode_t::shareware | GameMode_t::indetermined => {
+				println!(
+					"==========================================================================="
+				);
+				println!("								Shareware!");
+				println!(
+					"==========================================================================="
+				);
+			}
+			GameMode_t::registered | GameMode_t::retail | GameMode_t::commercial => {
+				println!(
+					"==========================================================================="
+				);
+				println!("				 Commercial product - do not distribute!");
+				println!("		 Please report software piracy to the SPA: 1-800-388-PIR8");
+				println!(
+					"==========================================================================="
+				);
+			}
+		}
+
+		printf(c"M_Init: Init miscellaneous info.\n".as_ptr());
+		M_Init();
+
+		printf(c"R_Init: Init DOOM refresh daemon - ".as_ptr());
+		R_Init();
+
+		printf(c"\nP_Init: Init Playloop state.\n".as_ptr());
+		P_Init();
+
+		printf(c"I_Init: Setting up machine state.\n".as_ptr());
+		I_Init();
+
+		printf(c"D_CheckNetGame: Checking network game status.\n".as_ptr());
+		D_CheckNetGame();
+
+		printf(c"S_Init: Setting up sound.\n".as_ptr());
+		S_Init(snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/);
+
+		printf(c"HU_Init: Setting up heads up display.\n".as_ptr());
+		HU_Init();
+
+		printf(c"ST_Init: Init status bar.\n".as_ptr());
+		ST_Init();
+
+		// check for a driver that wants intermission stats
+		let p = M_CheckParm(c"-statcopy".as_ptr());
+		if p != 0 && p < myargc - 1 {
+			// for statistics driver
+			unsafe extern "C" {
+				static mut statcopy: *mut c_void;
+			}
+
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			statcopy = atoi(argvp1) as *mut c_void;
+			printf(c"External statistics registered.\n".as_ptr());
+		}
+
+		// start the apropriate game based on parms
+		let p = M_CheckParm(c"-record".as_ptr());
+
+		if p != 0 && p < myargc - 1 {
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			G_RecordDemo(argvp1);
+			autostart = 1;
+		}
+
+		let p = M_CheckParm(c"-playdemo".as_ptr());
+		if p != 0 && p < myargc - 1 {
+			singledemo = 1; // quit after one demo
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			G_DeferedPlayDemo(argvp1);
+			D_DoomLoop(); // never returns
+		}
+
+		let p = M_CheckParm(c"-timedemo".as_ptr());
+		if p != 0 && p < myargc - 1 {
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			G_TimeDemo(argvp1);
+			D_DoomLoop(); // never returns
+		}
+
+		let p = M_CheckParm(c"-loadgame".as_ptr());
+		if p != 0 && p < myargc - 1 {
+			let argvp1 = *myargv.wrapping_add(p + 1);
+			if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
+				sprintf(&raw mut file[0], cdrom_savegamename!("%c.dsg"), *argvp1 as c_int);
+			} else {
+				sprintf(&raw mut file[0], savegamename!("%c.dsg"), *argvp1 as c_int);
+			}
+			G_LoadGame(&raw mut file[0]);
+		}
+
+		if gameaction != gameaction_t::ga_loadgame {
+			if autostart != 0 || netgame != 0 {
+				G_InitNew(startskill, startepisode, startmap);
+			} else {
+				D_StartTitle(); // start up intro loop
+			}
+		}
+
+		D_DoomLoop(); // never returns
+	}
+}

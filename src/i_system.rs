@@ -111,5 +111,5 @@ pub extern "C" fn I_AllocLow(length: usize) -> *mut u8 {
 
 // I_Error
 unsafe extern "C" {
-	pub fn I_Error(error: *const c_char, ...);
+	pub fn I_Error(error: *const c_char, ...) -> !;
 }

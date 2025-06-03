@@ -9,10 +9,10 @@ unsafe extern "C" {
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn M_CheckParm(check: *const c_char) -> i32 {
+pub unsafe extern "C" fn M_CheckParm(check: *const c_char) -> usize {
 	unsafe {
 		for i in 1..myargc {
-			if strcasecmp(check, *myargv.add(i as usize)) == 0 {
+			if strcasecmp(check, *myargv.add(i)) == 0 {
 				return i;
 			}
 		}

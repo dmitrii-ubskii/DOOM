@@ -6,10 +6,10 @@ use crate::{
 	d_think::{actionf_p1, thinker_t},
 	info::mobjtype_t,
 	m_fixed::fixed_t,
-	p_mobj::{mobj_t, MF_MISSILE},
+	p_mobj::{MF_MISSILE, mobj_t},
 	r_defs::{line_t, sector_t},
 	sounds::sfxenum_t,
-	tables::{finecos, finesine, ANGLETOFINESHIFT},
+	tables::{ANGLETOFINESHIFT, finecos, finesine},
 };
 
 unsafe extern "C" {
