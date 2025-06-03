@@ -175,8 +175,7 @@ unsafe extern "C" {
 	fn V_DrawBlock(x: i32, y_: i32, scrn: i32, width: usize, height: usize, src: *mut u8);
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn wipe_StartScreen(_x: i32, _y: i32, _width: usize, _height: usize) -> i32 {
+pub(crate) fn wipe_StartScreen(_x: i32, _y: i32, _width: usize, _height: usize) -> i32 {
 	unsafe {
 		wipe_scr_start = screens[2];
 		I_ReadScreen(wipe_scr_start);
@@ -184,8 +183,7 @@ pub extern "C" fn wipe_StartScreen(_x: i32, _y: i32, _width: usize, _height: usi
 	0
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn wipe_EndScreen(x: i32, y_: i32, width: usize, height: usize) -> i32 {
+pub(crate) fn wipe_EndScreen(x: i32, y_: i32, width: usize, height: usize) -> i32 {
 	unsafe {
 		wipe_scr_end = screens[3];
 		I_ReadScreen(wipe_scr_end);
@@ -194,8 +192,7 @@ pub extern "C" fn wipe_EndScreen(x: i32, y_: i32, width: usize, height: usize) -
 	0
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn wipe_ScreenWipe(
+pub(crate) fn wipe_ScreenWipe(
 	wipeno: usize,
 	_x: i32,
 	_y: i32,

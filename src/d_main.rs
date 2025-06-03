@@ -180,8 +180,7 @@ unsafe extern "C" {
 	fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void;
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn D_Display() {
+fn D_Display() {
 	unsafe {
 		static mut viewactivestate: boolean = 0;
 		static mut menuactivestate: boolean = 0;
@@ -570,8 +569,7 @@ macro_rules! tilde_devmaps {
 // Checks availability of IWAD files by name,
 // to determine whether registered/commercial features
 // should be executed (notably loading PWAD's).
-#[unsafe(no_mangle)]
-pub extern "C" fn IdentifyVersion() {
+fn IdentifyVersion() {
 	unsafe {
 		//#ifdef NORMALUNIX
 		let doomwaddir = env::var("DOOMWADDIR").unwrap_or_else(|_| ".".to_owned());
@@ -692,8 +690,7 @@ pub extern "C" fn IdentifyVersion() {
 }
 
 // Find a Response File
-#[unsafe(no_mangle)]
-pub extern "C" fn FindResponseFile() {
+fn FindResponseFile() {
 	unsafe {
 		const MAXARGVS: usize = 100;
 
