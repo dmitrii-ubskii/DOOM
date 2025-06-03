@@ -3,7 +3,7 @@
 #![allow(non_camel_case_types, non_upper_case_globals)]
 
 // DOOM version
-pub const VERSION: i32 = 110;
+pub const VERSION: i32 = 109;
 
 // Game mode handling - identify IWAD version
 //  to handle IWAD dependend animations etc.
@@ -87,6 +87,7 @@ pub const MTF_HARD: u8 = 4;
 pub const MTF_AMBUSH: u8 = 8;
 
 #[repr(C)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum skill_t {
 	sk_baby,
 	sk_easy,
