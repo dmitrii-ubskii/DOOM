@@ -17,7 +17,7 @@ use crate::{
 	p_tick::P_AddThinker,
 	r_defs::{line_t, sector_t},
 	r_state::{numsectors, sectors},
-	z_zone::PU_LEVSPEC,
+	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
 // T_FireFlicker
@@ -45,7 +45,6 @@ extern "C" fn T_FireFlicker_action(flick: *mut c_void) {
 }
 
 unsafe extern "C" {
-	fn Z_Malloc(size: usize, tag: usize, ptr: *mut c_void) -> *mut c_void;
 	fn P_FindMinSurroundingLight(sector: *mut sector_t, max: i32) -> i32;
 }
 

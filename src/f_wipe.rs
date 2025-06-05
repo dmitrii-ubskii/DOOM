@@ -7,7 +7,11 @@ use std::{ffi::c_void, ptr::null_mut, slice};
 
 use libc::memcpy;
 
-use crate::{m_random::M_Random, z_zone::PU_STATIC};
+use crate::{
+	m_random::M_Random,
+	v_video::{V_DrawBlock, V_MarkRect, screens},
+	z_zone::{PU_STATIC, Z_Free, Z_Malloc},
+};
 
 // simple gradual pixel change for 8-bit only
 pub const wipe_ColorXForm: usize = 0;
@@ -23,11 +27,6 @@ static mut go: bool = false;
 static mut wipe_scr_start: *mut u8 = null_mut();
 static mut wipe_scr_end: *mut u8 = null_mut();
 static mut wipe_scr: *mut u8 = null_mut();
-
-unsafe extern "C" {
-	fn Z_Malloc(size: usize, tag: usize, ptr: *mut c_void) -> *mut c_void;
-	fn Z_Free(ptr: *mut c_void);
-}
 
 fn wipe_shittyColMajorXform(array: *mut i16, width: usize, height: usize) {
 	unsafe {
@@ -170,9 +169,7 @@ fn wipe_exitMelt(_width: usize, _height: usize, _ticks: usize) -> i32 {
 }
 
 unsafe extern "C" {
-	static mut screens: [*mut u8; 5];
 	fn I_ReadScreen(scr: *mut u8);
-	fn V_DrawBlock(x: i32, y_: i32, scrn: i32, width: usize, height: usize, src: *mut u8);
 }
 
 pub(crate) fn wipe_StartScreen(_x: i32, _y: i32, _width: usize, _height: usize) -> i32 {
@@ -183,7 +180,7 @@ pub(crate) fn wipe_StartScreen(_x: i32, _y: i32, _width: usize, _height: usize) 
 	0
 }
 
-pub(crate) fn wipe_EndScreen(x: i32, y_: i32, width: usize, height: usize) -> i32 {
+pub(crate) fn wipe_EndScreen(x: usize, y_: usize, width: usize, height: usize) -> i32 {
 	unsafe {
 		wipe_scr_end = screens[3];
 		I_ReadScreen(wipe_scr_end);
@@ -209,10 +206,6 @@ pub(crate) fn wipe_ScreenWipe(
 			wipe_doMelt,
 			wipe_exitMelt,
 		];
-
-		unsafe extern "C" {
-			fn V_MarkRect(_: i32, _: i32, _: usize, _: usize);
-		}
 
 		// initial stuff
 		if !go {

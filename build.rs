@@ -34,7 +34,6 @@ fn main() {
 			"linuxdoom-1.10/r_things.c",
 			"linuxdoom-1.10/w_wad.c",
 			"linuxdoom-1.10/wi_stuff.c",
-			"linuxdoom-1.10/v_video.c",
 			"linuxdoom-1.10/st_stuff.c",
 			"linuxdoom-1.10/hu_stuff.c",
 			"linuxdoom-1.10/hu_lib.c",

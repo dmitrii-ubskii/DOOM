@@ -5,26 +5,21 @@ use std::{
 	ptr::null_mut,
 };
 
-use crate::{i_system::I_Error, r_defs::patch_t, st_stuff::ST_Y, z_zone::PU_STATIC};
+use crate::{
+	i_system::I_Error,
+	r_defs::patch_t,
+	st_stuff::ST_Y,
+	v_video::{V_CopyRect, V_DrawPatch},
+	z_zone::PU_STATIC,
+};
 
 unsafe extern "C" {
 	fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void;
-	fn V_DrawPatch(w: i32, y: i32, fg: i32, p: *const patch_t);
-	fn V_CopyRect(
-		srcx: i32,
-		srcy: i32,
-		srcscrn: i32,
-		width: i32,
-		height: i32,
-		destx: i32,
-		desty: i32,
-		destscrn: i32,
-	);
 }
 
 // Background and foreground screen numbers
-const BG: i32 = 4;
-const FG: i32 = 0;
+const BG: usize = 4;
+const FG: usize = 0;
 
 // Typedefs of widgets
 
@@ -34,11 +29,11 @@ const FG: i32 = 0;
 pub struct st_number_t {
 	// upper right-hand corner
 	//  of the number (right-justified)
-	x: i32,
-	y: i32,
+	x: usize,
+	y: usize,
 
 	// max # of digits in number
-	width: i32,
+	width: usize,
 
 	// last number value
 	oldnum: i32,
@@ -72,8 +67,8 @@ pub struct st_percent_t {
 #[repr(C)]
 pub struct st_multicon_t {
 	// center-justified location of icons
-	x: i32,
-	y: i32,
+	x: usize,
+	y: usize,
 
 	// last icon number
 	oldinum: i32,
@@ -97,8 +92,8 @@ pub struct st_multicon_t {
 #[repr(C)]
 pub struct st_binicon_t {
 	// center-justified location of icon
-	x: i32,
-	y: i32,
+	x: usize,
+	y: usize,
 
 	// last icon value
 	oldval: i32,
@@ -136,12 +131,12 @@ pub extern "C" fn STlib_init() {
 #[unsafe(no_mangle)]
 pub extern "C" fn STlib_initNum(
 	n: &mut st_number_t,
-	x: i32,
-	y: i32,
+	x: usize,
+	y: usize,
 	pl: *mut *mut patch_t,
 	num: *mut i32,
 	on: *mut i32,
-	width: i32,
+	width: usize,
 ) {
 	n.x = x;
 	n.y = y;
@@ -160,8 +155,8 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: i32) {
 		let mut numdigits = n.width;
 		let mut num = *n.num;
 
-		let w = (**n.p).width;
-		let h = (**n.p).height;
+		let w = (**n.p).width as usize;
+		let h = (**n.p).height as usize;
 
 		n.oldnum = *n.num;
 
@@ -178,13 +173,13 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: i32) {
 		}
 
 		// clear the area
-		let mut x = n.x - numdigits * w as i32;
+		let mut x = n.x - numdigits * w;
 
-		if (n.y - ST_Y as i32) < 0 {
+		if n.y < ST_Y {
 			I_Error(c"drawNum: n.y - ST_Y < 0".as_ptr());
 		}
 
-		V_CopyRect(x, n.y - ST_Y as i32, BG, w as i32 * numdigits, h as i32, x, n.y, FG);
+		V_CopyRect(x, n.y - ST_Y, BG, w * numdigits, h, x, n.y, FG);
 
 		// if non-number, do not draw it
 		if num == 1994 {
@@ -195,13 +190,13 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: i32) {
 
 		// in the special case of 0, you draw 0
 		if num == 0 {
-			V_DrawPatch(x - w as i32, n.y, FG, *n.p);
+			V_DrawPatch(x - w, n.y, FG, *n.p);
 		}
 
 		// draw the new number
 		while num > 0 && numdigits > 0 {
 			numdigits -= 1;
-			x -= w as i32;
+			x -= w;
 			V_DrawPatch(x, n.y, FG, *n.p.wrapping_add(num as usize % 10));
 			num /= 10;
 		}
@@ -227,8 +222,8 @@ pub extern "C" fn STlib_updateNum(n: &mut st_number_t, refresh: i32) {
 #[unsafe(no_mangle)]
 pub extern "C" fn STlib_initPercent(
 	p: &mut st_percent_t,
-	x: i32,
-	y: i32,
+	x: usize,
+	y: usize,
 	pl: *mut *mut patch_t,
 	num: *mut i32,
 	on: *mut i32,
@@ -254,8 +249,8 @@ pub extern "C" fn STlib_updatePercent(per: &mut st_percent_t, refresh: i32) {
 #[unsafe(no_mangle)]
 pub extern "C" fn STlib_initMultIcon(
 	i: &mut st_multicon_t,
-	x: i32,
-	y: i32,
+	x: usize,
+	y: usize,
 	il: *mut *mut patch_t,
 	inum: *mut i32,
 	on: *mut i32,
@@ -273,16 +268,24 @@ pub extern "C" fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: i32) {
 	unsafe {
 		if *mi.on != 0 && (mi.oldinum != *mi.inum || refresh != 0) && (*mi.inum != -1) {
 			if mi.oldinum != -1 {
-				let x = mi.x - (**mi.p.wrapping_add(mi.oldinum as usize)).leftoffset as i32;
-				let y = mi.y - (**mi.p.wrapping_add(mi.oldinum as usize)).topoffset as i32;
-				let w = (**mi.p.wrapping_add(mi.oldinum as usize)).width;
-				let h = (**mi.p.wrapping_add(mi.oldinum as usize)).height;
+				let x =
+					mi.x.checked_add_signed(
+						-(**mi.p.wrapping_add(mi.oldinum as usize)).leftoffset as isize,
+					)
+					.unwrap();
+				let y =
+					mi.y.checked_add_signed(
+						-(**mi.p.wrapping_add(mi.oldinum as usize)).topoffset as isize,
+					)
+					.unwrap();
+				let w = (**mi.p.wrapping_add(mi.oldinum as usize)).width as usize;
+				let h = (**mi.p.wrapping_add(mi.oldinum as usize)).height as usize;
 
-				if y < ST_Y as i32 {
+				if y < ST_Y {
 					I_Error(c"updateMultIcon: y - ST_Y < 0".as_ptr());
 				}
 
-				V_CopyRect(x, y - ST_Y as i32, BG, w as _, h as _, x, y, FG);
+				V_CopyRect(x, y - ST_Y, BG, w, h, x, y, FG);
 			}
 			V_DrawPatch(mi.x, mi.y, FG, *mi.p.wrapping_add(*mi.inum as usize));
 			mi.oldinum = *mi.inum;
@@ -295,8 +298,8 @@ pub extern "C" fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: i32) {
 #[unsafe(no_mangle)]
 pub extern "C" fn STlib_initBinIcon(
 	b: &mut st_binicon_t,
-	x: i32,
-	y: i32,
+	x: usize,
+	y: usize,
 	i: *mut patch_t,
 	val: *mut i32,
 	on: &mut i32,
@@ -313,19 +316,19 @@ pub extern "C" fn STlib_initBinIcon(
 pub extern "C" fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: i32) {
 	unsafe {
 		if *bi.on != 0 && (bi.oldval != *bi.val || refresh != 0) {
-			let x = bi.x - ((*bi.p).leftoffset) as i32;
-			let y = bi.y - ((*bi.p).topoffset) as i32;
-			let w = (*bi.p).width as i32;
-			let h = (*bi.p).height as i32;
+			let x = bi.x.checked_add_signed(-((*bi.p).leftoffset) as isize).unwrap();
+			let y = bi.y.checked_add_signed(-((*bi.p).topoffset) as isize).unwrap();
+			let w = (*bi.p).width as usize;
+			let h = (*bi.p).height as usize;
 
-			if y < ST_Y as i32 {
+			if y < ST_Y {
 				I_Error(c"updateBinIcon: y - ST_Y < 0".as_ptr());
 			}
 
 			if *bi.val != 0 {
 				V_DrawPatch(bi.x, bi.y, FG, bi.p);
 			} else {
-				V_CopyRect(x, y - ST_Y as i32, BG, w, h, x, y, FG);
+				V_CopyRect(x, y - ST_Y, BG, w, h, x, y, FG);
 			}
 
 			bi.oldval = *bi.val;

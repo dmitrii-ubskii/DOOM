@@ -3,16 +3,14 @@
 use std::{
 	env,
 	ffi::{CStr, CString, c_char, c_int, c_void},
-	io::stdout,
 	mem::transmute,
-	os::fd::AsRawFd,
 	ptr::{null, null_mut},
 	str::FromStr,
 };
 
 use libc::{
-	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fdopen, fread, fseek, ftell, malloc, memset,
-	mkdir, printf, setbuf, sprintf, strcpy,
+	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fread, fseek, ftell, malloc, memset, mkdir,
+	printf, sprintf, strcpy,
 };
 
 use crate::{
@@ -33,11 +31,9 @@ use crate::{
 	p_tick::players,
 	r_defs::patch_t,
 	sounds::musicenum_t,
-	z_zone::PU_CACHE,
+	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
+	z_zone::{PU_CACHE, Z_Init},
 };
-
-const BGCOLOR: u8 = 7;
-const FGCOLOR: u8 = 8;
 
 // D-DoomLoop()
 // Not a globally visible function,
@@ -154,7 +150,6 @@ unsafe extern "C" {
 	static mut paused: boolean;
 	static mut scaledviewwidth: i32;
 	static mut setsizeneeded: boolean;
-	static mut showMessages: boolean;
 	static mut viewactive: boolean;
 	static mut viewheight: i32;
 	static mut viewwindowx: usize;
@@ -175,7 +170,6 @@ unsafe extern "C" {
 	fn R_FillBackScreen();
 	fn R_RenderPlayerView(player: &mut player_t);
 	fn ST_Drawer(_: boolean, redrawsbar: boolean);
-	fn V_DrawPatchDirect(x: usize, y: usize, scrn: usize, patch: *mut patch_t);
 	fn WI_Drawer();
 	fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void;
 }
@@ -416,10 +410,6 @@ pub extern "C" fn D_PageTicker() {
 			D_AdvanceDemo();
 		}
 	}
-}
-
-unsafe extern "C" {
-	fn V_DrawPatch(w: i32, y: i32, fg: i32, p: *const patch_t);
 }
 
 // D_PageDrawer
@@ -773,9 +763,7 @@ unsafe extern "C" {
 	static mut netgame: boolean;
 	static mut snd_SfxVolume: i32;
 	static mut snd_MusicVolume: i32;
-	fn V_Init();
 	fn M_LoadDefaults();
-	fn Z_Init();
 	fn W_InitMultipleFiles(wadfiles: *mut *mut c_char);
 	fn M_Init();
 	fn R_Init();

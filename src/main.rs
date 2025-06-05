@@ -37,6 +37,7 @@ pub mod sounds;
 pub mod st_lib;
 pub mod st_stuff;
 pub mod tables;
+pub mod v_video;
 pub mod z_zone;
 
 use std::{

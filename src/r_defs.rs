@@ -186,9 +186,10 @@ pub struct node_t {
 
 // posts are runs of non masked source pixels
 #[repr(C)]
+#[derive(Debug)]
 pub struct post_t {
-	topdelta: i8, // -1 is the last post in a column
-	length: i8,   // length data bytes follows
+	pub topdelta: u8, // -1 is the last post in a column
+	pub length: u8,   // length data bytes follows
 }
 
 // column_t is a list of 0 or more post_t, (byte)-1 terminated
@@ -241,7 +242,7 @@ pub struct patch_t {
 	pub height: i16,
 	pub leftoffset: i16, // pixels to the left of origin
 	pub topoffset: i16,  // pixels below the origin
-	pub columnofs: [i32; 8], // only [width] used
+	pub columnofs: [usize; 8], // only [width] used
 	                     // the [0] is &columnofs[width]
 }
 

@@ -4,7 +4,7 @@ use std::ffi::c_void;
 
 use crate::{
 	d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, p_local::thinkercap,
-	p_user::P_PlayerThink,
+	p_user::P_PlayerThink, z_zone::Z_Free,
 };
 
 #[unsafe(no_mangle)]
@@ -15,10 +15,6 @@ pub static mut leveltime: usize = 0;
 // so they can be operated on uniformly.
 // The actual structures will vary in size,
 // but the first element must be thinker_t.
-
-unsafe extern "C" {
-	fn Z_Free(ptr: *mut c_void);
-}
 
 // P_InitThinkers
 #[unsafe(no_mangle)]
