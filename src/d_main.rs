@@ -32,6 +32,7 @@ use crate::{
 	r_defs::patch_t,
 	sounds::musicenum_t,
 	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
+	w_wad::W_InitMultipleFiles,
 	z_zone::{PU_CACHE, Z_Init},
 };
 
@@ -764,7 +765,6 @@ unsafe extern "C" {
 	static mut snd_SfxVolume: i32;
 	static mut snd_MusicVolume: i32;
 	fn M_LoadDefaults();
-	fn W_InitMultipleFiles(wadfiles: *mut *mut c_char);
 	fn M_Init();
 	fn R_Init();
 	fn P_Init();
@@ -1032,7 +1032,7 @@ pub extern "C" fn D_DoomMain() {
 		Z_Init();
 
 		printf(c"W_Init: Init WADfiles.\n".as_ptr());
-		W_InitMultipleFiles(&raw mut wadfiles[0]);
+		W_InitMultipleFiles((&raw const wadfiles[0]).cast());
 
 		// Check for -file in shareware
 		if modifiedgame != 0 {

@@ -31,17 +31,16 @@ pub struct memblock_t {
 
 // This is used to get the local FILE:LINE info from CPP
 // prior to really call the function in question.
-#[expect(unused)]
 macro_rules! Z_ChangeTag {
 	($p:expr, $t: expr) => {
-		let block = $p.wrapping_byte_sub(size_of::<memblock_t>()) as *mut memblock_t;
+		let block = $p.wrapping_byte_sub(size_of::<$crate::z_zone::memblock_t>())
+			as *mut $crate::z_zone::memblock_t;
 		if (*block).id != 0x1d4a11 {
 			I_Error(concat!("Z_CT at ", file!(), ":%i", line!(), "\0").as_ptr() as *const i8);
 		}
-		crate::z_zone::Z_ChangeTag2(p, t);
+		crate::z_zone::Z_ChangeTag2($p, $t);
 	};
 }
-#[expect(unused)]
 pub(crate) use Z_ChangeTag;
 
 // ZONE MEMORY ALLOCATION

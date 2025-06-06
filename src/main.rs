@@ -38,6 +38,7 @@ pub mod st_lib;
 pub mod st_stuff;
 pub mod tables;
 pub mod v_video;
+pub mod w_wad;
 pub mod z_zone;
 
 use std::{
