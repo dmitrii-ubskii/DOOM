@@ -216,8 +216,7 @@ fn W_AddFile(mut filename: *const c_char) {
 // W_Reload
 // Flushes any of the reloadable lumps in memory
 //  and reloads the directory.
-#[unsafe(no_mangle)]
-pub extern "C" fn W_Reload() {
+pub(crate) fn W_Reload() {
 	unsafe {
 		if reloadname.is_null() {
 			return;

@@ -1,8 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, io::Write, os::fd::FromRawFd, ptr::null_mut};
-
-use libc::{FILE, fileno};
+use std::{ffi::c_void, ptr::null_mut};
 
 use crate::i_system::{I_Error, I_ZoneBase};
 
@@ -264,8 +262,7 @@ pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c
 }
 
 // Z_FreeTags
-#[unsafe(no_mangle)]
-pub extern "C" fn Z_FreeTags(lowtag: usize, hightag: usize) {
+pub(crate) fn Z_FreeTags(lowtag: usize, hightag: usize) {
 	unsafe {
 		let mut block = (*mainzone).blocklist.next;
 		while !std::ptr::eq(block, (*mainzone).blocklist.next) {
@@ -278,51 +275,6 @@ pub extern "C" fn Z_FreeTags(lowtag: usize, hightag: usize) {
 			}
 
 			block = next;
-		}
-	}
-}
-
-// Z_FileDumpHeap
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn Z_FileDumpHeap(f: *mut FILE) {
-	unsafe {
-		let mut f = std::fs::File::from_raw_fd(fileno(f));
-
-		#[allow(static_mut_refs)]
-		{
-			writeln!(f, "zone size: {}  location: {:p}", (*mainzone).size, mainzone).unwrap();
-		}
-
-		let mut block = (*mainzone).blocklist.next;
-		loop {
-			writeln!(
-				f,
-				"block:{:p}	size:{:7}	user:{:p}	tag:{:3}",
-				block,
-				(*block).size,
-				(*block).user,
-				(*block).tag
-			)
-			.unwrap();
-
-			if std::ptr::eq((*block).next, &(*mainzone).blocklist) {
-				// all blocks have been hit
-				break;
-			}
-
-			if !std::ptr::eq(block.wrapping_byte_add((*block).size), (*block).next) {
-				writeln!(f, "ERROR: block size does not touch the next block").unwrap();
-			}
-
-			if !std::ptr::eq((*(*block).next).prev, block) {
-				writeln!(f, "ERROR: next block doesn't have proper back link").unwrap();
-			}
-
-			if (*block).user.is_null() && (*(*block).next).user.is_null() {
-				writeln!(f, "ERROR: two consecutive free blocks").unwrap();
-			}
-
-			block = (*block).next;
 		}
 	}
 }
