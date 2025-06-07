@@ -185,9 +185,9 @@ fn P_DeathThink(player: &mut player_t) {
 					player.damagecount -= 1;
 				}
 			} else if delta < ANG180 {
-				mo.angle += ANG5;
+				mo.angle = mo.angle.wrapping_add(ANG5);
 			} else {
-				mo.angle -= ANG5;
+				mo.angle = mo.angle.wrapping_sub(ANG5);
 			}
 		} else if player.damagecount != 0 {
 			player.damagecount -= 1;

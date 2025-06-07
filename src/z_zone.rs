@@ -36,7 +36,7 @@ macro_rules! Z_ChangeTag {
 		if (*block).id != 0x1d4a11 {
 			I_Error(concat!("Z_CT at ", file!(), ":%i", line!(), "\0").as_ptr() as *const i8);
 		}
-		crate::z_zone::Z_ChangeTag2($p, $t);
+		crate::z_zone::Z_ChangeTag2($p.cast(), $t);
 	};
 }
 pub(crate) use Z_ChangeTag;

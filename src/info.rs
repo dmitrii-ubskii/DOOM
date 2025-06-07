@@ -281,13 +281,13 @@ pub enum statenum_t {
 
 #[repr(C)]
 pub struct state_t {
-	sprite: spritenum_t,
-	frame: i32,
-	tics: i32,
-	action: actionf_t,
-	nextstate: statenum_t,
-	misc1: i32,
-	misc2: i32,
+	pub sprite: spritenum_t,
+	pub frame: i32,
+	pub tics: i32,
+	pub action: actionf_t,
+	pub nextstate: statenum_t,
+	pub misc1: i32,
+	pub misc2: i32,
 }
 
 #[repr(C)]
@@ -320,29 +320,29 @@ pub enum mobjtype_t {
 
 #[repr(C)]
 pub struct mobjinfo_t {
-	doomednum: i32,
-	spawnstate: statenum_t,
-	spawnhealth: i32,
-	seestate: statenum_t,
-	seesound: sfxenum_t,
-	reactiontime: i32,
-	attacksound: sfxenum_t,
-	painstate: statenum_t,
-	painchance: i32,
-	painsound: sfxenum_t,
-	meleestate: statenum_t,
-	missilestate: statenum_t,
-	deathstate: statenum_t,
-	xdeathstate: statenum_t,
-	deathsound: sfxenum_t,
-	speed: i32,
-	radius: i32,
-	height: i32,
-	mass: i32,
-	damage: i32,
-	activesound: sfxenum_t,
-	flags: u32,
-	raisestate: statenum_t,
+	pub doomednum: i32,
+	pub spawnstate: statenum_t,
+	pub spawnhealth: i32,
+	pub seestate: statenum_t,
+	pub seesound: sfxenum_t,
+	pub reactiontime: i32,
+	pub attacksound: sfxenum_t,
+	pub painstate: statenum_t,
+	pub painchance: i32,
+	pub painsound: sfxenum_t,
+	pub meleestate: statenum_t,
+	pub missilestate: statenum_t,
+	pub deathstate: statenum_t,
+	pub xdeathstate: statenum_t,
+	pub deathsound: sfxenum_t,
+	pub speed: i32,
+	pub radius: i32,
+	pub height: i32,
+	pub mass: i32,
+	pub damage: i32,
+	pub activesound: sfxenum_t,
+	pub flags: u32,
+	pub raisestate: statenum_t,
 }
 
 #[unsafe(no_mangle)]

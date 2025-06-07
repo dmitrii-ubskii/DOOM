@@ -3,7 +3,7 @@
 // Event handling.
 // Input event types.
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum evtype_t {
 	ev_keydown,
 	ev_keyup,

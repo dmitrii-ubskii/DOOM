@@ -25,6 +25,7 @@ use crate::{
 	},
 	doomstat::{gamemode, language, modifiedgame},
 	f_wipe::{wipe_EndScreen, wipe_Melt, wipe_ScreenWipe, wipe_StartScreen},
+	g_game::{G_BeginRecording, G_DeferedPlayDemo, G_RecordDemo, G_Responder, G_TimeDemo},
 	i_system::{I_Error, I_GetTime, I_Init},
 	m_argv::M_CheckParm,
 	myargc, myargv,
@@ -79,9 +80,9 @@ unsafe extern "C" {
 #[unsafe(no_mangle)]
 pub static mut startskill: skill_t = skill_t::sk_baby;
 #[unsafe(no_mangle)]
-pub static mut startepisode: i32 = 0;
+pub static mut startepisode: usize = 0;
 #[unsafe(no_mangle)]
-pub static mut startmap: i32 = 0;
+pub static mut startmap: usize = 0;
 #[unsafe(no_mangle)]
 pub static mut autostart: boolean = 0;
 
@@ -111,7 +112,6 @@ pub extern "C" fn D_PostEvent(ev: &mut event_t) {
 unsafe extern "C" {
 	fn W_CheckNumForName(_: *const c_char) -> i32;
 	fn M_Responder(ev: &mut event_t) -> i32;
-	fn G_Responder(ev: &mut event_t);
 }
 
 // D_ProcessEvents
@@ -328,8 +328,7 @@ unsafe extern "C" {
 	static mut demorecording: boolean;
 	static mut consoleplayer: usize;
 	static mut maketic: usize;
-	static mut netcmds: [[ticcmd_t; MAXPLAYERS]; BACKUPTICS];
-	fn G_BeginRecording();
+	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
 	fn I_InitGraphics();
 	fn I_StartFrame();
 	fn I_StartTic();
@@ -432,7 +431,6 @@ pub extern "C" fn D_AdvanceDemo() {
 
 unsafe extern "C" {
 	static mut usergame: boolean;
-	fn G_DeferedPlayDemo(name: *const c_char);
 	fn S_StartMusic(music_id: musicenum_t);
 }
 
@@ -770,10 +768,8 @@ unsafe extern "C" {
 	fn S_Init(snd_SfxVolume: i32, snd_MusicVolume: i32);
 	fn HU_Init();
 	fn ST_Init();
-	fn G_RecordDemo(name: *mut c_char);
-	fn G_TimeDemo(name: *mut c_char);
 	fn G_LoadGame(name: *mut c_char);
-	fn G_InitNew(skill: skill_t, episode: i32, map: i32);
+	fn G_InitNew(skill: skill_t, episode: usize, map: usize);
 }
 
 macro_rules! cdrom_savegamename {
@@ -792,9 +788,6 @@ macro_rules! savegamename {
 #[unsafe(no_mangle)]
 pub extern "C" fn D_DoomMain() {
 	unsafe {
-		// int			 p;
-		// char					file[256];
-
 		FindResponseFile();
 
 		IdentifyVersion();
@@ -985,7 +978,7 @@ pub extern "C" fn D_DoomMain() {
 		let p = M_CheckParm(c"-episode".as_ptr());
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
-			startepisode = *argvp1 as i32 - b'0' as i32;
+			startepisode = *argvp1 as usize - b'0' as usize;
 			startmap = 1;
 			autostart = 1;
 		}
@@ -1011,10 +1004,10 @@ pub extern "C" fn D_DoomMain() {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			let argvp2 = *myargv.wrapping_add(p + 2);
 			if gamemode == GameMode_t::commercial {
-				startmap = atoi(argvp1);
+				startmap = atoi(argvp1) as usize;
 			} else {
-				startepisode = *argvp1 as i32 - b'0' as i32;
-				startmap = *argvp2 as i32 - b'0' as i32;
+				startepisode = *argvp1 as usize - b'0' as usize;
+				startmap = *argvp2 as usize - b'0' as usize;
 			}
 			autostart = 1;
 		}

@@ -13,6 +13,7 @@ pub mod doomdef;
 pub mod doomstat;
 pub mod dstrings;
 pub mod f_wipe;
+pub mod g_game;
 pub mod i_system;
 pub mod info;
 pub mod m_argv;

@@ -1,4 +1,6 @@
-use std::ffi::CStr;
+use std::ffi::{c_char, CStr};
+
+pub const SAVEGAMENAME: *const c_char = c"doomsav".as_ptr();
 
 const NUM_QUITMESSAGES: usize = 22;
 

@@ -20,6 +20,7 @@ pub enum GameMode_t {
 
 // Mission packs - might be useful for TC stuff?
 #[repr(C)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum GameMission_t {
 	doom,      // DOOM 1
 	doom2,     // DOOM 2
@@ -94,6 +95,19 @@ pub enum skill_t {
 	sk_medium,
 	sk_hard,
 	sk_nightmare,
+}
+
+impl From<u8> for skill_t {
+	fn from(value: u8) -> Self {
+		match value {
+			0 => Self::sk_baby,
+			1 => Self::sk_easy,
+			2 => Self::sk_medium,
+			3 => Self::sk_hard,
+			4 => Self::sk_nightmare,
+			_ => panic!("skill_t out of bounds"),
+		}
+	}
 }
 
 // Key cards.

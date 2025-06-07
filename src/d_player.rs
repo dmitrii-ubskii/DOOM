@@ -12,7 +12,7 @@
 
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::ffi::c_char;
+use std::{ffi::c_char, ptr::null_mut};
 
 use crate::{
 	d_ticcmd::ticcmd_t,
@@ -47,7 +47,7 @@ pub enum cheat_t {
 
 // Extended player object info: player_t
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct player_t {
 	pub mo: *mut mobj_t,
 	pub playerstate: playerstate_t,
@@ -104,7 +104,7 @@ pub struct player_t {
 	pub secretcount: i32,
 
 	// Hint messages.
-	pub message: *mut c_char,
+	pub message: *const c_char,
 
 	// For screen flashing (red or bright).
 	pub damagecount: i32,
@@ -131,31 +131,87 @@ pub struct player_t {
 	pub didsecret: i32,
 }
 
+impl player_t {
+	pub const fn new() -> Self {
+		Self {
+			mo: null_mut(),
+			playerstate: playerstate_t::PST_LIVE,
+			cmd: ticcmd_t {
+				forwardmove: 0,
+				sidemove: 0,
+				angleturn: 0,
+				consistancy: 0,
+				chatchar: 0,
+				buttons: 0,
+			},
+			viewz: 0,
+			viewheight: 0,
+			deltaviewheight: 0,
+			bob: 0,
+			health: 0,
+			armorpoints: 0,
+			armortype: 0,
+			powers: [0; 6],
+			cards: [0; 6],
+			backpack: 0,
+			frags: [0; 4],
+			readyweapon: weapontype_t::wp_pistol,
+			pendingweapon: weapontype_t::wp_fist,
+			weaponowned: [0; 9],
+			ammo: [0; 4],
+			maxammo: [0; 4],
+			attackdown: 0,
+			usedown: 0,
+			cheats: 0,
+			refire: 0,
+			killcount: 0,
+			itemcount: 0,
+			secretcount: 0,
+			message: null_mut(),
+			damagecount: 0,
+			bonuscount: 0,
+			attacker: null_mut(),
+			extralight: 0,
+			fixedcolormap: 0,
+			colormap: 0,
+			psprites: [pspdef_t { state: null_mut(), tics: 0, sx: 0, sy: 0 }; 2],
+			didsecret: 0,
+		}
+	}
+}
+
+impl Default for player_t {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // INTERMISSION
 // Structure passed e.g. to WI_Start(wb)
 #[repr(C)]
+#[derive(Clone, Copy, Debug)]
 pub struct wbplayerstruct_t {
-	in_: i32, // whether the player is in game
+	pub in_: i32, // whether the player is in game
 
 	// Player stats, kills, collected items etc.
-	skills: i32,
-	sitems: i32,
-	ssecret: i32,
-	stime: i32,
-	frags: [i32; 4],
-	score: i32, // current score on entry, modified on return
+	pub skills: i32,
+	pub sitems: i32,
+	pub ssecret: i32,
+	pub stime: usize,
+	pub frags: [i32; 4],
+	pub score: i32, // current score on entry, modified on return
 }
 
 #[repr(C)]
 pub struct wbstartstruct_t {
-	pub epsd: i32, // episode # (0-2)
+	pub epsd: usize, // episode # (0-2)
 
 	// if true, splash the secret level
 	pub didsecret: i32,
 
 	// previous and next levels, origin 0
-	pub last: i32,
-	pub next: i32,
+	pub last: usize,
+	pub next: usize,
 
 	pub maxkills: i32,
 	pub maxitems: i32,
@@ -163,10 +219,10 @@ pub struct wbstartstruct_t {
 	pub maxfrags: i32,
 
 	// the par time
-	pub partime: i32,
+	pub partime: usize,
 
 	// index of this player in game
-	pub pnum: i32,
+	pub pnum: usize,
 
 	pub plyr: [wbplayerstruct_t; MAXPLAYERS],
 }

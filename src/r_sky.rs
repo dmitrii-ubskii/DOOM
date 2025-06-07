@@ -1,6 +1,14 @@
 #![allow(non_snake_case)]
 
-use crate::m_fixed::FRACUNIT;
+use std::ffi::c_char;
+
+use crate::{m_fixed::FRACUNIT, tables::angle_t};
+
+// SKY, store the number for name.
+pub const SKYFLATNAME: *const c_char = c"F_SKY1".as_ptr();
+
+// The sky map is 256*128*4 maps.
+pub const ANGLETOSKYSHIFT: angle_t = 22;
 
 // sky mapping
 #[unsafe(no_mangle)]

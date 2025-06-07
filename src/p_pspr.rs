@@ -18,10 +18,10 @@ pub enum psprnum_t {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct pspdef_t {
-	state: *mut state_t, // a NULL state means not active
-	tics: i32,
-	sx: fixed_t,
-	sy: fixed_t,
+	pub state: *mut state_t, // a NULL state means not active
+	pub tics: i32,
+	pub sx: fixed_t,
+	pub sy: fixed_t,
 }

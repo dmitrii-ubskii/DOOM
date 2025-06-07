@@ -5,7 +5,7 @@
 // Mainly movements/button commands per game tick,
 // plus a checksum for internal state consistency.
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ticcmd_t {
 	pub forwardmove: i8,  // *2048 for move
 	pub sidemove: i8,     // *2048 for move
