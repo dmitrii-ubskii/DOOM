@@ -72,7 +72,7 @@ unsafe extern "C" {
 	static demoplayback: i32;
 	pub static mut players: [player_t; MAXPLAYERS];
 	pub static playeringame: [i32; MAXPLAYERS];
-	static consoleplayer: i32;
+	static mut consoleplayer: i32;
 	fn P_UpdateSpecials();
 	fn P_RespawnSpecials();
 }

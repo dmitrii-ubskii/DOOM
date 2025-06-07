@@ -148,25 +148,25 @@ pub struct wbplayerstruct_t {
 
 #[repr(C)]
 pub struct wbstartstruct_t {
-	epsd: i32, // episode # (0-2)
+	pub epsd: i32, // episode # (0-2)
 
 	// if true, splash the secret level
-	didsecret: i32,
+	pub didsecret: i32,
 
 	// previous and next levels, origin 0
-	last: i32,
-	next: i32,
+	pub last: i32,
+	pub next: i32,
 
-	maxkills: i32,
-	maxitems: i32,
-	maxsecret: i32,
-	maxfrags: i32,
+	pub maxkills: i32,
+	pub maxitems: i32,
+	pub maxsecret: i32,
+	pub maxfrags: i32,
 
 	// the par time
-	partime: i32,
+	pub partime: i32,
 
 	// index of this player in game
-	pnum: i32,
+	pub pnum: i32,
 
-	plyr: [wbplayerstruct_t; MAXPLAYERS],
+	pub plyr: [wbplayerstruct_t; MAXPLAYERS],
 }

@@ -27,10 +27,10 @@ pub struct vertex_t {
 //  updated.
 #[repr(C)]
 pub struct degenmobj_t {
-	thinker: thinker_t, // not used for anything
-	x: fixed_t,
-	y: fixed_t,
-	z: fixed_t,
+	pub thinker: thinker_t, // not used for anything
+	pub x: fixed_t,
+	pub y: fixed_t,
+	pub z: fixed_t,
 }
 
 // The SECTORS record, at runtime.
@@ -74,19 +74,19 @@ pub struct sector_t {
 #[repr(C)]
 pub struct side_t {
 	// add this to the calculated texture column
-	textureoffset: fixed_t,
+	pub textureoffset: fixed_t,
 
 	// add this to the calculated texture top
-	rowoffset: fixed_t,
+	pub rowoffset: fixed_t,
 
 	// Texture indices.
 	// We do not maintain names here.
-	toptexture: i16,
-	bottomtexture: i16,
-	midtexture: i16,
+	pub toptexture: i16,
+	pub bottomtexture: i16,
+	pub midtexture: i16,
 
 	// Sector the SideDef is facing.
-	sector: *mut sector_t,
+	pub sector: *mut sector_t,
 }
 
 // Move clipping aid for LineDefs.

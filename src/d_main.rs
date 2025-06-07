@@ -28,6 +28,7 @@ use crate::{
 	i_system::{I_Error, I_GetTime, I_Init},
 	m_argv::M_CheckParm,
 	myargc, myargv,
+	p_setup::P_Init,
 	p_tick::players,
 	r_defs::patch_t,
 	sounds::musicenum_t,
@@ -765,7 +766,6 @@ unsafe extern "C" {
 	fn M_LoadDefaults();
 	fn M_Init();
 	fn R_Init();
-	fn P_Init();
 	fn D_CheckNetGame();
 	fn S_Init(snd_SfxVolume: i32, snd_MusicVolume: i32);
 	fn HU_Init();

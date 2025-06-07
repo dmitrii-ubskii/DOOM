@@ -2,10 +2,10 @@
 
 use crate::m_fixed::fixed_t;
 
-const BOXTOP: usize = 0;
-const BOXBOTTOM: usize = 1;
-const BOXLEFT: usize = 2;
-const BOXRIGHT: usize = 3;
+pub const BOXTOP: usize = 0;
+pub const BOXBOTTOM: usize = 1;
+pub const BOXLEFT: usize = 2;
+pub const BOXRIGHT: usize = 3;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn M_ClearBox(bbox: &mut [fixed_t; 4]) {
