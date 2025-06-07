@@ -94,8 +94,7 @@ fn Z_ClearZone(zone: *mut memzone_t) {
 }
 
 // Z_Init
-#[unsafe(no_mangle)]
-pub extern "C" fn Z_Init() {
+pub(crate) fn Z_Init() {
 	unsafe {
 		let mut size = 0;
 
@@ -279,52 +278,6 @@ pub extern "C" fn Z_FreeTags(lowtag: usize, hightag: usize) {
 			}
 
 			block = next;
-		}
-	}
-}
-
-// Z_DumpHeap
-// Note: TFileDumpHeap( stdout ) ?
-#[unsafe(no_mangle)]
-pub extern "C" fn Z_DumpHeap(lowtag: usize, hightag: usize) {
-	unsafe {
-		#[allow(static_mut_refs)]
-		{
-			println!("zone size: {}  location: {:p}", (*mainzone).size, mainzone);
-		}
-
-		println!("tag range: {} to {}", lowtag, hightag);
-
-		let mut block = (*mainzone).blocklist.next;
-		loop {
-			if (*block).tag >= lowtag && (*block).tag <= hightag {
-				println!(
-					"block:{:p}	size:{:7}	user:{:p}	tag:{:3}",
-					block,
-					(*block).size,
-					(*block).user,
-					(*block).tag
-				);
-			}
-
-			if std::ptr::eq((*block).next, &(*mainzone).blocklist) {
-				// all blocks have been hit
-				break;
-			}
-
-			if !std::ptr::eq(block.wrapping_byte_add((*block).size), (*block).next) {
-				println!("ERROR: block size does not touch the next block");
-			}
-
-			if !std::ptr::eq((*(*block).next).prev, block) {
-				println!("ERROR: next block doesn't have proper back link");
-			}
-
-			if (*block).user.is_null() && (*(*block).next).user.is_null() {
-				println!("ERROR: two consecutive free blocks");
-			}
-
-			block = (*block).next;
 		}
 	}
 }

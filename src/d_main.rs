@@ -414,8 +414,7 @@ pub extern "C" fn D_PageTicker() {
 }
 
 // D_PageDrawer
-#[unsafe(no_mangle)]
-pub extern "C" fn D_PageDrawer() {
+fn D_PageDrawer() {
 	unsafe {
 		V_DrawPatch(0, 0, 0, W_CacheLumpName(pagename, PU_CACHE) as *const patch_t);
 	}
@@ -522,8 +521,7 @@ pub extern "C" fn D_StartTitle() {
 pub static mut title: [c_char; 128] = [0; 128];
 
 // D_AddFile
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn D_AddFile(file: *const c_char) {
+fn D_AddFile(file: *const c_char) {
 	unsafe {
 		let mut numwadfiles = 0;
 

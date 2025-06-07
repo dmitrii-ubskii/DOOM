@@ -14,7 +14,6 @@ pub extern "C" fn I_Tactile(_on: i32, _off: i32, _total: i32) {
 	// UNUSED.
 }
 
-#[unsafe(no_mangle)]
 static mut emptycmd: ticcmd_t =
 	ticcmd_t { forwardmove: 0, sidemove: 0, angleturn: 0, consistancy: 0, chatchar: 0, buttons: 0 };
 #[unsafe(no_mangle)]
@@ -22,8 +21,7 @@ pub extern "C" fn I_BaseTiccmd() -> *mut ticcmd_t {
 	&raw mut emptycmd
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn I_ZoneBase(size: &mut usize) -> *mut u8 {
+pub(crate) fn I_ZoneBase(size: &mut usize) -> *mut u8 {
 	unsafe {
 		*size = mb_used * 1024 * 1024;
 		malloc(*size) as _
@@ -94,14 +92,7 @@ pub extern "C" fn I_WaitVBL(_count: i32) {
 	// #endif
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn I_BeginRead() {}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn I_EndRead() {}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn I_AllocLow(length: usize) -> *mut u8 {
+pub(crate) fn I_AllocLow(length: usize) -> *mut u8 {
 	unsafe {
 		let mem = malloc(length);
 		memset(mem, 0, length);

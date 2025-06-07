@@ -275,8 +275,7 @@ pub unsafe extern "C" fn V_DrawPatchDirect(x: usize, y: usize, scrn: usize, patc
 
 // V_DrawBlock
 // Draw a linear block of pixels into the view buffer.
-#[unsafe(no_mangle)]
-pub extern "C" fn V_DrawBlock(
+pub(crate) fn V_DrawBlock(
 	x: usize,
 	y: usize,
 	scrn: usize,
@@ -303,37 +302,8 @@ pub extern "C" fn V_DrawBlock(
 	}
 }
 
-// V_GetBlock
-// Gets a linear block of pixels from the view buffer.
-#[unsafe(no_mangle)]
-pub extern "C" fn V_GetBlock(
-	x: usize,
-	y: usize,
-	scrn: usize,
-	width: usize,
-	height: usize,
-	mut dest: *mut u8,
-) {
-	unsafe {
-		// #ifdef RANGECHECK
-		if x + width > SCREENWIDTH || y + height > SCREENHEIGHT || scrn > 4 {
-			I_Error(c"Bad V_DrawBlock".as_ptr());
-		}
-		// #endif
-
-		let mut src = screens[scrn].wrapping_byte_add(y * SCREENWIDTH + x);
-
-		for _ in 0..height {
-			memcpy(dest as *mut c_void, src as *mut c_void, width);
-			src = src.wrapping_byte_add(SCREENWIDTH);
-			dest = dest.wrapping_byte_add(width);
-		}
-	}
-}
-
 // V_Init
-#[unsafe(no_mangle)]
-pub extern "C" fn V_Init() {
+pub(crate) fn V_Init() {
 	unsafe {
 		// stick these in low dos memory on PCs
 
