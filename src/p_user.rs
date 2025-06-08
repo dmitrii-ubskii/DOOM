@@ -170,7 +170,7 @@ fn P_DeathThink(player: &mut player_t) {
 		onground = mo.z <= mo.floorz;
 		P_CalcHeight(player);
 
-		if player.attacker != mo {
+		if !player.attacker.is_null() && player.attacker != mo {
 			let attacker = &mut *player.attacker;
 			let angle = R_PointToAngle2(mo.x, mo.y, attacker.x, attacker.y);
 
