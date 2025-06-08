@@ -1375,7 +1375,6 @@ fn G_DoNewGame() {
 	}
 }
 
-#[unsafe(no_mangle)]
 pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 	unsafe {
 		if paused != 0 {
