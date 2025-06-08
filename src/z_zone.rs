@@ -280,8 +280,7 @@ pub(crate) fn Z_FreeTags(lowtag: usize, hightag: usize) {
 }
 
 // Z_CheckHeap
-#[unsafe(no_mangle)]
-pub extern "C" fn Z_CheckHeap() {
+pub(crate) fn Z_CheckHeap() {
 	unsafe {
 		let mut block = (*mainzone).blocklist.next;
 		loop {
@@ -321,25 +320,5 @@ pub extern "C" fn Z_ChangeTag2(ptr: *mut c_void, tag: usize) {
 		}
 
 		(*block).tag = tag;
-	}
-}
-
-// Z_FreeMemory
-#[unsafe(no_mangle)]
-pub extern "C" fn Z_FreeMemory() -> usize {
-	unsafe {
-		let mut free = 0;
-
-		let mut block = (*mainzone).blocklist.next;
-		loop {
-			if std::ptr::eq((*block).next, &(*mainzone).blocklist) {
-				break;
-			}
-			if (*block).user.is_null() || (*block).tag >= PU_PURGELEVEL {
-				free += (*block).size;
-			}
-			block = (*block).next;
-		}
-		free
 	}
 }

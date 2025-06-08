@@ -911,7 +911,6 @@ unsafe extern "C" {
 // G_DeathMatchSpawnPlayer
 // Spawns a player at one of the random death match spots
 // called at level load and each death
-#[unsafe(no_mangle)]
 pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 	unsafe {
 		let selections = deathmatch_p.offset_from(&raw mut deathmatchstarts[0]);

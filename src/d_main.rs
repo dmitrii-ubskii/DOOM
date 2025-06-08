@@ -26,7 +26,9 @@ use crate::{
 	doomstat::{gamemode, language, modifiedgame},
 	f_wipe::{wipe_EndScreen, wipe_Melt, wipe_ScreenWipe, wipe_StartScreen},
 	g_game::{
-		G_BeginRecording, G_DeferedPlayDemo, G_InitNew, G_RecordDemo, G_Responder, G_TimeDemo,
+		G_BeginRecording, G_BuildTiccmd, G_DeferedPlayDemo, G_InitNew, G_RecordDemo, G_Responder,
+		G_Ticker, G_TimeDemo, consoleplayer, deathmatch, displayplayer, forwardmove, gametic,
+		netgame, sidemove, singledemo, statcopy, usergame,
 	},
 	i_system::{I_Error, I_GetTime, I_Init},
 	m_argv::M_CheckParm,
@@ -36,7 +38,7 @@ use crate::{
 	r_defs::patch_t,
 	sounds::musicenum_t,
 	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
-	w_wad::W_InitMultipleFiles,
+	w_wad::{W_CheckNumForName, W_InitMultipleFiles},
 	z_zone::{PU_CACHE, Z_Init},
 };
 
@@ -70,10 +72,6 @@ pub static mut drone: boolean = 0;
 
 #[unsafe(no_mangle)]
 pub static mut singletics: boolean = 0; // debug flag to cancel adaptiveness
-
-//extern int soundVolume;
-//extern  int	sfxVolume;
-//extern  int	musicVolume;
 
 unsafe extern "C" {
 	static mut inhelpscreens: boolean;
@@ -112,7 +110,6 @@ pub extern "C" fn D_PostEvent(ev: &mut event_t) {
 }
 
 unsafe extern "C" {
-	fn W_CheckNumForName(_: *const c_char) -> i32;
 	fn M_Responder(ev: &mut event_t) -> i32;
 }
 
@@ -147,8 +144,6 @@ pub static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
 
 unsafe extern "C" {
 	static mut automapactive: boolean;
-	static mut displayplayer: usize;
-	static mut gametic: i32;
 	static mut menuactive: boolean;
 	static mut nodrawers: boolean;
 	static mut paused: boolean;
@@ -328,16 +323,13 @@ fn D_Display() {
 //  D_DoomLoop
 unsafe extern "C" {
 	static mut demorecording: boolean;
-	static mut consoleplayer: usize;
 	static mut maketic: usize;
 	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
 	fn I_InitGraphics();
 	fn I_StartFrame();
 	fn I_StartTic();
 	fn M_Ticker();
-	fn G_Ticker();
 	fn TryRunTics();
-	fn G_BuildTiccmd(cmd: *mut ticcmd_t);
 	fn S_UpdateSounds(listener: *mut c_void);
 }
 
@@ -423,7 +415,6 @@ fn D_PageDrawer() {
 
 // D_AdvanceDemo
 // Called after each demo or intro demosequence finishes
-#[unsafe(no_mangle)]
 pub(crate) fn D_AdvanceDemo() {
 	unsafe {
 		advancedemo = 1;
@@ -431,7 +422,6 @@ pub(crate) fn D_AdvanceDemo() {
 }
 
 unsafe extern "C" {
-	static mut usergame: boolean;
 	fn S_StartMusic(music_id: musicenum_t);
 }
 
@@ -757,9 +747,6 @@ fn FindResponseFile() {
 }
 
 unsafe extern "C" {
-	static mut deathmatch: boolean;
-	static mut singledemo: boolean;
-	static mut netgame: boolean;
 	static mut snd_SfxVolume: i32;
 	static mut snd_MusicVolume: i32;
 	fn M_LoadDefaults();
@@ -879,11 +866,6 @@ pub extern "C" fn D_DoomMain() {
 		// turbo option
 		if let p @ 1.. = M_CheckParm(c"-turbo".as_ptr()) {
 			let mut scale = 200;
-
-			unsafe extern "C" {
-				static mut forwardmove: [i32; 2];
-				static mut sidemove: [i32; 2];
-			}
 
 			if p < myargc - 1 {
 				scale = atoi(*myargv.wrapping_add(p + 1));
@@ -1131,11 +1113,6 @@ pub extern "C" fn D_DoomMain() {
 		// check for a driver that wants intermission stats
 		let p = M_CheckParm(c"-statcopy".as_ptr());
 		if p != 0 && p < myargc - 1 {
-			// for statistics driver
-			unsafe extern "C" {
-				static mut statcopy: *mut c_void;
-			}
-
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			statcopy = atoi(argvp1) as *mut c_void;
 			printf(c"External statistics registered.\n".as_ptr());

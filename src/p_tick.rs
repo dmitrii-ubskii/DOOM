@@ -17,8 +17,7 @@ pub static mut leveltime: usize = 0;
 // but the first element must be thinker_t.
 
 // P_InitThinkers
-#[unsafe(no_mangle)]
-pub extern "C" fn P_InitThinkers() {
+pub(crate) fn P_InitThinkers() {
 	unsafe {
 		thinkercap.prev = &raw mut thinkercap;
 		thinkercap.next = &raw mut thinkercap;

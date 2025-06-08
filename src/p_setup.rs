@@ -519,8 +519,7 @@ unsafe extern "C" {
 
 // NOT called by W_Ticker. Fixme.
 // P_SetupLevel
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill: skill_t) {
+pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill: skill_t) {
 	unsafe {
 		totalkills = 0;
 		totalitems = 0;
