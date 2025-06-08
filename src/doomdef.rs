@@ -112,6 +112,7 @@ impl From<u8> for skill_t {
 
 // Key cards.
 #[repr(C)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum card_t {
 	it_bluecard,
 	it_yellowcard,
@@ -147,6 +148,7 @@ pub enum weapontype_t {
 
 // Ammunition types defined.
 #[repr(C)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum ammotype_t {
 	am_clip,  // Pistol / chaingun ammo.
 	am_shell, // Shotgun / double barreled shotgun.
@@ -156,8 +158,21 @@ pub enum ammotype_t {
 	am_noammo, // Unlimited for chainsaw / fist.
 }
 
+impl From<u8> for ammotype_t {
+	fn from(value: u8) -> Self {
+		match value {
+			0 => Self::am_clip,
+			1 => Self::am_shell,
+			2 => Self::am_cell,
+			3 => Self::am_misl,
+			_ => panic!("ammo_t out of bounds"),
+		}
+	}
+}
+
 // Power up artifacts.
 #[repr(C)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum powertype_t {
 	pw_invulnerability,
 	pw_strength,

@@ -1,4 +1,4 @@
-use std::ffi::CStr;
+use std::ffi::{CStr, c_char};
 
 //	Printed strings for translation
 
@@ -39,65 +39,61 @@ pub const GAMMALVL2: &CStr = c"Gamma correction level 2";
 pub const GAMMALVL3: &CStr = c"Gamma correction level 3";
 pub const GAMMALVL4: &CStr = c"Gamma correction level 4";
 pub const EMPTYSTRING: &CStr = c"empty slot";
-
-//
-//	P_inter.C
-//
-pub const GOTARMOR: &CStr = c"Picked up the armor.";
-pub const GOTMEGA: &CStr = c"Picked up the MegaArmor!";
-pub const GOTHTHBONUS: &CStr = c"Picked up a health bonus.";
-pub const GOTARMBONUS: &CStr = c"Picked up an armor bonus.";
-pub const GOTSTIM: &CStr = c"Picked up a stimpack.";
-pub const GOTMEDINEED: &CStr = c"Picked up a medikit that you REALLY need!";
-pub const GOTMEDIKIT: &CStr = c"Picked up a medikit.";
-pub const GOTSUPER: &CStr = c"Supercharge!";
-
-pub const GOTBLUECARD: &CStr = c"Picked up a blue keycard.";
-pub const GOTYELWCARD: &CStr = c"Picked up a yellow keycard.";
-pub const GOTREDCARD: &CStr = c"Picked up a red keycard.";
-pub const GOTBLUESKUL: &CStr = c"Picked up a blue skull key.";
-pub const GOTYELWSKUL: &CStr = c"Picked up a yellow skull key.";
-pub const GOTREDSKULL: &CStr = c"Picked up a red skull key.";
-
-pub const GOTINVUL: &CStr = c"Invulnerability!";
-pub const GOTBERSERK: &CStr = c"Berserk!";
-pub const GOTINVIS: &CStr = c"Partial Invisibility";
-pub const GOTSUIT: &CStr = c"Radiation Shielding Suit";
-pub const GOTMAP: &CStr = c"Computer Area Map";
-pub const GOTVISOR: &CStr = c"Light Amplification Visor";
-pub const GOTMSPHERE: &CStr = c"MegaSphere!";
-
-pub const GOTCLIP: &CStr = c"Picked up a clip.";
-pub const GOTCLIPBOX: &CStr = c"Picked up a box of bullets.";
-pub const GOTROCKET: &CStr = c"Picked up a rocket.";
-pub const GOTROCKBOX: &CStr = c"Picked up a box of rockets.";
-pub const GOTCELL: &CStr = c"Picked up an energy cell.";
-pub const GOTCELLBOX: &CStr = c"Picked up an energy cell pack.";
-pub const GOTSHELLS: &CStr = c"Picked up 4 shotgun shells.";
-pub const GOTSHELLBOX: &CStr = c"Picked up a box of shotgun shells.";
-pub const GOTBACKPACK: &CStr = c"Picked up a backpack full of ammo!";
-
-pub const GOTBFG9000: &CStr = c"You got the BFG9000!  Oh, yes.";
-pub const GOTCHAINGUN: &CStr = c"You got the chaingun!";
-pub const GOTCHAINSAW: &CStr = c"A chainsaw!  Find some meat!";
-pub const GOTLAUNCHER: &CStr = c"You got the rocket launcher!";
-pub const GOTPLASMA: &CStr = c"You got the plasma gun!";
-pub const GOTSHOTGUN: &CStr = c"You got the shotgun!";
-pub const GOTSHOTGUN2: &CStr = c"You got the super shotgun!";
-
-//
-// P_Doors.C
-//
-pub const PD_BLUEO: &CStr = c"You need a blue key to activate this object";
-pub const PD_REDO: &CStr = c"You need a red key to activate this object";
-pub const PD_YELLOWO: &CStr = c"You need a yellow key to activate this object";
-pub const PD_BLUEK: &CStr = c"You need a blue key to open this door";
-pub const PD_REDK: &CStr = c"You need a red key to open this door";
-pub const PD_YELLOWK: &CStr = c"You need a yellow key to open this door";
 */
 
+//	P_inter.C
+pub const GOTARMOR: *const c_char = c"Picked up the armor.".as_ptr();
+pub const GOTMEGA: *const c_char = c"Picked up the MegaArmor!".as_ptr();
+pub const GOTHTHBONUS: *const c_char = c"Picked up a health bonus.".as_ptr();
+pub const GOTARMBONUS: *const c_char = c"Picked up an armor bonus.".as_ptr();
+pub const GOTSTIM: *const c_char = c"Picked up a stimpack.".as_ptr();
+pub const GOTMEDINEED: *const c_char = c"Picked up a medikit that you REALLY need!".as_ptr();
+pub const GOTMEDIKIT: *const c_char = c"Picked up a medikit.".as_ptr();
+pub const GOTSUPER: *const c_char = c"Supercharge!".as_ptr();
+
+pub const GOTBLUECARD: *const c_char = c"Picked up a blue keycard.".as_ptr();
+pub const GOTYELWCARD: *const c_char = c"Picked up a yellow keycard.".as_ptr();
+pub const GOTREDCARD: *const c_char = c"Picked up a red keycard.".as_ptr();
+pub const GOTBLUESKUL: *const c_char = c"Picked up a blue skull key.".as_ptr();
+pub const GOTYELWSKUL: *const c_char = c"Picked up a yellow skull key.".as_ptr();
+pub const GOTREDSKULL: *const c_char = c"Picked up a red skull key.".as_ptr();
+
+pub const GOTINVUL: *const c_char = c"Invulnerability!".as_ptr();
+pub const GOTBERSERK: *const c_char = c"Berserk!".as_ptr();
+pub const GOTINVIS: *const c_char = c"Partial Invisibility".as_ptr();
+pub const GOTSUIT: *const c_char = c"Radiation Shielding Suit".as_ptr();
+pub const GOTMAP: *const c_char = c"Computer Area Map".as_ptr();
+pub const GOTVISOR: *const c_char = c"Light Amplification Visor".as_ptr();
+pub const GOTMSPHERE: *const c_char = c"MegaSphere!".as_ptr();
+
+pub const GOTCLIP: *const c_char = c"Picked up a clip.".as_ptr();
+pub const GOTCLIPBOX: *const c_char = c"Picked up a box of bullets.".as_ptr();
+pub const GOTROCKET: *const c_char = c"Picked up a rocket.".as_ptr();
+pub const GOTROCKBOX: *const c_char = c"Picked up a box of rockets.".as_ptr();
+pub const GOTCELL: *const c_char = c"Picked up an energy cell.".as_ptr();
+pub const GOTCELLBOX: *const c_char = c"Picked up an energy cell pack.".as_ptr();
+pub const GOTSHELLS: *const c_char = c"Picked up 4 shotgun shells.".as_ptr();
+pub const GOTSHELLBOX: *const c_char = c"Picked up a box of shotgun shells.".as_ptr();
+pub const GOTBACKPACK: *const c_char = c"Picked up a backpack full of ammo!".as_ptr();
+
+pub const GOTBFG9000: *const c_char = c"You got the BFG9000!  Oh, yes.".as_ptr();
+pub const GOTCHAINGUN: *const c_char = c"You got the chaingun!".as_ptr();
+pub const GOTCHAINSAW: *const c_char = c"A chainsaw!  Find some meat!".as_ptr();
+pub const GOTLAUNCHER: *const c_char = c"You got the rocket launcher!".as_ptr();
+pub const GOTPLASMA: *const c_char = c"You got the plasma gun!".as_ptr();
+pub const GOTSHOTGUN: *const c_char = c"You got the shotgun!".as_ptr();
+pub const GOTSHOTGUN2: *const c_char = c"You got the super shotgun!".as_ptr();
+
+// P_Doors.C
+pub const PD_BLUEO: *const c_char = c"You need a blue key to activate this object".as_ptr();
+pub const PD_REDO: *const c_char = c"You need a red key to activate this object".as_ptr();
+pub const PD_YELLOWO: *const c_char = c"You need a yellow key to activate this object".as_ptr();
+pub const PD_BLUEK: *const c_char = c"You need a blue key to open this door".as_ptr();
+pub const PD_REDK: *const c_char = c"You need a red key to open this door".as_ptr();
+pub const PD_YELLOWK: *const c_char = c"You need a yellow key to open this door".as_ptr();
+
 //	G_game.C
-pub const GGSAVED: &CStr = c"game saved.";
+pub const GGSAVED: *const c_char = c"game saved.".as_ptr();
 
 /*
 //	HU_stuff.C
@@ -489,7 +485,7 @@ pub const STSTR_CLEV: &CStr = c"Changing Level...";
 "BLAZE THROUGH THIS ONE!\n"
 
 
-// after map 06	
+// after map 06
 
 #define P1TEXT  \
 "You gloat over the steaming carcass of the\n"\

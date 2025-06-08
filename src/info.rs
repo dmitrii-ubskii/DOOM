@@ -37,6 +37,7 @@ pub enum spritenum_t {
 
 #[repr(C)]
 #[rustfmt::skip]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum statenum_t {
 	S_NULL, S_LIGHTDONE,
 	S_PUNCH, S_PUNCHDOWN, S_PUNCHUP, S_PUNCH1, S_PUNCH2, S_PUNCH3, S_PUNCH4, S_PUNCH5,

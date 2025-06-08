@@ -108,7 +108,7 @@ pub struct player_t {
 
 	// For screen flashing (red or bright).
 	pub damagecount: i32,
-	pub bonuscount: i32,
+	pub bonuscount: usize,
 
 	// Who did damage (NULL for floors/ceilings).
 	pub attacker: *mut mobj_t,
@@ -181,9 +181,9 @@ impl player_t {
 }
 
 impl Default for player_t {
-    fn default() -> Self {
-        Self::new()
-    }
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 // INTERMISSION

@@ -22,6 +22,7 @@ pub mod m_cheat;
 pub mod m_fixed;
 pub mod m_random;
 pub mod m_swap;
+pub mod p_inter;
 pub mod p_lights;
 pub mod p_local;
 pub mod p_mobj;

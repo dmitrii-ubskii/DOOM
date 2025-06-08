@@ -10,15 +10,15 @@ use crate::{d_ticcmd::ticcmd_t, doomdef::TICRATE};
 static mut mb_used: usize = 6;
 
 #[unsafe(no_mangle)]
-pub extern "C" fn I_Tactile(_on: i32, _off: i32, _total: i32) {
+pub(crate) fn I_Tactile(_on: i32, _off: i32, _total: i32) {
 	// UNUSED.
 }
 
 static mut emptycmd: ticcmd_t =
 	ticcmd_t { forwardmove: 0, sidemove: 0, angleturn: 0, consistancy: 0, chatchar: 0, buttons: 0 };
 #[unsafe(no_mangle)]
-pub extern "C" fn I_BaseTiccmd() -> *mut ticcmd_t {
-	&raw mut emptycmd
+pub(crate) fn I_BaseTiccmd() -> *const ticcmd_t {
+	&raw const emptycmd
 }
 
 pub(crate) fn I_ZoneBase(size: &mut usize) -> *mut u8 {

@@ -8,12 +8,12 @@ use crate::{
 // Weapon info: sprite frames, ammunition use.
 #[repr(C)]
 pub struct weaponinfo_t {
-	ammo: ammotype_t,
-	upstate: statenum_t,
-	downstate: statenum_t,
-	readystate: statenum_t,
-	atkstate: statenum_t,
-	flashstate: statenum_t,
+	pub ammo: ammotype_t,
+	pub upstate: statenum_t,
+	pub downstate: statenum_t,
+	pub readystate: statenum_t,
+	pub atkstate: statenum_t,
+	pub flashstate: statenum_t,
 }
 
 // PSPRITE ACTIONS for waepons.

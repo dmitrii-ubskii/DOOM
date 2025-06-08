@@ -25,7 +25,9 @@ use crate::{
 	},
 	doomstat::{gamemode, language, modifiedgame},
 	f_wipe::{wipe_EndScreen, wipe_Melt, wipe_ScreenWipe, wipe_StartScreen},
-	g_game::{G_BeginRecording, G_DeferedPlayDemo, G_RecordDemo, G_Responder, G_TimeDemo},
+	g_game::{
+		G_BeginRecording, G_DeferedPlayDemo, G_InitNew, G_RecordDemo, G_Responder, G_TimeDemo,
+	},
 	i_system::{I_Error, I_GetTime, I_Init},
 	m_argv::M_CheckParm,
 	myargc, myargv,
@@ -768,7 +770,6 @@ unsafe extern "C" {
 	fn HU_Init();
 	fn ST_Init();
 	fn G_LoadGame(name: *mut c_char);
-	fn G_InitNew(skill: skill_t, episode: usize, map: usize);
 }
 
 macro_rules! cdrom_savegamename {

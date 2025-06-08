@@ -1330,7 +1330,7 @@ fn G_DoSaveGame() {
 		gameaction = gameaction_t::ga_nothing;
 		savedescription[0] = 0;
 
-		players[consoleplayer].message = GGSAVED.as_ptr();
+		players[consoleplayer].message = GGSAVED;
 
 		// draw the pattern into the back screen
 		R_FillBackScreen();

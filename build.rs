@@ -14,7 +14,6 @@ fn main() {
 			"linuxdoom-1.10/p_doors.c",
 			"linuxdoom-1.10/p_enemy.c",
 			"linuxdoom-1.10/p_floor.c",
-			"linuxdoom-1.10/p_inter.c",
 			"linuxdoom-1.10/p_map.c",
 			"linuxdoom-1.10/p_maputl.c",
 			"linuxdoom-1.10/p_plats.c",
