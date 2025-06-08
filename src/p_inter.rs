@@ -749,7 +749,7 @@ unsafe extern "C" {
 // Source can be NULL for slime, barrel explosions
 // and other environmental stuff.
 #[unsafe(no_mangle)]
-pub extern "C" fn P_DamageMobj(
+pub unsafe extern "C" fn P_DamageMobj(
 	target: &mut mobj_t,
 	inflictor: *mut mobj_t,
 	source: *mut mobj_t,

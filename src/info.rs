@@ -293,7 +293,7 @@ pub struct state_t {
 
 #[repr(C)]
 #[rustfmt::skip]
-#[derive(PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum mobjtype_t {
 	MT_PLAYER, MT_POSSESSED, MT_SHOTGUY, MT_VILE, MT_FIRE, MT_UNDEAD, 
 	MT_TRACER, MT_SMOKE, MT_FATSO, MT_FATSHOT, MT_CHAINGUY, MT_TROOP, MT_SERGEANT, 

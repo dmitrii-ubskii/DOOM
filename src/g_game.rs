@@ -32,6 +32,10 @@ use crate::{
 	myargc, myargv,
 	p_local::MAXHEALTH,
 	p_mobj::{MF_SHADOW, mobj_t},
+	p_saveg::{
+		P_ArchivePlayers, P_ArchiveSpecials, P_ArchiveThinkers, P_ArchiveWorld, P_UnArchivePlayers,
+		P_UnArchiveSpecials, P_UnArchiveThinkers, P_UnArchiveWorld, save_p,
+	},
 	p_setup::{P_SetupLevel, deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::leveltime,
 	r_defs::subsector_t,
@@ -1172,13 +1176,7 @@ pub unsafe extern "C" fn G_LoadGame(name: *const c_char) {
 pub const VERSIONSIZE: usize = 16;
 
 unsafe extern "C" {
-	static mut save_p: *mut u8;
-
 	fn M_ReadFile(name: *const c_char, buffer: *mut *mut u8) -> i32;
-	fn P_UnArchivePlayers();
-	fn P_UnArchiveWorld();
-	fn P_UnArchiveThinkers();
-	fn P_UnArchiveSpecials();
 	fn R_ExecuteSetViewSize();
 	fn R_FillBackScreen();
 }
@@ -1258,10 +1256,6 @@ pub unsafe extern "C" fn G_SaveGame(slot: usize, description: *const c_char) {
 }
 
 unsafe extern "C" {
-	fn P_ArchivePlayers();
-	fn P_ArchiveWorld();
-	fn P_ArchiveThinkers();
-	fn P_ArchiveSpecials();
 	fn M_WriteFile(name: *const c_char, source: *mut c_void, length: usize) -> boolean;
 
 }

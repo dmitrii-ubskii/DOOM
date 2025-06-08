@@ -21,7 +21,6 @@ fn main() {
 			"linuxdoom-1.10/p_spec.c",
 			"linuxdoom-1.10/p_switch.c",
 			"linuxdoom-1.10/p_mobj.c",
-			"linuxdoom-1.10/p_saveg.c",
 			"linuxdoom-1.10/r_bsp.c",
 			"linuxdoom-1.10/r_data.c",
 			"linuxdoom-1.10/r_draw.c",

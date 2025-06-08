@@ -131,18 +131,18 @@ pub enum plattype_e {
 
 #[repr(C)]
 pub struct plat_t {
-	thinker: thinker_t,
-	sector: *mut sector_t,
-	speed: fixed_t,
-	low: fixed_t,
-	high: fixed_t,
-	wait: i32,
-	count: i32,
-	status: plat_e,
-	oldstatus: plat_e,
-	crush: i32,
-	tag: i32,
-	ty: plattype_e,
+	pub thinker: thinker_t,
+	pub sector: *mut sector_t,
+	pub speed: fixed_t,
+	pub low: fixed_t,
+	pub high: fixed_t,
+	pub wait: i32,
+	pub count: i32,
+	pub status: plat_e,
+	pub oldstatus: plat_e,
+	pub crush: i32,
+	pub tag: i32,
+	pub ty: plattype_e,
 }
 
 pub const PLATWAIT: u32 = 3;
@@ -169,20 +169,20 @@ pub enum vldoor_e {
 
 #[repr(C)]
 pub struct vldoor_t {
-	thinker: thinker_t,
-	ty: vldoor_e,
-	sector: *mut sector_t,
-	topheight: fixed_t,
-	speed: fixed_t,
+	pub thinker: thinker_t,
+	pub ty: vldoor_e,
+	pub sector: *mut sector_t,
+	pub topheight: fixed_t,
+	pub speed: fixed_t,
 
 	// 1 = up, 0 = waiting at top, -1 = down
-	direction: i32,
+	pub direction: i32,
 
 	// tics to wait at the top
-	topwait: i32,
+	pub topwait: i32,
 	// (keep in case a door going down is reset)
 	// when it reaches 0, start going down
-	topcountdown: i32,
+	pub topcountdown: i32,
 }
 
 pub const VDOORSPEED: i32 = FRACUNIT * 2;
@@ -201,20 +201,20 @@ pub enum ceiling_e {
 
 #[repr(C)]
 pub struct ceiling_t {
-	thinker: thinker_t,
-	ty: ceiling_e,
-	sector: *mut sector_t,
-	bottomheight: fixed_t,
-	topheight: fixed_t,
-	speed: fixed_t,
-	crush: i32,
+	pub thinker: thinker_t,
+	pub ty: ceiling_e,
+	pub sector: *mut sector_t,
+	pub bottomheight: fixed_t,
+	pub topheight: fixed_t,
+	pub speed: fixed_t,
+	pub crush: i32,
 
 	// 1 = up, 0 = waiting, -1 = down
-	direction: i32,
+	pub direction: i32,
 
 	// ID
-	tag: i32,
-	olddirection: i32,
+	pub tag: i32,
+	pub olddirection: i32,
 }
 
 pub const CEILSPEED: i32 = FRACUNIT;
@@ -269,15 +269,15 @@ pub enum stair_e {
 
 #[repr(C)]
 pub struct floormove_t {
-	thinker: thinker_t,
-	ty: floor_e,
-	crush: i32,
-	sector: *mut sector_t,
-	direction: i32,
-	newspecial: i32,
-	texture: i16,
-	floordestheight: fixed_t,
-	speed: fixed_t,
+	pub thinker: thinker_t,
+	pub ty: floor_e,
+	pub crush: i32,
+	pub sector: *mut sector_t,
+	pub direction: i32,
+	pub newspecial: i32,
+	pub texture: i16,
+	pub floordestheight: fixed_t,
+	pub speed: fixed_t,
 }
 
 pub const FLOORSPEED: i32 = FRACUNIT;

@@ -74,8 +74,7 @@ pub extern "C" fn P_SpawnFireFlicker(sector: &mut sector_t) {
 
 // T_LightFlash
 // Do flashing lights.
-#[unsafe(no_mangle)]
-pub extern "C" fn T_LightFlash(flash: &mut lightflash_t) {
+fn T_LightFlash(flash: &mut lightflash_t) {
 	unsafe {
 		flash.count -= 1;
 		if (flash.count) != 0 {
@@ -92,7 +91,7 @@ pub extern "C" fn T_LightFlash(flash: &mut lightflash_t) {
 	}
 }
 
-extern "C" fn T_LightFlash_action(flash: *mut c_void) {
+pub(crate) unsafe extern "C" fn T_LightFlash_action(flash: *mut c_void) {
 	unsafe { T_LightFlash(&mut *(flash as *mut lightflash_t)) };
 }
 
@@ -125,8 +124,7 @@ pub extern "C" fn P_SpawnLightFlash(sector: &mut sector_t) {
 // STROBE LIGHT FLASHING
 
 // T_StrobeFlash
-#[unsafe(no_mangle)]
-pub extern "C" fn T_StrobeFlash(flash: &mut strobe_t) {
+fn T_StrobeFlash(flash: &mut strobe_t) {
 	unsafe {
 		flash.count -= 1;
 		if (flash.count) != 0 {
@@ -143,7 +141,7 @@ pub extern "C" fn T_StrobeFlash(flash: &mut strobe_t) {
 	}
 }
 
-extern "C" fn T_StrobeFlash_action(flash: *mut c_void) {
+pub(crate) extern "C" fn T_StrobeFlash_action(flash: *mut c_void) {
 	unsafe { T_StrobeFlash(&mut *(flash as *mut strobe_t)) };
 }
 
@@ -259,8 +257,7 @@ pub extern "C" fn EV_LightTurnOn(line: &mut line_t, mut bright: i32) {
 }
 
 // Spawn glowing light
-#[unsafe(no_mangle)]
-pub extern "C" fn T_Glow(g: &mut glow_t) {
+fn T_Glow(g: &mut glow_t) {
 	match g.direction {
 		-1 => {
 			// DOWN
@@ -285,7 +282,7 @@ pub extern "C" fn T_Glow(g: &mut glow_t) {
 	}
 }
 
-extern "C" fn T_Glow_action(g: *mut c_void) {
+pub(crate) extern "C" fn T_Glow_action(g: *mut c_void) {
 	unsafe { T_Glow(&mut *(g as *mut glow_t)) };
 }
 

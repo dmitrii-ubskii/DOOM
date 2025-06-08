@@ -27,6 +27,7 @@ pub mod p_lights;
 pub mod p_local;
 pub mod p_mobj;
 pub mod p_pspr;
+pub mod p_saveg;
 pub mod p_setup;
 pub mod p_sight;
 pub mod p_spec;
