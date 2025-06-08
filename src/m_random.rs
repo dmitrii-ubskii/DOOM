@@ -1,8 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 #[rustfmt::skip]
-#[unsafe(no_mangle)]
-pub static rndtable: [u8; 256] = [
+const rndtable: [u8; 256] = [
 	0,    8,    109,  220,  222,  241,  149,  107,  75,   248,  254,  140,  16,   66,   74,   21,
 	211,  47,   80,   242,  154,  27,   205,  128,  161,  89,   77,   36,   95,   110,  85,   48,
 	212,  140,  211,  249,  22,   79,   200,  50,   28,   188,  52,   140,  202,  120,  68,   145,
@@ -21,10 +20,8 @@ pub static rndtable: [u8; 256] = [
 	98,   43,   39,   175,  254,  145,  190,  84,   118,  222,  187,  136,  120,  163,  236,  249,
 ];
 
-#[unsafe(no_mangle)]
-pub static mut rndindex: i32 = 0;
-#[unsafe(no_mangle)]
-pub static mut prndindex: i32 = 0;
+pub(crate) static mut rndindex: i32 = 0;
+static mut prndindex: i32 = 0;
 
 // Which one is deterministic?
 #[unsafe(no_mangle)]
@@ -43,8 +40,7 @@ pub extern "C" fn M_Random() -> i32 {
 	}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn M_ClearRandom() {
+pub(crate) fn M_ClearRandom() {
 	unsafe {
 		rndindex = 0;
 		prndindex = 0;

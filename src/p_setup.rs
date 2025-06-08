@@ -11,6 +11,7 @@ use crate::{
 	},
 	doomdef::{GameMode_t, MAXPLAYERS, skill_t},
 	doomstat::gamemode,
+	g_game::G_DeathMatchSpawnPlayer,
 	i_system::I_Error,
 	info::sprnames,
 	m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP, M_AddToBox, M_ClearBox},
@@ -511,7 +512,6 @@ unsafe extern "C" {
 	fn S_Start();
 	fn P_SpawnSpecials();
 	fn R_PrecacheLevel();
-	fn G_DeathMatchSpawnPlayer(player: usize);
 	fn P_InitSwitchList();
 	fn P_InitPicAnims();
 	fn R_InitSprites(sprnames: *const *const c_char);

@@ -11,7 +11,9 @@ use crate::{
 		BT_ATTACK, BT_CHANGE, BT_SPECIAL, BT_SPECIALMASK, BT_USE, BT_WEAPONSHIFT, BTS_PAUSE,
 		BTS_SAVEGAME, BTS_SAVEMASK, BTS_SAVESHIFT, event_t, evtype_t, gameaction_t,
 	},
-	d_main::{D_AdvanceDemo, fastparm, nomonsters, respawnparm, singletics, wipegamestate},
+	d_main::{
+		D_AdvanceDemo, D_PageTicker, fastparm, nomonsters, respawnparm, singletics, wipegamestate,
+	},
 	d_net::BACKUPTICS,
 	d_player::{player_t, playerstate_t, wbplayerstruct_t, wbstartstruct_t},
 	d_ticcmd::ticcmd_t,
@@ -649,7 +651,6 @@ unsafe extern "C" {
 	fn HU_Ticker();
 	fn WI_Ticker();
 	fn F_Ticker();
-	fn D_PageTicker();
 }
 
 // G_Ticker
@@ -907,7 +908,7 @@ unsafe extern "C" {
 // Spawns a player at one of the random death match spots
 // called at level load and each death
 #[unsafe(no_mangle)]
-pub extern "C" fn G_DeathMatchSpawnPlayer(playernum: usize) {
+pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 	unsafe {
 		let selections = deathmatch_p.offset_from(&raw mut deathmatchstarts[0]);
 		if selections < 4 {
@@ -1375,7 +1376,7 @@ fn G_DoNewGame() {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
+pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 	unsafe {
 		if paused != 0 {
 			paused = 0;

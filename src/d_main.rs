@@ -340,7 +340,7 @@ unsafe extern "C" {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn D_DoomLoop() {
+pub(crate) fn D_DoomLoop() {
 	unsafe {
 		if demorecording != 0 {
 			G_BeginRecording();
@@ -403,8 +403,7 @@ pub static mut pagename: *const c_char = null_mut();
 
 // D_PageTicker
 // Handles timing for warped projection
-#[unsafe(no_mangle)]
-pub extern "C" fn D_PageTicker() {
+pub(crate) fn D_PageTicker() {
 	unsafe {
 		pagetic -= 1;
 		if pagetic < 0 {
@@ -423,7 +422,7 @@ fn D_PageDrawer() {
 // D_AdvanceDemo
 // Called after each demo or intro demosequence finishes
 #[unsafe(no_mangle)]
-pub extern "C" fn D_AdvanceDemo() {
+pub(crate) fn D_AdvanceDemo() {
 	unsafe {
 		advancedemo = 1;
 	}
