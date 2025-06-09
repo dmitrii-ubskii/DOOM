@@ -72,7 +72,7 @@ pub struct player_t {
 	pub armortype: i32,
 
 	// Power ups. invinc and invis are tic counters.
-	pub powers: [i32; powertype_t::NUMPOWERS as usize],
+	pub powers: [usize; powertype_t::NUMPOWERS as usize],
 	pub cards: [i32; card_t::NUMCARDS as usize],
 	pub backpack: i32,
 

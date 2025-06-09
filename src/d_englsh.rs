@@ -1,5 +1,7 @@
 use std::ffi::{CStr, c_char};
 
+use crate::dstrings::Smuggle;
+
 //	Printed strings for translation
 
 // D_Main.C
@@ -8,9 +10,9 @@ pub const D_CDROM: &CStr = c"CD-ROM Version: default.cfg from c:\\doomdata\n";
 
 /*
 //	M_Menu.C
-pub const PRESSKEY: &CStr = c"press a key.";
-pub const PRESSYN: &CStr = c"press y or n.";
-pub const QUITMSG: &CStr = c"are you sure you want to\nquit this great game?";
+pub const PRESSKEY: *const c_char = c"press a key.";
+pub const PRESSYN: *const c_char = c"press y or n.";
+pub const QUITMSG: *const c_char = c"are you sure you want to\nquit this great game?";
 #define LOADNET 	"you can't do load while in a net game!\n\n"PRESSKEY
 #define QLOADNET	"you can't quickload during a netgame!\n\n"PRESSKEY
 #define QSAVESPOT	"you haven't picked a quicksave slot yet!\n\n"PRESSKEY
@@ -24,21 +26,21 @@ pub const QUITMSG: &CStr = c"are you sure you want to\nquit this great game?";
 
 #define SWSTRING	"this is the shareware version of doom.\n\nyou need to order the entire trilogy.\n\n"PRESSKEY
 
-pub const MSGOFF: &CStr = c"Messages OFF";
-pub const MSGON: &CStr = c"Messages ON";
+pub const MSGOFF: *const c_char = c"Messages OFF";
+pub const MSGON: *const c_char = c"Messages ON";
 #define NETEND	"you can't end a netgame!\n\n"PRESSKEY
 #define ENDGAME	"are you sure you want to end the game?\n\n"PRESSYN
 
-pub const DOSY: &CStr = c"(press y to quit)";
+pub const DOSY: *const c_char = c"(press y to quit)";
 
-pub const DETAILHI: &CStr = c"High detail";
-pub const DETAILLO: &CStr = c"Low detail";
-pub const GAMMALVL0: &CStr = c"Gamma correction OFF";
-pub const GAMMALVL1: &CStr = c"Gamma correction level 1";
-pub const GAMMALVL2: &CStr = c"Gamma correction level 2";
-pub const GAMMALVL3: &CStr = c"Gamma correction level 3";
-pub const GAMMALVL4: &CStr = c"Gamma correction level 4";
-pub const EMPTYSTRING: &CStr = c"empty slot";
+pub const DETAILHI: *const c_char = c"High detail";
+pub const DETAILLO: *const c_char = c"Low detail";
+pub const GAMMALVL0: *const c_char = c"Gamma correction OFF";
+pub const GAMMALVL1: *const c_char = c"Gamma correction level 1";
+pub const GAMMALVL2: *const c_char = c"Gamma correction level 2";
+pub const GAMMALVL3: *const c_char = c"Gamma correction level 3";
+pub const GAMMALVL4: *const c_char = c"Gamma correction level 4";
+pub const EMPTYSTRING: *const c_char = c"empty slot";
 */
 
 //	P_inter.C
@@ -95,192 +97,190 @@ pub const PD_YELLOWK: *const c_char = c"You need a yellow key to open this door"
 //	G_game.C
 pub const GGSAVED: *const c_char = c"game saved.".as_ptr();
 
-/*
 //	HU_stuff.C
-//
-pub const HUSTR_MSGU: &CStr = c"[Message unsent]";
+pub const HUSTR_MSGU: *const c_char = c"[Message unsent]".as_ptr();
 
-pub const HUSTR_E1M1: &CStr = c"E1M1: Hangar";
-pub const HUSTR_E1M2: &CStr = c"E1M2: Nuclear Plant";
-pub const HUSTR_E1M3: &CStr = c"E1M3: Toxin Refinery";
-pub const HUSTR_E1M4: &CStr = c"E1M4: Command Control";
-pub const HUSTR_E1M5: &CStr = c"E1M5: Phobos Lab";
-pub const HUSTR_E1M6: &CStr = c"E1M6: Central Processing";
-pub const HUSTR_E1M7: &CStr = c"E1M7: Computer Station";
-pub const HUSTR_E1M8: &CStr = c"E1M8: Phobos Anomaly";
-pub const HUSTR_E1M9: &CStr = c"E1M9: Military Base";
+pub const HUSTR_E1M1: *const c_char = c"E1M1: Hangar".as_ptr();
+pub const HUSTR_E1M2: *const c_char = c"E1M2: Nuclear Plant".as_ptr();
+pub const HUSTR_E1M3: *const c_char = c"E1M3: Toxin Refinery".as_ptr();
+pub const HUSTR_E1M4: *const c_char = c"E1M4: Command Control".as_ptr();
+pub const HUSTR_E1M5: *const c_char = c"E1M5: Phobos Lab".as_ptr();
+pub const HUSTR_E1M6: *const c_char = c"E1M6: Central Processing".as_ptr();
+pub const HUSTR_E1M7: *const c_char = c"E1M7: Computer Station".as_ptr();
+pub const HUSTR_E1M8: *const c_char = c"E1M8: Phobos Anomaly".as_ptr();
+pub const HUSTR_E1M9: *const c_char = c"E1M9: Military Base".as_ptr();
 
-pub const HUSTR_E2M1: &CStr = c"E2M1: Deimos Anomaly";
-pub const HUSTR_E2M2: &CStr = c"E2M2: Containment Area";
-pub const HUSTR_E2M3: &CStr = c"E2M3: Refinery";
-pub const HUSTR_E2M4: &CStr = c"E2M4: Deimos Lab";
-pub const HUSTR_E2M5: &CStr = c"E2M5: Command Center";
-pub const HUSTR_E2M6: &CStr = c"E2M6: Halls of the Damned";
-pub const HUSTR_E2M7: &CStr = c"E2M7: Spawning Vats";
-pub const HUSTR_E2M8: &CStr = c"E2M8: Tower of Babel";
-pub const HUSTR_E2M9: &CStr = c"E2M9: Fortress of Mystery";
+pub const HUSTR_E2M1: *const c_char = c"E2M1: Deimos Anomaly".as_ptr();
+pub const HUSTR_E2M2: *const c_char = c"E2M2: Containment Area".as_ptr();
+pub const HUSTR_E2M3: *const c_char = c"E2M3: Refinery".as_ptr();
+pub const HUSTR_E2M4: *const c_char = c"E2M4: Deimos Lab".as_ptr();
+pub const HUSTR_E2M5: *const c_char = c"E2M5: Command Center".as_ptr();
+pub const HUSTR_E2M6: *const c_char = c"E2M6: Halls of the Damned".as_ptr();
+pub const HUSTR_E2M7: *const c_char = c"E2M7: Spawning Vats".as_ptr();
+pub const HUSTR_E2M8: *const c_char = c"E2M8: Tower of Babel".as_ptr();
+pub const HUSTR_E2M9: *const c_char = c"E2M9: Fortress of Mystery".as_ptr();
 
-pub const HUSTR_E3M1: &CStr = c"E3M1: Hell Keep";
-pub const HUSTR_E3M2: &CStr = c"E3M2: Slough of Despair";
-pub const HUSTR_E3M3: &CStr = c"E3M3: Pandemonium";
-pub const HUSTR_E3M4: &CStr = c"E3M4: House of Pain";
-pub const HUSTR_E3M5: &CStr = c"E3M5: Unholy Cathedral";
-pub const HUSTR_E3M6: &CStr = c"E3M6: Mt. Erebus";
-pub const HUSTR_E3M7: &CStr = c"E3M7: Limbo";
-pub const HUSTR_E3M8: &CStr = c"E3M8: Dis";
-pub const HUSTR_E3M9: &CStr = c"E3M9: Warrens";
+pub const HUSTR_E3M1: *const c_char = c"E3M1: Hell Keep".as_ptr();
+pub const HUSTR_E3M2: *const c_char = c"E3M2: Slough of Despair".as_ptr();
+pub const HUSTR_E3M3: *const c_char = c"E3M3: Pandemonium".as_ptr();
+pub const HUSTR_E3M4: *const c_char = c"E3M4: House of Pain".as_ptr();
+pub const HUSTR_E3M5: *const c_char = c"E3M5: Unholy Cathedral".as_ptr();
+pub const HUSTR_E3M6: *const c_char = c"E3M6: Mt. Erebus".as_ptr();
+pub const HUSTR_E3M7: *const c_char = c"E3M7: Limbo".as_ptr();
+pub const HUSTR_E3M8: *const c_char = c"E3M8: Dis".as_ptr();
+pub const HUSTR_E3M9: *const c_char = c"E3M9: Warrens".as_ptr();
 
-pub const HUSTR_E4M1: &CStr = c"E4M1: Hell Beneath";
-pub const HUSTR_E4M2: &CStr = c"E4M2: Perfect Hatred";
-pub const HUSTR_E4M3: &CStr = c"E4M3: Sever The Wicked";
-pub const HUSTR_E4M4: &CStr = c"E4M4: Unruly Evil";
-pub const HUSTR_E4M5: &CStr = c"E4M5: They Will Repent";
-pub const HUSTR_E4M6: &CStr = c"E4M6: Against Thee Wickedly";
-pub const HUSTR_E4M7: &CStr = c"E4M7: And Hell Followed";
-pub const HUSTR_E4M8: &CStr = c"E4M8: Unto The Cruel";
-pub const HUSTR_E4M9: &CStr = c"E4M9: Fear";
+pub const HUSTR_E4M1: *const c_char = c"E4M1: Hell Beneath".as_ptr();
+pub const HUSTR_E4M2: *const c_char = c"E4M2: Perfect Hatred".as_ptr();
+pub const HUSTR_E4M3: *const c_char = c"E4M3: Sever The Wicked".as_ptr();
+pub const HUSTR_E4M4: *const c_char = c"E4M4: Unruly Evil".as_ptr();
+pub const HUSTR_E4M5: *const c_char = c"E4M5: They Will Repent".as_ptr();
+pub const HUSTR_E4M6: *const c_char = c"E4M6: Against Thee Wickedly".as_ptr();
+pub const HUSTR_E4M7: *const c_char = c"E4M7: And Hell Followed".as_ptr();
+pub const HUSTR_E4M8: *const c_char = c"E4M8: Unto The Cruel".as_ptr();
+pub const HUSTR_E4M9: *const c_char = c"E4M9: Fear".as_ptr();
 
-pub const HUSTR_1: &CStr = c"level 1: entryway";
-pub const HUSTR_2: &CStr = c"level 2: underhalls";
-pub const HUSTR_3: &CStr = c"level 3: the gantlet";
-pub const HUSTR_4: &CStr = c"level 4: the focus";
-pub const HUSTR_5: &CStr = c"level 5: the waste tunnels";
-pub const HUSTR_6: &CStr = c"level 6: the crusher";
-pub const HUSTR_7: &CStr = c"level 7: dead simple";
-pub const HUSTR_8: &CStr = c"level 8: tricks and traps";
-pub const HUSTR_9: &CStr = c"level 9: the pit";
-pub const HUSTR_10: &CStr = c"level 10: refueling base";
-pub const HUSTR_11: &CStr = c"level 11: 'o' of destruction!";
+pub const HUSTR_1: *const c_char = c"level 1: entryway".as_ptr();
+pub const HUSTR_2: *const c_char = c"level 2: underhalls".as_ptr();
+pub const HUSTR_3: *const c_char = c"level 3: the gantlet".as_ptr();
+pub const HUSTR_4: *const c_char = c"level 4: the focus".as_ptr();
+pub const HUSTR_5: *const c_char = c"level 5: the waste tunnels".as_ptr();
+pub const HUSTR_6: *const c_char = c"level 6: the crusher".as_ptr();
+pub const HUSTR_7: *const c_char = c"level 7: dead simple".as_ptr();
+pub const HUSTR_8: *const c_char = c"level 8: tricks and traps".as_ptr();
+pub const HUSTR_9: *const c_char = c"level 9: the pit".as_ptr();
+pub const HUSTR_10: *const c_char = c"level 10: refueling base".as_ptr();
+pub const HUSTR_11: *const c_char = c"level 11: 'o' of destruction!".as_ptr();
 
-pub const HUSTR_12: &CStr = c"level 12: the factory";
-pub const HUSTR_13: &CStr = c"level 13: downtown";
-pub const HUSTR_14: &CStr = c"level 14: the inmost dens";
-pub const HUSTR_15: &CStr = c"level 15: industrial zone";
-pub const HUSTR_16: &CStr = c"level 16: suburbs";
-pub const HUSTR_17: &CStr = c"level 17: tenements";
-pub const HUSTR_18: &CStr = c"level 18: the courtyard";
-pub const HUSTR_19: &CStr = c"level 19: the citadel";
-pub const HUSTR_20: &CStr = c"level 20: gotcha!";
+pub const HUSTR_12: *const c_char = c"level 12: the factory".as_ptr();
+pub const HUSTR_13: *const c_char = c"level 13: downtown".as_ptr();
+pub const HUSTR_14: *const c_char = c"level 14: the inmost dens".as_ptr();
+pub const HUSTR_15: *const c_char = c"level 15: industrial zone".as_ptr();
+pub const HUSTR_16: *const c_char = c"level 16: suburbs".as_ptr();
+pub const HUSTR_17: *const c_char = c"level 17: tenements".as_ptr();
+pub const HUSTR_18: *const c_char = c"level 18: the courtyard".as_ptr();
+pub const HUSTR_19: *const c_char = c"level 19: the citadel".as_ptr();
+pub const HUSTR_20: *const c_char = c"level 20: gotcha!".as_ptr();
 
-pub const HUSTR_21: &CStr = c"level 21: nirvana";
-pub const HUSTR_22: &CStr = c"level 22: the catacombs";
-pub const HUSTR_23: &CStr = c"level 23: barrels o' fun";
-pub const HUSTR_24: &CStr = c"level 24: the chasm";
-pub const HUSTR_25: &CStr = c"level 25: bloodfalls";
-pub const HUSTR_26: &CStr = c"level 26: the abandoned mines";
-pub const HUSTR_27: &CStr = c"level 27: monster condo";
-pub const HUSTR_28: &CStr = c"level 28: the spirit world";
-pub const HUSTR_29: &CStr = c"level 29: the living end";
-pub const HUSTR_30: &CStr = c"level 30: icon of sin";
+pub const HUSTR_21: *const c_char = c"level 21: nirvana".as_ptr();
+pub const HUSTR_22: *const c_char = c"level 22: the catacombs".as_ptr();
+pub const HUSTR_23: *const c_char = c"level 23: barrels o' fun".as_ptr();
+pub const HUSTR_24: *const c_char = c"level 24: the chasm".as_ptr();
+pub const HUSTR_25: *const c_char = c"level 25: bloodfalls".as_ptr();
+pub const HUSTR_26: *const c_char = c"level 26: the abandoned mines".as_ptr();
+pub const HUSTR_27: *const c_char = c"level 27: monster condo".as_ptr();
+pub const HUSTR_28: *const c_char = c"level 28: the spirit world".as_ptr();
+pub const HUSTR_29: *const c_char = c"level 29: the living end".as_ptr();
+pub const HUSTR_30: *const c_char = c"level 30: icon of sin".as_ptr();
 
-pub const HUSTR_31: &CStr = c"level 31: wolfenstein";
-pub const HUSTR_32: &CStr = c"level 32: grosse";
+pub const HUSTR_31: *const c_char = c"level 31: wolfenstein".as_ptr();
+pub const HUSTR_32: *const c_char = c"level 32: grosse".as_ptr();
 
-pub const PHUSTR_1: &CStr = c"level 1: congo";
-pub const PHUSTR_2: &CStr = c"level 2: well of souls";
-pub const PHUSTR_3: &CStr = c"level 3: aztec";
-pub const PHUSTR_4: &CStr = c"level 4: caged";
-pub const PHUSTR_5: &CStr = c"level 5: ghost town";
-pub const PHUSTR_6: &CStr = c"level 6: baron's lair";
-pub const PHUSTR_7: &CStr = c"level 7: caughtyard";
-pub const PHUSTR_8: &CStr = c"level 8: realm";
-pub const PHUSTR_9: &CStr = c"level 9: abattoire";
-pub const PHUSTR_10: &CStr = c"level 10: onslaught";
-pub const PHUSTR_11: &CStr = c"level 11: hunted";
+pub const PHUSTR_1: *const c_char = c"level 1: congo".as_ptr();
+pub const PHUSTR_2: *const c_char = c"level 2: well of souls".as_ptr();
+pub const PHUSTR_3: *const c_char = c"level 3: aztec".as_ptr();
+pub const PHUSTR_4: *const c_char = c"level 4: caged".as_ptr();
+pub const PHUSTR_5: *const c_char = c"level 5: ghost town".as_ptr();
+pub const PHUSTR_6: *const c_char = c"level 6: baron's lair".as_ptr();
+pub const PHUSTR_7: *const c_char = c"level 7: caughtyard".as_ptr();
+pub const PHUSTR_8: *const c_char = c"level 8: realm".as_ptr();
+pub const PHUSTR_9: *const c_char = c"level 9: abattoire".as_ptr();
+pub const PHUSTR_10: *const c_char = c"level 10: onslaught".as_ptr();
+pub const PHUSTR_11: *const c_char = c"level 11: hunted".as_ptr();
 
-pub const PHUSTR_12: &CStr = c"level 12: speed";
-pub const PHUSTR_13: &CStr = c"level 13: the crypt";
-pub const PHUSTR_14: &CStr = c"level 14: genesis";
-pub const PHUSTR_15: &CStr = c"level 15: the twilight";
-pub const PHUSTR_16: &CStr = c"level 16: the omen";
-pub const PHUSTR_17: &CStr = c"level 17: compound";
-pub const PHUSTR_18: &CStr = c"level 18: neurosphere";
-pub const PHUSTR_19: &CStr = c"level 19: nme";
-pub const PHUSTR_20: &CStr = c"level 20: the death domain";
+pub const PHUSTR_12: *const c_char = c"level 12: speed".as_ptr();
+pub const PHUSTR_13: *const c_char = c"level 13: the crypt".as_ptr();
+pub const PHUSTR_14: *const c_char = c"level 14: genesis".as_ptr();
+pub const PHUSTR_15: *const c_char = c"level 15: the twilight".as_ptr();
+pub const PHUSTR_16: *const c_char = c"level 16: the omen".as_ptr();
+pub const PHUSTR_17: *const c_char = c"level 17: compound".as_ptr();
+pub const PHUSTR_18: *const c_char = c"level 18: neurosphere".as_ptr();
+pub const PHUSTR_19: *const c_char = c"level 19: nme".as_ptr();
+pub const PHUSTR_20: *const c_char = c"level 20: the death domain".as_ptr();
 
-pub const PHUSTR_21: &CStr = c"level 21: slayer";
-pub const PHUSTR_22: &CStr = c"level 22: impossible mission";
-pub const PHUSTR_23: &CStr = c"level 23: tombstone";
-pub const PHUSTR_24: &CStr = c"level 24: the final frontier";
-pub const PHUSTR_25: &CStr = c"level 25: the temple of darkness";
-pub const PHUSTR_26: &CStr = c"level 26: bunker";
-pub const PHUSTR_27: &CStr = c"level 27: anti-christ";
-pub const PHUSTR_28: &CStr = c"level 28: the sewers";
-pub const PHUSTR_29: &CStr = c"level 29: odyssey of noises";
-pub const PHUSTR_30: &CStr = c"level 30: the gateway of hell";
+pub const PHUSTR_21: *const c_char = c"level 21: slayer".as_ptr();
+pub const PHUSTR_22: *const c_char = c"level 22: impossible mission".as_ptr();
+pub const PHUSTR_23: *const c_char = c"level 23: tombstone".as_ptr();
+pub const PHUSTR_24: *const c_char = c"level 24: the final frontier".as_ptr();
+pub const PHUSTR_25: *const c_char = c"level 25: the temple of darkness".as_ptr();
+pub const PHUSTR_26: *const c_char = c"level 26: bunker".as_ptr();
+pub const PHUSTR_27: *const c_char = c"level 27: anti-christ".as_ptr();
+pub const PHUSTR_28: *const c_char = c"level 28: the sewers".as_ptr();
+pub const PHUSTR_29: *const c_char = c"level 29: odyssey of noises".as_ptr();
+pub const PHUSTR_30: *const c_char = c"level 30: the gateway of hell".as_ptr();
 
-pub const PHUSTR_31: &CStr = c"level 31: cyberden";
-pub const PHUSTR_32: &CStr = c"level 32: go 2 it";
+pub const PHUSTR_31: *const c_char = c"level 31: cyberden".as_ptr();
+pub const PHUSTR_32: *const c_char = c"level 32: go 2 it".as_ptr();
 
-pub const THUSTR_1: &CStr = c"level 1: system control";
-pub const THUSTR_2: &CStr = c"level 2: human bbq";
-pub const THUSTR_3: &CStr = c"level 3: power control";
-pub const THUSTR_4: &CStr = c"level 4: wormhole";
-pub const THUSTR_5: &CStr = c"level 5: hanger";
-pub const THUSTR_6: &CStr = c"level 6: open season";
-pub const THUSTR_7: &CStr = c"level 7: prison";
-pub const THUSTR_8: &CStr = c"level 8: metal";
-pub const THUSTR_9: &CStr = c"level 9: stronghold";
-pub const THUSTR_10: &CStr = c"level 10: redemption";
-pub const THUSTR_11: &CStr = c"level 11: storage facility";
+pub const THUSTR_1: *const c_char = c"level 1: system control".as_ptr();
+pub const THUSTR_2: *const c_char = c"level 2: human bbq".as_ptr();
+pub const THUSTR_3: *const c_char = c"level 3: power control".as_ptr();
+pub const THUSTR_4: *const c_char = c"level 4: wormhole".as_ptr();
+pub const THUSTR_5: *const c_char = c"level 5: hanger".as_ptr();
+pub const THUSTR_6: *const c_char = c"level 6: open season".as_ptr();
+pub const THUSTR_7: *const c_char = c"level 7: prison".as_ptr();
+pub const THUSTR_8: *const c_char = c"level 8: metal".as_ptr();
+pub const THUSTR_9: *const c_char = c"level 9: stronghold".as_ptr();
+pub const THUSTR_10: *const c_char = c"level 10: redemption".as_ptr();
+pub const THUSTR_11: *const c_char = c"level 11: storage facility".as_ptr();
 
-pub const THUSTR_12: &CStr = c"level 12: crater";
-pub const THUSTR_13: &CStr = c"level 13: nukage processing";
-pub const THUSTR_14: &CStr = c"level 14: steel works";
-pub const THUSTR_15: &CStr = c"level 15: dead zone";
-pub const THUSTR_16: &CStr = c"level 16: deepest reaches";
-pub const THUSTR_17: &CStr = c"level 17: processing area";
-pub const THUSTR_18: &CStr = c"level 18: mill";
-pub const THUSTR_19: &CStr = c"level 19: shipping/respawning";
-pub const THUSTR_20: &CStr = c"level 20: central processing";
+pub const THUSTR_12: *const c_char = c"level 12: crater".as_ptr();
+pub const THUSTR_13: *const c_char = c"level 13: nukage processing".as_ptr();
+pub const THUSTR_14: *const c_char = c"level 14: steel works".as_ptr();
+pub const THUSTR_15: *const c_char = c"level 15: dead zone".as_ptr();
+pub const THUSTR_16: *const c_char = c"level 16: deepest reaches".as_ptr();
+pub const THUSTR_17: *const c_char = c"level 17: processing area".as_ptr();
+pub const THUSTR_18: *const c_char = c"level 18: mill".as_ptr();
+pub const THUSTR_19: *const c_char = c"level 19: shipping/respawning".as_ptr();
+pub const THUSTR_20: *const c_char = c"level 20: central processing".as_ptr();
 
-pub const THUSTR_21: &CStr = c"level 21: administration center";
-pub const THUSTR_22: &CStr = c"level 22: habitat";
-pub const THUSTR_23: &CStr = c"level 23: lunar mining project";
-pub const THUSTR_24: &CStr = c"level 24: quarry";
-pub const THUSTR_25: &CStr = c"level 25: baron's den";
-pub const THUSTR_26: &CStr = c"level 26: ballistyx";
-pub const THUSTR_27: &CStr = c"level 27: mount pain";
-pub const THUSTR_28: &CStr = c"level 28: heck";
-pub const THUSTR_29: &CStr = c"level 29: river styx";
-pub const THUSTR_30: &CStr = c"level 30: last call";
+pub const THUSTR_21: *const c_char = c"level 21: administration center".as_ptr();
+pub const THUSTR_22: *const c_char = c"level 22: habitat".as_ptr();
+pub const THUSTR_23: *const c_char = c"level 23: lunar mining project".as_ptr();
+pub const THUSTR_24: *const c_char = c"level 24: quarry".as_ptr();
+pub const THUSTR_25: *const c_char = c"level 25: baron's den".as_ptr();
+pub const THUSTR_26: *const c_char = c"level 26: ballistyx".as_ptr();
+pub const THUSTR_27: *const c_char = c"level 27: mount pain".as_ptr();
+pub const THUSTR_28: *const c_char = c"level 28: heck".as_ptr();
+pub const THUSTR_29: *const c_char = c"level 29: river styx".as_ptr();
+pub const THUSTR_30: *const c_char = c"level 30: last call".as_ptr();
 
-pub const THUSTR_31: &CStr = c"level 31: pharaoh";
-pub const THUSTR_32: &CStr = c"level 32: caribbean";
+pub const THUSTR_31: *const c_char = c"level 31: pharaoh".as_ptr();
+pub const THUSTR_32: *const c_char = c"level 32: caribbean".as_ptr();
 
-pub const HUSTR_CHATMACRO1: &CStr = c"I'm ready to kick butt!";
-pub const HUSTR_CHATMACRO2: &CStr = c"I'm OK.";
-pub const HUSTR_CHATMACRO3: &CStr = c"I'm not looking too good!";
-pub const HUSTR_CHATMACRO4: &CStr = c"Help!";
-pub const HUSTR_CHATMACRO5: &CStr = c"You suck!";
-pub const HUSTR_CHATMACRO6: &CStr = c"Next time, scumbag...";
-pub const HUSTR_CHATMACRO7: &CStr = c"Come here!";
-pub const HUSTR_CHATMACRO8: &CStr = c"I'll take care of it.";
-pub const HUSTR_CHATMACRO9: &CStr = c"Yes";
-pub const HUSTR_CHATMACRO0: &CStr = c"No";
+pub static HUSTR_CHATMACRO1: Smuggle<c_char> = Smuggle(c"I'm ready to kick butt!".as_ptr());
+pub static HUSTR_CHATMACRO2: Smuggle<c_char> = Smuggle(c"I'm OK.".as_ptr());
+pub static HUSTR_CHATMACRO3: Smuggle<c_char> = Smuggle(c"I'm not looking too good!".as_ptr());
+pub static HUSTR_CHATMACRO4: Smuggle<c_char> = Smuggle(c"Help!".as_ptr());
+pub static HUSTR_CHATMACRO5: Smuggle<c_char> = Smuggle(c"You suck!".as_ptr());
+pub static HUSTR_CHATMACRO6: Smuggle<c_char> = Smuggle(c"Next time, scumbag...".as_ptr());
+pub static HUSTR_CHATMACRO7: Smuggle<c_char> = Smuggle(c"Come here!".as_ptr());
+pub static HUSTR_CHATMACRO8: Smuggle<c_char> = Smuggle(c"I'll take care of it.".as_ptr());
+pub static HUSTR_CHATMACRO9: Smuggle<c_char> = Smuggle(c"Yes".as_ptr());
+pub static HUSTR_CHATMACRO0: Smuggle<c_char> = Smuggle(c"No".as_ptr());
 
-pub const HUSTR_TALKTOSELF1: &CStr = c"You mumble to yourself";
-pub const HUSTR_TALKTOSELF2: &CStr = c"Who's there?";
-pub const HUSTR_TALKTOSELF3: &CStr = c"You scare yourself";
-pub const HUSTR_TALKTOSELF4: &CStr = c"You start to rave";
-pub const HUSTR_TALKTOSELF5: &CStr = c"You've lost it...";
+pub const HUSTR_TALKTOSELF1: *const c_char = c"You mumble to yourself".as_ptr();
+pub const HUSTR_TALKTOSELF2: *const c_char = c"Who's there?".as_ptr();
+pub const HUSTR_TALKTOSELF3: *const c_char = c"You scare yourself".as_ptr();
+pub const HUSTR_TALKTOSELF4: *const c_char = c"You start to rave".as_ptr();
+pub const HUSTR_TALKTOSELF5: *const c_char = c"You've lost it...".as_ptr();
 
-pub const HUSTR_MESSAGESENT: &CStr = c"[Message Sent]";
+pub const HUSTR_MESSAGESENT: *const c_char = c"[Message Sent]".as_ptr();
 
 // The following should NOT be changed unless it seems
 // just AWFULLY necessary
 
-pub const HUSTR_PLRGREEN: &CStr = c"Green: ";
-pub const HUSTR_PLRINDIGO: &CStr = c"Indigo: ";
-pub const HUSTR_PLRBROWN: &CStr = c"Brown: ";
-pub const HUSTR_PLRRED: &CStr = c"Red: ";
+pub const HUSTR_PLRGREEN: *const c_char = c"Green: ".as_ptr();
+pub const HUSTR_PLRINDIGO: *const c_char = c"Indigo: ".as_ptr();
+pub const HUSTR_PLRBROWN: *const c_char = c"Brown: ".as_ptr();
+pub const HUSTR_PLRRED: *const c_char = c"Red: ".as_ptr();
 
-#define HUSTR_KEYGREEN	'g'
-#define HUSTR_KEYINDIGO	'i'
-#define HUSTR_KEYBROWN	'b'
-#define HUSTR_KEYRED	'r'
+pub const HUSTR_KEYGREEN: c_char = b'g' as c_char;
+pub const HUSTR_KEYINDIGO: c_char = b'i' as c_char;
+pub const HUSTR_KEYBROWN: c_char = b'b' as c_char;
+pub const HUSTR_KEYRED: c_char = b'r' as c_char;
 
-//
+/*
 //	AM_map.C
 //
 
@@ -629,27 +629,23 @@ pub const STSTR_CLEV: &CStr = c"Changing Level...";
 "\n"\
 "As you step off the transport, you hear\n"\
 "the stomp of a cyberdemon's iron shoe."
-
-
-
-//
-// Character cast strings F_FINALE.C
-//
-pub const CC_ZOMBIE: &CStr = c"ZOMBIEMAN";
-pub const CC_SHOTGUN: &CStr = c"SHOTGUN GUY";
-pub const CC_HEAVY: &CStr = c"HEAVY WEAPON DUDE";
-pub const CC_IMP: &CStr = c"IMP";
-pub const CC_DEMON: &CStr = c"DEMON";
-pub const CC_LOST: &CStr = c"LOST SOUL";
-pub const CC_CACO: &CStr = c"CACODEMON";
-pub const CC_HELL: &CStr = c"HELL KNIGHT";
-pub const CC_BARON: &CStr = c"BARON OF HELL";
-pub const CC_ARACH: &CStr = c"ARACHNOTRON";
-pub const CC_PAIN: &CStr = c"PAIN ELEMENTAL";
-pub const CC_REVEN: &CStr = c"REVENANT";
-pub const CC_MANCU: &CStr = c"MANCUBUS";
-pub const CC_ARCH: &CStr = c"ARCH-VILE";
-pub const CC_SPIDER: &CStr = c"THE SPIDER MASTERMIND";
-pub const CC_CYBER: &CStr = c"THE CYBERDEMON";
-pub const CC_HERO: &CStr = c"OUR HERO";
 */
+
+// Character cast strings F_FINALE.C
+pub const CC_ZOMBIE: *const c_char = c"ZOMBIEMAN".as_ptr();
+pub const CC_SHOTGUN: *const c_char = c"SHOTGUN GUY".as_ptr();
+pub const CC_HEAVY: *const c_char = c"HEAVY WEAPON DUDE".as_ptr();
+pub const CC_IMP: *const c_char = c"IMP".as_ptr();
+pub const CC_DEMON: *const c_char = c"DEMON".as_ptr();
+pub const CC_LOST: *const c_char = c"LOST SOUL".as_ptr();
+pub const CC_CACO: *const c_char = c"CACODEMON".as_ptr();
+pub const CC_HELL: *const c_char = c"HELL KNIGHT".as_ptr();
+pub const CC_BARON: *const c_char = c"BARON OF HELL".as_ptr();
+pub const CC_ARACH: *const c_char = c"ARACHNOTRON".as_ptr();
+pub const CC_PAIN: *const c_char = c"PAIN ELEMENTAL".as_ptr();
+pub const CC_REVEN: *const c_char = c"REVENANT".as_ptr();
+pub const CC_MANCU: *const c_char = c"MANCUBUS".as_ptr();
+pub const CC_ARCH: *const c_char = c"ARCH-VILE".as_ptr();
+pub const CC_SPIDER: *const c_char = c"THE SPIDER MASTERMIND".as_ptr();
+pub const CC_CYBER: *const c_char = c"THE CYBERDEMON".as_ptr();
+pub const CC_HERO: *const c_char = c"OUR HERO".as_ptr();

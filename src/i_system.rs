@@ -29,7 +29,7 @@ pub(crate) fn I_ZoneBase(size: &mut usize) -> *mut u8 {
 // I_GetTime
 // returns time in 1/70th second tics
 #[unsafe(no_mangle)]
-pub extern "C" fn I_GetTime() -> i32 {
+pub extern "C" fn I_GetTime() -> usize {
 	let mut tp = timeval { tv_sec: 0, tv_usec: 0 };
 	static mut basetime: i32 = 0;
 
@@ -39,7 +39,7 @@ pub extern "C" fn I_GetTime() -> i32 {
 			basetime = tp.tv_sec;
 		}
 
-		(tp.tv_sec - basetime) * TICRATE + tp.tv_usec * TICRATE / 1_000_000
+		(tp.tv_sec - basetime) as usize * TICRATE + tp.tv_usec as usize * TICRATE / 1_000_000
 	}
 }
 

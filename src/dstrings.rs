@@ -5,15 +5,22 @@ pub const SAVEGAMENAME: *const c_char = c"doomsav".as_ptr();
 const NUM_QUITMESSAGES: usize = 22;
 
 #[repr(transparent)]
-pub struct Smuggle<T>(*const T);
+#[derive(Copy, Clone)]
+pub struct Smuggle<T>(pub *const T);
 
 unsafe impl<T> Sync for Smuggle<T> {}
+
+impl<T> Smuggle<T> {
+	pub fn u(self) -> *const T {
+		self.0
+	}
+}
 
 // from d_englsh.h
 const QUITMSG: &CStr = c"are you sure you want to\nquit this great game?";
 
 #[unsafe(no_mangle)]
-pub static endmsg: [Smuggle<i8>; NUM_QUITMESSAGES + 1] = [
+pub static endmsg: [Smuggle<c_char>; NUM_QUITMESSAGES + 1] = [
 	// DOOM1
 	Smuggle(QUITMSG.as_ptr()),
 	Smuggle(c"please don't leave, there's more\ndemons to toast!".as_ptr()),

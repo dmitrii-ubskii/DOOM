@@ -24,6 +24,7 @@ use crate::{
 	},
 	doomstat::{gamemission, gamemode},
 	dstrings::SAVEGAMENAME,
+	hu_stuff::{HU_Responder, HU_Ticker, HU_dequeueChatChar, player_names},
 	i_system::{I_BaseTiccmd, I_Error, I_GetTime, I_Quit},
 	info::{mobjinfo, mobjtype_t, statenum_t, states},
 	m_argv::M_CheckParm,
@@ -84,7 +85,7 @@ pub static mut nodrawers: boolean = 0; // for comparative timing purposes
 #[unsafe(no_mangle)]
 pub static mut noblit: boolean = 0; // for comparative timing purposes 
 #[unsafe(no_mangle)]
-pub static mut starttime: int = 0; // for comparative timing purposes  	 
+pub static mut starttime: usize = 0; // for comparative timing purposes  	 
 
 #[unsafe(no_mangle)]
 pub static mut viewactive: boolean = 0;
@@ -276,8 +277,6 @@ pub static mut statcopy: *mut c_void = null_mut(); // for statistics driver
 unsafe extern "C" {
 	static mut maketic: usize;
 	static mut ticdup: usize;
-
-	fn HU_dequeueChatChar() -> u8;
 }
 
 // G_BuildTiccmd
@@ -372,7 +371,7 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		// buttons
-		(*cmd).chatchar = HU_dequeueChatChar();
+		(*cmd).chatchar = HU_dequeueChatChar() as u8;
 
 		if gamekeydown[key_fire]
 			| *mousebuttons.wrapping_offset(mousebfire)
@@ -545,19 +544,18 @@ unsafe extern "C" {
 
 	fn M_StartControlPanel();
 	fn F_Responder(ev: *mut event_t) -> boolean;
-	fn HU_Responder(ev: *mut event_t) -> boolean;
 	fn ST_Responder(ev: *mut event_t) -> boolean;
 	fn AM_Responder(ev: *mut event_t) -> boolean;
 }
 
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
-pub(crate) fn G_Responder(ev: *mut event_t) -> boolean {
+pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 	unsafe {
 		// allow spy mode changes even during the demo
 		if gamestate == gamestate_t::GS_LEVEL
-			&& (*ev).ty == evtype_t::ev_keydown
-			&& (*ev).data1 == KEY_F12 as i32
+			&& ev.ty == evtype_t::ev_keydown
+			&& ev.data1 == KEY_F12 as i32
 			&& (singledemo != 0 || deathmatch == 0)
 		{
 			// spy mode
@@ -578,9 +576,9 @@ pub(crate) fn G_Responder(ev: *mut event_t) -> boolean {
 			&& singledemo == 0
 			&& (demoplayback != 0 || gamestate == gamestate_t::GS_DEMOSCREEN)
 		{
-			if (*ev).ty == evtype_t::ev_keydown
-				|| ((*ev).ty == evtype_t::ev_mouse && (*ev).data1 != 0)
-				|| ((*ev).ty == evtype_t::ev_joystick && (*ev).data1 != 0)
+			if ev.ty == evtype_t::ev_keydown
+				|| (ev.ty == evtype_t::ev_mouse && ev.data1 != 0)
+				|| (ev.ty == evtype_t::ev_joystick && ev.data1 != 0)
 			{
 				M_StartControlPanel();
 				return 1;
@@ -604,38 +602,38 @@ pub(crate) fn G_Responder(ev: *mut event_t) -> boolean {
 			return 1; // finale ate the event
 		}
 
-		match (*ev).ty {
+		match ev.ty {
 			evtype_t::ev_keydown => {
-				if (*ev).data1 == KEY_PAUSE as i32 {
+				if ev.data1 == KEY_PAUSE as i32 {
 					sendpause = 1;
 					return 1;
 				}
-				if (*ev).data1 < NUMKEYS as i32 {
-					gamekeydown[(*ev).data1 as usize] = 1;
+				if ev.data1 < NUMKEYS as i32 {
+					gamekeydown[ev.data1 as usize] = 1;
 				}
 				1 // eat key down events
 			}
 			evtype_t::ev_keyup => {
-				if (*ev).data1 < NUMKEYS as i32 {
-					gamekeydown[(*ev).data1 as usize] = 0;
+				if ev.data1 < NUMKEYS as i32 {
+					gamekeydown[ev.data1 as usize] = 0;
 				}
 				0 // always let key up events filter down
 			}
 			evtype_t::ev_mouse => {
-				*mousebuttons.wrapping_add(0) = (*ev).data1 & 1;
-				*mousebuttons.wrapping_add(1) = (*ev).data1 & 2;
-				*mousebuttons.wrapping_add(2) = (*ev).data1 & 4;
-				mousex = (*ev).data2 * (mouseSensitivity + 5) / 10;
-				mousey = (*ev).data3 * (mouseSensitivity + 5) / 10;
+				*mousebuttons.wrapping_add(0) = ev.data1 & 1;
+				*mousebuttons.wrapping_add(1) = ev.data1 & 2;
+				*mousebuttons.wrapping_add(2) = ev.data1 & 4;
+				mousex = ev.data2 * (mouseSensitivity + 5) / 10;
+				mousey = ev.data3 * (mouseSensitivity + 5) / 10;
 				1 // eat events
 			}
 			evtype_t::ev_joystick => {
-				*joybuttons.wrapping_add(0) = (*ev).data1 & 1;
-				*joybuttons.wrapping_add(1) = (*ev).data1 & 2;
-				*joybuttons.wrapping_add(2) = (*ev).data1 & 4;
-				*joybuttons.wrapping_add(3) = (*ev).data1 & 8;
-				joyxmove = (*ev).data2;
-				joyymove = (*ev).data3;
+				*joybuttons.wrapping_add(0) = ev.data1 & 1;
+				*joybuttons.wrapping_add(1) = ev.data1 & 2;
+				*joybuttons.wrapping_add(2) = ev.data1 & 4;
+				*joybuttons.wrapping_add(3) = ev.data1 & 8;
+				joyxmove = ev.data2;
+				joyymove = ev.data3;
 				1 // eat events
 			}
 		}
@@ -652,7 +650,6 @@ unsafe extern "C" {
 	fn P_Ticker();
 	fn ST_Ticker();
 	fn AM_Ticker();
-	fn HU_Ticker();
 	fn WI_Ticker();
 	fn F_Ticker();
 }
@@ -715,9 +712,6 @@ pub extern "C" fn G_Ticker() {
 					&& ((gametic >> 5) & 3) == i as i32
 				{
 					static mut turbomessage: [c_char; 80] = [0; 80];
-					unsafe extern "C" {
-						static mut player_names: [*mut c_char; 4];
-					}
 					libc::sprintf(
 						&raw mut turbomessage[0],
 						c"%s is turbo!".as_ptr(),

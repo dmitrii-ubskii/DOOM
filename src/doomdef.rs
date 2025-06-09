@@ -61,7 +61,7 @@ pub const SCREENHEIGHT: usize = 200;
 pub const MAXPLAYERS: usize = 4;
 
 // State updates, number of tics / second.
-pub const TICRATE: i32 = 35;
+pub const TICRATE: usize = 35;
 
 // The current state of the game: whether we are
 // playing, gazing at the intermission screen,
@@ -186,42 +186,42 @@ pub enum powertype_t {
 // Power up durations,
 //  how many seconds till expiration,
 //  assuming TICRATE is 35 ticks/second.
-pub const INVULNTICS: i32 = 30 * TICRATE;
-pub const INVISTICS: i32 = 60 * TICRATE;
-pub const INFRATICS: i32 = 120 * TICRATE;
-pub const IRONTICS: i32 = 60 * TICRATE;
+pub const INVULNTICS: usize = 30 * TICRATE;
+pub const INVISTICS: usize = 60 * TICRATE;
+pub const INFRATICS: usize = 120 * TICRATE;
+pub const IRONTICS: usize = 60 * TICRATE;
 
 // DOOM keyboard definition.
 // This is the stuff configured by Setup.Exe.
 // Most key data are simple ascii (uppercased).
-pub const KEY_RIGHTARROW: usize = 0xae;
-pub const KEY_LEFTARROW: usize = 0xac;
-pub const KEY_UPARROW: usize = 0xad;
-pub const KEY_DOWNARROW: usize = 0xaf;
-pub const KEY_ESCAPE: usize = 27;
-pub const KEY_ENTER: usize = 13;
-pub const KEY_TAB: usize = 9;
-pub const KEY_F1: usize = 0x80 + 0x3b;
-pub const KEY_F2: usize = 0x80 + 0x3c;
-pub const KEY_F3: usize = 0x80 + 0x3d;
-pub const KEY_F4: usize = 0x80 + 0x3e;
-pub const KEY_F5: usize = 0x80 + 0x3f;
-pub const KEY_F6: usize = 0x80 + 0x40;
-pub const KEY_F7: usize = 0x80 + 0x41;
-pub const KEY_F8: usize = 0x80 + 0x42;
-pub const KEY_F9: usize = 0x80 + 0x43;
-pub const KEY_F10: usize = 0x80 + 0x44;
-pub const KEY_F11: usize = 0x80 + 0x57;
-pub const KEY_F12: usize = 0x80 + 0x58;
+pub const KEY_RIGHTARROW: u8 = 0xae;
+pub const KEY_LEFTARROW: u8 = 0xac;
+pub const KEY_UPARROW: u8 = 0xad;
+pub const KEY_DOWNARROW: u8 = 0xaf;
+pub const KEY_ESCAPE: u8 = 27;
+pub const KEY_ENTER: u8 = 13;
+pub const KEY_TAB: u8 = 9;
+pub const KEY_F1: u8 = 0x80 + 0x3b;
+pub const KEY_F2: u8 = 0x80 + 0x3c;
+pub const KEY_F3: u8 = 0x80 + 0x3d;
+pub const KEY_F4: u8 = 0x80 + 0x3e;
+pub const KEY_F5: u8 = 0x80 + 0x3f;
+pub const KEY_F6: u8 = 0x80 + 0x40;
+pub const KEY_F7: u8 = 0x80 + 0x41;
+pub const KEY_F8: u8 = 0x80 + 0x42;
+pub const KEY_F9: u8 = 0x80 + 0x43;
+pub const KEY_F10: u8 = 0x80 + 0x44;
+pub const KEY_F11: u8 = 0x80 + 0x57;
+pub const KEY_F12: u8 = 0x80 + 0x58;
 
-pub const KEY_BACKSPACE: usize = 127;
-pub const KEY_PAUSE: usize = 0xff;
+pub const KEY_BACKSPACE: u8 = 127;
+pub const KEY_PAUSE: u8 = 0xff;
 
-pub const KEY_EQUALS: usize = 0x3d;
-pub const KEY_MINUS: usize = 0x2d;
+pub const KEY_EQUALS: u8 = 0x3d;
+pub const KEY_MINUS: u8 = 0x2d;
 
-pub const KEY_RSHIFT: usize = 0x80 + 0x36;
-pub const KEY_RCTRL: usize = 0x80 + 0x1d;
-pub const KEY_RALT: usize = 0x80 + 0x38;
+pub const KEY_RSHIFT: u8 = 0x80 + 0x36;
+pub const KEY_RCTRL: u8 = 0x80 + 0x1d;
+pub const KEY_RALT: u8 = 0x80 + 0x38;
 
-pub const KEY_LALT: usize = KEY_RALT;
+pub const KEY_LALT: u8 = KEY_RALT;

@@ -30,6 +30,7 @@ use crate::{
 		G_Ticker, G_TimeDemo, consoleplayer, deathmatch, displayplayer, forwardmove, gametic,
 		netgame, sidemove, singledemo, statcopy, usergame,
 	},
+	hu_stuff::{HU_Drawer, HU_Erase, HU_Init},
 	i_system::{I_Error, I_GetTime, I_Init},
 	m_argv::M_CheckParm,
 	myargc, myargv,
@@ -157,8 +158,6 @@ unsafe extern "C" {
 
 	fn AM_Drawer();
 	fn F_Drawer();
-	fn HU_Drawer();
-	fn HU_Erase();
 	fn I_FinishUpdate();
 	fn I_SetPalette(palette: *mut u8);
 	fn I_UpdateNoBlit();
@@ -309,7 +308,7 @@ fn D_Display() {
 				}
 			}
 			wipestart = nowtime;
-			let done = wipe_ScreenWipe(wipe_Melt, 0, 0, SCREENWIDTH, SCREENHEIGHT, tics as usize);
+			let done = wipe_ScreenWipe(wipe_Melt, 0, 0, SCREENWIDTH, SCREENHEIGHT, tics);
 			I_UpdateNoBlit();
 			M_Drawer(); // menu is drawn even on top of wipes
 			I_FinishUpdate(); // page flip or blit buffer
@@ -754,7 +753,6 @@ unsafe extern "C" {
 	fn R_Init();
 	fn D_CheckNetGame();
 	fn S_Init(snd_SfxVolume: i32, snd_MusicVolume: i32);
-	fn HU_Init();
 	fn ST_Init();
 	fn G_LoadGame(name: *mut c_char);
 }
