@@ -20,6 +20,7 @@ use crate::{
 	p_mobj::mobj_t,
 	p_tick::{P_InitThinkers, leveltime, playeringame, players},
 	r_defs::{line_t, node_t, sector_t, seg_t, side_t, slopetype_t, subsector_t, vertex_t},
+	s_sound::S_Start,
 	tables::angle_t,
 	w_wad::{W_CacheLumpNum, W_GetNumForName, W_LumpLength, W_Reload},
 	z_zone::{PU_LEVEL, PU_PURGELEVEL, PU_STATIC, Z_Free, Z_FreeTags, Z_Malloc},
@@ -509,7 +510,6 @@ unsafe extern "C" {
 	static mut totalsecret: i32;
 	static mut wminfo: wbstartstruct_t;
 
-	fn S_Start();
 	fn P_SpawnSpecials();
 	fn R_PrecacheLevel();
 	fn P_InitSwitchList();

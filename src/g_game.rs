@@ -41,6 +41,7 @@ use crate::{
 	p_tick::leveltime,
 	r_defs::subsector_t,
 	r_sky::{SKYFLATNAME, skyflatnum, skytexture},
+	s_sound::{S_PauseSound, S_ResumeSound, S_StartSound},
 	sounds::sfxenum_t,
 	tables::{ANG45, ANGLETOFINESHIFT, angle_t, finecos, finesine},
 	v_video::screens,
@@ -645,8 +646,6 @@ unsafe extern "C" {
 
 	fn F_StartFinale();
 	fn M_ScreenShot();
-	fn S_PauseSound();
-	fn S_ResumeSound();
 	fn P_Ticker();
 	fn ST_Ticker();
 	fn AM_Ticker();
@@ -848,7 +847,6 @@ unsafe extern "C" {
 	fn P_RemoveMobj(thing: *mut mobj_t);
 	fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t;
 	fn P_SpawnMobj(x: fixed_t, y: fixed_t, floorheight: i32, mt_tfog: mobjtype_t) -> *mut mobj_t;
-	fn S_StartSound(origin: *mut c_void, sound_id: sfxenum_t);
 }
 
 fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {

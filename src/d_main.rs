@@ -37,6 +37,7 @@ use crate::{
 	p_setup::P_Init,
 	p_tick::players,
 	r_defs::patch_t,
+	s_sound::{S_Init, S_StartMusic, S_UpdateSounds},
 	sounds::musicenum_t,
 	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
 	w_wad::{W_CheckNumForName, W_InitMultipleFiles},
@@ -329,7 +330,6 @@ unsafe extern "C" {
 	fn I_StartTic();
 	fn M_Ticker();
 	fn TryRunTics();
-	fn S_UpdateSounds(listener: *mut c_void);
 }
 
 #[unsafe(no_mangle)]
@@ -418,10 +418,6 @@ pub(crate) fn D_AdvanceDemo() {
 	unsafe {
 		advancedemo = 1;
 	}
-}
-
-unsafe extern "C" {
-	fn S_StartMusic(music_id: musicenum_t);
 }
 
 // This cycles through the demo sequences.
@@ -752,7 +748,6 @@ unsafe extern "C" {
 	fn M_Init();
 	fn R_Init();
 	fn D_CheckNetGame();
-	fn S_Init(snd_SfxVolume: i32, snd_MusicVolume: i32);
 	fn ST_Init();
 	fn G_LoadGame(name: *mut c_char);
 }

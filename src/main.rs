@@ -39,6 +39,7 @@ pub mod p_user;
 pub mod r_defs;
 pub mod r_sky;
 pub mod r_state;
+pub mod s_sound;
 pub mod sounds;
 pub mod st_lib;
 pub mod st_stuff;
