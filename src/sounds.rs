@@ -88,7 +88,7 @@ impl From<usize> for musicenum_t {
 
 // Identifiers for all sfx in game.
 #[repr(i32)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[rustfmt::skip]
 pub enum sfxenum_t {
 	sfx_None,

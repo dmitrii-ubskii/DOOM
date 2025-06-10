@@ -15,6 +15,7 @@ use crate::{
 
 #[repr(C)]
 #[rustfmt::skip]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum spritenum_t {
 	SPR_TROO, SPR_SHTG, SPR_PUNG, SPR_PISG, SPR_PISF, SPR_SHTF, SPR_SHT2, SPR_CHGG, SPR_CHGF,
 	SPR_MISG, SPR_MISF, SPR_SAWG, SPR_PLSG, SPR_PLSF, SPR_BFGG, SPR_BFGF, SPR_BLUD, SPR_PUFF,
@@ -317,6 +318,15 @@ pub enum mobjtype_t {
 	MT_MISC79, MT_MISC80, MT_MISC81, MT_MISC82, MT_MISC83, MT_MISC84, MT_MISC85, 
 	MT_MISC86,
 	NUMMOBJTYPES,
+}
+
+impl From<usize> for mobjtype_t {
+	fn from(value: usize) -> Self {
+		if value > Self::NUMMOBJTYPES as usize {
+			panic!("mobjtype_t out of bounds");
+		}
+		unsafe { std::mem::transmute(value) }
+	}
 }
 
 #[repr(C)]

@@ -56,18 +56,6 @@ pub const ONCEILINGZ: i32 = i32::MAX;
 // Time interval for item respawning.
 pub const ITEMQUESIZE: usize = 128;
 
-/*
-#[unsafe(no_mangle)]
-pub static mut itemrespawnque: [mapthing_t; ITEMQUESIZE] =
-	[mapthing_t { x: 0, y: 0, angle: 0, ty: 0, options: 0 }; ITEMQUESIZE];
-#[unsafe(no_mangle)]
-pub static mut itemrespawntime: [i32; ITEMQUESIZE] = [0; ITEMQUESIZE];
-#[unsafe(no_mangle)]
-pub static mut iquehead: i32 = 0;
-#[unsafe(no_mangle)]
-pub static mut iquetail: i32 = 0;
-*/
-
 // P_MAPUTL
 #[repr(C)]
 pub struct divline_t {

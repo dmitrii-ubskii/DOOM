@@ -17,7 +17,7 @@ use crate::{
 	m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP, M_AddToBox, M_ClearBox},
 	m_fixed::{FRACBITS, FixedDiv, fixed_t},
 	p_local::{MAPBLOCKSHIFT, MAXRADIUS},
-	p_mobj::mobj_t,
+	p_mobj::*,
 	p_tick::{P_InitThinkers, leveltime, playeringame, players},
 	r_defs::{line_t, node_t, sector_t, seg_t, side_t, slopetype_t, subsector_t, vertex_t},
 	s_sound::S_Start,
@@ -260,10 +260,6 @@ fn P_LoadNodes(lump: usize) {
 	}
 }
 
-unsafe extern "C" {
-	fn P_SpawnMapThing(mthing: *mut mapthing_t);
-}
-
 // P_LoadThings
 fn P_LoadThings(lump: usize) {
 	unsafe {
@@ -296,7 +292,7 @@ fn P_LoadThings(lump: usize) {
 			}
 
 			// Do spawn all other stuff.
-			P_SpawnMapThing(mt);
+			P_SpawnMapThing(&mut *mt);
 
 			mt = mt.wrapping_add(1);
 		}
@@ -502,8 +498,6 @@ unsafe extern "C" {
 	static mut bodyqueslot: i32;
 	static mut consoleplayer: i32;
 	static mut deathmatch: boolean;
-	static mut iquehead: i32;
-	static mut iquetail: i32;
 	static mut precache: boolean;
 	static mut totalitems: i32;
 	static mut totalkills: i32;

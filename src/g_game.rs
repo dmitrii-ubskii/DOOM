@@ -805,8 +805,7 @@ unsafe extern "C" {
 // G_PlayerReborn
 // Called after a player dies
 // almost everything is cleared and initialized
-#[unsafe(no_mangle)]
-pub extern "C" fn G_PlayerReborn(player: usize) {
+pub(crate) fn G_PlayerReborn(player: usize) {
 	unsafe {
 		let frags = players[player].frags;
 		let killcount = players[player].killcount;

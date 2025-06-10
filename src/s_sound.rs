@@ -288,8 +288,7 @@ pub extern "C" fn S_StartSound(origin: *mut c_void, sfx_id: sfxenum_t) {
 }
 
 // Stop sound for thing at <origin>
-#[unsafe(no_mangle)]
-pub extern "C" fn S_StopSound(origin: *mut c_void) {
+pub(crate) fn S_StopSound(origin: *mut c_void) {
 	unsafe {
 		for cnum in 0..numChannels {
 			if !(*channels.wrapping_add(cnum)).sfxinfo.is_null()

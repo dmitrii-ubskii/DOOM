@@ -4,7 +4,7 @@ use std::ffi::c_void;
 
 use crate::{
 	d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, p_local::thinkercap,
-	p_user::P_PlayerThink, z_zone::Z_Free,
+	p_mobj::P_RespawnSpecials, p_user::P_PlayerThink, z_zone::Z_Free,
 };
 
 #[unsafe(no_mangle)]
@@ -73,7 +73,6 @@ unsafe extern "C" {
 	pub static playeringame: [i32; MAXPLAYERS];
 	static mut consoleplayer: i32;
 	fn P_UpdateSpecials();
-	fn P_RespawnSpecials();
 }
 
 // P_Ticker
