@@ -111,7 +111,7 @@ fn HUlib_delCharFromTextLine(t: &mut hu_textline_t) -> boolean {
 	}
 }
 
-pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, _drawcursor: boolean) {
+pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, drawcursor: boolean) {
 	unsafe {
 		// draw the new stuff
 		let mut x = l.x;
@@ -126,7 +126,18 @@ pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, _drawcursor: boolean) {
 
 				V_DrawPatchDirect(x, l.y, FG, font);
 				x += w;
+			} else {
+				x += 4;
+				if x >= SCREENWIDTH {
+					break;
+				}
 			}
+		}
+
+		// draw the cursor if requested
+		let underscore = '_' as usize - l.sc as usize;
+		if drawcursor != 0 && x + (**l.f.wrapping_add(underscore)).width as usize <= SCREENWIDTH {
+			V_DrawPatchDirect(x, l.y, FG, *l.f.wrapping_add(underscore));
 		}
 	}
 }
