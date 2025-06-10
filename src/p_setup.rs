@@ -17,7 +17,7 @@ use crate::{
 	m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP, M_AddToBox, M_ClearBox},
 	m_fixed::{FRACBITS, FixedDiv, fixed_t},
 	p_local::{MAPBLOCKSHIFT, MAXRADIUS},
-	p_mobj::*,
+	p_mobj::{P_SpawnMapThing, iquehead, iquetail, mobj_t},
 	p_tick::{P_InitThinkers, leveltime, playeringame, players},
 	r_defs::{line_t, node_t, sector_t, seg_t, side_t, slopetype_t, subsector_t, vertex_t},
 	s_sound::S_Start,

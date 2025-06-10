@@ -79,7 +79,9 @@ use crate::{
 	info::{mobjinfo, mobjinfo_t, mobjtype_t, spritenum_t, state_t, statenum_t, states},
 	m_fixed::{FRACBITS, FRACUNIT, FixedMul, fixed_t},
 	m_random::P_Random,
-	p_local::*,
+	p_local::{
+		FLOATSPEED, GRAVITY, ITEMQUESIZE, MAXMOVE, MELEERANGE, ONCEILINGZ, ONFLOORZ, VIEWHEIGHT,
+	},
 	p_setup::{deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_AddThinker, P_RemoveThinker, leveltime},
 	r_defs::{line_t, subsector_t},
@@ -87,7 +89,7 @@ use crate::{
 	s_sound::{S_StartSound, S_StopSound},
 	sounds::sfxenum_t,
 	tables::{ANG45, ANGLETOFINESHIFT, angle_t, finecos, finesine},
-	z_zone::*,
+	z_zone::{PU_LEVEL, Z_Malloc},
 };
 
 type boolean = i32;
