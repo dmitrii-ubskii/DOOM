@@ -428,8 +428,7 @@ fn P_XYMovement(mo: &mut mobj_t) {
 			&& mo.momx < STOPSPEED
 			&& mo.momy > -STOPSPEED
 			&& mo.momy < STOPSPEED
-			&& (player.is_null()
-			|| ((*player).cmd.forwardmove == 0 && (*player).cmd.sidemove == 0))
+			&& (player.is_null() || ((*player).cmd.forwardmove == 0 && (*player).cmd.sidemove == 0))
 		{
 			// if in a walking frame, stop moving
 			if !player.is_null()
@@ -1111,12 +1110,12 @@ pub extern "C" fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
 		let mut an = source.angle;
 		let mut slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT);
 
-		if linetarget .is_null() {
-			an += 1 << 26;
+		if linetarget.is_null() {
+			an = an.wrapping_add(1 << 26);
 			slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT);
 
 			if linetarget.is_null() {
-				an -= 2 << 26;
+				an = an.wrapping_sub(2 << 26);
 				slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT);
 			}
 
@@ -1130,7 +1129,7 @@ pub extern "C" fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
 		let y = source.y;
 		let z = source.z + 4 * 8 * FRACUNIT;
 
-		let th = &mut * P_SpawnMobj(x, y, z, ty);
+		let th = &mut *P_SpawnMobj(x, y, z, ty);
 
 		if (*th.info).seesound != sfxenum_t::sfx_None {
 			S_StartSound((th as *mut mobj_t).cast(), (*th.info).seesound);

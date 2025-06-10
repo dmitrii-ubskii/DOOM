@@ -794,7 +794,7 @@ pub unsafe extern "C" fn P_DamageMobj(
 				&& target.z - (*inflictor).z > 64 * FRACUNIT
 				&& P_Random() & 1 == 1
 			{
-				ang += ANG180;
+				ang = ang.wrapping_add(ANG180);
 				thrust *= 4;
 			}
 
