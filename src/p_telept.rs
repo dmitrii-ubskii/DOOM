@@ -85,8 +85,8 @@ pub unsafe extern "C" fn EV_Teleport(line: &mut line_t, side: i32, thing: &mut m
 					S_StartSound(fog as _, sfxenum_t::sfx_telept);
 					let an = m.angle >> ANGLETOFINESHIFT;
 					fog = P_SpawnMobj(
-						m.x + 20 * finecos(an as usize),
-						m.y + 20 * finesine[an as usize],
+						m.x + 20 * finecos(an.0),
+						m.y + 20 * finesine[an.0],
 						thing.z,
 						mobjtype_t::MT_TFOG,
 					);

@@ -31,7 +31,7 @@ use crate::{
 		MF_NOCLIP, MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID, mobj_t,
 	},
 	sounds::sfxenum_t,
-	tables::{ANG180, ANGLETOFINESHIFT, finecos, finesine},
+	tables::{ANG180, ANGLETOFINESHIFT, angle_t, finecos, finesine},
 };
 
 type int = i32;
@@ -736,7 +736,7 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 }
 
 unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> u32;
+	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // P_DamageMobj
@@ -794,12 +794,12 @@ pub unsafe extern "C" fn P_DamageMobj(
 				&& target.z - (*inflictor).z > 64 * FRACUNIT
 				&& P_Random() & 1 == 1
 			{
-				ang = ang.wrapping_add(ANG180);
+				ang += ANG180;
 				thrust *= 4;
 			}
 
 			ang >>= ANGLETOFINESHIFT;
-			let ang = ang as usize;
+			let ang = ang.0 as usize;
 			target.momx += FixedMul(thrust, finecos(ang));
 			target.momy += FixedMul(thrust, finesine[ang]);
 		}

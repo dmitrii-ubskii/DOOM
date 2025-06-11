@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_char, ptr::null_mut};
+use std::{ffi::c_char, num::Wrapping, ptr::null_mut};
 
 use crate::{
 	d_player::wbstartstruct_t,
@@ -21,7 +21,6 @@ use crate::{
 	p_tick::{P_InitThinkers, leveltime, playeringame, players},
 	r_defs::{line_t, node_t, sector_t, seg_t, side_t, slopetype_t, subsector_t, vertex_t},
 	s_sound::S_Start,
-	tables::angle_t,
 	w_wad::{W_CacheLumpNum, W_GetNumForName, W_LumpLength, W_Reload},
 	z_zone::{PU_LEVEL, PU_PURGELEVEL, PU_STATIC, Z_Free, Z_FreeTags, Z_Malloc},
 };
@@ -154,7 +153,7 @@ fn P_LoadSegs(lump: usize) {
 			(*li).v1 = vertexes.wrapping_add((*ml).v1 as usize);
 			(*li).v2 = vertexes.wrapping_add((*ml).v2 as usize);
 
-			(*li).angle = ((*ml).angle as angle_t) << 16;
+			(*li).angle = Wrapping((*ml).angle as usize) << 16;
 			(*li).offset = ((*ml).offset as i32) << 16;
 			let linedef = (*ml).linedef as usize;
 			let ldef = lines.wrapping_add(linedef);

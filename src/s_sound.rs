@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, ptr::null_mut};
+use std::{ffi::c_void, num::Wrapping, ptr::null_mut};
 
 use crate::{
 	doomdef::GameMode_t,
@@ -11,7 +11,7 @@ use crate::{
 	m_random::M_Random,
 	p_mobj::mobj_t,
 	sounds::{S_music, S_sfx, musicenum_t, musicinfo_t, sfxenum_t, sfxinfo_t},
-	tables::{ANGLETOFINESHIFT, finesine},
+	tables::{ANGLETOFINESHIFT, angle_t, finesine},
 	w_wad::{W_CacheLumpNum, W_GetNumForName},
 	z_zone::{PU_CACHE, PU_MUSIC, PU_STATIC, Z_ChangeTag, Z_Malloc},
 };
@@ -511,7 +511,7 @@ fn S_StopChannel(cnum: usize) {
 }
 
 unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> u32;
+	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // Changes volume, stereo-separation, and pitch variables
@@ -544,13 +544,13 @@ fn S_AdjustSoundParams(
 		if angle > listener.angle {
 			angle -= listener.angle;
 		} else {
-			angle += 0xffffffff - listener.angle;
+			angle += Wrapping(0xffffffff) - listener.angle;
 		}
 
 		angle >>= ANGLETOFINESHIFT;
 
 		// stereo separation
-		*sep = 128 - (FixedMul(S_STEREO_SWING, finesine[angle as usize]) >> FRACBITS);
+		*sep = 128 - (FixedMul(S_STEREO_SWING, finesine[angle.0 as usize]) >> FRACBITS);
 
 		// volume calculation
 		if approx_dist < S_CLOSE_DIST {

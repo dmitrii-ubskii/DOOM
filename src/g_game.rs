@@ -2,6 +2,7 @@
 
 use std::{
 	ffi::{c_char, c_int, c_void},
+	num::Wrapping,
 	ptr::{null, null_mut},
 };
 
@@ -43,7 +44,7 @@ use crate::{
 	r_sky::{SKYFLATNAME, skyflatnum, skytexture},
 	s_sound::{S_PauseSound, S_ResumeSound, S_StartSound},
 	sounds::sfxenum_t,
-	tables::{ANG45, ANGLETOFINESHIFT, angle_t, finecos, finesine},
+	tables::{ANG45, ANGLETOFINESHIFT, finecos, finesine},
 	v_video::screens,
 	w_wad::{W_CacheLumpName, W_CheckNumForName},
 	z_zone::{PU_CACHE, PU_STATIC, Z_ChangeTag, Z_CheckHeap, Z_Free, Z_Malloc},
@@ -879,11 +880,11 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 
 		// spawn a teleport fog
 		let ss = R_PointInSubsector(x, y);
-		let an = (ANG45 * ((*mthing).angle as angle_t / 45)) >> ANGLETOFINESHIFT;
+		let an = (ANG45 * Wrapping((*mthing).angle as usize / 45)) >> ANGLETOFINESHIFT;
 
 		let mo = P_SpawnMobj(
-			x + 20 * finecos(an as usize),
-			y + 20 * finesine[an as usize],
+			x + 20 * finecos(an.0),
+			y + 20 * finesine[an.0],
 			(*(*ss).sector).floorheight,
 			mobjtype_t::MT_TFOG,
 		);

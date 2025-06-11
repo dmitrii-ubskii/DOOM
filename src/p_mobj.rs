@@ -62,7 +62,7 @@
 
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, mem::transmute, ptr::null_mut};
+use std::{ffi::c_void, mem::transmute, num::Wrapping, ptr::null_mut};
 
 use crate::{
 	d_main::nomonsters,
@@ -589,7 +589,7 @@ fn P_NightmareRespawn(mobj: &mut mobj_t) {
 		// inherit attributes from deceased one
 		let mo = P_SpawnMobj(x, y, z, mobj.ty);
 		(*mo).spawnpoint = mobj.spawnpoint;
-		(*mo).angle = ANG45 * (mthing.angle as angle_t / 45);
+		(*mo).angle = ANG45 * Wrapping(mthing.angle as usize / 45);
 
 		if mthing.options as u8 & MTF_AMBUSH != 0 {
 			(*mo).flags |= MF_AMBUSH;
@@ -808,7 +808,7 @@ pub(crate) fn P_RespawnSpecials() {
 
 		let mo = &mut *P_SpawnMobj(x, y, z, i);
 		mo.spawnpoint = *mthing;
-		mo.angle = ANG45 * (mthing.angle as angle_t / 45);
+		mo.angle = ANG45 * Wrapping(mthing.angle as usize / 45);
 
 		// pull it from the que
 		iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
@@ -848,7 +848,7 @@ pub extern "C" fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 			mobj.flags |= (mthing.ty as u32 - 1) << MF_TRANSSHIFT;
 		}
 
-		mobj.angle = ANG45 * (mthing.angle as angle_t / 45);
+		mobj.angle = ANG45 * Wrapping(mthing.angle as usize / 45);
 		mobj.player = p;
 		mobj.health = p.health;
 
@@ -979,7 +979,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 			totalitems += 1;
 		}
 
-		mobj.angle = ANG45 * (mthing.angle as angle_t / 45);
+		mobj.angle = ANG45 * Wrapping(mthing.angle as usize / 45);
 		if mthing.options as u8 & MTF_AMBUSH != 0 {
 			mobj.flags |= MF_AMBUSH;
 		}
@@ -1055,7 +1055,7 @@ fn P_CheckMissileSpawn(th: &mut mobj_t) {
 }
 
 unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> u32;
+	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // P_SpawnMissile
@@ -1077,12 +1077,12 @@ pub extern "C" fn P_SpawnMissile(
 
 		// fuzzy player
 		if dest.flags & MF_SHADOW != 0 {
-			an += ((P_Random() - P_Random()) << 20) as angle_t;
+			an += Wrapping(((P_Random() - P_Random()) << 20) as usize);
 		}
 
 		th.angle = an;
 		an >>= ANGLETOFINESHIFT;
-		let an = an as usize;
+		let an = an.0 as usize;
 		th.momx = FixedMul((*th.info).speed, finecos(an));
 		th.momy = FixedMul((*th.info).speed, finesine[an]);
 
@@ -1115,11 +1115,11 @@ pub extern "C" fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
 		let mut slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT);
 
 		if linetarget.is_null() {
-			an = an.wrapping_add(1 << 26);
+			an += Wrapping(1 << 26);
 			slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT);
 
 			if linetarget.is_null() {
-				an = an.wrapping_sub(2 << 26);
+				an -= Wrapping(2 << 26);
 				slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT);
 			}
 
@@ -1141,8 +1141,8 @@ pub extern "C" fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
 
 		th.target = source;
 		th.angle = an;
-		th.momx = FixedMul((*th.info).speed, finecos((an >> ANGLETOFINESHIFT) as usize));
-		th.momy = FixedMul((*th.info).speed, finesine[(an >> ANGLETOFINESHIFT) as usize]);
+		th.momx = FixedMul((*th.info).speed, finecos(an.0 >> ANGLETOFINESHIFT));
+		th.momy = FixedMul((*th.info).speed, finesine[an.0 >> ANGLETOFINESHIFT]);
 		th.momz = FixedMul((*th.info).speed, slope);
 
 		P_CheckMissileSpawn(th);

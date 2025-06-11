@@ -1,5 +1,7 @@
 #![allow(non_snake_case, clippy::missing_safety_doc)]
 
+use std::num::Wrapping;
+
 use crate::{
 	d_event::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAPONSHIFT},
 	d_player::{cheat_t, player_t, playerstate_t},
@@ -27,11 +29,9 @@ static mut onground: bool = false;
 // Moves the given origin along a given angle.
 fn P_Thrust(player: &mut player_t, mut angle: angle_t, mov: fixed_t) {
 	angle >>= ANGLETOFINESHIFT;
-	let angle = angle as usize;
-
 	unsafe {
-		(*player.mo).momx += FixedMul(mov, finecos(angle));
-		(*player.mo).momy += FixedMul(mov, finesine[angle]);
+		(*player.mo).momx += FixedMul(mov, finecos(angle.0));
+		(*player.mo).momy += FixedMul(mov, finesine[angle.0]);
 	}
 }
 
@@ -111,7 +111,7 @@ fn P_MovePlayer(player: &mut player_t) {
 		let mo = &mut *player.mo;
 		let cmd = &player.cmd;
 
-		mo.angle = mo.angle.wrapping_add_signed((cmd.angleturn as i32) << 16);
+		mo.angle += Wrapping((cmd.angleturn as usize) << 16);
 
 		// Do not let the player control movement
 		//  if not onground.
@@ -126,7 +126,7 @@ fn P_MovePlayer(player: &mut player_t) {
 		let mo = &mut *player.mo;
 		let cmd = &mut player.cmd;
 		if cmd.sidemove != 0 && onground {
-			let angle = mo.angle.wrapping_sub(ANG90);
+			let angle = mo.angle - ANG90;
 			let mov = cmd.sidemove as i32 * 2048;
 			P_Thrust(player, angle, mov);
 		}
@@ -143,13 +143,13 @@ fn P_MovePlayer(player: &mut player_t) {
 
 unsafe extern "C" {
 	fn P_MovePsprites(player: &mut player_t);
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> u32;
+	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // P_DeathThink
 // Fall on your face when dying.
 // Decrease POV height to floor height.
-const ANG5: angle_t = ANG90 / 18;
+const ANG5: angle_t = Wrapping(ANG90.0 / 18);
 
 fn P_DeathThink(player: &mut player_t) {
 	unsafe {
@@ -174,9 +174,9 @@ fn P_DeathThink(player: &mut player_t) {
 			let attacker = &mut *player.attacker;
 			let angle = R_PointToAngle2(mo.x, mo.y, attacker.x, attacker.y);
 
-			let delta = angle.wrapping_sub(mo.angle);
+			let delta = angle - mo.angle;
 
-			if delta < ANG5 || delta > -(ANG5 as i32) as u32 {
+			if delta < ANG5 || delta > -ANG5 {
 				// Looking at killer,
 				//  so fade damage flash down.
 				mo.angle = angle;
@@ -185,9 +185,9 @@ fn P_DeathThink(player: &mut player_t) {
 					player.damagecount -= 1;
 				}
 			} else if delta < ANG180 {
-				mo.angle = mo.angle.wrapping_add(ANG5);
+				mo.angle += ANG5;
 			} else {
-				mo.angle = mo.angle.wrapping_sub(ANG5);
+				mo.angle -= ANG5;
 			}
 		} else if player.damagecount != 0 {
 			player.damagecount -= 1;
