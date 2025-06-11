@@ -47,6 +47,7 @@ use crate::{
 	tables::{ANG45, ANGLETOFINESHIFT, finecos, finesine},
 	v_video::screens,
 	w_wad::{W_CacheLumpName, W_CheckNumForName},
+	wi_stuff::{WI_Start, WI_Ticker},
 	z_zone::{PU_CACHE, PU_STATIC, Z_ChangeTag, Z_CheckHeap, Z_Free, Z_Malloc},
 };
 
@@ -650,7 +651,6 @@ unsafe extern "C" {
 	fn P_Ticker();
 	fn ST_Ticker();
 	fn AM_Ticker();
-	fn WI_Ticker();
 	fn F_Ticker();
 }
 
@@ -1019,9 +1019,9 @@ pub extern "C" fn G_SecretExitLevel() {
 unsafe extern "C" {
 	static mut automapactive: boolean;
 	fn AM_Stop();
-	fn WI_Start(wbstartstruct: *mut wbstartstruct_t);
 }
 
+#[allow(static_mut_refs)]
 fn G_DoCompleted() {
 	unsafe {
 		gameaction = gameaction_t::ga_nothing;
@@ -1115,13 +1115,12 @@ fn G_DoCompleted() {
 			libc::memcpy(statcopy, (&raw mut wminfo).cast(), size_of::<wbstartstruct_t>());
 		}
 
-		WI_Start(&raw mut wminfo);
+		WI_Start(&mut wminfo);
 	}
 }
 
 // G_WorldDone
-#[unsafe(no_mangle)]
-pub extern "C" fn G_WorldDone() {
+pub(crate) fn G_WorldDone() {
 	unsafe {
 		gameaction = gameaction_t::ga_worlddone;
 

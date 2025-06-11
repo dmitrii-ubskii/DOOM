@@ -40,6 +40,7 @@ use crate::{
 	sounds::musicenum_t,
 	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
 	w_wad::{W_CheckNumForName, W_InitMultipleFiles},
+	wi_stuff::WI_Drawer,
 	z_zone::{PU_CACHE, Z_Init},
 };
 
@@ -168,7 +169,6 @@ unsafe extern "C" {
 	fn R_FillBackScreen();
 	fn R_RenderPlayerView(player: &mut player_t);
 	fn ST_Drawer(_: boolean, redrawsbar: boolean);
-	fn WI_Drawer();
 	fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void;
 }
 

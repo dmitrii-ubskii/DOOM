@@ -34,7 +34,9 @@ macro_rules! Z_ChangeTag {
 		let block = $p.wrapping_byte_sub(size_of::<$crate::z_zone::memblock_t>())
 			as *mut $crate::z_zone::memblock_t;
 		if (*block).id != 0x1d4a11 {
-			I_Error(concat!("Z_CT at ", file!(), ":%i", line!(), "\0").as_ptr().cast());
+			crate::i_system::I_Error(
+				concat!("Z_CT at ", file!(), ":%i", line!(), "\0").as_ptr().cast(),
+			);
 		}
 		crate::z_zone::Z_ChangeTag2($p.cast(), $t);
 	};

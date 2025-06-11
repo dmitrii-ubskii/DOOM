@@ -27,7 +27,6 @@ fn main() {
 			"linuxdoom-1.10/r_plane.c",
 			"linuxdoom-1.10/r_segs.c",
 			"linuxdoom-1.10/r_things.c",
-			"linuxdoom-1.10/wi_stuff.c",
 			"linuxdoom-1.10/st_stuff.c",
 		])
 		.no_default_flags(true)
