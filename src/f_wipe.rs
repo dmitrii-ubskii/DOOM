@@ -3,7 +3,7 @@
 // DESCRIPTION:
 //	Mission start screen wipe/melt, special effects.
 
-use std::{ffi::c_void, ptr::null_mut, slice};
+use std::{ptr::null_mut, slice};
 
 use libc::memcpy;
 
@@ -38,14 +38,14 @@ fn wipe_shittyColMajorXform(array: *mut i16, width: usize, height: usize) {
 			}
 		}
 
-		memcpy(array as *mut c_void, dest as *mut c_void, width * height * 2);
+		memcpy(array.cast(), dest.cast(), width * height * 2);
 
-		Z_Free(dest as *mut c_void);
+		Z_Free(dest.cast());
 	}
 }
 
 fn wipe_initColorXForm(width: usize, height: usize, _ticks: usize) -> i32 {
-	unsafe { memcpy(wipe_scr as *mut c_void, wipe_scr_start as *mut c_void, width * height) };
+	unsafe { memcpy(wipe_scr.cast(), wipe_scr_start.cast(), width * height) };
 	0
 }
 
@@ -92,16 +92,16 @@ static mut y: *mut i32 = null_mut();
 fn wipe_initMelt(width: usize, height: usize, _ticks: usize) -> i32 {
 	unsafe {
 		// copy start screen to main screen
-		memcpy(wipe_scr as *mut c_void, wipe_scr_start as *mut c_void, width * height);
+		memcpy(wipe_scr.cast(), wipe_scr_start.cast(), width * height);
 
 		// makes this wipe faster (in theory)
 		// to have stuff in column-major format
-		wipe_shittyColMajorXform(wipe_scr_start as *mut i16, width / 2, height);
-		wipe_shittyColMajorXform(wipe_scr_end as *mut i16, width / 2, height);
+		wipe_shittyColMajorXform(wipe_scr_start.cast(), width / 2, height);
+		wipe_shittyColMajorXform(wipe_scr_end.cast(), width / 2, height);
 
 		// setup initial column positions
 		// (y<0 => not ready to scroll yet)
-		y = Z_Malloc(width * size_of::<i32>(), PU_STATIC, null_mut()) as *mut i32;
+		y = Z_Malloc(width * size_of::<i32>(), PU_STATIC, null_mut()).cast();
 
 		let y_slice = slice::from_raw_parts_mut(y, width);
 		y_slice[0] = -(M_Random() % 16);
@@ -164,7 +164,7 @@ fn wipe_doMelt(mut width: usize, height: usize, ticks: usize) -> i32 {
 }
 
 fn wipe_exitMelt(_width: usize, _height: usize, _ticks: usize) -> i32 {
-	unsafe { Z_Free(y as *mut c_void) };
+	unsafe { Z_Free(y.cast()) };
 	0
 }
 

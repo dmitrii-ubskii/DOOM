@@ -51,7 +51,7 @@ pub unsafe extern "C" fn EV_Teleport(line: &mut line_t, side: i32, thing: &mut m
 						continue;
 					}
 
-					let m = &mut *(thinker as *mut _ as *mut mobj_t);
+					let m = &mut *(thinker as *mut thinker_t as *mut mobj_t);
 
 					// not a teleportman
 					if m.ty != mobjtype_t::MT_TELEPORTMAN {

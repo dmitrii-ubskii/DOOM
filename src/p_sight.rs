@@ -213,7 +213,7 @@ fn P_CrossBSPNode(bspnum: usize) -> i32 {
 		let bsp = nodes.add(bspnum);
 
 		// decide which side the start point is on
-		let mut side = P_DivlineSide(strace.x, strace.y, &mut *(bsp as *mut divline_t));
+		let mut side = P_DivlineSide(strace.x, strace.y, &mut *(bsp.cast()));
 		if side == 2 {
 			side = 0; // an "on" should cross both sides
 		}
@@ -224,7 +224,7 @@ fn P_CrossBSPNode(bspnum: usize) -> i32 {
 		}
 
 		// the partition plane is crossed here
-		if side == P_DivlineSide(t2x, t2y, &mut *(bsp as *mut divline_t)) {
+		if side == P_DivlineSide(t2x, t2y, &mut *(bsp.cast())) {
 			// the line doesn't touch the other side
 			return 1;
 		}

@@ -34,7 +34,7 @@ macro_rules! Z_ChangeTag {
 		let block = $p.wrapping_byte_sub(size_of::<$crate::z_zone::memblock_t>())
 			as *mut $crate::z_zone::memblock_t;
 		if (*block).id != 0x1d4a11 {
-			I_Error(concat!("Z_CT at ", file!(), ":%i", line!(), "\0").as_ptr() as *const i8);
+			I_Error(concat!("Z_CT at ", file!(), ":%i", line!(), "\0").as_ptr().cast());
 		}
 		crate::z_zone::Z_ChangeTag2($p.cast(), $t);
 	};
@@ -68,7 +68,7 @@ static mut mainzone: *mut memzone_t = null_mut();
 // Z_ClearZone
 fn Z_ClearZone(zone: *mut memzone_t) {
 	unsafe {
-		let block = zone.wrapping_byte_add(size_of::<memzone_t>()) as *mut memblock_t;
+		let block = zone.wrapping_byte_add(size_of::<memzone_t>()).cast();
 
 		let zone = &mut *zone;
 		// set the entire zone to one free block
@@ -96,7 +96,7 @@ pub(crate) fn Z_Init() {
 	unsafe {
 		let mut size = 0;
 
-		mainzone = I_ZoneBase(&mut size) as *mut memzone_t;
+		mainzone = I_ZoneBase(&mut size).cast();
 		(*mainzone).size = size;
 
 		Z_ClearZone(mainzone);
@@ -257,7 +257,7 @@ pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c
 
 		(*base).id = ZONEID;
 
-		(base.wrapping_byte_add(size_of::<memblock_t>())) as *mut c_void
+		(base.wrapping_byte_add(size_of::<memblock_t>())).cast()
 	}
 }
 
@@ -271,7 +271,7 @@ pub(crate) fn Z_FreeTags(lowtag: usize, hightag: usize) {
 
 			// free block?
 			if !(*block).user.is_null() && lowtag <= (*block).tag && (*block).tag <= hightag {
-				Z_Free(block.wrapping_byte_add(size_of::<memblock_t>()) as *mut c_void);
+				Z_Free(block.wrapping_byte_add(size_of::<memblock_t>()).cast());
 			}
 
 			block = next;

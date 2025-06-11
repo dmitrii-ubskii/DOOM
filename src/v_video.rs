@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, ptr::null_mut};
+use std::ptr::null_mut;
 
 use libc::memcpy;
 
@@ -145,7 +145,7 @@ pub extern "C" fn V_CopyRect(
 		let mut dest = screens[destscrn].wrapping_byte_add(SCREENWIDTH * desty + destx);
 
 		for _ in 0..height {
-			memcpy(dest as *mut c_void, src as *mut c_void, width);
+			memcpy(dest.cast(), src.cast(), width);
 			src = src.wrapping_byte_add(SCREENWIDTH);
 			dest = dest.wrapping_byte_add(SCREENWIDTH);
 		}
@@ -185,7 +185,7 @@ pub unsafe extern "C" fn V_DrawPatch(
 
 		let w = (*patch).width as usize;
 		while col < w {
-			let count = *(&raw const (*patch).columnofs[0]).wrapping_add(col);
+			let count = *((*patch).columnofs.as_ptr()).wrapping_add(col);
 			let mut column = patch.wrapping_byte_add(count) as *mut column_t;
 
 			// step through the posts in a column
@@ -241,7 +241,7 @@ pub unsafe extern "C" fn V_DrawPatchFlipped(
 		let w = (*patch).width as usize;
 
 		while col < w {
-			let count = *(&raw const (*patch).columnofs[0]).wrapping_add(w - 1 - col);
+			let count = *((*patch).columnofs.as_ptr()).wrapping_add(w - 1 - col);
 			let mut column = patch.wrapping_byte_add(count) as *mut column_t;
 
 			// step through the posts in a column
@@ -295,7 +295,7 @@ pub(crate) fn V_DrawBlock(
 		let mut dest = screens[scrn].wrapping_byte_add(y * SCREENWIDTH + x);
 
 		for _ in 0..height {
-			memcpy(dest as *mut c_void, src as *mut c_void, width);
+			memcpy(dest.cast(), src.cast(), width);
 			src = src.wrapping_byte_add(width);
 			dest = dest.wrapping_byte_add(SCREENWIDTH);
 		}

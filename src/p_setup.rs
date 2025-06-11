@@ -217,8 +217,8 @@ fn P_LoadSectors(lump: usize) {
 		for _ in 0..numsectors {
 			(*ss).floorheight = ((*ms).floorheight as i32) << FRACBITS;
 			(*ss).ceilingheight = ((*ms).ceilingheight as i32) << FRACBITS;
-			(*ss).floorpic = R_FlatNumForName(&raw const (*ms).floorpic[0]) as i16;
-			(*ss).ceilingpic = R_FlatNumForName(&raw const (*ms).ceilingpic[0]) as i16;
+			(*ss).floorpic = R_FlatNumForName((*ms).floorpic.as_ptr()) as i16;
+			(*ss).ceilingpic = R_FlatNumForName((*ms).ceilingpic.as_ptr()) as i16;
 			(*ss).lightlevel = (*ms).lightlevel;
 			(*ss).special = (*ms).special;
 			(*ss).tag = (*ms).tag;
@@ -388,9 +388,9 @@ fn P_LoadSideDefs(lump: usize) {
 		for _ in 0..numsides {
 			(*sd).textureoffset = ((*msd).textureoffset as i32) << FRACBITS;
 			(*sd).rowoffset = ((*msd).rowoffset as i32) << FRACBITS;
-			(*sd).toptexture = R_TextureNumForName(&raw const (*msd).toptexture[0]) as i16;
-			(*sd).bottomtexture = R_TextureNumForName(&raw const (*msd).bottomtexture[0]) as i16;
-			(*sd).midtexture = R_TextureNumForName(&raw const (*msd).midtexture[0]) as i16;
+			(*sd).toptexture = R_TextureNumForName((*msd).toptexture.as_ptr()) as i16;
+			(*sd).bottomtexture = R_TextureNumForName((*msd).bottomtexture.as_ptr()) as i16;
+			(*sd).midtexture = R_TextureNumForName((*msd).midtexture.as_ptr()) as i16;
 			(*sd).sector = sectors.wrapping_add((*msd).sector as usize);
 			msd = msd.wrapping_add(1);
 			sd = sd.wrapping_add(1);
@@ -513,6 +513,7 @@ unsafe extern "C" {
 
 // NOT called by W_Ticker. Fixme.
 // P_SetupLevel
+#[allow(static_mut_refs)]
 pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill: skill_t) {
 	unsafe {
 		totalkills = 0;
@@ -546,9 +547,9 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 		// find map name
 		if gamemode == GameMode_t::commercial {
 			if map < 10 {
-				libc::sprintf(&raw mut lumpname[0], c"map0%i".as_ptr(), map);
+				libc::sprintf(lumpname.as_mut_ptr(), c"map0%i".as_ptr(), map);
 			} else {
-				libc::sprintf(&raw mut lumpname[0], c"map%i".as_ptr(), map);
+				libc::sprintf(lumpname.as_mut_ptr(), c"map%i".as_ptr(), map);
 			}
 		} else {
 			lumpname[0] = b'E' as c_char;
@@ -558,7 +559,7 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 			lumpname[4] = 0;
 		}
 
-		let lumpnum = W_GetNumForName(&raw const lumpname[0]) as usize;
+		let lumpnum = W_GetNumForName(lumpname.as_ptr()) as usize;
 
 		leveltime = 0;
 
@@ -577,7 +578,7 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 		P_GroupLines();
 
 		bodyqueslot = 0;
-		deathmatch_p = &raw mut deathmatchstarts[0];
+		deathmatch_p = deathmatchstarts.as_mut_ptr();
 		P_LoadThings(lumpnum + ML_THINGS);
 
 		// if deathmatch, randomly spawn the active players
@@ -611,10 +612,11 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 
 // Called by startup code.
 // P_Init
+#[allow(static_mut_refs)]
 pub(crate) fn P_Init() {
 	unsafe {
 		P_InitSwitchList();
 		P_InitPicAnims();
-		R_InitSprites(&raw const sprnames[0]);
+		R_InitSprites(sprnames.as_ptr());
 	}
 }

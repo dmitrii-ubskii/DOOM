@@ -656,6 +656,7 @@ unsafe extern "C" {
 // G_Ticker
 // Make ticcmd_ts for the players.
 #[unsafe(no_mangle)]
+#[allow(static_mut_refs)]
 pub extern "C" fn G_Ticker() {
 	unsafe {
 		// do player reborns if needed
@@ -712,11 +713,11 @@ pub extern "C" fn G_Ticker() {
 				{
 					static mut turbomessage: [c_char; 80] = [0; 80];
 					libc::sprintf(
-						&raw mut turbomessage[0],
+						turbomessage.as_mut_ptr(),
 						c"%s is turbo!".as_ptr(),
 						player_names[i],
 					);
-					players[consoleplayer].message = &raw mut turbomessage[0];
+					players[consoleplayer].message = turbomessage.as_mut_ptr();
 				}
 
 				if netgame != 0 && netdemo == 0 && gametic % ticdup as i32 == 0 {
@@ -751,7 +752,7 @@ pub extern "C" fn G_Ticker() {
 
 					BTS_SAVEGAME => {
 						if savedescription[0] == 0 {
-							libc::strcpy(&raw mut savedescription[0], c"NET GAME".as_ptr());
+							libc::strcpy(savedescription.as_mut_ptr(), c"NET GAME".as_ptr());
 						}
 						savegameslot =
 							((players[i].cmd.buttons & BTS_SAVEMASK) >> BTS_SAVESHIFT) as usize;
@@ -902,9 +903,10 @@ unsafe extern "C" {
 // G_DeathMatchSpawnPlayer
 // Spawns a player at one of the random death match spots
 // called at level load and each death
+#[allow(static_mut_refs)]
 pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 	unsafe {
-		let selections = deathmatch_p.offset_from(&raw mut deathmatchstarts[0]);
+		let selections = deathmatch_p.offset_from(deathmatchstarts.as_mut_ptr());
 		if selections < 4 {
 			I_Error(c"Only %i deathmatch spots, 4 required".as_ptr(), selections);
 		}
@@ -1156,9 +1158,10 @@ unsafe extern "C" {
 pub static mut savename: [c_char; 256] = [0; 256];
 
 #[unsafe(no_mangle)]
+#[allow(static_mut_refs)]
 pub unsafe extern "C" fn G_LoadGame(name: *const c_char) {
 	unsafe {
-		libc::strcpy(&raw mut savename[0], name);
+		libc::strcpy(savename.as_mut_ptr(), name);
 		gameaction = gameaction_t::ga_loadgame;
 	}
 }
@@ -1171,17 +1174,18 @@ unsafe extern "C" {
 	fn R_FillBackScreen();
 }
 
+#[allow(static_mut_refs)]
 fn G_DoLoadGame() {
 	unsafe {
 		gameaction = gameaction_t::ga_nothing;
 
-		let _length = M_ReadFile(&raw const savename[0], &raw mut savebuffer);
+		let _length = M_ReadFile(savename.as_ptr(), &raw mut savebuffer);
 		save_p = savebuffer.wrapping_add(SAVESTRINGSIZE);
 
 		// skip the description field
 		let mut vcheck = [0; VERSIONSIZE];
-		libc::sprintf(&raw mut vcheck[0], c"version %i".as_ptr(), VERSION);
-		if libc::strcmp(save_p.cast(), &raw const vcheck[0]) != 0 {
+		libc::sprintf(vcheck.as_mut_ptr(), c"version %i".as_ptr(), VERSION);
+		if libc::strcmp(save_p.cast(), vcheck.as_ptr()) != 0 {
 			return; // bad version
 		}
 		save_p = save_p.wrapping_add(VERSIONSIZE);
@@ -1237,10 +1241,11 @@ fn G_DoLoadGame() {
 // Called by the menu task.
 // Description is a 24 byte text string
 #[unsafe(no_mangle)]
+#[allow(static_mut_refs)]
 pub unsafe extern "C" fn G_SaveGame(slot: usize, description: *const c_char) {
 	unsafe {
 		savegameslot = slot;
-		libc::strcpy(&raw mut savedescription[0], description);
+		libc::strcpy(savedescription.as_mut_ptr(), description);
 		sendsave = 1;
 	}
 }
@@ -1256,13 +1261,13 @@ fn G_DoSaveGame() {
 
 		if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
 			libc::sprintf(
-				&raw mut name[0],
+				name.as_mut_ptr(),
 				c"c:\\doomdata\\%s%d.dsg".as_ptr(),
 				SAVEGAMENAME,
 				savegameslot,
 			);
 		} else {
-			libc::sprintf(&raw mut name[0], c"%s%d.dsg".as_ptr(), SAVEGAMENAME, savegameslot);
+			libc::sprintf(name.as_mut_ptr(), c"%s%d.dsg".as_ptr(), SAVEGAMENAME, savegameslot);
 		}
 		let description = savedescription;
 
@@ -1273,8 +1278,8 @@ fn G_DoSaveGame() {
 		save_p = save_p.wrapping_add(SAVESTRINGSIZE);
 
 		let mut name2 = [0; VERSIONSIZE];
-		libc::sprintf(&raw mut name2[0], c"version %i".as_ptr(), VERSION);
-		libc::memcpy(save_p.cast(), (&raw const name2[0]).cast(), VERSIONSIZE);
+		libc::sprintf(name2.as_mut_ptr(), c"version %i".as_ptr(), VERSION);
+		libc::memcpy(save_p.cast(), (name2.as_ptr()).cast(), VERSIONSIZE);
 		save_p = save_p.wrapping_add(VERSIONSIZE);
 
 		*save_p = gameskill as u8;
@@ -1310,7 +1315,7 @@ fn G_DoSaveGame() {
 			I_Error(c"Savegame buffer overrun".as_ptr());
 		}
 
-		M_WriteFile(&raw const name[0], savebuffer.cast(), length as usize);
+		M_WriteFile(name.as_ptr(), savebuffer.cast(), length as usize);
 		gameaction = gameaction_t::ga_nothing;
 		savedescription[0] = 0;
 
@@ -1507,11 +1512,12 @@ fn G_WriteDemoTiccmd(cmd: *mut ticcmd_t) {
 }
 
 // G_RecordDemo
+#[allow(static_mut_refs)]
 pub(crate) fn G_RecordDemo(name: *const c_char) {
 	unsafe {
 		usergame = 0;
-		libc::strcpy(&raw mut demoname[0], name);
-		libc::strcat(&raw mut demoname[0], c".lmp".as_ptr());
+		libc::strcpy(demoname.as_mut_ptr(), name);
+		libc::strcat(demoname.as_mut_ptr(), c".lmp".as_ptr());
 		let mut maxsize = 0x20000;
 		let i = M_CheckParm(c"-maxdemo".as_ptr());
 		if i != 0 && i < myargc - 1 {
@@ -1644,6 +1650,7 @@ pub(crate) fn G_TimeDemo(name: *const c_char) {
 */
 
 #[unsafe(no_mangle)]
+#[allow(static_mut_refs)]
 pub extern "C" fn G_CheckDemoStatus() -> boolean {
 	unsafe {
 		if timingdemo != 0 {
@@ -1676,7 +1683,7 @@ pub extern "C" fn G_CheckDemoStatus() -> boolean {
 			*demo_p = DEMOMARKER;
 			demo_p = demo_p.wrapping_add(1);
 			M_WriteFile(
-				&raw mut demoname[0],
+				demoname.as_mut_ptr(),
 				demobuffer.cast(),
 				demo_p.offset_from(demobuffer) as usize,
 			);

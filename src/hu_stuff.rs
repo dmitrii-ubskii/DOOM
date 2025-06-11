@@ -354,18 +354,18 @@ pub(crate) fn HU_Init() {
 		let mut buffer = [0; 9];
 
 		// if french != 0 {
-		//     shiftxform = &raw const french_shiftxform[0];
+		//     shiftxform = french_shiftxform.as_ptr();
 		// } else {
-		shiftxform = &raw const english_shiftxform[0];
+		shiftxform = english_shiftxform.as_ptr();
 		// }
 
 		// load the heads-up font
 		let mut j = HU_FONTSTART;
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..HU_FONTSIZE as usize {
-			libc::sprintf(&raw mut buffer[0], c"STCFN%.3d".as_ptr(), j as c_int);
+			libc::sprintf(buffer.as_mut_ptr(), c"STCFN%.3d".as_ptr(), j as c_int);
 			j += 1;
-			hu_font[i] = W_CacheLumpName(&raw mut buffer[0], PU_STATIC).cast();
+			hu_font[i] = W_CacheLumpName(buffer.as_mut_ptr(), PU_STATIC).cast();
 		}
 	}
 }
@@ -396,7 +396,7 @@ pub extern "C" fn HU_Start() {
 			HU_MSGX,
 			HU_MSGY,
 			HU_MSGHEIGHT,
-			&raw mut hu_font[0],
+			hu_font.as_mut_ptr(),
 			HU_FONTSTART as i32,
 			&raw mut message_on,
 		);
@@ -406,7 +406,7 @@ pub extern "C" fn HU_Start() {
 			&mut w_title,
 			HU_TITLEX,
 			HU_TITLEY(),
-			&raw mut hu_font[0],
+			hu_font.as_mut_ptr(),
 			HU_FONTSTART as i32,
 		);
 
@@ -435,7 +435,7 @@ pub extern "C" fn HU_Start() {
 			&mut w_chat,
 			HU_INPUTX,
 			HU_INPUTY(),
-			&raw mut hu_font[0],
+			hu_font.as_mut_ptr(),
 			HU_FONTSTART as i32,
 			&raw mut chat_on,
 		);
@@ -528,7 +528,7 @@ pub(crate) fn HU_Ticker() {
 								HUlib_addMessageToSText(
 									&mut w_message,
 									player_names[i],
-									&raw const w_inputbuffer[i].l.l[0],
+									w_inputbuffer[i].l.l.as_ptr(),
 								);
 
 								message_nottobefuckedwith = 1;
@@ -669,8 +669,8 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 
 				// leave chat mode and notify that it was sent
 				chat_on = 0;
-				libc::strcpy(&raw mut lastmessage[0], chat_macros[c as usize].u());
-				(*plr).message = &raw mut lastmessage[0];
+				libc::strcpy(lastmessage.as_mut_ptr(), chat_macros[c as usize].u());
+				(*plr).message = lastmessage.as_mut_ptr();
 				eatkey = 1;
 			} else {
 				// if french {
@@ -690,8 +690,8 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 				if c == KEY_ENTER {
 					chat_on = 0;
 					if w_chat.l.len != 0 {
-						libc::strcpy(&raw mut lastmessage[0], &raw const w_chat.l.l[0]);
-						(*plr).message = &raw mut lastmessage[0];
+						libc::strcpy(lastmessage.as_mut_ptr(), w_chat.l.l.as_ptr());
+						(*plr).message = lastmessage.as_mut_ptr();
 					}
 				} else if c == KEY_ESCAPE {
 					chat_on = 0;

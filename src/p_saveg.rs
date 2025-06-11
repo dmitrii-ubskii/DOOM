@@ -40,6 +40,7 @@ fn PADSAVEP() {
 }
 
 // P_ArchivePlayers
+#[allow(static_mut_refs)]
 pub(crate) fn P_ArchivePlayers() {
 	unsafe {
 		for i in 0..MAXPLAYERS {
@@ -56,7 +57,7 @@ pub(crate) fn P_ArchivePlayers() {
 			for j in 0..psprnum_t::NUMPSPRITES as usize {
 				if !dest.psprites[j].state.is_null() {
 					dest.psprites[j].state =
-						dest.psprites[j].state.offset_from(&raw const states[0]) as *mut state_t;
+						dest.psprites[j].state.offset_from(states.as_ptr()) as *mut state_t;
 				}
 			}
 		}
@@ -223,6 +224,7 @@ unsafe extern "C" {
 }
 
 // P_ArchiveThinkers
+#[allow(static_mut_refs)]
 pub(crate) fn P_ArchiveThinkers() {
 	unsafe {
 		// save off the current thinkers
@@ -236,11 +238,11 @@ pub(crate) fn P_ArchiveThinkers() {
 				let mobj = save_p as *mut mobj_t;
 				libc::memcpy(mobj.cast(), th.cast(), size_of::<mobj_t>());
 				save_p = save_p.wrapping_add(size_of::<mobj_t>());
-				(*mobj).state = ((*mobj).state.offset_from(&raw const states[0])) as *mut state_t;
+				(*mobj).state = ((*mobj).state.offset_from(states.as_ptr())) as *mut state_t;
 
 				if !(*mobj).player.is_null() {
 					(*mobj).player =
-						(((*mobj).player.offset_from(&raw const players[0])) + 1) as *mut player_t;
+						(((*mobj).player.offset_from(players.as_ptr())) + 1) as *mut player_t;
 				}
 				{
 					th = (*th).next;

@@ -36,7 +36,6 @@ use crate::{
 	myargc, myargv,
 	p_setup::P_Init,
 	p_tick::players,
-	r_defs::patch_t,
 	s_sound::{S_Init, S_StartMusic, S_UpdateSounds},
 	sounds::musicenum_t,
 	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
@@ -245,7 +244,7 @@ fn D_Display() {
 
 		// clean up border stuff
 		if gamestate != oldgamestate && gamestate != gamestate_t::GS_LEVEL {
-			I_SetPalette(W_CacheLumpName(c"PLAYPAL".as_ptr(), PU_CACHE) as *mut u8);
+			I_SetPalette(W_CacheLumpName(c"PLAYPAL".as_ptr(), PU_CACHE).cast());
 		}
 
 		// see if the border needs to be initially drawn
@@ -275,12 +274,7 @@ fn D_Display() {
 		if paused != 0 {
 			let y = if automapactive != 0 { 4 } else { viewwindowy + 4 };
 			let x = viewwindowx.wrapping_add_signed((scaledviewwidth as isize - 68) / 2);
-			V_DrawPatchDirect(
-				x,
-				y,
-				0,
-				W_CacheLumpName(c"M_PAUSE".as_ptr(), PU_CACHE) as *mut patch_t,
-			);
+			V_DrawPatchDirect(x, y, 0, W_CacheLumpName(c"M_PAUSE".as_ptr(), PU_CACHE).cast());
 		}
 
 		// menus go directly to the screen
@@ -341,9 +335,9 @@ pub(crate) fn D_DoomLoop() {
 
 		if M_CheckParm(c"-debugfile".as_ptr()) != 0 {
 			let mut filename = [0; 20];
-			sprintf(&raw mut filename[0], c"debug%i.txt".as_ptr(), consoleplayer);
+			sprintf(filename.as_mut_ptr(), c"debug%i.txt".as_ptr(), consoleplayer);
 			libc::printf(c"debug output to: %s\n".as_ptr(), filename);
-			debugfile = libc::fopen(&raw mut filename[0], c"w".as_ptr());
+			debugfile = libc::fopen(filename.as_mut_ptr(), c"w".as_ptr());
 		}
 
 		I_InitGraphics();
@@ -368,7 +362,7 @@ pub(crate) fn D_DoomLoop() {
 				TryRunTics(); // will run at least one tic
 			}
 
-			S_UpdateSounds(players[consoleplayer].mo as *mut c_void); // move positional sounds
+			S_UpdateSounds(players[consoleplayer].mo.cast()); // move positional sounds
 
 			// Update display, next frame, with current state.
 			D_Display();
@@ -408,7 +402,7 @@ pub(crate) fn D_PageTicker() {
 // D_PageDrawer
 fn D_PageDrawer() {
 	unsafe {
-		V_DrawPatch(0, 0, 0, W_CacheLumpName(pagename, PU_CACHE) as *const patch_t);
+		V_DrawPatch(0, 0, 0, W_CacheLumpName(pagename, PU_CACHE).cast());
 	}
 }
 
@@ -514,7 +508,7 @@ fn D_AddFile(file: *const c_char) {
 			numwadfiles += 1;
 		}
 
-		let newfile = libc::malloc(libc::strlen(file) + 1) as *mut c_char;
+		let newfile = libc::malloc(libc::strlen(file) + 1).cast();
 		libc::strcpy(newfile, file);
 
 		wadfiles[numwadfiles] = newfile;
@@ -523,19 +517,19 @@ fn D_AddFile(file: *const c_char) {
 
 macro_rules! devdata {
 	($s:literal) => {
-		concat!("devdata", $s, "\0").as_ptr() as *const i8
+		concat!("devdata", $s, "\0").as_ptr().cast()
 	};
 }
 
 macro_rules! devmaps {
 	($s:literal) => {
-		concat!("devmaps", $s, "\0").as_ptr() as *const i8
+		concat!("devmaps", $s, "\0").as_ptr().cast()
 	};
 }
 
 macro_rules! tilde_devmaps {
 	($s:literal) => {
-		concat!("~", "devmaps", $s, "\0").as_ptr() as *const i8
+		concat!("~", "devmaps", $s, "\0").as_ptr().cast()
 	};
 }
 
@@ -543,6 +537,7 @@ macro_rules! tilde_devmaps {
 // Checks availability of IWAD files by name,
 // to determine whether registered/commercial features
 // should be executed (notably loading PWAD's).
+#[allow(static_mut_refs)]
 fn IdentifyVersion() {
 	unsafe {
 		//#ifdef NORMALUNIX
@@ -573,7 +568,7 @@ fn IdentifyVersion() {
 			I_Error(c"Please set $HOME to your home directory".as_ptr());
 		};
 		let home = CString::from_str(&home).unwrap();
-		sprintf(&raw mut basedefault[0], c"%s/.doomrc".as_ptr(), home.as_ptr());
+		sprintf(basedefault.as_mut_ptr(), c"%s/.doomrc".as_ptr(), home.as_ptr());
 		//#endif
 
 		if M_CheckParm(c"-shdev".as_ptr()) != 0 {
@@ -582,7 +577,7 @@ fn IdentifyVersion() {
 			D_AddFile(devdata!("doom1.wad"));
 			D_AddFile(devmaps!("data_se/texture1.lmp"));
 			D_AddFile(devmaps!("data_se/pnames.lmp"));
-			libc::strcpy(&raw mut basedefault[0], devdata!("default.cfg"));
+			libc::strcpy(basedefault.as_mut_ptr(), devdata!("default.cfg"));
 			return;
 		}
 
@@ -593,7 +588,7 @@ fn IdentifyVersion() {
 			D_AddFile(devmaps!("data_se/texture1.lmp"));
 			D_AddFile(devmaps!("data_se/texture2.lmp"));
 			D_AddFile(devmaps!("data_se/pnames.lmp"));
-			libc::strcpy(&raw mut basedefault[0], devdata!("default.cfg"));
+			libc::strcpy(basedefault.as_mut_ptr(), devdata!("default.cfg"));
 			return;
 		}
 
@@ -604,53 +599,53 @@ fn IdentifyVersion() {
 
 			D_AddFile(devmaps!("cdata/texture1.lmp"));
 			D_AddFile(devmaps!("cdata/pnames.lmp"));
-			libc::strcpy(&raw mut basedefault[0], devdata!("default.cfg"));
+			libc::strcpy(basedefault.as_mut_ptr(), devdata!("default.cfg"));
 			return;
 		}
 
-		if access(doom2fwad.as_ptr() as *const i8, R_OK) == 0 {
+		if access(doom2fwad.as_ptr().cast(), R_OK) == 0 {
 			gamemode = GameMode_t::commercial;
 			// C'est ridicule!
 			// Let's handle languages in config files, okay?
 			language = Language_t::french;
 			println!("French version");
-			D_AddFile(doom2fwad.as_ptr() as *const i8);
+			D_AddFile(doom2fwad.as_ptr().cast());
 			return;
 		}
 
-		if access(doom2wad.as_ptr() as *const i8, R_OK) == 0 {
+		if access(doom2wad.as_ptr().cast(), R_OK) == 0 {
 			gamemode = GameMode_t::commercial;
-			D_AddFile(doom2wad.as_ptr() as *const i8);
+			D_AddFile(doom2wad.as_ptr().cast());
 			return;
 		}
 
-		if (access(plutoniawad.as_ptr() as *const i8, R_OK)) == 0 {
+		if (access(plutoniawad.as_ptr().cast(), R_OK)) == 0 {
 			gamemode = GameMode_t::commercial;
-			D_AddFile(plutoniawad.as_ptr() as *const i8);
+			D_AddFile(plutoniawad.as_ptr().cast());
 			return;
 		}
 
-		if (access(tntwad.as_ptr() as *const i8, R_OK)) == 0 {
+		if (access(tntwad.as_ptr().cast(), R_OK)) == 0 {
 			gamemode = GameMode_t::commercial;
-			D_AddFile(tntwad.as_ptr() as *const i8);
+			D_AddFile(tntwad.as_ptr().cast());
 			return;
 		}
 
-		if (access(doomuwad.as_ptr() as *const i8, R_OK)) == 0 {
+		if (access(doomuwad.as_ptr().cast(), R_OK)) == 0 {
 			gamemode = GameMode_t::retail;
-			D_AddFile(doomuwad.as_ptr() as *const i8);
+			D_AddFile(doomuwad.as_ptr().cast());
 			return;
 		}
 
-		if (access(doomwad.as_ptr() as *const i8, R_OK)) == 0 {
+		if (access(doomwad.as_ptr().cast(), R_OK)) == 0 {
 			gamemode = GameMode_t::registered;
-			D_AddFile(doomwad.as_ptr() as *const i8);
+			D_AddFile(doomwad.as_ptr().cast());
 			return;
 		}
 
-		if (access(doom1wad.as_ptr() as *const i8, R_OK)) == 0 {
+		if (access(doom1wad.as_ptr().cast(), R_OK)) == 0 {
 			gamemode = GameMode_t::shareware;
-			D_AddFile(doom1wad.as_ptr() as *const i8);
+			D_AddFile(doom1wad.as_ptr().cast());
 			return;
 		}
 
@@ -686,7 +681,7 @@ fn FindResponseFile() {
 				let size = ftell(handle) as usize;
 				fseek(handle, 0, SEEK_SET);
 				let file = libc::malloc(size) as *mut c_char;
-				fread(file as *mut c_void, size, 1, handle);
+				fread(file.cast(), size, 1, handle);
 				fclose(handle);
 
 				// KEEP ALL CMDLINE ARGS FOLLOWING @RESPONSEFILE ARG
@@ -699,7 +694,7 @@ fn FindResponseFile() {
 
 				let firstargv = *myargv.wrapping_add(0);
 				myargv = malloc(size_of::<*const char>() * MAXARGVS) as *mut *mut c_char;
-				memset(myargv as *mut c_void, 0, size_of::<*const char>() * MAXARGVS);
+				memset(myargv.cast(), 0, size_of::<*const char>() * MAXARGVS);
 				*myargv = firstargv;
 
 				let infile = file;
@@ -754,18 +749,19 @@ unsafe extern "C" {
 
 macro_rules! cdrom_savegamename {
 	($s:literal) => {
-		concat!("c:\\doomdata\\doomsav", $s, "\0").as_ptr() as *const i8
+		concat!("c:\\doomdata\\doomsav", $s, "\0").as_ptr().cast()
 	};
 }
 
 macro_rules! savegamename {
 	($s:literal) => {
-		concat!("doomsav", $s, "\0").as_ptr() as *const i8
+		concat!("doomsav", $s, "\0").as_ptr().cast()
 	};
 }
 
 // D_DoomMain
 #[unsafe(no_mangle)]
+#[allow(static_mut_refs)]
 pub extern "C" fn D_DoomMain() {
 	unsafe {
 		FindResponseFile();
@@ -788,7 +784,7 @@ pub extern "C" fn D_DoomMain() {
 		match gamemode {
 			GameMode_t::retail => {
 				sprintf(
-					&raw mut title[0],
+					title.as_mut_ptr(),
 					c"						 The Ultimate DOOM Startup v%i.%i						   ".as_ptr(),
 					VERSION / 100,
 					VERSION % 100,
@@ -796,7 +792,7 @@ pub extern "C" fn D_DoomMain() {
 			}
 			GameMode_t::shareware => {
 				sprintf(
-					&raw mut title[0],
+					title.as_mut_ptr(),
 					c"							DOOM Shareware Startup v%i.%i						   ".as_ptr(),
 					VERSION / 100,
 					VERSION % 100,
@@ -804,7 +800,7 @@ pub extern "C" fn D_DoomMain() {
 			}
 			GameMode_t::registered => {
 				sprintf(
-					&raw mut title[0],
+					title.as_mut_ptr(),
 					c"							DOOM Registered Startup v%i.%i						   ".as_ptr(),
 					VERSION / 100,
 					VERSION % 100,
@@ -812,21 +808,21 @@ pub extern "C" fn D_DoomMain() {
 			}
 			GameMode_t::commercial => {
 				sprintf(
-					&raw mut title[0],
+					title.as_mut_ptr(),
 					c"						 DOOM 2: Hell on Earth v%i.%i						   ".as_ptr(),
 					VERSION / 100,
 					VERSION % 100,
 				);
 				/*FIXME
 				} GameMode_t::pack_plut => {
-				sprintf (&raw mut title[0],
+				sprintf (title.as_mut_ptr(),
 				c"				   ".as_ptr()
 				c"DOOM 2: Plutonia Experiment v%i.%i".as_ptr()
 				c"						   ".as_ptr(),
 				VERSION/100,VERSION%100);
 				break;
 				} GameMode_t::pack_tnt => {
-				sprintf (&raw mut title[0],
+				sprintf (title.as_mut_ptr(),
 				c"					 ".as_ptr()
 				c"DOOM 2: TNT - Evilution v%i.%i".as_ptr()
 				c"						   ".as_ptr(),
@@ -836,7 +832,7 @@ pub extern "C" fn D_DoomMain() {
 			}
 			_ => {
 				sprintf(
-					&raw mut title[0],
+					title.as_mut_ptr(),
 					c"					 Public DOOM - v%i.%i						   ".as_ptr(),
 					VERSION / 100,
 					VERSION % 100,
@@ -844,7 +840,7 @@ pub extern "C" fn D_DoomMain() {
 			}
 		}
 
-		printf(c"%s\n".as_ptr(), &raw const title[0]);
+		printf(c"%s\n".as_ptr(), title.as_ptr());
 
 		if devparm != 0 {
 			printf(D_DEVSTR.as_ptr());
@@ -853,7 +849,7 @@ pub extern "C" fn D_DoomMain() {
 		if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
 			printf(D_CDROM.as_ptr());
 			mkdir(c"c:\\doomdata".as_ptr(), 0);
-			strcpy(&raw mut basedefault[0], c"c:/doomdata/default.cfg".as_ptr());
+			strcpy(basedefault.as_mut_ptr(), c"c:/doomdata/default.cfg".as_ptr());
 		}
 
 		// turbo option
@@ -891,7 +887,7 @@ pub extern "C" fn D_DoomMain() {
 			match gamemode {
 				GameMode_t::shareware | GameMode_t::retail | GameMode_t::registered => {
 					sprintf(
-						&raw mut file[0],
+						file.as_mut_ptr(),
 						tilde_devmaps!("E%cM%c.wad"),
 						*argvp1 as c_int,
 						*argvp2 as c_int,
@@ -901,13 +897,13 @@ pub extern "C" fn D_DoomMain() {
 				GameMode_t::commercial | _ => {
 					let p = atoi(argvp1) as usize;
 					if p < 10 {
-						sprintf(&raw mut file[0], tilde_devmaps!("cdata/map0%i.wad"), p);
+						sprintf(file.as_mut_ptr(), tilde_devmaps!("cdata/map0%i.wad"), p);
 					} else {
-						sprintf(&raw mut file[0], tilde_devmaps!("cdata/map%i.wad"), p);
+						sprintf(file.as_mut_ptr(), tilde_devmaps!("cdata/map%i.wad"), p);
 					}
 				}
 			}
-			D_AddFile(&raw const file[0]);
+			D_AddFile(file.as_ptr());
 		}
 
 		let mut p = M_CheckParm(c"-file".as_ptr());
@@ -932,8 +928,8 @@ pub extern "C" fn D_DoomMain() {
 
 		if p > 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
-			sprintf(&raw mut file[0], c"%s.lmp".as_ptr(), argvp1);
-			D_AddFile(&raw const file[0]);
+			sprintf(file.as_mut_ptr(), c"%s.lmp".as_ptr(), argvp1);
+			D_AddFile(file.as_ptr());
 			printf(c"Playing demo %s.lmp.\n".as_ptr(), argvp1);
 		}
 
@@ -998,7 +994,7 @@ pub extern "C" fn D_DoomMain() {
 		Z_Init();
 
 		printf(c"W_Init: Init WADfiles.\n".as_ptr());
-		W_InitMultipleFiles((&raw const wadfiles[0]).cast());
+		W_InitMultipleFiles(wadfiles.as_ptr().cast());
 
 		// Check for -file in shareware
 		if modifiedgame != 0 {
@@ -1139,11 +1135,11 @@ pub extern "C" fn D_DoomMain() {
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
-				sprintf(&raw mut file[0], cdrom_savegamename!("%c.dsg"), *argvp1 as c_int);
+				sprintf(file.as_mut_ptr(), cdrom_savegamename!("%c.dsg"), *argvp1 as c_int);
 			} else {
-				sprintf(&raw mut file[0], savegamename!("%c.dsg"), *argvp1 as c_int);
+				sprintf(file.as_mut_ptr(), savegamename!("%c.dsg"), *argvp1 as c_int);
 			}
-			G_LoadGame(&raw mut file[0]);
+			G_LoadGame(file.as_mut_ptr());
 		}
 
 		if gameaction != gameaction_t::ga_loadgame {

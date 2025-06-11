@@ -653,6 +653,7 @@ unsafe extern "C" {
 }
 
 // KillMobj
+#[allow(static_mut_refs)]
 fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 	target.flags &= !(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY);
 
@@ -670,8 +671,8 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 			}
 
 			if !target.player.is_null() {
-				(*(*source).player).frags
-					[target.player.offset_from(&raw const players[0]) as usize] += 1;
+				(*(*source).player).frags[target.player.offset_from(players.as_ptr()) as usize] +=
+					1;
 			}
 		} else if netgame == 0 && (target.flags & MF_COUNTKILL != 0) {
 			// count all monster deaths,
@@ -684,8 +685,7 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 		unsafe {
 			// count environment kills against you
 			if source.is_null() {
-				(*target.player).frags
-					[target.player.offset_from(&raw const players[0]) as usize] += 1;
+				(*target.player).frags[target.player.offset_from(players.as_ptr()) as usize] += 1;
 			}
 
 			target.flags &= !MF_SOLID;

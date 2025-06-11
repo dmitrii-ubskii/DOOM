@@ -331,6 +331,7 @@ unsafe extern "C" {
 const STOPSPEED: i32 = 0x1000;
 const FRICTION: i32 = 0xe800;
 
+#[allow(static_mut_refs)]
 fn P_XYMovement(mo: &mut mobj_t) {
 	unsafe {
 		if mo.momx == 0 && mo.momy == 0 {
@@ -434,7 +435,7 @@ fn P_XYMovement(mo: &mut mobj_t) {
 		{
 			// if in a walking frame, stop moving
 			if !player.is_null()
-				&& (((*(*player).mo).state.offset_from(&raw mut states[0])) as usize)
+				&& (((*(*player).mo).state.offset_from(states.as_mut_ptr())) as usize)
 					< statenum_t::S_PLAY_ATK1 as usize
 			{
 				P_SetMobjState(&mut *(*player).mo, statenum_t::S_PLAY);
@@ -883,11 +884,12 @@ pub extern "C" fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 // P_SpawnMapThing
 // The fields of the mapthing should
 // already be in host byte order.
+#[allow(static_mut_refs)]
 pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 	unsafe {
 		// count deathmatch start positions
 		if mthing.ty == 11 {
-			if deathmatch_p.offset_from(&raw const deathmatchstarts[0]) < 10 {
+			if deathmatch_p.offset_from(deathmatchstarts.as_ptr()) < 10 {
 				libc::memcpy(
 					deathmatch_p.cast(),
 					(mthing as *mut mapthing_t).cast(),

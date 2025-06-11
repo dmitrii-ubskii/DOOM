@@ -41,7 +41,7 @@ fn T_FireFlicker(flick: &mut fireflicker_t) {
 }
 
 extern "C" fn T_FireFlicker_action(flick: *mut c_void) {
-	unsafe { T_FireFlicker(&mut *(flick as *mut fireflicker_t)) };
+	unsafe { T_FireFlicker(&mut *(flick.cast())) };
 }
 
 unsafe extern "C" {
@@ -92,7 +92,7 @@ fn T_LightFlash(flash: &mut lightflash_t) {
 }
 
 pub(crate) unsafe extern "C" fn T_LightFlash_action(flash: *mut c_void) {
-	unsafe { T_LightFlash(&mut *(flash as *mut lightflash_t)) };
+	unsafe { T_LightFlash(&mut *(flash.cast())) };
 }
 
 // P_SpawnLightFlash
@@ -142,7 +142,7 @@ fn T_StrobeFlash(flash: &mut strobe_t) {
 }
 
 pub(crate) extern "C" fn T_StrobeFlash_action(flash: *mut c_void) {
-	unsafe { T_StrobeFlash(&mut *(flash as *mut strobe_t)) };
+	unsafe { T_StrobeFlash(&mut *(flash.cast())) };
 }
 
 // P_SpawnStrobeFlash
@@ -283,7 +283,7 @@ fn T_Glow(g: &mut glow_t) {
 }
 
 pub(crate) extern "C" fn T_Glow_action(g: *mut c_void) {
-	unsafe { T_Glow(&mut *(g as *mut glow_t)) };
+	unsafe { T_Glow(&mut *(g.cast())) };
 }
 
 #[unsafe(no_mangle)]

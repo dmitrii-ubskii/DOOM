@@ -92,7 +92,7 @@ fn ExtractFileBase(path: *const c_char, mut dest: *mut c_char) {
 		}
 
 		// copy up to eight characters
-		memset(dest as *mut c_void, 0, 8);
+		memset(dest.cast(), 0, 8);
 		let mut length = 0;
 
 		while *src != 0 && *src != b'.' as i8 {
@@ -163,16 +163,16 @@ fn W_AddFile(mut filename: *const c_char) {
 			fileinfo = &raw mut singleinfo;
 			singleinfo.filepos = 0;
 			singleinfo.size = filelength(handle);
-			ExtractFileBase(filename, &raw mut singleinfo.name[0]);
+			ExtractFileBase(filename, singleinfo.name.as_mut_ptr());
 			numlumps += 1;
 		} else {
 			// WAD file
 			let mut header = MaybeUninit::<wadinfo_t>::uninit();
-			libc::read(handle, header.as_mut_ptr() as *mut c_void, size_of_val(&header));
+			libc::read(handle, header.as_mut_ptr().cast(), size_of_val(&header));
 			let header = header.assume_init();
-			if libc::strncmp(&raw const header.identification[0], c"IWAD".as_ptr(), 4) != 0 {
+			if libc::strncmp(header.identification.as_ptr(), c"IWAD".as_ptr(), 4) != 0 {
 				// Homebrew levels?
-				if libc::strncmp(&raw const header.identification[0], c"PWAD".as_ptr(), 4) != 0 {
+				if libc::strncmp(header.identification.as_ptr(), c"PWAD".as_ptr(), 4) != 0 {
 					I_Error(c"Wad file %s doesn't have IWAD or PWAD id\n".as_ptr(), filename);
 				}
 
@@ -180,15 +180,14 @@ fn W_AddFile(mut filename: *const c_char) {
 			}
 			let length = header.numlumps * size_of::<filelump_t>();
 			lumps = vec![filelump_t { filepos: 0, size: 0, name: [0; 8] }; length];
-			fileinfo = &raw mut lumps[0];
+			fileinfo = lumps.as_mut_ptr();
 			libc::lseek(handle, header.infotableofs, libc::SEEK_SET);
-			libc::read(handle, fileinfo as *mut c_void, length);
+			libc::read(handle, fileinfo.cast(), length);
 			numlumps += header.numlumps;
 		}
 
 		// Fill in lumpinfo
-		lumpinfo = libc::realloc(lumpinfo as *mut c_void, numlumps * size_of::<lumpinfo_t>())
-			as *mut lumpinfo_t;
+		lumpinfo = libc::realloc(lumpinfo.cast(), numlumps * size_of::<lumpinfo_t>()).cast();
 
 		if lumpinfo.is_null() {
 			I_Error(c"Couldn't realloc lumpinfo".as_ptr());
@@ -202,7 +201,7 @@ fn W_AddFile(mut filename: *const c_char) {
 			(*lump_p).handle = storehandle;
 			(*lump_p).position = (*fileinfo).filepos;
 			(*lump_p).size = (*fileinfo).size;
-			libc::strncpy(&raw mut (*lump_p).name[0], &raw const (*fileinfo).name[0], 8);
+			libc::strncpy((*lump_p).name.as_mut_ptr(), (*fileinfo).name.as_ptr(), 8);
 			lump_p = lump_p.wrapping_add(1);
 			fileinfo = fileinfo.wrapping_add(1);
 		}
@@ -228,21 +227,21 @@ pub(crate) fn W_Reload() {
 		}
 
 		let mut header = MaybeUninit::<wadinfo_t>::uninit();
-		libc::read(handle, header.as_mut_ptr() as *mut c_void, size_of_val(&header));
+		libc::read(handle, header.as_mut_ptr().cast(), size_of_val(&header));
 		let header = header.assume_init();
 		let lumpcount = header.numlumps;
 		let length = lumpcount * size_of::<filelump_t>();
 		let mut fileinfo = vec![filelump_t { filepos: 0, size: 0, name: [0; 8] }; length];
-		let mut fileinfo = &raw mut fileinfo[0];
+		let mut fileinfo = fileinfo.as_mut_ptr();
 		libc::lseek(handle, header.infotableofs, SEEK_SET);
-		libc::read(handle, fileinfo as *mut c_void, length);
+		libc::read(handle, fileinfo.cast(), length);
 
 		// Fill in lumpinfo
 		let mut lump_p = lumpinfo.wrapping_add(reloadlump);
 
 		for i in reloadlump..reloadlump + lumpcount {
 			if !lumpcache.wrapping_add(i).is_null() {
-				Z_Free(lumpcache.wrapping_add(i) as *mut c_void);
+				Z_Free(lumpcache.wrapping_add(i).cast());
 			}
 
 			(*lump_p).position = (*fileinfo).filepos;
@@ -272,7 +271,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 		numlumps = 0;
 
 		// will be realloced as lumps are added
-		lumpinfo = libc::malloc(1) as *mut lumpinfo_t;
+		lumpinfo = libc::malloc(1).cast();
 
 		while !(*filenames).is_null() {
 			W_AddFile(*filenames);
@@ -291,7 +290,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 			I_Error(c"Couldn't allocate lumpcache".as_ptr());
 		}
 
-		memset(lumpcache as *mut c_void, 0, size);
+		memset(lumpcache.cast(), 0, size);
 	}
 }
 
@@ -303,13 +302,13 @@ pub unsafe extern "C" fn W_CheckNumForName(name: *const c_char) -> isize {
 		let mut name8 = [0; 9];
 
 		// make the name into two integers for easy compares
-		libc::strncpy(&raw mut name8[0], name, 8);
+		libc::strncpy(name8.as_mut_ptr(), name, 8);
 
 		// in case the name was a fill 8 chars
 		name8[8] = 0;
 
 		// case insensitive
-		strupr(&raw mut name8[0]);
+		strupr(name8.as_mut_ptr());
 
 		// scan backwards so patch lump files take precedence
 		let mut lump_p = lumpinfo.wrapping_add(numlumps);
@@ -405,7 +404,7 @@ pub extern "C" fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
 
 			//printf ("cache miss on lump %i\n",lump);
 			// FIXME unused???
-			let _ptr = Z_Malloc(W_LumpLength(lump), tag, lump_p as *mut c_void);
+			let _ptr = Z_Malloc(W_LumpLength(lump), tag, lump_p.cast());
 			W_ReadLump(lump, *lump_p);
 		} else {
 			//printf ("cache hit on lump %i\n",lump);
