@@ -31,6 +31,7 @@ use crate::{
 	m_argv::M_CheckParm,
 	m_fixed::{FRACBITS, FRACUNIT, fixed_t},
 	m_menu::M_StartControlPanel,
+	m_misc::{M_ReadFile, M_ScreenShot, M_WriteFile},
 	m_random::{M_ClearRandom, P_Random, rndindex},
 	myargc, myargv,
 	p_local::MAXHEALTH,
@@ -160,43 +161,26 @@ pub static mut consistancy: [[short; BACKUPTICS]; MAXPLAYERS] = [[0; BACKUPTICS]
 static mut savebuffer: *mut byte = null_mut();
 
 // controls (have defaults)
-#[unsafe(no_mangle)]
-pub static mut key_right: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut key_left: usize = 0;
+pub(crate) static mut key_right: usize = 0;
+pub(crate) static mut key_left: usize = 0;
 
-#[unsafe(no_mangle)]
-pub static mut key_up: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut key_down: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut key_strafeleft: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut key_straferight: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut key_fire: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut key_use: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut key_strafe: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut key_speed: usize = 0;
+pub(crate) static mut key_up: usize = 0;
+pub(crate) static mut key_down: usize = 0;
+pub(crate) static mut key_strafeleft: usize = 0;
+pub(crate) static mut key_straferight: usize = 0;
+pub(crate) static mut key_fire: usize = 0;
+pub(crate) static mut key_use: usize = 0;
+pub(crate) static mut key_strafe: usize = 0;
+pub(crate) static mut key_speed: usize = 0;
 
-#[unsafe(no_mangle)]
-pub static mut mousebfire: isize = 0;
-#[unsafe(no_mangle)]
-pub static mut mousebstrafe: isize = 0;
-#[unsafe(no_mangle)]
-pub static mut mousebforward: isize = 0;
+pub(crate) static mut mousebfire: isize = 0;
+pub(crate) static mut mousebstrafe: isize = 0;
+pub(crate) static mut mousebforward: isize = 0;
 
-#[unsafe(no_mangle)]
-pub static mut joybfire: isize = 0;
-#[unsafe(no_mangle)]
-pub static mut joybstrafe: isize = 0;
-#[unsafe(no_mangle)]
-pub static mut joybuse: isize = 0;
-#[unsafe(no_mangle)]
-pub static mut joybspeed: isize = 0;
+pub(crate) static mut joybfire: isize = 0;
+pub(crate) static mut joybstrafe: isize = 0;
+pub(crate) static mut joybuse: isize = 0;
+pub(crate) static mut joybspeed: isize = 0;
 
 pub const MAXPLMOVE: fixed_t = 0x32; // forwardmove[1]
 
@@ -617,7 +601,6 @@ unsafe extern "C" {
 	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
 
 	fn F_StartFinale();
-	fn M_ScreenShot();
 	fn P_Ticker();
 	fn ST_Ticker();
 	fn AM_Ticker();
@@ -1134,7 +1117,6 @@ pub unsafe extern "C" fn G_LoadGame(name: *const c_char) {
 pub const VERSIONSIZE: usize = 16;
 
 unsafe extern "C" {
-	fn M_ReadFile(name: *const c_char, buffer: *mut *mut u8) -> i32;
 	fn R_ExecuteSetViewSize();
 	fn R_FillBackScreen();
 }
@@ -1213,11 +1195,6 @@ pub unsafe extern "C" fn G_SaveGame(slot: usize, description: *const c_char) {
 		libc::strcpy(savedescription.as_mut_ptr(), description);
 		sendsave = 1;
 	}
-}
-
-unsafe extern "C" {
-	fn M_WriteFile(name: *const c_char, source: *mut c_void, length: usize) -> boolean;
-
 }
 
 fn G_DoSaveGame() {

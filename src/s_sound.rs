@@ -71,8 +71,7 @@ static mut mus_playing: *mut musicinfo_t = null_mut();
 // following is set
 //  by the defaults code in M_misc:
 // number of channels available
-#[unsafe(no_mangle)]
-pub static mut numChannels: usize = 0;
+pub(crate) static mut numChannels: usize = 0;
 
 static mut nextcleanup: i32 = 0;
 

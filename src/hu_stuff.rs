@@ -36,6 +36,7 @@ use crate::{
 		HUlib_eraseTextLine, HUlib_initIText, HUlib_initSText, HUlib_initTextLine,
 		HUlib_keyInIText, HUlib_resetIText, hu_itext_t, hu_stext_t, hu_textline_t,
 	},
+	m_menu::showMessages,
 	r_defs::patch_t,
 	sounds::sfxenum_t,
 	w_wad::W_CacheLumpName,
@@ -85,8 +86,7 @@ fn HU_INPUTY() -> usize {
 	unsafe { HU_MSGY + HU_MSGHEIGHT * ((*hu_font[0]).height as usize + 1) }
 }
 
-#[unsafe(no_mangle)]
-static mut chat_macros: [Smuggle<c_char>; 10] = [
+pub(crate) static mut chat_macros: [Smuggle<c_char>; 10] = [
 	HUSTR_CHATMACRO0,
 	HUSTR_CHATMACRO1,
 	HUSTR_CHATMACRO2,
@@ -474,7 +474,6 @@ pub(crate) fn HU_Erase() {
 }
 
 unsafe extern "C" {
-	static mut showMessages: boolean;
 	fn S_StartSound(origin: *mut c_void, sound_id: sfxenum_t);
 }
 

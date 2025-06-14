@@ -47,8 +47,7 @@ type boolean = i32;
 pub static mut mouseSensitivity: int = 0; // has default
 
 // Show messages has default, 0 = off, 1 = on
-#[unsafe(no_mangle)]
-pub static mut showMessages: int = 0;
+pub(crate) static mut showMessages: int = 0;
 
 // Blocky mode, has default, 0 = high, 1 = normal
 #[unsafe(no_mangle)]

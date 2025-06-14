@@ -4,10 +4,9 @@ use std::{ffi::c_char, process::exit, ptr::null_mut};
 
 use libc::{gettimeofday, malloc, memset, timeval};
 
-use crate::{d_ticcmd::ticcmd_t, doomdef::TICRATE};
+use crate::{d_ticcmd::ticcmd_t, doomdef::TICRATE, m_misc::M_SaveDefaults};
 
-#[unsafe(no_mangle)]
-static mut mb_used: usize = 6;
+pub(crate) static mut mb_used: usize = 6;
 
 pub(crate) fn I_Tactile(_on: i32, _off: i32, _total: i32) {
 	// UNUSED.
@@ -60,7 +59,6 @@ unsafe extern "C" {
 	fn D_QuitNetGame();
 	fn I_ShutdownSound();
 	fn I_ShutdownMusic();
-	fn M_SaveDefaults();
 	fn I_ShutdownGraphics();
 }
 

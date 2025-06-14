@@ -34,6 +34,7 @@ use crate::{
 	i_system::{I_Error, I_GetTime, I_Init},
 	m_argv::M_CheckParm,
 	m_menu::{M_Drawer, M_Init, M_Responder, M_Ticker, inhelpscreens, menuactive},
+	m_misc::M_LoadDefaults,
 	myargc, myargv,
 	p_setup::P_Init,
 	p_tick::players,
@@ -719,7 +720,6 @@ fn FindResponseFile() {
 }
 
 unsafe extern "C" {
-	fn M_LoadDefaults();
 	fn R_Init();
 	fn D_CheckNetGame();
 	fn ST_Init();

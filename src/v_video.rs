@@ -266,8 +266,7 @@ pub unsafe extern "C" fn V_DrawPatchFlipped(
 
 // V_DrawPatchDirect
 // Draws directly to the screen on the pc.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn V_DrawPatchDirect(x: usize, y: usize, scrn: usize, patch: *mut patch_t) {
+pub(crate) unsafe fn V_DrawPatchDirect(x: usize, y: usize, scrn: usize, patch: *mut patch_t) {
 	unsafe {
 		V_DrawPatch(x, y, scrn, patch);
 	}
