@@ -75,21 +75,17 @@ pub static mut gamemap: usize = 0;
 
 #[unsafe(no_mangle)]
 pub static mut paused: boolean = 0;
-#[unsafe(no_mangle)]
-pub static mut sendpause: boolean = 0; // send a pause event next tic 
-#[unsafe(no_mangle)]
-pub static mut sendsave: boolean = 0; // send a save event next tic 
+static mut sendpause: boolean = 0; // send a pause event next tic 
+static mut sendsave: boolean = 0; // send a save event next tic 
 #[unsafe(no_mangle)]
 pub static mut usergame: boolean = 0; // ok to save / end game 
 
-#[unsafe(no_mangle)]
-pub static mut timingdemo: boolean = 0; // if true, exit with report on completion 
+static mut timingdemo: boolean = 0; // if true, exit with report on completion 
 #[unsafe(no_mangle)]
 pub static mut nodrawers: boolean = 0; // for comparative timing purposes 
 #[unsafe(no_mangle)]
 pub static mut noblit: boolean = 0; // for comparative timing purposes 
-#[unsafe(no_mangle)]
-pub static mut starttime: usize = 0; // for comparative timing purposes  	 
+static mut starttime: usize = 0; // for comparative timing purposes  	 
 
 #[unsafe(no_mangle)]
 pub static mut viewactive: boolean = 0;
@@ -120,20 +116,15 @@ pub static mut totalitems: int = 0;
 #[unsafe(no_mangle)]
 pub static mut totalsecret: int = 0;
 
-#[unsafe(no_mangle)]
-pub static mut demoname: [c_char; 32] = [0; 32];
+static mut demoname: [c_char; 32] = [0; 32];
 #[unsafe(no_mangle)]
 pub static mut demorecording: boolean = 0;
 #[unsafe(no_mangle)]
 pub static mut demoplayback: boolean = 0;
-#[unsafe(no_mangle)]
-pub static mut netdemo: boolean = 0;
-#[unsafe(no_mangle)]
-pub static mut demobuffer: *mut byte = null_mut();
-#[unsafe(no_mangle)]
-pub static mut demo_p: *mut byte = null_mut();
-#[unsafe(no_mangle)]
-pub static mut demoend: *mut byte = null_mut();
+static mut netdemo: boolean = 0;
+static mut demobuffer: *mut byte = null_mut();
+static mut demo_p: *mut byte = null_mut();
+static mut demoend: *mut byte = null_mut();
 #[unsafe(no_mangle)]
 pub static mut singledemo: boolean = 0; // quit after playing a demo from cmdline 
 
@@ -166,8 +157,7 @@ pub static mut wminfo: wbstartstruct_t = wbstartstruct_t {
 #[unsafe(no_mangle)]
 pub static mut consistancy: [[short; BACKUPTICS]; MAXPLAYERS] = [[0; BACKUPTICS]; MAXPLAYERS];
 
-#[unsafe(no_mangle)]
-pub static mut savebuffer: *mut byte = null_mut();
+static mut savebuffer: *mut byte = null_mut();
 
 // controls (have defaults)
 #[unsafe(no_mangle)]
@@ -223,59 +213,39 @@ pub const SLOWTURNTICS: usize = 6;
 
 pub const NUMKEYS: usize = 256;
 
-#[unsafe(no_mangle)]
-pub static mut gamekeydown: [boolean; NUMKEYS] = [0; NUMKEYS];
-#[unsafe(no_mangle)]
-pub static mut turnheld: usize = 0; // for accelerative turning 
+static mut gamekeydown: [boolean; NUMKEYS] = [0; NUMKEYS];
+static mut turnheld: usize = 0; // for accelerative turning 
 
-#[unsafe(no_mangle)]
-pub static mut mousearray: [boolean; 4] = [0; 4];
-#[unsafe(no_mangle)]
-pub static mut mousebuttons: *mut boolean = unsafe { &raw mut mousearray[1] }; // allow [-1]
+static mut mousearray: [boolean; 4] = [0; 4];
+static mut mousebuttons: *mut boolean = unsafe { &raw mut mousearray[1] }; // allow [-1]
 
 // mouse values are used once
-#[unsafe(no_mangle)]
-pub static mut mousex: int = 0;
-#[unsafe(no_mangle)]
-pub static mut mousey: int = 0;
+static mut mousex: int = 0;
+static mut mousey: int = 0;
 
-#[unsafe(no_mangle)]
-pub static mut dclicktime: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut dclickstate: int = 0;
-#[unsafe(no_mangle)]
-pub static mut dclicks: int = 0;
-#[unsafe(no_mangle)]
-pub static mut dclicktime2: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut dclickstate2: int = 0;
-#[unsafe(no_mangle)]
-pub static mut dclicks2: int = 0;
+static mut dclicktime: usize = 0;
+static mut dclickstate: int = 0;
+static mut dclicks: int = 0;
+static mut dclicktime2: usize = 0;
+static mut dclickstate2: int = 0;
+static mut dclicks2: int = 0;
 
 // joystick values are repeated
-#[unsafe(no_mangle)]
-pub static mut joyxmove: int = 0;
-#[unsafe(no_mangle)]
-pub static mut joyymove: int = 0;
-#[unsafe(no_mangle)]
-pub static mut joyarray: [boolean; 5] = [0; 5];
-#[unsafe(no_mangle)]
-pub static mut joybuttons: *mut boolean = unsafe { &raw mut joyarray[1] }; // allow [-1] 
+static mut joyxmove: int = 0;
+static mut joyymove: int = 0;
+static mut joyarray: [boolean; 5] = [0; 5];
+static mut joybuttons: *mut boolean = unsafe { &raw mut joyarray[1] }; // allow [-1] 
 
-#[unsafe(no_mangle)]
-pub static mut savegameslot: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut savedescription: [c_char; 32] = [0; 32];
+static mut savegameslot: usize = 0;
+static mut savedescription: [c_char; 32] = [0; 32];
 
 pub const BODYQUESIZE: usize = 32;
 
-#[unsafe(no_mangle)]
-pub static mut bodyque: [*mut mobj_t; BODYQUESIZE] = [null_mut(); BODYQUESIZE];
+static mut bodyque: [*mut mobj_t; BODYQUESIZE] = [null_mut(); BODYQUESIZE];
 #[unsafe(no_mangle)]
 pub static mut bodyqueslot: usize = 0;
 
-#[unsafe(no_mangle)]
-pub static mut statcopy: *mut c_void = null_mut(); // for statistics driver
+pub(crate) static mut statcopy: *mut c_void = null_mut(); // for statistics driver
 
 //  D_DoomLoop
 unsafe extern "C" {
@@ -972,8 +942,7 @@ pub(crate) fn G_ScreenShot() {
 }
 
 // DOOM Par Times
-#[unsafe(no_mangle)]
-pub static mut pars: [[usize; 10]; 4] = [
+static pars: [[usize; 10]; 4] = [
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	[0, 30, 75, 120, 90, 165, 180, 180, 30, 165],
 	[0, 90, 90, 90, 120, 90, 360, 240, 30, 170],
@@ -981,8 +950,7 @@ pub static mut pars: [[usize; 10]; 4] = [
 ];
 
 // DOOM II Par Times
-#[unsafe(no_mangle)]
-pub static mut cpars: [usize; 32] = [
+static cpars: [usize; 32] = [
 	30, 90, 120, 120, 90, 150, 120, 120, 270, 90, //  1-10
 	210, 150, 150, 150, 210, 150, 420, 150, 210, 150, // 11-20
 	240, 150, 180, 150, 150, 300, 330, 420, 300, 180, // 21-30
@@ -990,8 +958,7 @@ pub static mut cpars: [usize; 32] = [
 ];
 
 // G_DoCompleted
-#[unsafe(no_mangle)]
-pub static mut secretexit: boolean = 0;
+static mut secretexit: boolean = 0;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn G_ExitLevel() {
@@ -1153,8 +1120,7 @@ unsafe extern "C" {
 	static mut setsizeneeded: boolean;
 }
 
-#[unsafe(no_mangle)]
-pub static mut savename: [c_char; 256] = [0; 256];
+static mut savename: [c_char; 256] = [0; 256];
 
 #[unsafe(no_mangle)]
 #[allow(static_mut_refs)]
@@ -1328,12 +1294,9 @@ fn G_DoSaveGame() {
 // G_InitNew
 // Can be called by the startup code or the menu task,
 // consoleplayer, displayplayer, playeringame[] should be set.
-#[unsafe(no_mangle)]
-pub static mut d_skill: skill_t = skill_t::sk_baby;
-#[unsafe(no_mangle)]
-pub static mut d_episode: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut d_map: usize = 0;
+static mut d_skill: skill_t = skill_t::sk_baby;
+static mut d_episode: usize = 0;
+static mut d_map: usize = 0;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn G_DeferedInitNew(skill: skill_t, episode: usize, map: usize) {
@@ -1562,8 +1525,7 @@ pub(crate) fn G_BeginRecording() {
 
 // G_PlayDemo
 
-#[unsafe(no_mangle)]
-pub static mut defdemoname: *const c_char = null();
+static mut defdemoname: *const c_char = null();
 
 pub(crate) fn G_DeferedPlayDemo(name: *const c_char) {
 	unsafe {

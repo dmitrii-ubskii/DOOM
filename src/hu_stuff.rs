@@ -148,8 +148,7 @@ static mut w_inputbuffer: [hu_itext_t; MAXPLAYERS] = [hu_itext_t {
 }; MAXPLAYERS];
 
 static mut message_on: boolean = 0;
-#[unsafe(no_mangle)]
-pub static mut message_dontfuckwithme: boolean = 0;
+pub(crate) static mut message_dontfuckwithme: boolean = 0;
 static mut message_nottobefuckedwith: boolean = 0;
 
 static mut w_message: hu_stext_t = hu_stext_t {

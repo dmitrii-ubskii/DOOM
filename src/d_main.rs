@@ -92,10 +92,6 @@ pub static mut debugfile: *const libc::FILE = null();
 pub static mut advancedemo: boolean = 0;
 
 #[unsafe(no_mangle)]
-pub static mut wadfile: [c_char; 1024] = [0; 1024]; // primary wad file
-#[unsafe(no_mangle)]
-pub static mut mapdir: [c_char; 1024] = [0; 1024]; // directory of development maps
-#[unsafe(no_mangle)]
 pub static mut basedefault: [c_char; 1024] = [0; 1024]; // default file
 
 // D_PostEvent
@@ -371,12 +367,9 @@ pub(crate) fn D_DoomLoop() {
 }
 
 //  DEMO LOOP
-#[unsafe(no_mangle)]
-pub static mut demosequence: i32 = 0;
-#[unsafe(no_mangle)]
-pub static mut pagetic: i32 = 0;
-#[unsafe(no_mangle)]
-pub static mut pagename: *const c_char = null_mut();
+static mut demosequence: i32 = 0;
+static mut pagetic: i32 = 0;
+static mut pagename: *const c_char = null_mut();
 
 // D_PageTicker
 // Handles timing for warped projection

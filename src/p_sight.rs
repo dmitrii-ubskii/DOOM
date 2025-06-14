@@ -12,21 +12,17 @@ use crate::{
 };
 
 // P_CheckSight
-#[unsafe(no_mangle)]
-pub static mut sightzstart: fixed_t = 0; // eye z of looker
+static mut sightzstart: fixed_t = 0; // eye z of looker
 #[unsafe(no_mangle)]
 pub static mut topslope: fixed_t = 0;
 #[unsafe(no_mangle)]
 pub static mut bottomslope: fixed_t = 0; // slopes to top and bottom of target
 
 pub static mut strace: divline_t = divline_t { x: 0, y: 0, dx: 0, dy: 0 }; // from t1 to t2
-#[unsafe(no_mangle)]
-pub static mut t2x: fixed_t = 0;
-#[unsafe(no_mangle)]
-pub static mut t2y: fixed_t = 0;
+static mut t2x: fixed_t = 0;
+static mut t2y: fixed_t = 0;
 
-#[unsafe(no_mangle)]
-pub static mut sightcounts: [i32; 2] = [0; 2];
+static mut sightcounts: [i32; 2] = [0; 2];
 
 // P_DivlineSide
 // Returns side 0 (front), 1 (back), or 2 (on).
