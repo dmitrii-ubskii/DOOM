@@ -1105,9 +1105,8 @@ unsafe extern "C" {
 
 static mut savename: [c_char; 256] = [0; 256];
 
-#[unsafe(no_mangle)]
 #[allow(static_mut_refs)]
-pub unsafe extern "C" fn G_LoadGame(name: *const c_char) {
+pub(crate) unsafe fn G_LoadGame(name: *const c_char) {
 	unsafe {
 		libc::strcpy(savename.as_mut_ptr(), name);
 		gameaction = gameaction_t::ga_loadgame;
