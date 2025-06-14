@@ -8,40 +8,76 @@ use crate::dstrings::Smuggle;
 pub const D_DEVSTR: &CStr = c"Development mode ON.\n";
 pub const D_CDROM: &CStr = c"CD-ROM Version: default.cfg from c:\\doomdata\n";
 
-/*
 //	M_Menu.C
-pub const PRESSKEY: *const c_char = c"press a key.";
-pub const PRESSYN: *const c_char = c"press y or n.";
-pub const QUITMSG: *const c_char = c"are you sure you want to\nquit this great game?";
-#define LOADNET 	"you can't do load while in a net game!\n\n"PRESSKEY
-#define QLOADNET	"you can't quickload during a netgame!\n\n"PRESSKEY
-#define QSAVESPOT	"you haven't picked a quicksave slot yet!\n\n"PRESSKEY
-#define SAVEDEAD 	"you can't save if you aren't playing!\n\n"PRESSKEY
-#define QSPROMPT 	"quicksave over your game named\n\n'%s'?\n\n"PRESSYN
-#define QLPROMPT	"do you want to quickload the game named\n\n'%s'?\n\n"PRESSYN
-
-#define NEWGAME	"you can't start a new game\nwhile in a network game.\n\n"PRESSKEY
-
-#define NIGHTMARE	"are you sure? this skill level\nisn't even remotely fair.\n\n"PRESSYN
-
-#define SWSTRING	"this is the shareware version of doom.\n\nyou need to order the entire trilogy.\n\n"PRESSKEY
-
-pub const MSGOFF: *const c_char = c"Messages OFF";
-pub const MSGON: *const c_char = c"Messages ON";
-#define NETEND	"you can't end a netgame!\n\n"PRESSKEY
-#define ENDGAME	"are you sure you want to end the game?\n\n"PRESSYN
-
-pub const DOSY: *const c_char = c"(press y to quit)";
-
-pub const DETAILHI: *const c_char = c"High detail";
-pub const DETAILLO: *const c_char = c"Low detail";
-pub const GAMMALVL0: *const c_char = c"Gamma correction OFF";
-pub const GAMMALVL1: *const c_char = c"Gamma correction level 1";
-pub const GAMMALVL2: *const c_char = c"Gamma correction level 2";
-pub const GAMMALVL3: *const c_char = c"Gamma correction level 3";
-pub const GAMMALVL4: *const c_char = c"Gamma correction level 4";
-pub const EMPTYSTRING: *const c_char = c"empty slot";
+macro_rules! PRESSKEY {
+	() => {
+		"press a key.\0"
+	};
+}
+macro_rules! PRESSYN {
+	() => {
+		"press y or n.\0"
+	};
+}
+/*
+macro_rules! QUITMSG {
+	() => {
+		"are you sure you want to\nquit this great game?\0"
+	};
+}
 */
+pub const LOADNET: *const c_char =
+	concat!("you can't do load while in a net game!\n\n", PRESSKEY!()).as_ptr().cast();
+pub const QLOADNET: *const c_char =
+	concat!("you can't quickload during a netgame!\n\n", PRESSKEY!()).as_ptr().cast();
+pub const QSAVESPOT: *const c_char =
+	concat!("you haven't picked a quicksave slot yet!\n\n", PRESSKEY!()).as_ptr().cast();
+pub const SAVEDEAD: *const c_char =
+	concat!("you can't save if you aren't playing!\n\n", PRESSKEY!()).as_ptr().cast();
+pub const QSPROMPT: *const c_char =
+	concat!("quicksave over your game named\n\n'%s'?\n\n", PRESSYN!()).as_ptr().cast();
+pub const QLPROMPT: *const c_char =
+	concat!("do you want to quickload the game named\n\n'%s'?\n\n", PRESSYN!()).as_ptr().cast();
+
+pub const NEWGAME: *const c_char =
+	concat!("you can't start a new game\nwhile in a network game.\n\n", PRESSKEY!())
+		.as_ptr()
+		.cast();
+
+pub const NIGHTMARE: *const c_char =
+	concat!("are you sure? this skill level\nisn't even remotely fair.\n\n", PRESSYN!())
+		.as_ptr()
+		.cast();
+
+pub const SWSTRING: *const c_char = concat!(
+	"this is the shareware version of doom.\n\nyou need to order the entire trilogy.\n\n",
+	PRESSKEY!()
+)
+.as_ptr()
+.cast();
+
+pub const MSGOFF: *const c_char = c"Messages OFF".as_ptr();
+pub const MSGON: *const c_char = c"Messages ON".as_ptr();
+pub const NETEND: *const c_char =
+	concat!("you can't end a netgame!\n\n", PRESSKEY!()).as_ptr().cast();
+pub const ENDGAME: *const c_char =
+	concat!("are you sure you want to end the game?\n\n", PRESSYN!()).as_ptr().cast();
+
+macro_rules! DOSY {
+	() => {
+		"(press y to quit)\0"
+	};
+}
+pub(crate) use DOSY;
+
+pub const DETAILHI: *const c_char = c"High detail".as_ptr();
+pub const DETAILLO: *const c_char = c"Low detail".as_ptr();
+pub const GAMMALVL0: [u8; 26] = *b"Gamma correction OFF\0\0\0\0\0\0";
+pub const GAMMALVL1: [u8; 26] = *b"Gamma correction level 1\0\0";
+pub const GAMMALVL2: [u8; 26] = *b"Gamma correction level 2\0\0";
+pub const GAMMALVL3: [u8; 26] = *b"Gamma correction level 3\0\0";
+pub const GAMMALVL4: [u8; 26] = *b"Gamma correction level 4\0\0";
+pub const EMPTYSTRING: *const c_char = c"empty slot".as_ptr();
 
 //	P_inter.C
 pub const GOTARMOR: *const c_char = c"Picked up the armor.".as_ptr();
@@ -282,7 +318,6 @@ pub const HUSTR_KEYRED: c_char = b'r' as c_char;
 
 /*
 //	AM_map.C
-//
 
 pub const AMSTR_FOLLOWON: &CStr = c"Follow Mode ON";
 pub const AMSTR_FOLLOWOFF: &CStr = c"Follow Mode OFF";

@@ -1,8 +1,8 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use crate::{
-	d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, p_local::thinkercap,
-	p_mobj::P_RespawnSpecials, p_user::P_PlayerThink, z_zone::Z_Free,
+	d_player::player_t, d_think::thinker_t, doomdef::MAXPLAYERS, m_menu::menuactive,
+	p_local::thinkercap, p_mobj::P_RespawnSpecials, p_user::P_PlayerThink, z_zone::Z_Free,
 };
 
 #[unsafe(no_mangle)]
@@ -65,7 +65,6 @@ fn run_thinkers() {
 unsafe extern "C" {
 	static paused: i32;
 	static netgame: i32;
-	static menuactive: i32;
 	static demoplayback: i32;
 	pub static mut players: [player_t; MAXPLAYERS];
 	pub static playeringame: [i32; MAXPLAYERS];

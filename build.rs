@@ -7,7 +7,6 @@ fn main() {
 			"linuxdoom-1.10/i_net.c",
 			"linuxdoom-1.10/f_finale.c",
 			"linuxdoom-1.10/d_net.c",
-			"linuxdoom-1.10/m_menu.c",
 			"linuxdoom-1.10/m_misc.c",
 			"linuxdoom-1.10/am_map.c",
 			"linuxdoom-1.10/p_ceilng.c",

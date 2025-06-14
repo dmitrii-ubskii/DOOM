@@ -20,15 +20,15 @@ type boolean = i32;
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
-const S_CLIPPING_DIST: i32 = 1200 * 0x10000;
+const S_CLIPPING_DIST: usize = 1200 * 0x10000;
 
 // Distance tp origin when sounds should be maxed out.
 // This should relate to movement clipping resolution
 // (see BLOCKMAP handling).
 // Originally: (200*0x10000).
-const S_CLOSE_DIST: i32 = 160 * 0x10000;
+const S_CLOSE_DIST: usize = 160 * 0x10000;
 
-const S_ATTENUATOR: i32 = (S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS;
+const S_ATTENUATOR: usize = (S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS;
 
 // Adjustable by menu.
 
@@ -56,11 +56,11 @@ static mut channels: *mut channel_t = null_mut();
 // Maximum volume of a sound effect.
 // Internal default is max out of 0-15.
 #[unsafe(no_mangle)]
-pub static mut snd_SfxVolume: i32 = 15;
+pub static mut snd_SfxVolume: usize = 15;
 
 // Maximum volume of music. Useless so far.
 #[unsafe(no_mangle)]
-pub static mut snd_MusicVolume: i32 = 15;
+pub static mut snd_MusicVolume: usize = 15;
 
 // whether songs are mus_paused
 static mut mus_paused: boolean = 0;
@@ -83,7 +83,7 @@ unsafe extern "C" {
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,
 //  allocates channel buffer, sets S_sfx lookup.
-pub(crate) fn S_Init(sfxVolume: i32, musicVolume: i32) {
+pub(crate) fn S_Init(sfxVolume: usize, musicVolume: usize) {
 	unsafe {
 		eprintln!("S_Init: default sfx volume {sfxVolume}");
 
@@ -168,11 +168,11 @@ pub(crate) fn S_Start() {
 }
 
 unsafe extern "C" {
-	fn I_StartSound(id: sfxenum_t, vol: i32, sep: i32, pitch: i32, priority: i32) -> i32;
+	fn I_StartSound(id: sfxenum_t, vol: usize, sep: i32, pitch: i32, priority: i32) -> i32;
 	fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> i32;
 }
 
-fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: i32) {
+fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: usize) {
 	unsafe {
 		let origin = origin_p as *mut mobj_t;
 
@@ -194,7 +194,7 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: i3
 		if !sfx.link.is_null() {
 			pitch = sfx.pitch;
 			priority = sfx.priority;
-			volume += sfx.volume;
+			volume = volume.saturating_add_signed(sfx.volume);
 
 			if volume < 1 {
 				return;
@@ -327,7 +327,7 @@ pub(crate) fn S_ResumeSound() {
 
 unsafe extern "C" {
 	fn I_SoundIsPlaying(handle: i32) -> boolean;
-	fn I_UpdateSoundParams(handle: i32, vol: i32, sep: i32, pitch: i32);
+	fn I_UpdateSoundParams(handle: i32, vol: usize, sep: i32, pitch: i32);
 }
 
 // Updates music & sounds
@@ -345,7 +345,7 @@ pub(crate) fn S_UpdateSounds(listener_p: *mut c_void) {
 
 					if !sfx.link.is_null() {
 						pitch = sfx.pitch;
-						volume += sfx.volume;
+						volume = volume.saturating_add_signed(sfx.volume);
 						if volume < 1 {
 							S_StopChannel(cnum);
 							continue;
@@ -382,11 +382,10 @@ pub(crate) fn S_UpdateSounds(listener_p: *mut c_void) {
 }
 
 unsafe extern "C" {
-	fn I_SetMusicVolume(volume: i32);
+	fn I_SetMusicVolume(volume: usize);
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn S_SetMusicVolume(volume: i32) {
+pub(crate) fn S_SetMusicVolume(volume: usize) {
 	unsafe {
 		if !(0..=127).contains(&volume) {
 			I_Error(c"Attempt to set music volume at %d".as_ptr(), volume);
@@ -398,8 +397,7 @@ pub extern "C" fn S_SetMusicVolume(volume: i32) {
 	}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn S_SetSfxVolume(volume: i32) {
+pub(crate) fn S_SetSfxVolume(volume: usize) {
 	unsafe {
 		if !(0..=127).contains(&volume) {
 			I_Error(c"Attempt to set sfx volume at %d".as_ptr(), volume);
@@ -521,18 +519,18 @@ unsafe extern "C" {
 fn S_AdjustSoundParams(
 	listener: &mut mobj_t,
 	source: &mut mobj_t,
-	vol: *mut i32,
+	vol: *mut usize,
 	sep: *mut i32,
 	_pitch: *mut i32,
 ) -> i32 {
 	unsafe {
 		// calculate the distance to sound origin
 		//  and clip it if necessary
-		let adx = i32::abs(listener.x - source.x);
-		let ady = i32::abs(listener.y - source.y);
+		let adx = i32::abs(listener.x - source.x) as usize;
+		let ady = i32::abs(listener.y - source.y) as usize;
 
 		// From _GG1_ p.428. Appox. eucledian distance fast.
-		let mut approx_dist = adx + ady - ((adx.min(ady)) >> 1);
+		let mut approx_dist = adx + ady - (usize::min(adx, ady) >> 1);
 
 		if gamemap != 8 && approx_dist > S_CLIPPING_DIST {
 			return 0;

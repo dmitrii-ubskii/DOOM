@@ -104,7 +104,8 @@ pub(crate) const player_names: [*const c_char; 4] =
 
 static mut plr: *mut player_t = null_mut();
 #[unsafe(no_mangle)]
-static mut hu_font: [*mut patch_t; HU_FONTSIZE as usize] = [null_mut(); HU_FONTSIZE as usize];
+pub(crate) static mut hu_font: [*mut patch_t; HU_FONTSIZE as usize] =
+	[null_mut(); HU_FONTSIZE as usize];
 static mut w_title: hu_textline_t = hu_textline_t {
 	x: 0,
 	y: 0,
@@ -114,8 +115,7 @@ static mut w_title: hu_textline_t = hu_textline_t {
 	len: 0,
 	needsupdate: 0,
 };
-#[unsafe(no_mangle)]
-static mut chat_on: boolean = 0;
+pub(crate) static mut chat_on: boolean = 0;
 static mut w_chat: hu_itext_t = hu_itext_t {
 	l: hu_textline_t {
 		x: 0,

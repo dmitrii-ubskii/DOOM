@@ -33,10 +33,11 @@ use crate::{
 	hu_stuff::{HU_Drawer, HU_Erase, HU_Init},
 	i_system::{I_Error, I_GetTime, I_Init},
 	m_argv::M_CheckParm,
+	m_menu::{M_Drawer, M_Init, M_Responder, M_Ticker, inhelpscreens, menuactive},
 	myargc, myargv,
 	p_setup::P_Init,
 	p_tick::players,
-	s_sound::{S_Init, S_StartMusic, S_UpdateSounds},
+	s_sound::{S_Init, S_StartMusic, S_UpdateSounds, snd_MusicVolume, snd_SfxVolume},
 	sounds::musicenum_t,
 	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
 	w_wad::{W_CheckNumForName, W_InitMultipleFiles},
@@ -75,10 +76,6 @@ pub static mut drone: boolean = 0;
 #[unsafe(no_mangle)]
 pub static mut singletics: boolean = 0; // debug flag to cancel adaptiveness
 
-unsafe extern "C" {
-	static mut inhelpscreens: boolean;
-}
-
 #[unsafe(no_mangle)]
 pub static mut startskill: skill_t = skill_t::sk_baby;
 #[unsafe(no_mangle)]
@@ -111,10 +108,6 @@ pub extern "C" fn D_PostEvent(ev: &mut event_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn M_Responder(ev: &mut event_t) -> i32;
-}
-
 // D_ProcessEvents
 // Send all the events of the given timestamp down the responder chain
 #[unsafe(no_mangle)]
@@ -127,7 +120,7 @@ pub extern "C" fn D_ProcessEvents() {
 
 		while eventtail != eventhead {
 			let ev = &mut events[eventtail];
-			if M_Responder(ev) != 0 {
+			if M_Responder(ev) {
 				eventtail = (eventtail + 1) & (MAXEVENTS - 1);
 				continue; // menu ate the event
 			}
@@ -146,7 +139,6 @@ pub static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
 
 unsafe extern "C" {
 	static mut automapactive: boolean;
-	static mut menuactive: boolean;
 	static mut nodrawers: boolean;
 	static mut paused: boolean;
 	static mut scaledviewwidth: i32;
@@ -162,7 +154,6 @@ unsafe extern "C" {
 	fn I_FinishUpdate();
 	fn I_SetPalette(palette: *mut u8);
 	fn I_UpdateNoBlit();
-	fn M_Drawer();
 	fn NetUpdate();
 	fn R_DrawViewBorder();
 	fn R_ExecuteSetViewSize();
@@ -322,7 +313,6 @@ unsafe extern "C" {
 	fn I_InitGraphics();
 	fn I_StartFrame();
 	fn I_StartTic();
-	fn M_Ticker();
 	fn TryRunTics();
 }
 
@@ -486,8 +476,7 @@ pub extern "C" fn D_DoAdvanceDemo() {
 }
 
 // D_StartTitle
-#[unsafe(no_mangle)]
-pub extern "C" fn D_StartTitle() {
+pub(crate) fn D_StartTitle() {
 	unsafe {
 		gameaction = gameaction_t::ga_nothing;
 		demosequence = -1;
@@ -737,10 +726,7 @@ fn FindResponseFile() {
 }
 
 unsafe extern "C" {
-	static mut snd_SfxVolume: i32;
-	static mut snd_MusicVolume: i32;
 	fn M_LoadDefaults();
-	fn M_Init();
 	fn R_Init();
 	fn D_CheckNetGame();
 	fn ST_Init();

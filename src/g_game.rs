@@ -30,6 +30,7 @@ use crate::{
 	info::{mobjinfo, mobjtype_t, statenum_t, states},
 	m_argv::M_CheckParm,
 	m_fixed::{FRACBITS, FRACUNIT, fixed_t},
+	m_menu::M_StartControlPanel,
 	m_random::{M_ClearRandom, P_Random, rndindex},
 	myargc, myargv,
 	p_local::MAXHEALTH,
@@ -545,7 +546,6 @@ fn G_DoLoadLevel() {
 unsafe extern "C" {
 	static mut mouseSensitivity: i32;
 
-	fn M_StartControlPanel();
 	fn F_Responder(ev: *mut event_t) -> boolean;
 	fn ST_Responder(ev: *mut event_t) -> boolean;
 	fn AM_Responder(ev: *mut event_t) -> boolean;
@@ -965,8 +965,7 @@ fn G_DoReborn(playernum: usize) {
 	}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn G_ScreenShot() {
+pub(crate) fn G_ScreenShot() {
 	unsafe {
 		gameaction = gameaction_t::ga_screenshot;
 	}

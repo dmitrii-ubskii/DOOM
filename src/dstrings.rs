@@ -2,7 +2,7 @@ use std::ffi::{CStr, c_char};
 
 pub const SAVEGAMENAME: *const c_char = c"doomsav".as_ptr();
 
-const NUM_QUITMESSAGES: usize = 22;
+pub(crate) const NUM_QUITMESSAGES: usize = 22;
 
 #[repr(transparent)]
 #[derive(Copy, Clone)]

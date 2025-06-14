@@ -26,7 +26,7 @@ pub struct sfxinfo_t {
 	pub pitch: i32,
 
 	// volume if a link
-	pub volume: i32,
+	pub volume: isize,
 
 	// sound data
 	pub data: *mut c_void,

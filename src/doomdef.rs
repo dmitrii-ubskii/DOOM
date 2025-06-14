@@ -31,6 +31,7 @@ pub enum GameMission_t {
 
 // Identify language to use, software localization.
 #[repr(C)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Language_t {
 	english,
 	french,
