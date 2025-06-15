@@ -19,6 +19,7 @@ use crate::{
 	p_lights::{T_Glow_action, T_LightFlash_action, T_StrobeFlash_action},
 	p_local::thinkercap,
 	p_mobj::mobj_t,
+	p_plats::{P_AddActivePlat, T_PlatRaise_action},
 	p_pspr::psprnum_t,
 	p_setup::{lines, numlines, numsectors, sectors, sides},
 	p_spec::{
@@ -353,7 +354,6 @@ unsafe extern "C" {
 	fn T_MoveCeiling(_: *mut c_void);
 	fn T_VerticalDoor(_: *mut c_void);
 	fn T_MoveFloor(_: *mut c_void);
-	fn T_PlatRaise(_: *mut c_void);
 }
 
 // Things to handle:
@@ -431,7 +431,11 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th).function.acp1.is_some_and(|f| ptr::fn_addr_eq(f, T_PlatRaise as actionf_p1)) {
+			if (*th)
+				.function
+				.acp1
+				.is_some_and(|f| ptr::fn_addr_eq(f, T_PlatRaise_action as actionf_p1))
+			{
 				*save_p = specials_e::tc_plat as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -499,7 +503,6 @@ pub(crate) fn P_ArchiveSpecials() {
 
 unsafe extern "C" {
 	fn P_AddActiveCeiling(ceiling: *mut ceiling_t);
-	fn P_AddActivePlat(plat: *mut plat_t);
 }
 
 // P_UnArchiveSpecials
@@ -562,7 +565,7 @@ pub(crate) fn P_UnArchiveSpecials() {
 					(*(*plat).sector).specialdata = plat.cast();
 
 					if (*plat).thinker.function.acp1.is_some() {
-						(*plat).thinker.function.acp1 = Some(T_PlatRaise);
+						(*plat).thinker.function.acp1 = Some(T_PlatRaise_action);
 					}
 
 					P_AddThinker(&mut (*plat).thinker);

@@ -13,7 +13,6 @@ fn main() {
 			"linuxdoom-1.10/p_floor.c",
 			"linuxdoom-1.10/p_map.c",
 			"linuxdoom-1.10/p_maputl.c",
-			"linuxdoom-1.10/p_plats.c",
 			"linuxdoom-1.10/p_pspr.c",
 			"linuxdoom-1.10/p_spec.c",
 			"linuxdoom-1.10/p_switch.c",

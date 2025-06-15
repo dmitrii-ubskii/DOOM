@@ -113,6 +113,7 @@ pub static mut buttonlist: [button_t; MAXBUTTONS] = [button_t {
 
 // P_PLATS
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum plat_e {
 	up,
 	down,
@@ -121,6 +122,7 @@ pub enum plat_e {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum plattype_e {
 	perpetualRaise,
 	downWaitUpStay,
@@ -145,7 +147,7 @@ pub struct plat_t {
 	pub ty: plattype_e,
 }
 
-pub const PLATWAIT: u32 = 3;
+pub const PLATWAIT: i32 = 3;
 pub const PLATSPEED: i32 = FRACUNIT;
 pub const MAXPLATS: usize = 30;
 
@@ -283,6 +285,7 @@ pub struct floormove_t {
 pub const FLOORSPEED: i32 = FRACUNIT;
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum result_e {
 	ok,
 	crushed,
