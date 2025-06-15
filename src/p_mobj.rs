@@ -265,8 +265,6 @@ pub struct mobj_t {
 // Returns true if the mobj is still present.
 #[unsafe(no_mangle)]
 pub extern "C" fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> boolean {
-	// state_t*	st;
-
 	loop {
 		if state == statenum_t::S_NULL {
 			mobj.state = null_mut();
@@ -436,7 +434,7 @@ fn P_XYMovement(mo: &mut mobj_t) {
 			// if in a walking frame, stop moving
 			if !player.is_null()
 				&& (((*(*player).mo).state.offset_from(states.as_mut_ptr())) as usize)
-					< statenum_t::S_PLAY_ATK1 as usize
+					< statenum_t::S_PLAY_RUN1 as usize + 4
 			{
 				P_SetMobjState(&mut *(*player).mo, statenum_t::S_PLAY);
 			}
