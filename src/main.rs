@@ -27,6 +27,7 @@ pub mod m_menu;
 pub mod m_misc;
 pub mod m_random;
 pub mod m_swap;
+pub mod p_ceiling;
 pub mod p_inter;
 pub mod p_lights;
 pub mod p_local;

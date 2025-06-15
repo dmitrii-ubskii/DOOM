@@ -192,6 +192,7 @@ pub const VDOORWAIT: u32 = 150;
 
 // P_CEILNG
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ceiling_e {
 	lowerToFloor,
 	raiseToHighest,

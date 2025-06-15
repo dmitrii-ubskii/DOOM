@@ -16,6 +16,7 @@ use crate::{
 	i_system::I_Error,
 	info::{mobjinfo, state_t, states},
 	m_fixed::FRACBITS,
+	p_ceiling::{P_AddActiveCeiling, T_MoveCeiling_action, activeceilings},
 	p_lights::{T_Glow_action, T_LightFlash_action, T_StrobeFlash_action},
 	p_local::thinkercap,
 	p_mobj::mobj_t,
@@ -349,9 +350,6 @@ impl From<u8> for specials_e {
 }
 
 unsafe extern "C" {
-	static mut activeceilings: [*mut ceiling_t; MAXCEILINGS];
-
-	fn T_MoveCeiling(_: *mut c_void);
 	fn T_VerticalDoor(_: *mut c_void);
 	fn T_MoveFloor(_: *mut c_void);
 }
@@ -393,7 +391,10 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th).function.acp1.is_some_and(|f| ptr::fn_addr_eq(f, T_MoveCeiling as actionf_p1))
+			if (*th)
+				.function
+				.acp1
+				.is_some_and(|f| ptr::fn_addr_eq(f, T_MoveCeiling_action as actionf_p1))
 			{
 				*save_p = specials_e::tc_ceiling as u8;
 				save_p = save_p.wrapping_add(1);
@@ -501,10 +502,6 @@ pub(crate) fn P_ArchiveSpecials() {
 	}
 }
 
-unsafe extern "C" {
-	fn P_AddActiveCeiling(ceiling: *mut ceiling_t);
-}
-
 // P_UnArchiveSpecials
 pub(crate) fn P_UnArchiveSpecials() {
 	unsafe {
@@ -525,7 +522,7 @@ pub(crate) fn P_UnArchiveSpecials() {
 					(*(*ceiling).sector).specialdata = ceiling.cast();
 
 					if (*ceiling).thinker.function.acp1.is_some() {
-						(*ceiling).thinker.function.acp1 = Some(T_MoveCeiling);
+						(*ceiling).thinker.function.acp1 = Some(T_MoveCeiling_action);
 					}
 
 					P_AddThinker(&mut (*ceiling).thinker);
