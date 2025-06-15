@@ -529,7 +529,7 @@ fn P_ZMovement(mo: &mut mobj_t) {
 				mo.momz = -mo.momz;
 			}
 
-			if mo.flags & MF_MISSILE != 0 && !mo.flags & MF_NOCLIP == 0 {
+			if mo.flags & MF_MISSILE != 0 && mo.flags & MF_NOCLIP == 0 {
 				P_ExplodeMissile(mo);
 				// return;
 			}
