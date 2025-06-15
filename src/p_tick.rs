@@ -73,8 +73,7 @@ unsafe extern "C" {
 }
 
 // P_Ticker
-#[unsafe(no_mangle)]
-pub extern "C" fn P_Ticker() {
+pub(crate) fn P_Ticker() {
 	unsafe {
 		// run the tic
 		if paused != 0 {

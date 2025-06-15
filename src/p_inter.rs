@@ -6,6 +6,7 @@
 use std::{ffi::c_void, ptr::null_mut};
 
 use crate::{
+	am_map::{AM_Stop, automapactive},
 	d_englsh::{
 		GOTARMBONUS, GOTARMOR, GOTBACKPACK, GOTBERSERK, GOTBFG9000, GOTBLUECARD, GOTBLUESKUL,
 		GOTCELL, GOTCELLBOX, GOTCHAINGUN, GOTCHAINSAW, GOTCLIP, GOTCLIPBOX, GOTHTHBONUS, GOTINVIS,
@@ -645,9 +646,7 @@ pub extern "C" fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t
 }
 
 unsafe extern "C" {
-	static mut automapactive: boolean;
 	fn P_DropWeapon(player: *mut player_t);
-	fn AM_Stop();
 	fn P_SetMobjState(mobj: *mut mobj_t, state: statenum_t) -> boolean;
 	fn P_SpawnMobj(x: fixed_t, y: fixed_t, floorheight: i32, mt_tfog: mobjtype_t) -> *mut mobj_t;
 }

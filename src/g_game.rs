@@ -7,6 +7,7 @@ use std::{
 };
 
 use crate::{
+	am_map::{AM_Responder, AM_Stop, AM_Ticker, automapactive},
 	d_englsh::GGSAVED,
 	d_event::{
 		BT_ATTACK, BT_CHANGE, BT_SPECIAL, BT_SPECIALMASK, BT_USE, BT_WEAPONSHIFT, BTS_PAUSE,
@@ -41,7 +42,7 @@ use crate::{
 		P_UnArchiveSpecials, P_UnArchiveThinkers, P_UnArchiveWorld, save_p,
 	},
 	p_setup::{P_SetupLevel, deathmatch_p, deathmatchstarts, playerstarts},
-	p_tick::leveltime,
+	p_tick::{P_Ticker, leveltime},
 	r_defs::subsector_t,
 	r_sky::{SKYFLATNAME, skyflatnum, skytexture},
 	s_sound::{S_PauseSound, S_ResumeSound, S_StartSound},
@@ -502,7 +503,6 @@ unsafe extern "C" {
 
 	fn F_Responder(ev: *mut event_t) -> boolean;
 	fn ST_Responder(ev: *mut event_t) -> boolean;
-	fn AM_Responder(ev: *mut event_t) -> boolean;
 }
 
 // G_Responder
@@ -601,9 +601,7 @@ unsafe extern "C" {
 	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
 
 	fn F_StartFinale();
-	fn P_Ticker();
 	fn ST_Ticker();
-	fn AM_Ticker();
 	fn F_Ticker();
 }
 
@@ -963,11 +961,6 @@ pub extern "C" fn G_SecretExitLevel() {
 		}
 		gameaction = gameaction_t::ga_completed;
 	}
-}
-
-unsafe extern "C" {
-	static mut automapactive: boolean;
-	fn AM_Stop();
 }
 
 #[allow(static_mut_refs)]

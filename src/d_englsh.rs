@@ -316,19 +316,18 @@ pub const HUSTR_KEYINDIGO: c_char = b'i' as c_char;
 pub const HUSTR_KEYBROWN: c_char = b'b' as c_char;
 pub const HUSTR_KEYRED: c_char = b'r' as c_char;
 
-/*
 //	AM_map.C
 
-pub const AMSTR_FOLLOWON: &CStr = c"Follow Mode ON";
-pub const AMSTR_FOLLOWOFF: &CStr = c"Follow Mode OFF";
+pub const AMSTR_FOLLOWON: *const c_char = c"Follow Mode ON".as_ptr();
+pub const AMSTR_FOLLOWOFF: *const c_char = c"Follow Mode OFF".as_ptr();
 
-pub const AMSTR_GRIDON: &CStr = c"Grid ON";
-pub const AMSTR_GRIDOFF: &CStr = c"Grid OFF";
+pub const AMSTR_GRIDON: *const c_char = c"Grid ON".as_ptr();
+pub const AMSTR_GRIDOFF: *const c_char = c"Grid OFF".as_ptr();
 
-pub const AMSTR_MARKEDSPOT: &CStr = c"Marked Spot";
-pub const AMSTR_MARKSCLEARED: &CStr = c"All Marks Cleared";
+pub const AMSTR_MARKEDSPOT: *const c_char = c"Marked Spot".as_ptr();
+pub const AMSTR_MARKSCLEARED: *const c_char = c"All Marks Cleared".as_ptr();
 
-//
+/*
 //	ST_stuff.C
 //
 

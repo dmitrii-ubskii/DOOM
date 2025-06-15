@@ -8,8 +8,8 @@ pub static mut cheat_xlate_table: [u8; 256] = [0; 256];
 
 #[repr(C)]
 pub struct cheatseq_t {
-	sequence: *mut u8,
-	p: *mut u8,
+	pub sequence: *mut u8,
+	pub p: *mut u8,
 }
 
 fn scramble(a: u8) -> u8 {

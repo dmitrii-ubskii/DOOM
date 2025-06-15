@@ -9,6 +9,7 @@ use std::{
 use libc::O_RDONLY;
 
 use crate::{
+	am_map::automapactive,
 	d_englsh::{
 		DOSY, EMPTYSTRING, ENDGAME, GAMMALVL0, GAMMALVL1, GAMMALVL2, GAMMALVL3, GAMMALVL4, LOADNET,
 		MSGOFF, MSGON, NETEND, NEWGAME, NIGHTMARE, QLOADNET, QLPROMPT, QSAVESPOT, QSPROMPT,
@@ -1101,7 +1102,6 @@ fn M_WriteText(x: usize, y: usize, string: *const c_char) {
 // CONTROL PANEL
 
 unsafe extern "C" {
-	static mut automapactive: boolean;
 	fn I_SetPalette(palette: *mut u8);
 }
 

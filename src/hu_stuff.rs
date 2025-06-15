@@ -6,6 +6,7 @@ use std::{
 };
 
 use crate::{
+	am_map::automapactive,
 	d_englsh::{
 		HUSTR_1, HUSTR_2, HUSTR_3, HUSTR_4, HUSTR_5, HUSTR_6, HUSTR_7, HUSTR_8, HUSTR_9, HUSTR_10,
 		HUSTR_11, HUSTR_12, HUSTR_13, HUSTR_14, HUSTR_15, HUSTR_16, HUSTR_17, HUSTR_18, HUSTR_19,
@@ -447,10 +448,6 @@ pub extern "C" fn HU_Start() {
 
 		headsupactive = 1;
 	}
-}
-
-unsafe extern "C" {
-	static mut automapactive: boolean;
 }
 
 #[allow(static_mut_refs)]

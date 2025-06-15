@@ -3,6 +3,7 @@
 use std::ffi::c_char;
 
 use crate::{
+	am_map::automapactive,
 	doomdef::{KEY_BACKSPACE, KEY_ENTER, SCREENWIDTH},
 	r_defs::patch_t,
 	v_video::V_DrawPatchDirect,
@@ -62,10 +63,6 @@ pub struct hu_itext_t {
 	// pointer to boolean stating whether to update window
 	pub on: *mut boolean,
 	pub laston: boolean, // last value of *on.
-}
-
-unsafe extern "C" {
-	static mut automapactive: boolean;
 }
 
 fn HUlib_clearTextLine(t: &mut hu_textline_t) {

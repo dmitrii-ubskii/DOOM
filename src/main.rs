@@ -1,5 +1,6 @@
 #![allow(non_upper_case_globals)]
 
+pub mod am_map;
 pub mod d_englsh;
 pub mod d_event;
 pub mod d_items;

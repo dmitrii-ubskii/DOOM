@@ -14,6 +14,7 @@ use libc::{
 };
 
 use crate::{
+	am_map::{AM_Drawer, automapactive},
 	d_englsh::{D_CDROM, D_DEVSTR},
 	d_event::{MAXEVENTS, event_t, eventhead, events, eventtail, gameaction, gameaction_t},
 	d_net::BACKUPTICS,
@@ -135,7 +136,6 @@ pub extern "C" fn D_ProcessEvents() {
 pub static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
 
 unsafe extern "C" {
-	static mut automapactive: boolean;
 	static mut nodrawers: boolean;
 	static mut paused: boolean;
 	static mut scaledviewwidth: i32;
@@ -146,7 +146,6 @@ unsafe extern "C" {
 	static mut viewwindowy: usize;
 	static mut gamestate: gamestate_t;
 
-	fn AM_Drawer();
 	fn F_Drawer();
 	fn I_FinishUpdate();
 	fn I_SetPalette(palette: *mut u8);
