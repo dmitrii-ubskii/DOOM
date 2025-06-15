@@ -28,8 +28,9 @@ use crate::{
 	f_wipe::{wipe_EndScreen, wipe_Melt, wipe_ScreenWipe, wipe_StartScreen},
 	g_game::{
 		G_BeginRecording, G_BuildTiccmd, G_DeferedPlayDemo, G_InitNew, G_LoadGame, G_RecordDemo,
-		G_Responder, G_Ticker, G_TimeDemo, consoleplayer, deathmatch, displayplayer, forwardmove,
-		gametic, netgame, sidemove, singledemo, statcopy, usergame,
+		G_Responder, G_Ticker, G_TimeDemo, consoleplayer, deathmatch, demorecording, displayplayer,
+		forwardmove, gametic, netgame, nodrawers, paused, sidemove, singledemo, statcopy, usergame,
+		viewactive,
 	},
 	hu_stuff::{HU_Drawer, HU_Erase, HU_Init},
 	i_system::{I_Error, I_GetTime, I_Init},
@@ -58,8 +59,7 @@ use crate::{
 
 const MAXWADFILES: usize = 20;
 
-#[unsafe(no_mangle)]
-pub static mut wadfiles: [*mut c_char; MAXWADFILES] = [null_mut(); MAXWADFILES];
+pub(crate) static mut wadfiles: [*mut c_char; MAXWADFILES] = [null_mut(); MAXWADFILES];
 
 type boolean = i32;
 
@@ -71,9 +71,6 @@ pub static mut nomonsters: boolean = 0; // checkparm of -nomonsters
 pub static mut respawnparm: boolean = 0; // checkparm of -respawn
 #[unsafe(no_mangle)]
 pub static mut fastparm: boolean = 0; // checkparm of -fast
-
-#[unsafe(no_mangle)]
-pub static mut drone: boolean = 0;
 
 #[unsafe(no_mangle)]
 pub static mut singletics: boolean = 0; // debug flag to cancel adaptiveness
@@ -93,8 +90,7 @@ pub static mut debugfile: *const libc::FILE = null();
 #[unsafe(no_mangle)]
 pub static mut advancedemo: boolean = 0;
 
-#[unsafe(no_mangle)]
-pub static mut basedefault: [c_char; 1024] = [0; 1024]; // default file
+pub(crate) static mut basedefault: [c_char; 1024] = [0; 1024]; // default file
 
 // D_PostEvent
 // Called by the I/O functions when input is detected
@@ -136,11 +132,8 @@ pub extern "C" fn D_ProcessEvents() {
 pub static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
 
 unsafe extern "C" {
-	static mut nodrawers: boolean;
-	static mut paused: boolean;
 	static mut scaledviewwidth: i32;
 	static mut setsizeneeded: boolean;
-	static mut viewactive: boolean;
 	static mut viewheight: i32;
 	static mut viewwindowx: usize;
 	static mut viewwindowy: usize;
@@ -161,15 +154,15 @@ unsafe extern "C" {
 
 fn D_Display() {
 	unsafe {
-		static mut viewactivestate: boolean = 0;
-		static mut menuactivestate: boolean = 0;
-		static mut inhelpscreensstate: boolean = 0;
-		static mut fullscreen: boolean = 0;
+		static mut viewactivestate: bool = false;
+		static mut menuactivestate: bool = false;
+		static mut inhelpscreensstate: bool = false;
+		static mut fullscreen: bool = false;
 		static mut oldgamestate: gamestate_t = gamestate_t::None;
 		static mut borderdrawcount: i32 = 0;
 		let wipe;
 
-		if nodrawers != 0 {
+		if nodrawers {
 			return; // for comparative timing / profiling
 		}
 
@@ -201,14 +194,14 @@ fn D_Display() {
 					if automapactive != 0 {
 						AM_Drawer();
 					}
-					if wipe || (viewheight != 200 && fullscreen != 0) {
+					if wipe || (viewheight != 200 && fullscreen) {
 						redrawsbar = 1;
 					}
-					if inhelpscreensstate != 0 && inhelpscreens == 0 {
+					if inhelpscreensstate && !inhelpscreens {
 						redrawsbar = 1; // just put away the help screen
 					}
 					ST_Drawer((viewheight == 200) as boolean, redrawsbar);
-					fullscreen = (viewheight == 200) as boolean;
+					fullscreen = viewheight == 200;
 				}
 			}
 			gamestate_t::GS_INTERMISSION => WI_Drawer(),
@@ -236,13 +229,13 @@ fn D_Display() {
 
 		// see if the border needs to be initially drawn
 		if gamestate == gamestate_t::GS_LEVEL && oldgamestate != gamestate_t::GS_LEVEL {
-			viewactivestate = 0; // view was not active
+			viewactivestate = false; // view was not active
 			R_FillBackScreen(); // draw the pattern into the back screen
 		}
 
 		// see if the border needs to be updated to the screen
 		if gamestate == gamestate_t::GS_LEVEL && automapactive == 0 && scaledviewwidth != 320 {
-			if menuactive != 0 || menuactivestate != 0 || viewactivestate == 0 {
+			if menuactive || menuactivestate || !viewactivestate {
 				borderdrawcount = 3;
 			}
 			if borderdrawcount != 0 {
@@ -252,13 +245,13 @@ fn D_Display() {
 		}
 
 		menuactivestate = menuactive;
-		viewactivestate = viewactive;
+		viewactivestate = viewactive != 0;
 		inhelpscreensstate = inhelpscreens;
 		oldgamestate = gamestate;
 		wipegamestate = gamestate;
 
 		// draw pause pic
-		if paused != 0 {
+		if paused {
 			let y = if automapactive != 0 { 4 } else { viewwindowy + 4 };
 			let x = viewwindowx.wrapping_add_signed((scaledviewwidth as isize - 68) / 2);
 			V_DrawPatchDirect(x, y, 0, W_CacheLumpName(c"M_PAUSE".as_ptr(), PU_CACHE).cast());
@@ -303,7 +296,6 @@ fn D_Display() {
 
 //  D_DoomLoop
 unsafe extern "C" {
-	static mut demorecording: boolean;
 	static mut maketic: usize;
 	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
 	fn I_InitGraphics();
@@ -405,7 +397,7 @@ pub extern "C" fn D_DoAdvanceDemo() {
 		players[consoleplayer].playerstate = playerstate_t::PST_LIVE; // not reborn
 		advancedemo = 0;
 		usergame = 0; // no save / end game here
-		paused = 0;
+		paused = false;
 		gameaction = gameaction_t::ga_nothing;
 
 		if gamemode == GameMode_t::retail {
@@ -1095,7 +1087,7 @@ pub extern "C" fn D_DoomMain() {
 
 		let p = M_CheckParm(c"-playdemo".as_ptr());
 		if p != 0 && p < myargc - 1 {
-			singledemo = 1; // quit after one demo
+			singledemo = true; // quit after one demo
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			G_DeferedPlayDemo(argvp1);
 			D_DoomLoop(); // never returns

@@ -314,7 +314,7 @@ static mut cheat_amap_seq: [u8; 5] = [0xb2, 0x26, 0x26, 0x2e, 0xff];
 static mut cheat_amap: cheatseq_t =
 	cheatseq_t { sequence: unsafe { cheat_amap_seq.as_mut_ptr() }, p: null_mut() };
 
-static mut stopped: boolean = 1;
+static mut stopped: bool = true;
 
 fn AM_activateNewScale() {
 	unsafe {
@@ -546,7 +546,7 @@ pub(crate) fn AM_Stop() {
 		AM_unloadPics();
 		automapactive = 0;
 		ST_Responder(&raw mut st_notify);
-		stopped = 1;
+		stopped = true;
 	}
 }
 
@@ -555,10 +555,10 @@ fn AM_Start() {
 		static mut lastlevel: i32 = -1;
 		static mut lastepisode: i32 = -1;
 
-		if stopped == 0 {
+		if !stopped {
 			AM_Stop();
 		}
-		stopped = 0;
+		stopped = false;
 		if lastlevel != gamemap as i32 || lastepisode != gameepisode as i32 {
 			AM_LevelInit();
 			lastlevel = gamemap as i32;
@@ -1175,7 +1175,7 @@ fn AM_drawPlayers() {
 			their_color += 1;
 			let p = &raw const players[i];
 
-			if deathmatch != 0 && singledemo == 0 && !std::ptr::eq(p, plr) {
+			if deathmatch != 0 && !singledemo && !std::ptr::eq(p, plr) {
 				continue;
 			}
 

@@ -20,7 +20,6 @@ use crate::{
 };
 
 type int = i32;
-type boolean = i32;
 
 #[repr(C)]
 #[derive(PartialEq, Eq)]
@@ -932,7 +931,7 @@ fn WI_updateNoState() {
 	}
 }
 
-static mut snl_pointeron: boolean = 0;
+static mut snl_pointeron: bool = false;
 
 fn WI_initShowNextLoc() {
 	unsafe {
@@ -952,7 +951,7 @@ fn WI_updateShowNextLoc() {
 		if cnt == 0 || acceleratestage != 0 {
 			WI_initNoState();
 		} else {
-			snl_pointeron = ((cnt & 31) < 20) as boolean;
+			snl_pointeron = (cnt & 31) < 20;
 		}
 	}
 }
@@ -984,7 +983,7 @@ fn WI_drawShowNextLoc() {
 			}
 
 			// draw flashing ptr
-			if snl_pointeron != 0 {
+			if snl_pointeron {
 				WI_drawOnLnode((*wbs).next, yah.as_mut_ptr());
 			}
 		}
@@ -998,7 +997,7 @@ fn WI_drawShowNextLoc() {
 
 fn WI_drawNoState() {
 	unsafe {
-		snl_pointeron = 1;
+		snl_pointeron = true;
 		WI_drawShowNextLoc();
 	}
 }

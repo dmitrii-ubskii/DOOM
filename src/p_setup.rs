@@ -3,7 +3,6 @@
 use std::{ffi::c_char, num::Wrapping, ptr::null_mut};
 
 use crate::{
-	d_player::wbstartstruct_t,
 	doomdata::{
 		ML_BLOCKMAP, ML_LINEDEFS, ML_NODES, ML_REJECT, ML_SECTORS, ML_SEGS, ML_SIDEDEFS,
 		ML_SSECTORS, ML_THINGS, ML_TWOSIDED, ML_VERTEXES, maplinedef_t, mapnode_t, mapsector_t,
@@ -11,7 +10,10 @@ use crate::{
 	},
 	doomdef::{GameMode_t, MAXPLAYERS, skill_t},
 	doomstat::gamemode,
-	g_game::G_DeathMatchSpawnPlayer,
+	g_game::{
+		G_DeathMatchSpawnPlayer, bodyqueslot, consoleplayer, deathmatch, precache, totalitems,
+		totalkills, totalsecret, wminfo,
+	},
 	i_system::I_Error,
 	info::sprnames,
 	m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP, M_AddToBox, M_ClearBox},
@@ -27,13 +29,10 @@ use crate::{
 
 // MAP related Lookup tables.
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
-#[unsafe(no_mangle)]
-pub static mut numvertexes: usize = 0;
-#[unsafe(no_mangle)]
-pub static mut vertexes: *mut vertex_t = null_mut();
+pub(crate) static mut numvertexes: usize = 0;
+pub(crate) static mut vertexes: *mut vertex_t = null_mut();
 
-#[unsafe(no_mangle)]
-pub static mut numsegs: usize = 0;
+pub(crate) static mut numsegs: usize = 0;
 #[unsafe(no_mangle)]
 pub static mut segs: *mut seg_t = null_mut();
 
@@ -94,19 +93,15 @@ pub static mut blocklinks: *mut *mut mobj_t = null_mut();
 //  LineOf Sight calculation.
 // Without special effect, this could be
 //  used as a PVS lookup as well.
-#[unsafe(no_mangle)]
-pub static mut rejectmatrix: *mut u8 = null_mut();
+pub(crate) static mut rejectmatrix: *mut u8 = null_mut();
 
 // Maintain single and multi player starting spots.
 const MAX_DEATHMATCH_STARTS: usize = 10;
 
-#[unsafe(no_mangle)]
-pub static mut deathmatchstarts: [mapthing_t; MAX_DEATHMATCH_STARTS] =
+pub(crate) static mut deathmatchstarts: [mapthing_t; MAX_DEATHMATCH_STARTS] =
 	[mapthing_t { x: 0, y: 0, angle: 0, ty: 0, options: 0 }; MAX_DEATHMATCH_STARTS];
-#[unsafe(no_mangle)]
-pub static mut deathmatch_p: *mut mapthing_t = null_mut();
-#[unsafe(no_mangle)]
-pub static mut playerstarts: [mapthing_t; MAXPLAYERS] =
+pub(crate) static mut deathmatch_p: *mut mapthing_t = null_mut();
+pub(crate) static mut playerstarts: [mapthing_t; MAXPLAYERS] =
 	[mapthing_t { x: 0, y: 0, angle: 0, ty: 0, options: 0 }; MAXPLAYERS];
 
 // P_LoadVertexes
@@ -491,18 +486,7 @@ fn P_GroupLines() {
 	}
 }
 
-type boolean = i32;
-
 unsafe extern "C" {
-	static mut bodyqueslot: i32;
-	static mut consoleplayer: i32;
-	static mut deathmatch: boolean;
-	static mut precache: boolean;
-	static mut totalitems: i32;
-	static mut totalkills: i32;
-	static mut totalsecret: i32;
-	static mut wminfo: wbstartstruct_t;
-
 	fn P_SpawnSpecials();
 	fn R_PrecacheLevel();
 	fn P_InitSwitchList();
@@ -528,7 +512,7 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 
 		// Initial height of PointOfView
 		// will be set by player think.
-		players[consoleplayer as usize].viewz = 1;
+		players[consoleplayer].viewz = 1;
 
 		// Make sure all sounds are stopped before Z_FreeTags.
 		S_Start();
@@ -601,7 +585,7 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 		//	UNUSED P_ConnectSubsectors ();
 
 		// preload graphics
-		if precache != 0 {
+		if precache {
 			R_PrecacheLevel();
 		}
 

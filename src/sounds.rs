@@ -123,8 +123,7 @@ impl From<usize> for sfxenum_t {
 }
 
 // Information about all the music
-#[unsafe(no_mangle)]
-pub static mut S_music: [musicinfo_t; 68] = [
+pub(crate) static mut S_music: [musicinfo_t; 68] = [
 	musicinfo_t { name: null_mut(), lumpnum: 0, data: null_mut(), handle: 0 },
 	musicinfo_t { name: c"e1m1".as_ptr(), lumpnum: 0, data: null_mut(), handle: 0 },
 	musicinfo_t { name: c"e1m2".as_ptr(), lumpnum: 0, data: null_mut(), handle: 0 },

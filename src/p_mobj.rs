@@ -637,7 +637,7 @@ pub extern "C" fn P_MobjThinker(mobj: &mut mobj_t) {
 				return;
 			}
 
-			if respawnmonsters == 0 {
+			if !respawnmonsters {
 				return;
 			}
 

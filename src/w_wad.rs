@@ -46,8 +46,7 @@ pub struct lumpinfo_t {
 // Location of each lump on disk.
 #[unsafe(no_mangle)]
 pub static mut lumpinfo: *mut lumpinfo_t = null_mut();
-#[unsafe(no_mangle)]
-pub static mut numlumps: usize = 0;
+pub(crate) static mut numlumps: usize = 0;
 
 static mut lumpcache: *mut *mut c_void = null_mut();
 

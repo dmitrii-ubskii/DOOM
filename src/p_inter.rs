@@ -42,7 +42,6 @@ const BONUSADD: usize = 6;
 
 // a weapon is found with two clip loads,
 // a big item has five clip loads
-#[unsafe(no_mangle)]
 pub static mut maxammo: [int; ammotype_t::NUMAMMO as usize] = [200, 50, 300, 50];
 static mut clipammo: [int; ammotype_t::NUMAMMO as usize] = [10, 4, 20, 1];
 

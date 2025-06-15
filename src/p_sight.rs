@@ -6,8 +6,9 @@ use crate::{
 	doomdata::{ML_TWOSIDED, NF_SUBSECTOR},
 	i_system::I_Error,
 	m_fixed::{FRACBITS, FixedDiv, FixedMul, fixed_t},
-	p_local::{divline_t, openbottom, opentop, rejectmatrix},
+	p_local::{divline_t, openbottom, opentop},
 	p_mobj::mobj_t,
+	p_setup::rejectmatrix,
 	r_state::{nodes, numnodes, numsectors, numsubsectors, sectors, segs, subsectors},
 };
 

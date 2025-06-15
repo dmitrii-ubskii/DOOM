@@ -19,8 +19,7 @@ impl<T> Smuggle<T> {
 // from d_englsh.h
 const QUITMSG: &CStr = c"are you sure you want to\nquit this great game?";
 
-#[unsafe(no_mangle)]
-pub static endmsg: [Smuggle<c_char>; NUM_QUITMESSAGES + 1] = [
+pub(crate) static endmsg: [Smuggle<c_char>; NUM_QUITMESSAGES + 1] = [
 	// DOOM1
 	Smuggle(QUITMSG.as_ptr()),
 	Smuggle(c"please don't leave, there's more\ndemons to toast!".as_ptr()),

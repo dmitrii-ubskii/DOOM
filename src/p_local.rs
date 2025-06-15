@@ -134,13 +134,7 @@ pub static mut linetarget: *mut mobj_t = null_mut(); // who got hit (or NULL)
 */
 
 // P_SETUP
-unsafe extern "C" {
-	pub static mut rejectmatrix: *mut u8; // for fast sight rejection
-}
-
 /*
-#[unsafe(no_mangle)]
-pub static mut rejectmatrix: *mut u8 = null_mut(); // for fast sight rejection
 #[unsafe(no_mangle)]
 pub static mut blockmaplump: *mut i16 = null_mut(); // offsets in blockmap are from here
 #[unsafe(no_mangle)]
@@ -155,10 +149,4 @@ pub static mut bmaporgx: fixed_t = 0;
 pub static mut bmaporgy: fixed_t = 0; // origin of block map
 #[unsafe(no_mangle)]
 pub static mut blocklinks: *mut *mut mobj_t = null_mut(); // for thing chains
-
-// P_INTER
-#[unsafe(no_mangle)]
-pub static mut maxammo: [i32; NUMAMMO as usize] = [0; NUMAMMO as usize];
-#[unsafe(no_mangle)]
-pub static mut clipammo: [i32; NUMAMMO as usize] = [0; NUMAMMO as usize];
 */

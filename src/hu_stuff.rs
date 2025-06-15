@@ -149,8 +149,8 @@ static mut w_inputbuffer: [hu_itext_t; MAXPLAYERS] = [hu_itext_t {
 }; MAXPLAYERS];
 
 static mut message_on: boolean = 0;
-pub(crate) static mut message_dontfuckwithme: boolean = 0;
-static mut message_nottobefuckedwith: boolean = 0;
+pub(crate) static mut message_dontfuckwithme: bool = false;
+static mut message_nottobefuckedwith: bool = false;
 
 static mut w_message: hu_stext_t = hu_stext_t {
 	l: [hu_textline_t {
@@ -169,7 +169,7 @@ static mut w_message: hu_stext_t = hu_stext_t {
 };
 static mut message_counter: usize = 0;
 
-static mut headsupactive: boolean = 0;
+static mut headsupactive: bool = false;
 
 // Builtin map names.
 // The actual names can be found in DStrings.h.
@@ -372,7 +372,7 @@ pub(crate) fn HU_Init() {
 
 fn HU_Stop() {
 	unsafe {
-		headsupactive = 0;
+		headsupactive = false;
 	}
 }
 
@@ -380,14 +380,14 @@ fn HU_Stop() {
 #[allow(static_mut_refs)]
 pub extern "C" fn HU_Start() {
 	unsafe {
-		if headsupactive != 0 {
+		if headsupactive {
 			HU_Stop();
 		}
 
 		plr = &raw mut players[consoleplayer];
 		message_on = 0;
-		message_dontfuckwithme = 0;
-		message_nottobefuckedwith = 0;
+		message_dontfuckwithme = false;
+		message_nottobefuckedwith = false;
 		chat_on = 0;
 
 		// create the message widget
@@ -446,7 +446,7 @@ pub extern "C" fn HU_Start() {
 			HUlib_initIText(&mut w_inputbuffer[i], 0, 0, null_mut(), 0, &mut always_off);
 		}
 
-		headsupactive = 1;
+		headsupactive = true;
 	}
 }
 
@@ -482,21 +482,19 @@ pub(crate) fn HU_Ticker() {
 			message_counter -= 1;
 			if message_counter == 0 {
 				message_on = 0;
-				message_nottobefuckedwith = 0;
+				message_nottobefuckedwith = false;
 			}
 		}
 
-		if showMessages != 0 || message_dontfuckwithme != 0 {
+		if showMessages != 0 || message_dontfuckwithme {
 			// display message if necessary
-			if (!(*plr).message.is_null() && message_nottobefuckedwith == 0)
-				|| (!(*plr).message.is_null() && message_dontfuckwithme != 0)
-			{
+			if !(*plr).message.is_null() && (!message_nottobefuckedwith || message_dontfuckwithme) {
 				HUlib_addMessageToSText(&mut w_message, null(), (*plr).message);
 				(*plr).message = null();
 				message_on = 1;
 				message_counter = HU_MSGTIMEOUT;
 				message_nottobefuckedwith = message_dontfuckwithme;
-				message_dontfuckwithme = 0;
+				message_dontfuckwithme = false;
 			}
 		} // else message_on = false;
 
@@ -526,7 +524,7 @@ pub(crate) fn HU_Ticker() {
 									w_inputbuffer[i].l.l.as_ptr(),
 								);
 
-								message_nottobefuckedwith = 1;
+								message_nottobefuckedwith = true;
 								message_on = 1;
 								message_counter = HU_MSGTIMEOUT;
 								if gamemode == GameMode_t::commercial {
@@ -578,8 +576,8 @@ pub(crate) fn HU_dequeueChatChar() -> c_char {
 pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 	unsafe {
 		static mut lastmessage: [c_char; HU_MAXLINELENGTH + 1] = [0; HU_MAXLINELENGTH + 1];
-		static mut shiftdown: boolean = 0;
-		static mut altdown: boolean = 0;
+		static mut shiftdown: bool = false;
+		static mut altdown: bool = false;
 
 		static destination_keys: [c_char; MAXPLAYERS] =
 			[HUSTR_KEYGREEN, HUSTR_KEYINDIGO, HUSTR_KEYBROWN, HUSTR_KEYRED];
@@ -593,10 +591,10 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 		}
 
 		if ev.data1 == KEY_RSHIFT as i32 {
-			shiftdown = (ev.ty == evtype_t::ev_keydown) as boolean;
+			shiftdown = ev.ty == evtype_t::ev_keydown;
 			return 0;
 		} else if ev.data1 == KEY_RALT as i32 || ev.data1 == KEY_LALT as i32 {
-			altdown = (ev.ty == evtype_t::ev_keydown) as boolean;
+			altdown = ev.ty == evtype_t::ev_keydown;
 			return 0;
 		}
 
@@ -644,7 +642,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 		} else {
 			let mut c = ev.data1 as u8;
 			// send a macro
-			if altdown != 0 {
+			if altdown {
 				c -= b'0';
 				if c > 9 {
 					return 0;
@@ -671,7 +669,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 				// if french {
 				// 	c = ForeignTranslation(c);
 				// }
-				if shiftdown != 0 || c.is_ascii_lowercase() {
+				if shiftdown || c.is_ascii_lowercase() {
 					c = *shiftxform.wrapping_add(c as usize);
 				}
 				eatkey = HUlib_keyInIText(&mut w_chat, c);

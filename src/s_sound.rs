@@ -63,7 +63,7 @@ pub static mut snd_SfxVolume: usize = 15;
 pub static mut snd_MusicVolume: usize = 15;
 
 // whether songs are mus_paused
-static mut mus_paused: boolean = 0;
+static mut mus_paused: bool = false;
 
 // music currently being played
 static mut mus_playing: *mut musicinfo_t = null_mut();
@@ -104,7 +104,7 @@ pub(crate) fn S_Init(sfxVolume: usize, musicVolume: usize) {
 		}
 
 		// no sounds are playing, and they are not mus_paused
-		mus_paused = 0;
+		mus_paused = false;
 
 		// Note that sounds have not been cached (yet).
 		#[allow(clippy::needless_range_loop)]
@@ -129,7 +129,7 @@ pub(crate) fn S_Start() {
 		}
 
 		// start new music for the level
-		mus_paused = 0;
+		mus_paused = false;
 
 		let mnum;
 		if gamemode == GameMode_t::commercial {
@@ -308,18 +308,18 @@ unsafe extern "C" {
 // Stop and resume music, during game PAUSE.
 pub(crate) fn S_PauseSound() {
 	unsafe {
-		if !mus_playing.is_null() && mus_paused == 0 {
+		if !mus_playing.is_null() && !mus_paused {
 			I_PauseSong((*mus_playing).handle);
-			mus_paused = 1;
+			mus_paused = true;
 		}
 	}
 }
 
 pub(crate) fn S_ResumeSound() {
 	unsafe {
-		if !mus_playing.is_null() && mus_paused != 0 {
+		if !mus_playing.is_null() && mus_paused {
 			I_ResumeSong((*mus_playing).handle);
-			mus_paused = 0;
+			mus_paused = false;
 		}
 	}
 }
@@ -463,7 +463,7 @@ unsafe extern "C" {
 fn S_StopMusic() {
 	unsafe {
 		if !mus_playing.is_null() {
-			if mus_paused != 0 {
+			if mus_paused {
 				I_ResumeSong((*mus_playing).handle);
 			}
 

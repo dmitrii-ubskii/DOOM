@@ -41,11 +41,9 @@ use crate::{
 
 type short = i16;
 type int = i32;
-type boolean = i32;
 
 // defaulted values
-#[unsafe(no_mangle)]
-pub static mut mouseSensitivity: int = 0; // has default
+pub(crate) static mut mouseSensitivity: int = 0; // has default
 
 // Show messages has default, 0 = off, 1 = on
 pub(crate) static mut showMessages: int = 0;
@@ -68,10 +66,10 @@ static mut messageToPrint: int = 0;
 static mut messageString: *const c_char = null_mut();
 
 // message x & y
-static mut messageLastMenuActive: int = 0;
+static mut messageLastMenuActive: bool = false;
 
 // timed message = no input from user
-static mut messageNeedsInput: boolean = 0;
+static mut messageNeedsInput: bool = false;
 static mut messageRoutine: Option<fn(i32)> = None;
 
 const SAVESTRINGSIZE: usize = 24;
@@ -85,8 +83,8 @@ static mut saveCharIndex: usize = 0; // which char we're editing
 // old save description before edit
 static mut saveOldString: [c_char; SAVESTRINGSIZE] = [0; SAVESTRINGSIZE];
 
-pub(crate) static mut inhelpscreens: boolean = 0;
-pub(crate) static mut menuactive: boolean = 0;
+pub(crate) static mut inhelpscreens: bool = false;
+pub(crate) static mut menuactive: bool = false;
 
 const SKULLXOFF: isize = -32;
 const LINEHEIGHT: usize = 16;
@@ -481,7 +479,7 @@ fn M_LoadSelect(choice: i32) {
 fn M_LoadGame(_choice: i32) {
 	unsafe {
 		if netgame != 0 {
-			M_StartMessage(LOADNET, null_mut(), 0);
+			M_StartMessage(LOADNET, null_mut(), false);
 			return;
 		}
 		M_SetupNextMenu(&raw mut LoadDef);
@@ -548,7 +546,7 @@ fn M_SaveSelect(choice: i32) {
 fn M_SaveGame(_choice: i32) {
 	unsafe {
 		if usergame == 0 {
-			M_StartMessage(SAVEDEAD, null_mut(), 0);
+			M_StartMessage(SAVEDEAD, null_mut(), false);
 			return;
 		}
 
@@ -590,7 +588,7 @@ fn M_QuickSave() {
 			return;
 		}
 		libc::sprintf(tempstring.as_mut_ptr(), QSPROMPT, savegamestrings[quickSaveSlot as usize]);
-		M_StartMessage(tempstring.as_ptr(), M_QuickSaveResponse as *mut c_void, 1);
+		M_StartMessage(tempstring.as_ptr(), M_QuickSaveResponse as *mut c_void, true);
 	}
 }
 
@@ -606,17 +604,17 @@ fn M_QuickLoadResponse(ch: u8) {
 fn M_QuickLoad() {
 	unsafe {
 		if netgame != 0 {
-			M_StartMessage(QLOADNET, null_mut(), 0);
+			M_StartMessage(QLOADNET, null_mut(), false);
 			return;
 		}
 
 		if quickSaveSlot < 0 {
-			M_StartMessage(QSAVESPOT, null_mut(), 0);
+			M_StartMessage(QSAVESPOT, null_mut(), false);
 			return;
 		}
 
 		libc::sprintf(tempstring.as_mut_ptr(), QLPROMPT, savegamestrings[quickSaveSlot as usize]);
-		M_StartMessage(tempstring.as_ptr(), M_QuickLoadResponse as *mut c_void, 1);
+		M_StartMessage(tempstring.as_ptr(), M_QuickLoadResponse as *mut c_void, true);
 	}
 }
 
@@ -624,7 +622,7 @@ fn M_QuickLoad() {
 // Had a "quick hack to fix romero bug"
 fn M_DrawReadThis1() {
 	unsafe {
-		inhelpscreens = 1;
+		inhelpscreens = true;
 		match gamemode {
 			GameMode_t::commercial => {
 				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"HELP".as_ptr(), PU_CACHE).cast())
@@ -640,7 +638,7 @@ fn M_DrawReadThis1() {
 // Read This Menus - optional second page.
 fn M_DrawReadThis2() {
 	unsafe {
-		inhelpscreens = 1;
+		inhelpscreens = true;
 		match gamemode {
 			GameMode_t::retail | GameMode_t::commercial => {
 				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"CREDIT".as_ptr(), PU_CACHE).cast())
@@ -728,7 +726,7 @@ fn M_DrawNewGame() {
 fn M_NewGame(_choice: i32) {
 	unsafe {
 		if netgame != 0 && demoplayback == 0 {
-			M_StartMessage(NEWGAME, null_mut(), 0);
+			M_StartMessage(NEWGAME, null_mut(), false);
 			return;
 		}
 
@@ -761,7 +759,7 @@ fn M_VerifyNightmare(ch: u8) {
 fn M_ChooseSkill(choice: i32) {
 	unsafe {
 		if choice == newgame_e::nightmare as i32 {
-			M_StartMessage(NIGHTMARE, M_VerifyNightmare as *const c_void, 1);
+			M_StartMessage(NIGHTMARE, M_VerifyNightmare as *const c_void, true);
 			return;
 		}
 
@@ -773,7 +771,7 @@ fn M_ChooseSkill(choice: i32) {
 fn M_Episode(mut choice: i32) {
 	unsafe {
 		if gamemode == GameMode_t::shareware && choice != 0 {
-			M_StartMessage(SWSTRING, null_mut(), 0);
+			M_StartMessage(SWSTRING, null_mut(), false);
 			M_SetupNextMenu(&raw mut ReadDef1);
 			return;
 		}
@@ -842,7 +840,7 @@ fn M_ChangeMessages(_choice: i32) {
 			players[consoleplayer].message = MSGON;
 		}
 
-		message_dontfuckwithme = 1;
+		message_dontfuckwithme = true;
 	}
 }
 
@@ -864,11 +862,11 @@ fn M_EndGame(_choice: i32) {
 		}
 
 		if netgame != 0 {
-			M_StartMessage(NETEND, null_mut(), 0);
+			M_StartMessage(NETEND, null_mut(), false);
 			return;
 		}
 
-		M_StartMessage(ENDGAME, M_EndGameResponse as *mut c_void, 1);
+		M_StartMessage(ENDGAME, M_EndGameResponse as *mut c_void, true);
 	}
 }
 
@@ -941,7 +939,7 @@ fn M_QuitDOOM(_choice: i32) {
 			);
 		}
 
-		M_StartMessage(endstring.as_ptr(), M_QuitResponse as *const c_void, 1);
+		M_StartMessage(endstring.as_ptr(), M_QuitResponse as *const c_void, true);
 	}
 }
 
@@ -1019,14 +1017,14 @@ fn M_DrawThermo(x: usize, y: usize, thermWidth: usize, thermDot: usize) {
 	}
 }
 
-fn M_StartMessage(string: *const c_char, routine: *const c_void, input: boolean) {
+fn M_StartMessage(string: *const c_char, routine: *const c_void, input: bool) {
 	unsafe {
 		messageLastMenuActive = menuactive;
 		messageToPrint = 1;
 		messageString = string;
 		messageRoutine = mem::transmute::<*const c_void, Option<fn(i32)>>(routine);
 		messageNeedsInput = input;
-		menuactive = 1;
+		menuactive = true;
 	}
 }
 
@@ -1229,7 +1227,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 
 		// Take care of any messages that need input
 		if messageToPrint != 0 {
-			if messageNeedsInput != 0
+			if messageNeedsInput
 				&& !(ch == b' ' as i32
 					|| ch == b'n' as i32
 					|| ch == b'y' as i32
@@ -1244,7 +1242,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 				routine(ch);
 			}
 
-			menuactive = 0;
+			menuactive = false;
 			S_StartSound(null_mut(), sfxenum_t::sfx_swtchx);
 			return true;
 		}
@@ -1255,7 +1253,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 		}
 
 		// F-Keys
-		if menuactive == 0 {
+		if !menuactive {
 			match ch {
 				_ if ch == KEY_MINUS as i32 => {
 					// Screen size down
@@ -1375,7 +1373,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 		}
 
 		// Pop-up menu?
-		if menuactive == 0 {
+		if !menuactive {
 			if ch == KEY_ESCAPE as i32 {
 				M_StartControlPanel();
 				S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
@@ -1503,11 +1501,11 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 pub(crate) fn M_StartControlPanel() {
 	unsafe {
 		// intro might call this repeatedly
-		if menuactive != 0 {
+		if menuactive {
 			return;
 		}
 
-		menuactive = 1;
+		menuactive = true;
 		currentMenu = &raw mut MainDef; // JDC
 		itemOn = (*currentMenu).lastOn; // JDC
 	}
@@ -1522,7 +1520,7 @@ pub(crate) fn M_Drawer() {
 		static mut y: short = 0;
 		let mut string = [0; 40];
 
-		inhelpscreens = 0;
+		inhelpscreens = false;
 
 		// Horiz. & Vertically center string and print it.
 		if messageToPrint != 0 {
@@ -1551,7 +1549,7 @@ pub(crate) fn M_Drawer() {
 			return;
 		}
 
-		if menuactive == 0 {
+		if !menuactive {
 			return;
 		}
 
@@ -1591,7 +1589,7 @@ pub(crate) fn M_Drawer() {
 // M_ClearMenus
 fn M_ClearMenus() {
 	unsafe {
-		menuactive = 0;
+		menuactive = false;
 	}
 }
 
@@ -1619,7 +1617,7 @@ pub extern "C" fn M_Ticker() {
 pub(crate) fn M_Init() {
 	unsafe {
 		currentMenu = &raw mut MainDef;
-		menuactive = 0;
+		menuactive = false;
 		itemOn = (*currentMenu).lastOn;
 		whichSkull = 0;
 		skullAnimCounter = 10;

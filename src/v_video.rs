@@ -15,8 +15,7 @@ use crate::{
 #[unsafe(no_mangle)]
 pub static mut screens: [*mut u8; 5] = [null_mut(); 5];
 
-#[unsafe(no_mangle)]
-pub static mut dirtybox: [i32; 4] = [0; 4];
+static mut dirtybox: [i32; 4] = [0; 4];
 
 // Now where did these came from?
 #[unsafe(no_mangle)]

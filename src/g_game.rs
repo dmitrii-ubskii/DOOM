@@ -31,10 +31,11 @@ use crate::{
 	info::{mobjinfo, mobjtype_t, statenum_t, states},
 	m_argv::M_CheckParm,
 	m_fixed::{FRACBITS, FRACUNIT, fixed_t},
-	m_menu::M_StartControlPanel,
+	m_menu::{M_StartControlPanel, mouseSensitivity},
 	m_misc::{M_ReadFile, M_ScreenShot, M_WriteFile},
 	m_random::{M_ClearRandom, P_Random, rndindex},
 	myargc, myargv,
+	p_inter::maxammo,
 	p_local::MAXHEALTH,
 	p_mobj::{MF_SHADOW, mobj_t},
 	p_saveg::{
@@ -68,25 +69,21 @@ pub static mut gameaction: gameaction_t = gameaction_t::ga_nothing;
 pub static mut gamestate: gamestate_t = gamestate_t::GS_LEVEL;
 #[unsafe(no_mangle)]
 pub static mut gameskill: skill_t = skill_t::sk_baby;
-#[unsafe(no_mangle)]
-pub static mut respawnmonsters: boolean = 0;
+pub(crate) static mut respawnmonsters: bool = false;
 #[unsafe(no_mangle)]
 pub static mut gameepisode: usize = 0;
 #[unsafe(no_mangle)]
 pub static mut gamemap: usize = 0;
 
-#[unsafe(no_mangle)]
-pub static mut paused: boolean = 0;
-static mut sendpause: boolean = 0; // send a pause event next tic 
-static mut sendsave: boolean = 0; // send a save event next tic 
+pub(crate) static mut paused: bool = false;
+static mut sendpause: bool = false; // send a pause event next tic 
+static mut sendsave: bool = false; // send a save event next tic 
 #[unsafe(no_mangle)]
 pub static mut usergame: boolean = 0; // ok to save / end game 
 
-static mut timingdemo: boolean = 0; // if true, exit with report on completion 
-#[unsafe(no_mangle)]
-pub static mut nodrawers: boolean = 0; // for comparative timing purposes 
-#[unsafe(no_mangle)]
-pub static mut noblit: boolean = 0; // for comparative timing purposes 
+static mut timingdemo: bool = false; // if true, exit with report on completion 
+pub(crate) static mut nodrawers: bool = false; // for comparative timing purposes 
+pub(crate) static mut noblit: bool = false; // for comparative timing purposes 
 static mut starttime: usize = 0; // for comparative timing purposes  	 
 
 #[unsafe(no_mangle)]
@@ -107,14 +104,11 @@ pub static mut consoleplayer: usize = 0; // player taking events and displaying
 pub static mut displayplayer: usize = 0; // view being displayed 
 #[unsafe(no_mangle)]
 pub static mut gametic: int = 0;
-#[unsafe(no_mangle)]
-pub static mut levelstarttic: int = 0; // gametic at level start 
+static mut levelstarttic: int = 0; // gametic at level start 
 
 // for intermission
-#[unsafe(no_mangle)]
-pub static mut totalkills: int = 0;
-#[unsafe(no_mangle)]
-pub static mut totalitems: int = 0;
+pub(crate) static mut totalkills: int = 0;
+pub(crate) static mut totalitems: int = 0;
 #[unsafe(no_mangle)]
 pub static mut totalsecret: int = 0;
 
@@ -123,18 +117,15 @@ static mut demoname: [c_char; 32] = [0; 32];
 pub static mut demorecording: boolean = 0;
 #[unsafe(no_mangle)]
 pub static mut demoplayback: boolean = 0;
-static mut netdemo: boolean = 0;
+static mut netdemo: bool = false;
 static mut demobuffer: *mut byte = null_mut();
 static mut demo_p: *mut byte = null_mut();
 static mut demoend: *mut byte = null_mut();
-#[unsafe(no_mangle)]
-pub static mut singledemo: boolean = 0; // quit after playing a demo from cmdline 
+pub(crate) static mut singledemo: bool = false; // quit after playing a demo from cmdline 
 
-#[unsafe(no_mangle)]
-pub static mut precache: boolean = 1; // if true, load all graphics at start 
+pub(crate) static mut precache: bool = true; // if true, load all graphics at start 
 
-#[unsafe(no_mangle)]
-pub static mut wminfo: wbstartstruct_t = wbstartstruct_t {
+pub(crate) static mut wminfo: wbstartstruct_t = wbstartstruct_t {
 	epsd: 0,
 	didsecret: 0,
 	last: 0,
@@ -198,18 +189,18 @@ pub const SLOWTURNTICS: usize = 6;
 
 pub const NUMKEYS: usize = 256;
 
-static mut gamekeydown: [boolean; NUMKEYS] = [0; NUMKEYS];
+static mut gamekeydown: [bool; NUMKEYS] = [false; NUMKEYS];
 static mut turnheld: usize = 0; // for accelerative turning 
 
-static mut mousearray: [boolean; 4] = [0; 4];
-static mut mousebuttons: *mut boolean = unsafe { &raw mut mousearray[1] }; // allow [-1]
+static mut mousearray: [bool; 4] = [false; 4];
+static mut mousebuttons: *mut bool = unsafe { &raw mut mousearray[1] }; // allow [-1]
 
 // mouse values are used once
 static mut mousex: int = 0;
 static mut mousey: int = 0;
 
 static mut dclicktime: usize = 0;
-static mut dclickstate: int = 0;
+static mut dclickstate: bool = false;
 static mut dclicks: int = 0;
 static mut dclicktime2: usize = 0;
 static mut dclickstate2: int = 0;
@@ -218,8 +209,8 @@ static mut dclicks2: int = 0;
 // joystick values are repeated
 static mut joyxmove: int = 0;
 static mut joyymove: int = 0;
-static mut joyarray: [boolean; 5] = [0; 5];
-static mut joybuttons: *mut boolean = unsafe { &raw mut joyarray[1] }; // allow [-1] 
+static mut joyarray: [bool; 5] = [false; 5];
+static mut joybuttons: *mut bool = unsafe { &raw mut joyarray[1] }; // allow [-1] 
 
 static mut savegameslot: usize = 0;
 static mut savedescription: [c_char; 32] = [0; 32];
@@ -227,8 +218,7 @@ static mut savedescription: [c_char; 32] = [0; 32];
 pub const BODYQUESIZE: usize = 32;
 
 static mut bodyque: [*mut mobj_t; BODYQUESIZE] = [null_mut(); BODYQUESIZE];
-#[unsafe(no_mangle)]
-pub static mut bodyqueslot: usize = 0;
+pub(crate) static mut bodyqueslot: usize = 0;
 
 pub(crate) static mut statcopy: *mut c_void = null_mut(); // for statistics driver
 
@@ -253,18 +243,14 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		let strafe = gamekeydown[key_strafe]
 			| *mousebuttons.wrapping_offset(mousebstrafe)
 			| *joybuttons.wrapping_offset(joybstrafe);
-		let speed = if gamekeydown[key_speed] | *joybuttons.wrapping_offset(joybspeed) == 0 {
-			0
-		} else {
-			1
-		};
+		let speed = (gamekeydown[key_speed] || *joybuttons.wrapping_offset(joybspeed)) as usize;
 
 		let mut forward = 0;
 		let mut side = 0;
 
 		// use two stage accelerative turning
 		// on the keyboard and joystick
-		if joyxmove != 0 || gamekeydown[key_right] != 0 || gamekeydown[key_left] != 0 {
+		if joyxmove != 0 || gamekeydown[key_right] || gamekeydown[key_left] {
 			turnheld += ticdup;
 		} else {
 			turnheld = 0;
@@ -277,12 +263,12 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		};
 
 		// let movement keys cancel each other out
-		if strafe != 0 {
-			if gamekeydown[key_right] != 0 {
+		if strafe {
+			if gamekeydown[key_right] {
 				// fprintf(stderr, "strafe right\n");
 				side += sidemove[speed];
 			}
-			if gamekeydown[key_left] != 0 {
+			if gamekeydown[key_left] {
 				//	fprintf(stderr, "strafe left\n");
 				side -= sidemove[speed];
 			}
@@ -294,10 +280,10 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 			}
 		} else {
 			let cmd_angleturn = &mut (*cmd).angleturn;
-			if gamekeydown[key_right] != 0 {
+			if gamekeydown[key_right] {
 				*cmd_angleturn = (*cmd_angleturn).wrapping_sub(angleturn[tspeed] as i16);
 			}
-			if gamekeydown[key_left] != 0 {
+			if gamekeydown[key_left] {
 				*cmd_angleturn = (*cmd_angleturn).wrapping_add(angleturn[tspeed] as i16);
 			}
 			if joyxmove > 0 {
@@ -308,11 +294,11 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 			}
 		}
 
-		if gamekeydown[key_up] != 0 {
+		if gamekeydown[key_up] {
 			// fprintf(stderr, "up\n");
 			forward += forwardmove[speed];
 		}
-		if gamekeydown[key_down] != 0 {
+		if gamekeydown[key_down] {
 			// fprintf(stderr, "down\n");
 			forward -= forwardmove[speed];
 		}
@@ -322,10 +308,10 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		if joyymove > 0 {
 			forward -= forwardmove[speed];
 		}
-		if gamekeydown[key_straferight] != 0 {
+		if gamekeydown[key_straferight] {
 			side += sidemove[speed];
 		}
-		if gamekeydown[key_strafeleft] != 0 {
+		if gamekeydown[key_strafeleft] {
 			side -= sidemove[speed];
 		}
 
@@ -333,14 +319,13 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		(*cmd).chatchar = HU_dequeueChatChar() as u8;
 
 		if gamekeydown[key_fire]
-			| *mousebuttons.wrapping_offset(mousebfire)
-			| *joybuttons.wrapping_offset(joybfire)
-			!= 0
+			|| *mousebuttons.wrapping_offset(mousebfire)
+			|| *joybuttons.wrapping_offset(joybfire)
 		{
 			(*cmd).buttons |= BT_ATTACK;
 		}
 
-		if gamekeydown[key_use] | *joybuttons.wrapping_offset(joybuse) != 0 {
+		if gamekeydown[key_use] || *joybuttons.wrapping_offset(joybuse) {
 			(*cmd).buttons |= BT_USE;
 			// clear double clicks if hit use button
 			dclicks = 0;
@@ -348,7 +333,7 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 
 		// chainsaw overrides
 		for i in 0..weapontype_t::NUMWEAPONS as usize - 1 {
-			if gamekeydown[b'1' as usize + i] != 0 {
+			if gamekeydown[b'1' as usize + i] {
 				(*cmd).buttons |= BT_CHANGE;
 				(*cmd).buttons |= (i << BT_WEAPONSHIFT) as u8;
 				break;
@@ -356,14 +341,14 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		// mouse
-		if *mousebuttons.wrapping_offset(mousebforward) != 0 {
+		if *mousebuttons.wrapping_offset(mousebforward) {
 			forward += forwardmove[speed];
 		}
 
 		// forward double click
 		if *mousebuttons.wrapping_offset(mousebforward) != dclickstate && dclicktime > 1 {
 			dclickstate = *mousebuttons.wrapping_offset(mousebforward);
-			if dclickstate != 0 {
+			if dclickstate {
 				dclicks += 1;
 			}
 			if dclicks == 2 {
@@ -376,13 +361,13 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 			dclicktime += ticdup;
 			if dclicktime > 20 {
 				dclicks = 0;
-				dclickstate = 0;
+				dclickstate = false;
 			}
 		}
 
 		// strafe double click
-		let bstrafe = (*mousebuttons.wrapping_offset(mousebstrafe) != 0
-			|| *joybuttons.wrapping_offset(joybstrafe) != 0) as i32;
+		let bstrafe = (*mousebuttons.wrapping_offset(mousebstrafe)
+			|| *joybuttons.wrapping_offset(joybstrafe)) as i32;
 		if bstrafe != dclickstate2 && dclicktime2 > 1 {
 			dclickstate2 = bstrafe;
 			if dclickstate2 != 0 {
@@ -403,7 +388,7 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		forward += mousey;
-		if strafe != 0 {
+		if strafe {
 			side += mousex * 2;
 		} else {
 			(*cmd).angleturn = (*cmd).angleturn.wrapping_sub((mousex * 0x8) as i16);
@@ -419,13 +404,13 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		(*cmd).sidemove += side as i8;
 
 		// special buttons
-		if sendpause != 0 {
-			sendpause = 0;
+		if sendpause {
+			sendpause = false;
 			(*cmd).buttons = BT_SPECIAL | BTS_PAUSE;
 		}
 
-		if sendsave != 0 {
-			sendsave = 0;
+		if sendsave {
+			sendsave = false;
 			(*cmd).buttons = BT_SPECIAL | BTS_SAVEGAME | ((savegameslot as u8) << BTS_SAVESHIFT);
 		}
 	}
@@ -483,24 +468,22 @@ fn G_DoLoadLevel() {
 		Z_CheckHeap();
 
 		// clear cmd building stuff
-		gamekeydown = [0; NUMKEYS];
+		gamekeydown = [false; NUMKEYS];
 		joyxmove = 0;
 		joyymove = 0;
 		mousex = 0;
 		mousey = 0;
-		sendpause = 0;
-		sendsave = 0;
-		paused = 0;
+		sendpause = false;
+		sendsave = false;
+		paused = false;
 		// libc::memset(mousebuttons.cast(), 0, size_of_val(&mousebuttons));
-		mousearray = [mousearray[0], 0, 0, 0];
+		mousearray = [mousearray[0], false, false, false];
 		// libc::memset(joybuttons.cast(), 0, size_of_val(&joybuttons));
-		joyarray = [joyarray[0], 0, 0, 0, 0];
+		joyarray = [joyarray[0], false, false, false, false];
 	}
 }
 
 unsafe extern "C" {
-	static mut mouseSensitivity: i32;
-
 	fn F_Responder(ev: *mut event_t) -> boolean;
 	fn ST_Responder(ev: *mut event_t) -> boolean;
 }
@@ -513,7 +496,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 		if gamestate == gamestate_t::GS_LEVEL
 			&& ev.ty == evtype_t::ev_keydown
 			&& ev.data1 == KEY_F12 as i32
-			&& (singledemo != 0 || deathmatch == 0)
+			&& (singledemo || deathmatch == 0)
 		{
 			// spy mode
 			loop {
@@ -530,7 +513,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 
 		// any other key pops up menu if in demos
 		if gameaction == gameaction_t::ga_nothing
-			&& singledemo == 0
+			&& !singledemo
 			&& (demoplayback != 0 || gamestate == gamestate_t::GS_DEMOSCREEN)
 		{
 			if ev.ty == evtype_t::ev_keydown
@@ -562,33 +545,33 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 		match ev.ty {
 			evtype_t::ev_keydown => {
 				if ev.data1 == KEY_PAUSE as i32 {
-					sendpause = 1;
+					sendpause = true;
 					return 1;
 				}
 				if ev.data1 < NUMKEYS as i32 {
-					gamekeydown[ev.data1 as usize] = 1;
+					gamekeydown[ev.data1 as usize] = true;
 				}
 				1 // eat key down events
 			}
 			evtype_t::ev_keyup => {
 				if ev.data1 < NUMKEYS as i32 {
-					gamekeydown[ev.data1 as usize] = 0;
+					gamekeydown[ev.data1 as usize] = false;
 				}
 				0 // always let key up events filter down
 			}
 			evtype_t::ev_mouse => {
-				*mousebuttons.wrapping_add(0) = ev.data1 & 1;
-				*mousebuttons.wrapping_add(1) = ev.data1 & 2;
-				*mousebuttons.wrapping_add(2) = ev.data1 & 4;
+				*mousebuttons.wrapping_add(0) = ev.data1 & 1 != 0;
+				*mousebuttons.wrapping_add(1) = ev.data1 & 2 != 0;
+				*mousebuttons.wrapping_add(2) = ev.data1 & 4 != 0;
 				mousex = ev.data2 * (mouseSensitivity + 5) / 10;
 				mousey = ev.data3 * (mouseSensitivity + 5) / 10;
 				1 // eat events
 			}
 			evtype_t::ev_joystick => {
-				*joybuttons.wrapping_add(0) = ev.data1 & 1;
-				*joybuttons.wrapping_add(1) = ev.data1 & 2;
-				*joybuttons.wrapping_add(2) = ev.data1 & 4;
-				*joybuttons.wrapping_add(3) = ev.data1 & 8;
+				*joybuttons.wrapping_add(0) = ev.data1 & 1 != 0;
+				*joybuttons.wrapping_add(1) = ev.data1 & 2 != 0;
+				*joybuttons.wrapping_add(2) = ev.data1 & 4 != 0;
+				*joybuttons.wrapping_add(3) = ev.data1 & 8 != 0;
 				joyxmove = ev.data2;
 				joyymove = ev.data3;
 				1 // eat events
@@ -672,7 +655,7 @@ pub extern "C" fn G_Ticker() {
 					players[consoleplayer].message = turbomessage.as_mut_ptr();
 				}
 
-				if netgame != 0 && netdemo == 0 && gametic % ticdup as i32 == 0 {
+				if netgame != 0 && !netdemo && gametic % ticdup as i32 == 0 {
 					if gametic > BACKUPTICS as i32 && consistancy[i][buf] != (*cmd).consistancy {
 						I_Error(
 							c"consistency failure (%i should be %i)".as_ptr(),
@@ -694,8 +677,8 @@ pub extern "C" fn G_Ticker() {
 			if playeringame[i] != 0 && players[i].cmd.buttons & BT_SPECIAL != 0 {
 				match players[i].cmd.buttons & BT_SPECIALMASK {
 					BTS_PAUSE => {
-						paused ^= 1;
-						if paused != 0 {
+						paused = !paused;
+						if paused {
 							S_PauseSound();
 						} else {
 							S_ResumeSound();
@@ -749,10 +732,6 @@ fn G_PlayerFinishLevel(player: usize) {
 		(*p).damagecount = 0; // no palette changes
 		(*p).bonuscount = 0;
 	}
-}
-
-unsafe extern "C" {
-	static mut maxammo: [i32; ammotype_t::NUMAMMO as usize];
 }
 
 // G_PlayerReborn
@@ -939,12 +918,12 @@ static cpars: [usize; 32] = [
 ];
 
 // G_DoCompleted
-static mut secretexit: boolean = 0;
+static mut secretexit: bool = false;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn G_ExitLevel() {
 	unsafe {
-		secretexit = 0;
+		secretexit = false;
 		gameaction = gameaction_t::ga_completed;
 	}
 }
@@ -954,11 +933,8 @@ pub extern "C" fn G_ExitLevel() {
 pub extern "C" fn G_SecretExitLevel() {
 	unsafe {
 		// IF NO WOLF3D LEVELS, NO SECRET EXIT!
-		if gamemode == GameMode_t::commercial && W_CheckNumForName(c"map31".as_ptr()) < 0 {
-			secretexit = 0;
-		} else {
-			secretexit = 1;
-		}
+		secretexit =
+			gamemode != GameMode_t::commercial || W_CheckNumForName(c"map31".as_ptr()) >= 0;
 		gameaction = gameaction_t::ga_completed;
 	}
 }
@@ -1002,7 +978,7 @@ fn G_DoCompleted() {
 
 		// wminfo.next is 0 biased, unlike gamemap
 		if gamemode == GameMode_t::commercial {
-			if secretexit != 0 {
+			if secretexit {
 				match gamemap {
 					15 => wminfo.next = 30,
 					31 => wminfo.next = 31,
@@ -1014,7 +990,7 @@ fn G_DoCompleted() {
 					_ => wminfo.next = gamemap,
 				}
 			}
-		} else if secretexit != 0 {
+		} else if secretexit {
 			wminfo.next = 8; // go to secret level
 		} else if gamemap == 9 {
 			// returning from secret level
@@ -1066,13 +1042,13 @@ pub(crate) fn G_WorldDone() {
 	unsafe {
 		gameaction = gameaction_t::ga_worlddone;
 
-		if secretexit != 0 {
+		if secretexit {
 			players[consoleplayer].didsecret = 1;
 		}
 
 		if gamemode == GameMode_t::commercial {
 			match gamemap {
-				15 | 31 if secretexit == 0 => (),
+				15 | 31 if !secretexit => (),
 				15 | 31 | 6 | 11 | 20 | 30 => F_StartFinale(),
 				_ => (),
 			}
@@ -1185,7 +1161,7 @@ pub unsafe extern "C" fn G_SaveGame(slot: usize, description: *const c_char) {
 	unsafe {
 		savegameslot = slot;
 		libc::strcpy(savedescription.as_mut_ptr(), description);
-		sendsave = 1;
+		sendsave = true;
 	}
 }
 
@@ -1280,7 +1256,7 @@ pub extern "C" fn G_DeferedInitNew(skill: skill_t, episode: usize, map: usize) {
 fn G_DoNewGame() {
 	unsafe {
 		demoplayback = 0;
-		netdemo = 0;
+		netdemo = false;
 		netgame = 0;
 		deathmatch = 0;
 		playeringame[1] = 0;
@@ -1297,8 +1273,8 @@ fn G_DoNewGame() {
 
 pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 	unsafe {
-		if paused != 0 {
-			paused = 0;
+		if paused {
+			paused = false;
 			S_ResumeSound();
 		}
 
@@ -1329,11 +1305,7 @@ pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 
 		M_ClearRandom();
 
-		if skill == skill_t::sk_nightmare || respawnparm != 0 {
-			respawnmonsters = 1;
-		} else {
-			respawnmonsters = 0;
-		}
+		respawnmonsters = skill == skill_t::sk_nightmare || respawnparm != 0;
 
 		if fastparm != 0 || (skill == skill_t::sk_nightmare && gameskill != skill_t::sk_nightmare) {
 			#[allow(clippy::needless_range_loop)]
@@ -1360,7 +1332,7 @@ pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 		}
 
 		usergame = 1; // will be set false if a demo
-		paused = 0;
+		paused = false;
 		demoplayback = 0;
 		automapactive = 0;
 		viewactive = 1;
@@ -1416,9 +1388,8 @@ fn G_ReadDemoTiccmd(cmd: *mut ticcmd_t) {
 
 fn G_WriteDemoTiccmd(cmd: *mut ticcmd_t) {
 	unsafe {
-		if gamekeydown['q' as usize] != 0
-		// press q to end demo recording
-		{
+		if gamekeydown['q' as usize] {
+			// press q to end demo recording
 			G_CheckDemoStatus();
 		}
 		*demo_p = (*cmd).forwardmove as u8;
@@ -1543,13 +1514,13 @@ fn G_DoPlayDemo() {
 		}
 		if playeringame[1] != 0 {
 			netgame = 1;
-			netdemo = 1;
+			netdemo = true;
 		}
 
 		// don't spend a lot of time in loadlevel
-		precache = 0;
+		precache = false;
 		G_InitNew(skill, episode, map);
-		precache = 1;
+		precache = true;
 
 		usergame = 0;
 		demoplayback = 1;
@@ -1559,9 +1530,9 @@ fn G_DoPlayDemo() {
 // G_TimeDemo
 pub(crate) fn G_TimeDemo(name: *const c_char) {
 	unsafe {
-		nodrawers = M_CheckParm(c"-nodraw".as_ptr()) as boolean;
-		noblit = M_CheckParm(c"-noblit".as_ptr()) as boolean;
-		timingdemo = 1;
+		nodrawers = M_CheckParm(c"-nodraw".as_ptr()) != 0;
+		noblit = M_CheckParm(c"-noblit".as_ptr()) != 0;
+		timingdemo = true;
 		singletics = 1;
 
 		defdemoname = name;
@@ -1583,19 +1554,19 @@ pub(crate) fn G_TimeDemo(name: *const c_char) {
 #[allow(static_mut_refs)]
 pub extern "C" fn G_CheckDemoStatus() -> boolean {
 	unsafe {
-		if timingdemo != 0 {
+		if timingdemo {
 			let endtime = I_GetTime();
 			I_Error(c"timed %i gametics in %i realtics".as_ptr(), gametic, endtime - starttime);
 		}
 
 		if demoplayback != 0 {
-			if singledemo != 0 {
+			if singledemo {
 				I_Quit();
 			}
 
 			Z_ChangeTag!(demobuffer, PU_CACHE);
 			demoplayback = 0;
-			netdemo = 0;
+			netdemo = false;
 			netgame = 0;
 			deathmatch = 0;
 			playeringame[1] = 0;
