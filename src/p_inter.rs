@@ -15,7 +15,7 @@ use crate::{
 		GOTSHOTGUN2, GOTSTIM, GOTSUIT, GOTSUPER, GOTVISOR, GOTYELWCARD, GOTYELWSKUL,
 	},
 	d_items::weaponinfo,
-	d_player::{cheat_t, player_t, playerstate_t},
+	d_player::{CF_GODMODE, player_t, playerstate_t},
 	doomdef::{
 		GameMode_t, INFRATICS, INVISTICS, INVULNTICS, IRONTICS, ammotype_t, card_t, powertype_t,
 		skill_t, weapontype_t,
@@ -42,8 +42,8 @@ const BONUSADD: usize = 6;
 
 // a weapon is found with two clip loads,
 // a big item has five clip loads
-pub static mut maxammo: [int; ammotype_t::NUMAMMO as usize] = [200, 50, 300, 50];
-static mut clipammo: [int; ammotype_t::NUMAMMO as usize] = [10, 4, 20, 1];
+pub static mut maxammo: [usize; ammotype_t::NUMAMMO as usize] = [200, 50, 300, 50];
+static mut clipammo: [usize; ammotype_t::NUMAMMO as usize] = [10, 4, 20, 1];
 
 // GET STUFF
 
@@ -51,7 +51,7 @@ static mut clipammo: [int; ammotype_t::NUMAMMO as usize] = [10, 4, 20, 1];
 // Num is the number of clip loads,
 // not the individual count (0= 1/2 clip).
 // Returns false if the ammo can't be picked up at all
-fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: int) -> boolean {
+fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolean {
 	unsafe {
 		if ammo == ammotype_t::am_noammo {
 			return 0;
@@ -812,7 +812,7 @@ pub unsafe extern "C" fn P_DamageMobj(
 			// Below certain threshold,
 			// ignore damage in GOD mode, or with INVUL power.
 			if damage < 1000
-				&& ((*player).cheats & cheat_t::CF_GODMODE as i32 != 0
+				&& ((*player).cheats & CF_GODMODE != 0
 					|| (*player).powers[powertype_t::pw_invulnerability as usize] != 0)
 			{
 				return;

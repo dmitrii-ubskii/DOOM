@@ -1,13 +1,18 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, ptr::null_mut};
+use std::ptr::null_mut;
 
 use crate::{
-	m_fixed::{FRACUNIT, fixed_t},
+	d_think::think_t,
+	m_fixed::FRACUNIT,
+	p_floor::T_MovePlane,
 	p_setup::sectors,
-	p_spec::{CEILSPEED, MAXCEILINGS, ceiling_e, ceiling_t, result_e},
+	p_spec::{
+		CEILSPEED, MAXCEILINGS, P_FindHighestCeilingSurrounding, P_FindSectorFromLineTag,
+		ceiling_e, ceiling_t, result_e,
+	},
 	p_tick::{P_AddThinker, P_RemoveThinker, leveltime},
-	r_defs::{line_t, sector_t},
+	r_defs::line_t,
 	s_sound::S_StartSound,
 	sounds::sfxenum_t,
 	z_zone::{PU_LEVSPEC, Z_Malloc},
@@ -19,35 +24,18 @@ type boolean = i32;
 #[unsafe(no_mangle)]
 pub static mut activeceilings: [*mut ceiling_t; MAXCEILINGS] = [null_mut(); MAXCEILINGS];
 
-unsafe extern "C" {
-	fn T_MovePlane(
-		sector: *mut crate::r_defs::sector_t,
-		speed: i32,
-		high: i32,
-		crush: boolean,
-		arg_1: i32,
-		arg_2: i32,
-	) -> result_e;
-}
-
-pub(crate) unsafe extern "C" fn T_MoveCeiling_action(ceiling: *mut c_void) {
-	unsafe {
-		T_MoveCeiling(&mut *ceiling.cast());
-	}
-}
-
 // T_MoveCeiling
-fn T_MoveCeiling(ceiling: &mut ceiling_t) {
+pub(crate) fn T_MoveCeiling(ceiling: &mut ceiling_t) {
 	unsafe {
 		match ceiling.direction {
 			0 => (), // IN STASIS
 			1 => {
 				// UP
 				let res = T_MovePlane(
-					ceiling.sector,
+					&mut *ceiling.sector,
 					ceiling.speed,
 					ceiling.topheight,
-					0,
+					false,
 					1,
 					ceiling.direction,
 				);
@@ -82,10 +70,10 @@ fn T_MoveCeiling(ceiling: &mut ceiling_t) {
 			-1 => {
 				// DOWN
 				let res = T_MovePlane(
-					ceiling.sector,
+					&mut *ceiling.sector,
 					ceiling.speed,
 					ceiling.bottomheight,
-					ceiling.crush,
+					ceiling.crush != 0,
 					1,
 					ceiling.direction,
 				);
@@ -130,15 +118,9 @@ fn T_MoveCeiling(ceiling: &mut ceiling_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn P_FindSectorFromLineTag(line: *mut line_t, start: i32) -> i32;
-	fn P_FindHighestCeilingSurrounding(sec: *mut sector_t) -> fixed_t;
-}
-
 // EV_DoCeiling
 // Move a ceiling up/down and all around!
-#[unsafe(no_mangle)]
-pub extern "C" fn EV_DoCeiling(line: &mut line_t, ty: ceiling_e) -> boolean {
+pub(crate) fn EV_DoCeiling(line: &mut line_t, ty: ceiling_e) -> bool {
 	unsafe {
 		//	Reactivate in-stasis ceilings...for certain types.
 		match ty {
@@ -149,7 +131,7 @@ pub extern "C" fn EV_DoCeiling(line: &mut line_t, ty: ceiling_e) -> boolean {
 		}
 
 		let mut secnum = -1;
-		let mut rtn = 0;
+		let mut rtn = false;
 
 		while let new_secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
 			secnum = new_secnum;
@@ -159,13 +141,13 @@ pub extern "C" fn EV_DoCeiling(line: &mut line_t, ty: ceiling_e) -> boolean {
 			}
 
 			// new door thinker
-			rtn = 1;
+			rtn = true;
 			let ceiling_p =
 				Z_Malloc(size_of::<ceiling_t>(), PU_LEVSPEC, null_mut()) as *mut ceiling_t;
 			let ceiling = &mut *ceiling_p;
 			P_AddThinker(&raw mut ceiling.thinker);
 			sec.specialdata = ceiling_p.cast();
-			ceiling.thinker.function.acp1 = Some(T_MoveCeiling_action);
+			ceiling.thinker.function = think_t::T_MoveCeiling;
 			ceiling.sector = sec;
 			ceiling.crush = 0;
 
@@ -245,7 +227,7 @@ fn P_ActivateInStasisCeiling(line: &mut line_t) {
 				&& (*activeceilings[i]).direction == 0
 			{
 				(*activeceilings[i]).direction = (*activeceilings[i]).olddirection;
-				(*activeceilings[i]).thinker.function.acp1 = Some(T_MoveCeiling_action);
+				(*activeceilings[i]).thinker.function = think_t::T_MoveCeiling;
 			}
 		}
 	}
@@ -264,7 +246,7 @@ pub extern "C" fn EV_CeilingCrushStop(line: &mut line_t) -> boolean {
 				&& (*activeceilings[i]).direction != 0
 			{
 				(*activeceilings[i]).olddirection = (*activeceilings[i]).direction;
-				(*activeceilings[i]).thinker.function.acv = None;
+				(*activeceilings[i]).thinker.function = think_t::null;
 				(*activeceilings[i]).direction = 0; // in-stasis
 				rtn = 1;
 			}

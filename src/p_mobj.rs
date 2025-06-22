@@ -62,12 +62,12 @@
 
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, mem::transmute, num::Wrapping, ptr::null_mut};
+use std::{num::Wrapping, ptr::null_mut};
 
 use crate::{
 	d_main::nomonsters,
-	d_player::{cheat_t, player_t, playerstate_t},
-	d_think::thinker_t,
+	d_player::{CF_NOMOMENTUM, player_t, playerstate_t},
+	d_think::{think_t, thinker_t},
 	doomdata::mapthing_t,
 	doomdef::{MAXPLAYERS, MTF_AMBUSH, card_t, skill_t},
 	g_game::{
@@ -79,9 +79,11 @@ use crate::{
 	info::{mobjinfo, mobjinfo_t, mobjtype_t, spritenum_t, state_t, statenum_t, states},
 	m_fixed::{FRACBITS, FRACUNIT, FixedMul, fixed_t},
 	m_random::P_Random,
+	p_enemy::dirtype_t,
 	p_local::{
 		FLOATSPEED, GRAVITY, ITEMQUESIZE, MAXMOVE, MELEERANGE, ONCEILINGZ, ONFLOORZ, VIEWHEIGHT,
 	},
+	p_pspr::P_SetupPsprites,
 	p_setup::{deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_AddThinker, P_RemoveThinker, leveltime},
 	r_defs::{line_t, subsector_t},
@@ -232,8 +234,8 @@ pub struct mobj_t {
 	pub health: i32,
 
 	// Movement direction, movement generation (zig-zagging).
-	pub movedir: i32,   // 0-7
-	pub movecount: i32, // when 0, select a new dir
+	pub movedir: dirtype_t, // 0-7
+	pub movecount: i32,     // when 0, select a new dir
 
 	// Thing being chased/attacked (or NULL),
 	// also the originator for missiles.
@@ -280,9 +282,15 @@ pub extern "C" fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> bo
 
 		// Modified handling.
 		// Call action functions when the state is set
-		unsafe {
-			if let Some(acp1) = st.action.acp1 {
-				acp1((mobj as *mut mobj_t).cast());
+		if let Some(action) = st.action.as_ac_mobj() {
+			action(mobj);
+		} else if let Some(action) = st.action.as_acp1() {
+			action((mobj as *mut mobj_t).cast());
+		} else {
+			match st.action {
+				think_t::null => (),
+				think_t::mobj => P_MobjThinker(mobj),
+				_ => unreachable!(),
 			}
 		}
 
@@ -397,7 +405,7 @@ fn P_XYMovement(mo: &mut mobj_t) {
 		}
 
 		// slow down
-		if !player.is_null() && (*player).cheats & cheat_t::CF_NOMOMENTUM as i32 != 0 {
+		if !player.is_null() && (*player).cheats & CF_NOMOMENTUM != 0 {
 			// debug option for no sliding at all
 			mo.momx = 0;
 			mo.momy = 0;
@@ -609,7 +617,7 @@ pub extern "C" fn P_MobjThinker(mobj: &mut mobj_t) {
 			P_XYMovement(mobj);
 
 			// FIXME: decent NOP/NULL/Nil function pointer please.
-			if mobj.thinker.function.acv.is_none() {
+			if mobj.thinker.function.is_null() {
 				return; // mobj was removed
 			}
 		}
@@ -617,7 +625,7 @@ pub extern "C" fn P_MobjThinker(mobj: &mut mobj_t) {
 			P_ZMovement(mobj);
 
 			// FIXME: decent NOP/NULL/Nil function pointer please.
-			if mobj.thinker.function.acv.is_none() {
+			if mobj.thinker.function.is_null() {
 				return; // mobj was removed
 			}
 		}
@@ -711,10 +719,7 @@ pub extern "C" fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t
 			mobj.z = z;
 		}
 
-		mobj.thinker.function.acp1 = Some(transmute::<
-			extern "C" fn(&mut mobj_t),
-			unsafe extern "C" fn(*mut c_void),
-		>(P_MobjThinker as extern "C" fn(&mut mobj_t)));
+		mobj.thinker.function = think_t::mobj;
 
 		P_AddThinker(&mut mobj.thinker);
 
@@ -815,7 +820,6 @@ pub(crate) fn P_RespawnSpecials() {
 
 unsafe extern "C" {
 	fn ST_Start();
-	fn P_SetupPsprites(curplayer: *mut player_t);
 }
 
 // P_SpawnPlayer
@@ -823,7 +827,7 @@ unsafe extern "C" {
 // Most of the player structure stays unchanged
 //  between levels.
 #[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnPlayer(mthing: &mut mapthing_t) {
+pub(crate) fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 	unsafe {
 		// not playing?
 		if playeringame[mthing.ty as usize - 1] == 0 {

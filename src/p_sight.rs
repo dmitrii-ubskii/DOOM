@@ -236,7 +236,7 @@ fn P_CrossBSPNode(bspnum: usize) -> i32 {
 //  if a straight line between t1 and t2 is unobstructed.
 // Uses REJECT.
 #[unsafe(no_mangle)]
-pub extern "C" fn P_CheckSight(t1: &mut mobj_t, t2: &mut mobj_t) -> i32 {
+pub extern "C" fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> i32 {
 	unsafe {
 		// First check for trivial rejection.
 

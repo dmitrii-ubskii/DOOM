@@ -1,15 +1,21 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, ptr::null_mut};
+use std::ptr::null_mut;
 
 use crate::{
+	d_think::think_t,
 	i_system::I_Error,
-	m_fixed::{FRACUNIT, fixed_t},
+	m_fixed::FRACUNIT,
 	m_random::P_Random,
+	p_floor::T_MovePlane,
 	p_setup::{sectors, sides},
-	p_spec::{MAXPLATS, PLATSPEED, PLATWAIT, plat_e, plat_t, plattype_e, result_e},
+	p_spec::{
+		MAXPLATS, P_FindHighestFloorSurrounding, P_FindLowestFloorSurrounding,
+		P_FindNextHighestFloor, P_FindSectorFromLineTag, PLATSPEED, PLATWAIT, plat_e, plat_t,
+		plattype_e, result_e,
+	},
 	p_tick::{P_AddThinker, P_RemoveThinker, leveltime},
-	r_defs::{line_t, sector_t},
+	r_defs::line_t,
 	s_sound::S_StartSound,
 	sounds::sfxenum_t,
 	z_zone::{PU_LEVSPEC, Z_Malloc},
@@ -20,29 +26,13 @@ type boolean = i32;
 #[unsafe(no_mangle)]
 pub static mut activeplats: [*mut plat_t; MAXPLATS] = [null_mut(); MAXPLATS];
 
-unsafe extern "C" {
-	fn T_MovePlane(
-		sector: *mut crate::r_defs::sector_t,
-		speed: i32,
-		high: i32,
-		crush: boolean,
-		arg_1: i32,
-		arg_2: i32,
-	) -> result_e;
-}
-
-pub(crate) unsafe extern "C" fn T_PlatRaise_action(plat: *mut c_void) {
-	unsafe {
-		T_PlatRaise(&mut *plat.cast());
-	}
-}
-
 // Move a plat up and down
-fn T_PlatRaise(plat: &mut plat_t) {
+pub(crate) fn T_PlatRaise(plat: &mut plat_t) {
 	unsafe {
 		match plat.status {
 			plat_e::up => {
-				let res = T_MovePlane(plat.sector, plat.speed, plat.high, plat.crush, 0, 1);
+				let res =
+					T_MovePlane(&mut *plat.sector, plat.speed, plat.high, plat.crush != 0, 0, 1);
 				if (plat.ty == plattype_e::raiseAndChange
 					|| plat.ty == plattype_e::raiseToNearestAndChange)
 					&& leveltime & 7 == 0
@@ -71,7 +61,8 @@ fn T_PlatRaise(plat: &mut plat_t) {
 			}
 
 			plat_e::down => {
-				if let result_e::pastdest = T_MovePlane(plat.sector, plat.speed, plat.low, 0, 0, -1)
+				if let result_e::pastdest =
+					T_MovePlane(&mut *plat.sector, plat.speed, plat.low, false, 0, -1)
 				{
 					plat.count = plat.wait;
 					plat.status = plat_e::waiting;
@@ -96,20 +87,12 @@ fn T_PlatRaise(plat: &mut plat_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn P_FindSectorFromLineTag(line: *mut line_t, start: i32) -> i32;
-	fn P_FindLowestFloorSurrounding(sec: *mut sector_t) -> fixed_t;
-	fn P_FindHighestFloorSurrounding(sec: *mut sector_t) -> fixed_t;
-	fn P_FindNextHighestFloor(sec: *mut sector_t, currentheight: fixed_t) -> fixed_t;
-}
-
 // Do Platforms
 //  "amount" is only used for SOME platforms.
-#[unsafe(no_mangle)]
-pub extern "C" fn EV_DoPlat(line: &mut line_t, ty: plattype_e, amount: i32) -> boolean {
+pub(crate) fn EV_DoPlat(line: &mut line_t, ty: plattype_e, amount: i32) -> bool {
 	unsafe {
 		let mut secnum = -1;
-		let mut rtn = 0;
+		let mut rtn = false;
 
 		//	Activate all <type> plats that are in_stasis
 		if let plattype_e::perpetualRaise = ty {
@@ -125,7 +108,7 @@ pub extern "C" fn EV_DoPlat(line: &mut line_t, ty: plattype_e, amount: i32) -> b
 			}
 
 			// Find lowest & highest floors around sector
-			rtn = 1;
+			rtn = true;
 			let plat_p = Z_Malloc(size_of::<plat_t>(), PU_LEVSPEC, null_mut()) as *mut plat_t;
 			let plat = &mut *plat_p;
 			P_AddThinker(&raw mut plat.thinker);
@@ -133,7 +116,7 @@ pub extern "C" fn EV_DoPlat(line: &mut line_t, ty: plattype_e, amount: i32) -> b
 			plat.ty = ty;
 			plat.sector = sec;
 			(*plat.sector).specialdata = plat_p.cast();
-			plat.thinker.function.acp1 = Some(T_PlatRaise_action);
+			plat.thinker.function = think_t::T_PlatRaise;
 			plat.crush = 0;
 			plat.tag = line.tag.into();
 
@@ -225,7 +208,7 @@ fn P_ActivateInStasis(tag: i32) {
 				&& (*activeplats[i]).status == plat_e::in_stasis
 			{
 				(*activeplats[i]).status = (*activeplats[i]).oldstatus;
-				(*activeplats[i]).thinker.function.acp1 = Some(T_PlatRaise_action);
+				(*activeplats[i]).thinker.function = think_t::T_PlatRaise;
 			}
 		}
 	}
@@ -242,7 +225,7 @@ pub extern "C" fn EV_StopPlat(line: &mut line_t) {
 			{
 				(*activeplats[j]).oldstatus = (*activeplats[j]).status;
 				(*activeplats[j]).status = plat_e::in_stasis;
-				(*activeplats[j]).thinker.function.acv = None;
+				(*activeplats[j]).thinker.function = think_t::null;
 			}
 		}
 	}

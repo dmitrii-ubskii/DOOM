@@ -37,13 +37,14 @@ use crate::{
 	myargc, myargv,
 	p_inter::maxammo,
 	p_local::MAXHEALTH,
-	p_mobj::{MF_SHADOW, mobj_t},
+	p_mobj::{MF_SHADOW, P_SpawnPlayer, mobj_t},
 	p_saveg::{
 		P_ArchivePlayers, P_ArchiveSpecials, P_ArchiveThinkers, P_ArchiveWorld, P_UnArchivePlayers,
 		P_UnArchiveSpecials, P_UnArchiveThinkers, P_UnArchiveWorld, save_p,
 	},
 	p_setup::{P_SetupLevel, deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_Ticker, leveltime},
+	r_data::{R_FlatNumForName, R_TextureNumForName},
 	r_defs::subsector_t,
 	r_sky::{SKYFLATNAME, skyflatnum, skytexture},
 	s_sound::{S_PauseSound, S_ResumeSound, S_StartSound},
@@ -417,12 +418,6 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 }
 
 // G_DoLoadLevel
-
-unsafe extern "C" {
-	fn R_FlatNumForName(name: *const c_char) -> i32;
-	fn R_TextureNumForName(name: *const c_char) -> i32;
-}
-
 fn G_DoLoadLevel() {
 	unsafe {
 		// Set the sky map.
@@ -827,10 +822,6 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 	}
 }
 
-unsafe extern "C" {
-	fn P_SpawnPlayer(thing: *mut mapthing_t);
-}
-
 // G_DeathMatchSpawnPlayer
 // Spawns a player at one of the random death match spots
 // called at level load and each death
@@ -846,13 +837,13 @@ pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 			let i = (P_Random() % selections as i32) as usize;
 			if G_CheckSpot(playernum, &raw mut deathmatchstarts[i]) != 0 {
 				deathmatchstarts[i].ty = playernum as i16 + 1;
-				P_SpawnPlayer(&raw mut deathmatchstarts[i]);
+				P_SpawnPlayer(&mut deathmatchstarts[i]);
 				return;
 			}
 		}
 
 		// no good spot, so the player will probably get stuck
-		P_SpawnPlayer(&raw mut playerstarts[playernum]);
+		P_SpawnPlayer(&mut playerstarts[playernum]);
 	}
 }
 
@@ -875,7 +866,7 @@ fn G_DoReborn(playernum: usize) {
 			}
 
 			if G_CheckSpot(playernum, &raw mut playerstarts[playernum]) != 0 {
-				P_SpawnPlayer(&raw mut playerstarts[playernum]);
+				P_SpawnPlayer(&mut playerstarts[playernum]);
 				return;
 			}
 
@@ -884,13 +875,13 @@ fn G_DoReborn(playernum: usize) {
 			for i in 0..MAXPLAYERS {
 				if G_CheckSpot(playernum, &raw mut playerstarts[i]) != 0 {
 					playerstarts[i].ty = playernum as i16 + 1; // fake as other player
-					P_SpawnPlayer(&raw mut playerstarts[i]);
+					P_SpawnPlayer(&mut playerstarts[i]);
 					playerstarts[i].ty = i as i16 + 1; // restore
 					return;
 				}
 				// he's going to be inside something.  Too bad.
 			}
-			P_SpawnPlayer(&raw mut playerstarts[playernum]);
+			P_SpawnPlayer(&mut playerstarts[playernum]);
 		}
 	}
 }

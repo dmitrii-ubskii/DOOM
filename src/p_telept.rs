@@ -1,30 +1,25 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::ffi::c_void;
-
 use crate::{
-	d_think::{actionf_p1, thinker_t},
+	d_think::thinker_t,
 	info::mobjtype_t,
 	m_fixed::fixed_t,
-	p_mobj::{MF_MISSILE, mobj_t},
-	r_defs::{line_t, sector_t},
+	p_local::thinkercap,
+	p_mobj::{MF_MISSILE, P_SpawnMobj, mobj_t},
+	p_setup::{numsectors, sectors},
+	r_defs::line_t,
+	s_sound::S_StartSound,
 	sounds::sfxenum_t,
 	tables::{ANGLETOFINESHIFT, finecos, finesine},
 };
 
 unsafe extern "C" {
-	static numsectors: i32;
-	static sectors: *mut sector_t;
-	static thinkercap: thinker_t;
-	fn P_MobjThinker(_: *mut c_void);
 	fn P_TeleportMove(thing: *mut mobj_t, x: fixed_t, y: fixed_t) -> bool;
-	fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut mobj_t;
-	fn S_StartSound(origin: *mut c_void, sound_id: sfxenum_t);
 }
 
 // TELEPORTATION
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn EV_Teleport(line: &mut line_t, side: i32, thing: &mut mobj_t) -> bool {
+pub unsafe extern "C" fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) -> bool {
 	// don't teleport missiles
 	if thing.flags & MF_MISSILE != 0 {
 		return false;
@@ -40,13 +35,11 @@ pub unsafe extern "C" fn EV_Teleport(line: &mut line_t, side: i32, thing: &mut m
 
 	unsafe {
 		for i in 0..numsectors {
-			if (*sectors.add(i as usize)).tag == tag {
+			if (*sectors.add(i)).tag == tag {
 				let mut thinker = &mut *thinkercap.next;
-				while !std::ptr::eq(thinker, &thinkercap) {
+				while !std::ptr::eq(thinker, &raw const thinkercap) {
 					// not a mobj
-					if (thinker.function.acp1)
-						.is_none_or(|f| !std::ptr::fn_addr_eq(f, P_MobjThinker as actionf_p1))
-					{
+					if !thinker.function.is_mobj() {
 						thinker = &mut *thinker.next;
 						continue;
 					}

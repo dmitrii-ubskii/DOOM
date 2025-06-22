@@ -35,15 +35,12 @@ pub enum playerstate_t {
 }
 
 // Player internal flags, for cheats and debug.
-#[repr(C)]
-pub enum cheat_t {
-	// No clipping, walk through barriers.
-	CF_NOCLIP = 1,
-	// No damage, no health loss.
-	CF_GODMODE = 2,
-	// Not really a cheat, just a debug aid.
-	CF_NOMOMENTUM = 4,
-}
+// No clipping, walk through barriers.
+pub(crate) const CF_NOCLIP: usize = 1;
+// No damage, no health loss.
+pub(crate) const CF_GODMODE: usize = 2;
+// Not really a cheat, just a debug aid.
+pub(crate) const CF_NOMOMENTUM: usize = 4;
 
 // Extended player object info: player_t
 #[repr(C)]
@@ -84,8 +81,8 @@ pub struct player_t {
 	pub pendingweapon: weapontype_t,
 
 	pub weaponowned: [i32; weapontype_t::NUMWEAPONS as usize],
-	pub ammo: [i32; ammotype_t::NUMAMMO as usize],
-	pub maxammo: [i32; ammotype_t::NUMAMMO as usize],
+	pub ammo: [usize; ammotype_t::NUMAMMO as usize],
+	pub maxammo: [usize; ammotype_t::NUMAMMO as usize],
 
 	// True if button down last tic.
 	pub attackdown: i32,
@@ -93,7 +90,7 @@ pub struct player_t {
 
 	// Bit flags, for cheats and debug.
 	// See cheat_t, above.
-	pub cheats: i32,
+	pub cheats: usize,
 
 	// Refired shots are less accurate.
 	pub refire: i32,

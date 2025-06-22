@@ -28,7 +28,7 @@ pub struct wadinfo_t {
 #[derive(Clone, Copy)]
 pub struct filelump_t {
 	pub filepos: int,
-	pub size: int,
+	pub size: usize,
 	pub name: [c_char; 8],
 }
 
@@ -38,7 +38,7 @@ pub struct lumpinfo_t {
 	pub name: [c_char; 8],
 	pub handle: int,
 	pub position: int,
-	pub size: i32,
+	pub size: usize,
 }
 
 // GLOBALS
@@ -66,7 +66,7 @@ fn strupr(mut s: *mut c_char) {
 	}
 }
 
-fn filelength(handle: i32) -> i32 {
+fn filelength(handle: i32) -> usize {
 	unsafe {
 		let mut fileinfo = MaybeUninit::uninit();
 
@@ -74,7 +74,7 @@ fn filelength(handle: i32) -> i32 {
 			I_Error(c"Error fstating".as_ptr());
 		}
 
-		fileinfo.assume_init().st_size
+		fileinfo.assume_init().st_size as usize
 	}
 }
 

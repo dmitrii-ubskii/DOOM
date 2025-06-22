@@ -20,7 +20,10 @@ use crate::{
 	m_fixed::{FRACBITS, FixedDiv, fixed_t},
 	p_local::{MAPBLOCKSHIFT, MAXRADIUS},
 	p_mobj::{P_SpawnMapThing, iquehead, iquetail, mobj_t},
+	p_spec::{P_InitPicAnims, P_SpawnSpecials},
+	p_switch::P_InitSwitchList,
 	p_tick::{P_InitThinkers, leveltime, playeringame, players},
+	r_data::{R_FlatNumForName, R_PrecacheLevel, R_TextureNumForName},
 	r_defs::{line_t, node_t, sector_t, seg_t, side_t, slopetype_t, subsector_t, vertex_t},
 	s_sound::S_Start,
 	w_wad::{W_CacheLumpNum, W_GetNumForName, W_LumpLength, W_Reload},
@@ -194,10 +197,6 @@ fn P_LoadSubsectors(lump: usize) {
 	}
 }
 
-unsafe extern "C" {
-	fn R_FlatNumForName(name: *const c_char) -> i32;
-}
-
 // P_LoadSectors
 fn P_LoadSectors(lump: usize) {
 	unsafe {
@@ -365,10 +364,6 @@ fn P_LoadLineDefs(lump: usize) {
 	}
 }
 
-unsafe extern "C" {
-	fn R_TextureNumForName(name: *const c_char) -> i32;
-}
-
 // P_LoadSideDefs
 fn P_LoadSideDefs(lump: usize) {
 	unsafe {
@@ -487,10 +482,6 @@ fn P_GroupLines() {
 }
 
 unsafe extern "C" {
-	fn P_SpawnSpecials();
-	fn R_PrecacheLevel();
-	fn P_InitSwitchList();
-	fn P_InitPicAnims();
 	fn R_InitSprites(sprnames: *const *const c_char);
 }
 

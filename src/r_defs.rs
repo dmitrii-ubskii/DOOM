@@ -3,7 +3,7 @@
 
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::ffi::c_void;
+use std::{ffi::c_void, ptr::null_mut};
 
 use crate::{d_think::thinker_t, m_fixed::fixed_t, p_mobj::mobj_t, tables::angle_t};
 
@@ -66,7 +66,7 @@ pub struct sector_t {
 	// thinker_t for reversable actions
 	pub specialdata: *mut c_void,
 
-	pub linecount: i32,
+	pub linecount: usize,
 	pub lines: *mut *mut line_t, // [linecount] size
 }
 
@@ -134,6 +134,27 @@ pub struct line_t {
 
 	// thinker_t for reversable actions
 	pub specialdata: *mut c_void,
+}
+
+impl Default for line_t {
+	fn default() -> Self {
+		Self {
+			v1: null_mut(),
+			v2: null_mut(),
+			dx: 0,
+			dy: 0,
+			flags: 0,
+			special: 0,
+			tag: 666,
+			sidenum: [0; 2],
+			bbox: [0; 4],
+			slopetype: slopetype_t::ST_VERTICAL,
+			frontsector: null_mut(),
+			backsector: null_mut(),
+			validcount: 0,
+			specialdata: null_mut(),
+		}
+	}
 }
 
 // A SubSector.
@@ -237,6 +258,7 @@ pub struct drawseg_t {
 // and we compose textures from the TEXTURE1/2 lists
 // of patches.
 #[repr(C)]
+#[derive(Debug)]
 pub struct patch_t {
 	pub width: i16, // bounding box size
 	pub height: i16,
@@ -303,21 +325,21 @@ pub struct spriteframe_t {
 	// If false use 0 for any position.
 	// Note: as eight entries are available,
 	//  we might as well insert the same name eight times.
-	rotate: i32,
+	pub rotate: i32,
 
 	// Lump to use for view angles 0-7.
-	lump: [i16; 8],
+	pub lump: [i16; 8],
 
 	// Flip bit (1 = flip) to use for view angles 0-7.
-	flip: [i8; 8],
+	pub flip: [i8; 8],
 }
 
 // A sprite definition:
 //  a number of animation frames.
 #[repr(C)]
 pub struct spritedef_t {
-	numframes: i32,
-	spriteframes: *mut spriteframe_t,
+	pub numframes: i32,
+	pub spriteframes: *mut spriteframe_t,
 }
 
 // Now what is a visplane, anyway?

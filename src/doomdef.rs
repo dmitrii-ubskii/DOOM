@@ -89,7 +89,7 @@ pub const MTF_HARD: u8 = 4;
 pub const MTF_AMBUSH: u8 = 8;
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq)]
 pub enum skill_t {
 	sk_baby,
 	sk_easy,

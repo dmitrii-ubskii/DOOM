@@ -3,7 +3,7 @@
 use std::ptr::null_mut;
 
 use crate::{
-	d_think::{actionf_t, thinker_t},
+	d_think::{think_t, thinker_t},
 	m_fixed::{FRACBITS, FRACUNIT, fixed_t},
 	p_mobj::mobj_t,
 	r_defs::line_t,
@@ -45,11 +45,9 @@ pub const BASETHRESHOLD: i32 = 100;
 // Both the head and tail of the thinker list.
 #[unsafe(no_mangle)]
 pub static mut thinkercap: thinker_t =
-	thinker_t { prev: null_mut(), next: null_mut(), function: actionf_t { acv: None } };
+	thinker_t { prev: null_mut(), next: null_mut(), function: think_t::null };
 
-//
 // P_MOBJ
-//
 pub const ONFLOORZ: i32 = i32::MIN;
 pub const ONCEILINGZ: i32 = i32::MAX;
 
@@ -101,8 +99,6 @@ unsafe extern "C" {
 pub static mut opentop: fixed_t = 0;
 #[unsafe(no_mangle)]
 pub static mut openbottom: fixed_t = 0;
-#[unsafe(no_mangle)]
-pub static mut openrange: fixed_t = 0;
 #[unsafe(no_mangle)]
 pub static mut lowfloor: fixed_t = 0;
 */

@@ -10,17 +10,16 @@ use std::{
 
 use crate::{
 	d_player::player_t,
-	d_think::actionf_p1,
+	d_think::think_t,
 	doomdef::MAXPLAYERS,
 	g_game::{playeringame, players},
 	i_system::I_Error,
 	info::{mobjinfo, state_t, states},
 	m_fixed::FRACBITS,
-	p_ceiling::{P_AddActiveCeiling, T_MoveCeiling_action, activeceilings},
-	p_lights::{T_Glow_action, T_LightFlash_action, T_StrobeFlash_action},
+	p_ceiling::{P_AddActiveCeiling, activeceilings},
 	p_local::thinkercap,
 	p_mobj::mobj_t,
-	p_plats::{P_AddActivePlat, T_PlatRaise_action},
+	p_plats::P_AddActivePlat,
 	p_pspr::psprnum_t,
 	p_setup::{lines, numlines, numsectors, sectors, sides},
 	p_spec::{
@@ -232,8 +231,7 @@ pub(crate) fn P_ArchiveThinkers() {
 		// save off the current thinkers
 		let mut th = thinkercap.next;
 		while !ptr::eq(th, &raw const thinkercap) {
-			if (*th).function.acp1.is_some_and(|f| ptr::fn_addr_eq(f, P_MobjThinker as actionf_p1))
-			{
+			if (*th).function.is_mobj() {
 				*save_p = thinkerclass_t::tc_mobj as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -275,11 +273,7 @@ pub(crate) fn P_UnArchiveThinkers() {
 		while !ptr::eq(currentthinker, &raw const thinkercap) {
 			let next = (*currentthinker).next;
 
-			if (*currentthinker)
-				.function
-				.acp1
-				.is_some_and(|f| ptr::fn_addr_eq(f, P_MobjThinker as actionf_p1))
-			{
+			if (*currentthinker).function.is_mobj() {
 				P_RemoveMobj(currentthinker.cast());
 			} else {
 				Z_Free(currentthinker.cast());
@@ -311,7 +305,7 @@ pub(crate) fn P_UnArchiveThinkers() {
 					(*mobj).info = &raw mut mobjinfo[(*mobj).ty as usize];
 					(*mobj).floorz = (*(*(*mobj).subsector).sector).floorheight;
 					(*mobj).ceilingz = (*(*(*mobj).subsector).sector).ceilingheight;
-					(*mobj).thinker.function.acp1 = Some(P_MobjThinker);
+					(*mobj).thinker.function = think_t::mobj;
 					P_AddThinker(&mut (*mobj).thinker);
 				}
 
@@ -349,11 +343,6 @@ impl From<u8> for specials_e {
 	}
 }
 
-unsafe extern "C" {
-	fn T_VerticalDoor(_: *mut c_void);
-	fn T_MoveFloor(_: *mut c_void);
-}
-
 // Things to handle:
 //
 // T_MoveCeiling, (ceiling_t: sector_t * swizzle), - active list
@@ -368,7 +357,7 @@ pub(crate) fn P_ArchiveSpecials() {
 		// save off the current thinkers
 		let mut th = thinkercap.next;
 		while !ptr::eq(th, &raw const thinkercap) {
-			if (*th).function.acv.is_none() {
+			if (*th).function.is_null() {
 				let mut i = 0;
 				#[allow(clippy::needless_range_loop)]
 				for j in 0..MAXCEILINGS {
@@ -391,11 +380,7 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th)
-				.function
-				.acp1
-				.is_some_and(|f| ptr::fn_addr_eq(f, T_MoveCeiling_action as actionf_p1))
-			{
+			if (*th).function == think_t::T_MoveCeiling {
 				*save_p = specials_e::tc_ceiling as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -407,8 +392,7 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th).function.acp1.is_some_and(|f| ptr::fn_addr_eq(f, T_VerticalDoor as actionf_p1))
-			{
+			if (*th).function == think_t::T_VerticalDoor {
 				*save_p = specials_e::tc_door as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -420,7 +404,7 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th).function.acp1.is_some_and(|f| ptr::fn_addr_eq(f, T_MoveFloor as actionf_p1)) {
+			if (*th).function == think_t::T_MoveFloor {
 				*save_p = specials_e::tc_floor as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -432,11 +416,7 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th)
-				.function
-				.acp1
-				.is_some_and(|f| ptr::fn_addr_eq(f, T_PlatRaise_action as actionf_p1))
-			{
+			if (*th).function == think_t::T_PlatRaise {
 				*save_p = specials_e::tc_plat as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -448,11 +428,7 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th)
-				.function
-				.acp1
-				.is_some_and(|f| ptr::fn_addr_eq(f, T_LightFlash_action as actionf_p1))
-			{
+			if (*th).function == think_t::T_LightFlash {
 				*save_p = specials_e::tc_flash as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -464,11 +440,7 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th)
-				.function
-				.acp1
-				.is_some_and(|f| ptr::fn_addr_eq(f, T_StrobeFlash_action as actionf_p1))
-			{
+			if (*th).function == think_t::T_StrobeFlash {
 				*save_p = specials_e::tc_strobe as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -480,8 +452,7 @@ pub(crate) fn P_ArchiveSpecials() {
 				continue;
 			}
 
-			if (*th).function.acp1.is_some_and(|f| ptr::fn_addr_eq(f, T_Glow_action as actionf_p1))
-			{
+			if (*th).function == think_t::T_Glow {
 				*save_p = specials_e::tc_glow as u8;
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
@@ -521,8 +492,8 @@ pub(crate) fn P_UnArchiveSpecials() {
 					(*ceiling).sector = sectors.wrapping_add((*ceiling).sector as usize);
 					(*(*ceiling).sector).specialdata = ceiling.cast();
 
-					if (*ceiling).thinker.function.acp1.is_some() {
-						(*ceiling).thinker.function.acp1 = Some(T_MoveCeiling_action);
+					if (*ceiling).thinker.function.as_acp1().is_some() {
+						(*ceiling).thinker.function = think_t::T_MoveCeiling;
 					}
 
 					P_AddThinker(&mut (*ceiling).thinker);
@@ -537,7 +508,7 @@ pub(crate) fn P_UnArchiveSpecials() {
 					save_p = save_p.wrapping_add(size_of::<vldoor_t>());
 					(*door).sector = sectors.wrapping_add((*door).sector as usize);
 					(*(*door).sector).specialdata = door.cast();
-					(*door).thinker.function.acp1 = Some(T_VerticalDoor);
+					(*door).thinker.function = think_t::T_VerticalDoor;
 					P_AddThinker(&mut (*door).thinker);
 				}
 
@@ -549,7 +520,7 @@ pub(crate) fn P_UnArchiveSpecials() {
 					save_p = save_p.wrapping_add(size_of::<floormove_t>());
 					(*floor).sector = sectors.wrapping_add((*floor).sector as usize);
 					(*(*floor).sector).specialdata = floor.cast();
-					(*floor).thinker.function.acp1 = Some(T_MoveFloor);
+					(*floor).thinker.function = think_t::T_MoveFloor;
 					P_AddThinker(&mut (*floor).thinker);
 				}
 
@@ -561,8 +532,8 @@ pub(crate) fn P_UnArchiveSpecials() {
 					(*plat).sector = sectors.wrapping_add((*plat).sector as usize);
 					(*(*plat).sector).specialdata = plat.cast();
 
-					if (*plat).thinker.function.acp1.is_some() {
-						(*plat).thinker.function.acp1 = Some(T_PlatRaise_action);
+					if (*plat).thinker.function.as_acp1().is_some() {
+						(*plat).thinker.function = think_t::T_PlatRaise;
 					}
 
 					P_AddThinker(&mut (*plat).thinker);
@@ -576,7 +547,7 @@ pub(crate) fn P_UnArchiveSpecials() {
 					libc::memcpy(flash.cast(), save_p.cast(), size_of::<lightflash_t>());
 					save_p = save_p.wrapping_add(size_of::<lightflash_t>());
 					(*flash).sector = sectors.wrapping_add((*flash).sector as usize);
-					(*flash).thinker.function.acp1 = Some(T_LightFlash_action);
+					(*flash).thinker.function = think_t::T_LightFlash;
 					P_AddThinker(&mut (*flash).thinker);
 				}
 
@@ -587,7 +558,7 @@ pub(crate) fn P_UnArchiveSpecials() {
 					libc::memcpy(strobe.cast(), save_p.cast(), size_of::<strobe_t>());
 					save_p = save_p.wrapping_add(size_of::<strobe_t>());
 					(*strobe).sector = sectors.wrapping_add((*strobe).sector as usize);
-					(*strobe).thinker.function.acp1 = Some(T_StrobeFlash_action);
+					(*strobe).thinker.function = think_t::T_StrobeFlash;
 					P_AddThinker(&mut (*strobe).thinker);
 				}
 
@@ -597,7 +568,7 @@ pub(crate) fn P_UnArchiveSpecials() {
 					libc::memcpy(glow.cast(), save_p.cast(), size_of::<glow_t>());
 					save_p = save_p.wrapping_add(size_of::<glow_t>());
 					(*glow).sector = sectors.wrapping_add((*glow).sector as usize);
-					(*glow).thinker.function.acp1 = Some(T_Glow_action);
+					(*glow).thinker.function = think_t::T_Glow;
 					P_AddThinker(&mut (*glow).thinker);
 				}
 			}

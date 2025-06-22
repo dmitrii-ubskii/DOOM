@@ -4,16 +4,17 @@
 //	Handle Sector base lighting effects.
 //	Muzzle flash?
 
-//
 // FIRELIGHT FLICKER
-//
 
-use std::{ffi::c_void, ptr::null_mut};
+use std::ptr::null_mut;
 
 use crate::{
-	d_think::actionf_p1,
+	d_think::think_t,
 	m_random::P_Random,
-	p_spec::{GLOWSPEED, SLOWDARK, STROBEBRIGHT, fireflicker_t, glow_t, lightflash_t, strobe_t},
+	p_spec::{
+		GLOWSPEED, P_FindMinSurroundingLight, P_FindSectorFromLineTag, SLOWDARK, STROBEBRIGHT,
+		fireflicker_t, getNextSector, glow_t, lightflash_t, strobe_t,
+	},
 	p_tick::P_AddThinker,
 	r_defs::{line_t, sector_t},
 	r_state::{numsectors, sectors},
@@ -21,7 +22,7 @@ use crate::{
 };
 
 // T_FireFlicker
-fn T_FireFlicker(flick: &mut fireflicker_t) {
+pub(crate) fn T_FireFlicker(flick: &mut fireflicker_t) {
 	unsafe {
 		flick.count -= 1;
 		if (flick.count) != 0 {
@@ -40,14 +41,6 @@ fn T_FireFlicker(flick: &mut fireflicker_t) {
 	}
 }
 
-extern "C" fn T_FireFlicker_action(flick: *mut c_void) {
-	unsafe { T_FireFlicker(&mut *(flick.cast())) };
-}
-
-unsafe extern "C" {
-	fn P_FindMinSurroundingLight(sector: *mut sector_t, max: i32) -> i32;
-}
-
 // P_SpawnFireFlicker
 #[unsafe(no_mangle)]
 pub extern "C" fn P_SpawnFireFlicker(sector: &mut sector_t) {
@@ -62,7 +55,7 @@ pub extern "C" fn P_SpawnFireFlicker(sector: &mut sector_t) {
 
 		P_AddThinker(&raw mut flick.thinker);
 
-		flick.thinker.function.acp1 = Some(T_FireFlicker_action as actionf_p1);
+		flick.thinker.function = think_t::T_FireFlicker;
 		flick.sector = sector;
 		flick.maxlight = sector.lightlevel as i32;
 		flick.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel as i32) + 16;
@@ -74,7 +67,7 @@ pub extern "C" fn P_SpawnFireFlicker(sector: &mut sector_t) {
 
 // T_LightFlash
 // Do flashing lights.
-fn T_LightFlash(flash: &mut lightflash_t) {
+pub(crate) fn T_LightFlash(flash: &mut lightflash_t) {
 	unsafe {
 		flash.count -= 1;
 		if (flash.count) != 0 {
@@ -89,10 +82,6 @@ fn T_LightFlash(flash: &mut lightflash_t) {
 			flash.count = (P_Random() & flash.maxtime) + 1;
 		}
 	}
-}
-
-pub(crate) unsafe extern "C" fn T_LightFlash_action(flash: *mut c_void) {
-	unsafe { T_LightFlash(&mut *(flash.cast())) };
 }
 
 // P_SpawnLightFlash
@@ -110,7 +99,7 @@ pub extern "C" fn P_SpawnLightFlash(sector: &mut sector_t) {
 
 		P_AddThinker(&raw mut flash.thinker);
 
-		flash.thinker.function.acp1 = Some(T_LightFlash_action as actionf_p1);
+		flash.thinker.function = think_t::T_LightFlash;
 		flash.sector = sector;
 		flash.maxlight = sector.lightlevel as i32;
 
@@ -124,7 +113,7 @@ pub extern "C" fn P_SpawnLightFlash(sector: &mut sector_t) {
 // STROBE LIGHT FLASHING
 
 // T_StrobeFlash
-fn T_StrobeFlash(flash: &mut strobe_t) {
+pub(crate) fn T_StrobeFlash(flash: &mut strobe_t) {
 	unsafe {
 		flash.count -= 1;
 		if (flash.count) != 0 {
@@ -141,10 +130,6 @@ fn T_StrobeFlash(flash: &mut strobe_t) {
 	}
 }
 
-pub(crate) extern "C" fn T_StrobeFlash_action(flash: *mut c_void) {
-	unsafe { T_StrobeFlash(&mut *(flash.cast())) };
-}
-
 // P_SpawnStrobeFlash
 // After the map has been loaded, scan each sector
 // for specials that spawn thinkers
@@ -159,7 +144,7 @@ pub extern "C" fn P_SpawnStrobeFlash(sector: &mut sector_t, fastOrSlow: i32, inS
 		flash.sector = sector;
 		flash.darktime = fastOrSlow;
 		flash.brighttime = STROBEBRIGHT;
-		flash.thinker.function.acp1 = Some(T_StrobeFlash_action as actionf_p1);
+		flash.thinker.function = think_t::T_StrobeFlash;
 		flash.maxlight = sector.lightlevel as i32;
 		flash.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel as i32);
 
@@ -178,10 +163,6 @@ pub extern "C" fn P_SpawnStrobeFlash(sector: &mut sector_t, fastOrSlow: i32, inS
 	}
 }
 
-unsafe extern "C" {
-	fn P_FindSectorFromLineTag(line: *mut line_t, start: i32) -> i32;
-}
-
 // Start strobing lights (usually from a trigger)
 #[unsafe(no_mangle)]
 pub extern "C" fn EV_StartLightStrobing(line: &mut line_t) {
@@ -198,10 +179,6 @@ pub extern "C" fn EV_StartLightStrobing(line: &mut line_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn getNextSector(line: *mut line_t, sec: *mut sector_t) -> *mut sector_t;
-}
-
 // TURN LINE'S TAG LIGHTS OFF
 #[unsafe(no_mangle)]
 pub extern "C" fn EV_TurnTagLightsOff(line: &mut line_t) {
@@ -210,7 +187,7 @@ pub extern "C" fn EV_TurnTagLightsOff(line: &mut line_t) {
 			let sector = &mut *sectors.wrapping_add(j);
 			if sector.tag == line.tag {
 				let mut min = sector.lightlevel;
-				for i in 0..sector.linecount as usize {
+				for i in 0..sector.linecount {
 					let templine = *sector.lines.wrapping_add(i);
 					let tsec = getNextSector(templine, sector);
 					if tsec.is_null() {
@@ -227,8 +204,7 @@ pub extern "C" fn EV_TurnTagLightsOff(line: &mut line_t) {
 }
 
 // TURN LINE'S TAG LIGHTS ON
-#[unsafe(no_mangle)]
-pub extern "C" fn EV_LightTurnOn(line: &mut line_t, mut bright: i32) {
+pub(crate) fn EV_LightTurnOn(line: &mut line_t, mut bright: i32) {
 	unsafe {
 		for i in 0..numsectors as usize {
 			let sector = &mut *sectors.wrapping_add(i);
@@ -237,7 +213,7 @@ pub extern "C" fn EV_LightTurnOn(line: &mut line_t, mut bright: i32) {
 				// for highest light level
 				// surrounding sector
 				if bright != 0 {
-					for j in 0..sector.linecount as usize {
+					for j in 0..sector.linecount {
 						let templine = *sector.lines.wrapping_add(j);
 						let temp = getNextSector(templine, sector);
 
@@ -257,7 +233,7 @@ pub extern "C" fn EV_LightTurnOn(line: &mut line_t, mut bright: i32) {
 }
 
 // Spawn glowing light
-fn T_Glow(g: &mut glow_t) {
+pub(crate) fn T_Glow(g: &mut glow_t) {
 	match g.direction {
 		-1 => {
 			// DOWN
@@ -282,10 +258,6 @@ fn T_Glow(g: &mut glow_t) {
 	}
 }
 
-pub(crate) extern "C" fn T_Glow_action(g: *mut c_void) {
-	unsafe { T_Glow(&mut *(g.cast())) };
-}
-
 #[unsafe(no_mangle)]
 pub extern "C" fn P_SpawnGlowingLight(sector: &mut sector_t) {
 	unsafe {
@@ -297,7 +269,7 @@ pub extern "C" fn P_SpawnGlowingLight(sector: &mut sector_t) {
 		g.sector = sector;
 		g.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel as i32);
 		g.maxlight = sector.lightlevel as i32;
-		g.thinker.function.acp1 = Some(T_Glow_action as actionf_p1);
+		g.thinker.function = think_t::T_Glow;
 		g.direction = -1;
 
 		sector.special = 0;

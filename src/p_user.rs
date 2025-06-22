@@ -4,13 +4,15 @@ use std::num::Wrapping;
 
 use crate::{
 	d_event::{BT_CHANGE, BT_SPECIAL, BT_USE, BT_WEAPONMASK, BT_WEAPONSHIFT},
-	d_player::{cheat_t, player_t, playerstate_t},
+	d_player::{CF_NOCLIP, CF_NOMOMENTUM, player_t, playerstate_t},
 	doomdef::{GameMode_t, powertype_t, weapontype_t},
 	doomstat::gamemode,
 	info::{state_t, statenum_t},
 	m_fixed::{FRACUNIT, FixedMul, fixed_t},
 	p_local::VIEWHEIGHT,
 	p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW, mobj_t},
+	p_pspr::P_MovePsprites,
+	p_spec::P_PlayerInSpecialSector,
 	p_tick::leveltime,
 	tables::{ANG90, ANG180, ANGLETOFINESHIFT, FINEANGLES, FINEMASK, angle_t, finecos, finesine},
 };
@@ -55,7 +57,7 @@ fn P_CalcHeight(player: &mut player_t) {
 			player.bob = MAXBOB;
 		}
 
-		if (player.cheats & cheat_t::CF_NOMOMENTUM as i32 != 0) || !onground {
+		if player.cheats & CF_NOMOMENTUM != 0 || !onground {
 			player.viewz = mo.z + VIEWHEIGHT;
 
 			if player.viewz > mo.ceilingz - 4 * FRACUNIT {
@@ -142,7 +144,6 @@ fn P_MovePlayer(player: &mut player_t) {
 }
 
 unsafe extern "C" {
-	fn P_MovePsprites(player: &mut player_t);
 	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
@@ -200,7 +201,6 @@ fn P_DeathThink(player: &mut player_t) {
 }
 
 unsafe extern "C" {
-	fn P_PlayerInSpecialSector(player: &mut player_t);
 	fn P_UseLines(player: &mut player_t);
 }
 
@@ -208,7 +208,7 @@ unsafe extern "C" {
 pub fn P_PlayerThink(player: &mut player_t) {
 	unsafe {
 		// fixme: do this in the cheat code
-		if player.cheats & cheat_t::CF_NOCLIP as i32 != 0 {
+		if player.cheats & CF_NOCLIP != 0 {
 			(*player.mo).flags |= MF_NOCLIP;
 		} else {
 			(*player.mo).flags &= !MF_NOCLIP;

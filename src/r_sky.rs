@@ -12,9 +12,9 @@ pub const ANGLETOSKYSHIFT: angle_t = Wrapping(22);
 
 // sky mapping
 #[unsafe(no_mangle)]
-pub static mut skyflatnum: i32 = 0;
+pub static mut skyflatnum: usize = 0;
 #[unsafe(no_mangle)]
-pub static mut skytexture: i32 = 0;
+pub static mut skytexture: usize = 0;
 #[unsafe(no_mangle)]
 pub static mut skytexturemid: i32 = 0;
 
