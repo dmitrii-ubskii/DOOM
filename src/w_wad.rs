@@ -314,7 +314,7 @@ pub unsafe extern "C" fn W_CheckNumForName(name: *const c_char) -> isize {
 
 		while lump_p != lumpinfo {
 			lump_p = lump_p.wrapping_sub(1);
-			if (*lump_p).name[..] == name8[..8] {
+			if (&*lump_p).name[..] == name8[..8] {
 				return lump_p.offset_from(lumpinfo);
 			}
 		}
@@ -345,7 +345,7 @@ pub extern "C" fn W_LumpLength(lump: usize) -> usize {
 			I_Error(c"W_LumpLength: %i >= numlumps".as_ptr(), lump);
 		}
 
-		(*lumpinfo.wrapping_add(lump)).size as usize
+		(*lumpinfo.wrapping_add(lump)).size
 	}
 }
 
@@ -375,7 +375,7 @@ pub unsafe extern "C" fn W_ReadLump(lump: usize, dest: *mut c_void) {
 		}
 
 		libc::lseek(handle, (*l).position, SEEK_SET);
-		let c = libc::read(handle, dest, (*l).size as usize);
+		let c = libc::read(handle, dest, (*l).size);
 
 		if c < (*l).size as isize {
 			I_Error(c"W_ReadLump: only read %i of %i on lump %i".as_ptr(), c, (*l).size, lump);

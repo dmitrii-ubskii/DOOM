@@ -39,9 +39,6 @@ use crate::{
 	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
-type boolean = i32;
-type int = i32;
-
 //      Define values for map objects
 pub const MO_TELEPORTMAN: u32 = 14;
 
@@ -568,9 +565,9 @@ pub(crate) fn P_FindNextHighestFloor(sec: &mut sector_t, currentheight: fixed_t)
 		let mut min = heightlist[0];
 
 		// Range checking?
-		for i in 1..h {
-			if heightlist[i] < min {
-				min = heightlist[i];
+		for &height in &heightlist[1..h] {
+			if height < min {
+				min = height;
 			}
 		}
 
@@ -650,7 +647,7 @@ pub(crate) fn P_FindMinSurroundingLight(sector: &mut sector_t, max: i32) -> i32 
 
 			min = i32::min(min, (*check).lightlevel as i32);
 		}
-		return min;
+		min
 	}
 }
 
