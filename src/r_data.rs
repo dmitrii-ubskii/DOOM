@@ -6,7 +6,10 @@
 // A column is composed of zero or more posts,
 // a patch or sprite is composed of zero or more columns.
 
-use std::{ffi::c_char, ptr::null_mut};
+use std::{
+	ffi::c_char,
+	ptr::{null_mut, read_unaligned},
+};
 
 use crate::{
 	g_game::demoplayback,
@@ -402,11 +405,12 @@ fn R_InitTextures() {
 				I_Error(c"R_InitTextures: bad texture directory".as_ptr());
 			}
 
-			let mtexture = &mut *(maptex.wrapping_byte_add(offset) as *mut maptexture_t);
+			let mtexture: *mut maptexture_t = maptex.wrapping_byte_add(offset).cast();
 
 			let texture = Z_Malloc(
 				size_of::<texture_t>()
-					+ size_of::<texpatch_t>() * (mtexture.patchcount - 1) as usize,
+					+ size_of::<texpatch_t>()
+						* (read_unaligned(&raw const (*mtexture).patchcount) - 1) as usize,
 				PU_STATIC,
 				null_mut(),
 			)
@@ -414,12 +418,12 @@ fn R_InitTextures() {
 			*textures.wrapping_add(i) = texture;
 			let texture = &mut *texture;
 
-			texture.width = mtexture.width;
-			texture.height = mtexture.height;
-			texture.patchcount = mtexture.patchcount;
+			texture.width = read_unaligned(&raw const (*mtexture).width);
+			texture.height = read_unaligned(&raw const (*mtexture).height);
+			texture.patchcount = read_unaligned(&raw const (*mtexture).patchcount);
 
-			texture.name = mtexture.name;
-			let mpatch = mtexture.patches.as_ptr();
+			texture.name = read_unaligned(&raw const (*mtexture).name);
+			let mpatch: *const mappatch_t = (&raw const (*mtexture).patches).cast();
 			let patch = texture.patches.as_mut_ptr();
 
 			for j in 0..texture.patchcount as usize {
