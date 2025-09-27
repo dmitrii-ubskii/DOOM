@@ -525,7 +525,7 @@ pub(crate) fn A_FirePistol(player: &mut player_t, _psp: &mut pspdef_t) {
 		);
 
 		P_BulletSlope(&mut *player.mo);
-		P_GunShot(&mut *player.mo, player.refire != 0);
+		P_GunShot(&mut *player.mo, player.refire == 0);
 	}
 }
 
@@ -606,7 +606,7 @@ pub(crate) fn A_FireCGun(player: &mut player_t, psp: &mut pspdef_t) {
 
 		P_BulletSlope(&mut *player.mo);
 
-		P_GunShot(&mut *player.mo, player.refire != 0);
+		P_GunShot(&mut *player.mo, player.refire == 0);
 	}
 }
 
