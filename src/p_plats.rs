@@ -21,8 +21,6 @@ use crate::{
 	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
-type boolean = i32;
-
 #[unsafe(no_mangle)]
 pub static mut activeplats: [*mut plat_t; MAXPLATS] = [null_mut(); MAXPLATS];
 

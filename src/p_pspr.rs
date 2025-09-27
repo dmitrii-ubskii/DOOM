@@ -106,26 +106,6 @@ fn P_SetPsprite(player: &mut player_t, position: psprnum_t, mut stnum: statenum_
 	}
 }
 
-// P_CalcSwing
-static mut swingx: fixed_t = 0;
-static mut swingy: fixed_t = 0;
-
-fn P_CalcSwing(player: &mut player_t) {
-	unsafe {
-		// OPTIMIZE: tablify this.
-		// A LUT would allow for different modes,
-		//  and add flexibility.
-
-		let swing = player.bob;
-
-		let angle = (FINEANGLES / 70 * leveltime) & FINEMASK;
-		swingx = FixedMul(swing, finesine[angle]);
-
-		let angle = (FINEANGLES / 70 * leveltime + FINEANGLES / 2) & FINEMASK;
-		swingy = -FixedMul(swingx, finesine[angle]);
-	}
-}
-
 // P_BringUpWeapon
 // Starts bringing the pending weapon up
 // from the bottom of the screen.

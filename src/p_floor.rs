@@ -121,7 +121,7 @@ pub(crate) fn T_MovePlane(
 							let flag = P_ChangeSector(sector, crush as boolean);
 
 							if flag == 1 {
-								if crush == true {
+								if crush {
 									return result_e::crushed;
 								}
 								sector.ceilingheight = lastpos;
@@ -156,7 +156,7 @@ pub(crate) fn T_MovePlane(
 
 			_ => unreachable!(),
 		}
-		return result_e::ok;
+		result_e::ok
 	}
 }
 
@@ -180,20 +180,14 @@ pub(crate) fn T_MoveFloor(floor: &mut floormove_t) {
 			(*floor.sector).specialdata = null_mut();
 
 			if floor.direction == 1 {
-				match floor.ty {
-					floor_e::donutRaise => {
-						(*floor.sector).special = floor.newspecial as i16;
-						(*floor.sector).floorpic = floor.texture;
-					}
-					_ => (),
+				if floor.ty == floor_e::donutRaise {
+					(*floor.sector).special = floor.newspecial as i16;
+					(*floor.sector).floorpic = floor.texture;
 				}
 			} else if floor.direction == -1 {
-				match floor.ty {
-					floor_e::lowerAndChange => {
-						(*floor.sector).special = floor.newspecial as i16;
-						(*floor.sector).floorpic = floor.texture;
-					}
-					_ => (),
+				if floor.ty == floor_e::lowerAndChange {
+					(*floor.sector).special = floor.newspecial as i16;
+					(*floor.sector).floorpic = floor.texture;
 				}
 			}
 			P_RemoveThinker(&mut floor.thinker);
@@ -366,7 +360,7 @@ pub(crate) fn EV_DoFloor(line: &mut line_t, floortype: floor_e) -> bool {
 				_ => (),
 			}
 		}
-		return rtn;
+		rtn
 	}
 }
 
@@ -454,6 +448,6 @@ pub(crate) fn EV_BuildStairs(line: &mut line_t, ty: stair_e) -> bool {
 				}
 			}
 		}
-		return rtn;
+		rtn
 	}
 }

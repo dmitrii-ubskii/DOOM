@@ -4,7 +4,7 @@
 //	Archiving: SaveGame I/O.
 
 use std::{
-	ffi::{c_int, c_void},
+	ffi::c_int,
 	ptr::{self, null_mut},
 };
 
@@ -218,10 +218,6 @@ pub(crate) fn P_UnArchiveWorld() {
 enum thinkerclass_t {
 	tc_end,
 	tc_mobj,
-}
-
-unsafe extern "C" {
-	fn P_MobjThinker(_: *mut c_void);
 }
 
 // P_ArchiveThinkers

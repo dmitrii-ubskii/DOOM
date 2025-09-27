@@ -92,6 +92,7 @@ struct default_t {
 	pub defaultvalue: *const c_void,
 }
 
+#[allow(clippy::manual_dangling_ptr)]
 static mut defaults: [default_t; 39] = [
 	default_t {
 		name: c"mouse_sensitivity".as_ptr(),

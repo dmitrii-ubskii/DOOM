@@ -79,6 +79,7 @@ pub(crate) static mut buttonlist: [button_t; MAXBUTTONS] = [button_t::new(); MAX
 
 // P_InitSwitchList
 // Only called at game initialization.
+#[allow(clippy::needless_range_loop)]
 pub(crate) fn P_InitSwitchList() {
 	unsafe {
 		let mut episode = 1;
@@ -110,6 +111,7 @@ pub(crate) fn P_InitSwitchList() {
 }
 
 // Start a button counting down till it turns off.
+#[allow(clippy::needless_range_loop)]
 fn P_StartButton(line: *mut line_t, w: bwhere_e, texture: i32, time: u32) {
 	unsafe {
 		// See if button is already pressed

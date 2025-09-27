@@ -243,6 +243,7 @@ const xspeed: [fixed_t; 8] = [FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 
 const yspeed: [fixed_t; 8] = [0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000];
 
 const MAXSPECIALCROSS: usize = 8;
+
 unsafe extern "C" {
 	static mut floatok: boolean;
 	static mut tmfloorz: fixed_t;
@@ -328,8 +329,6 @@ fn P_TryWalk(actor: &mut mobj_t) -> bool {
 
 fn P_NewChaseDir(actor: &mut mobj_t) {
 	unsafe {
-		// int		tdir;
-
 		if actor.target.is_null() {
 			I_Error(c"P_NewChaseDir: called with no target".as_ptr());
 		}
@@ -368,9 +367,7 @@ fn P_NewChaseDir(actor: &mut mobj_t) {
 
 		// try other directions
 		if P_Random() > 200 || deltay.abs() > deltax.abs() {
-			let tdir = d[1];
-			d[1] = d[2];
-			d[2] = tdir;
+			d.swap(1, 2);
 		}
 
 		if d[1] == turnaround {
@@ -1146,7 +1143,7 @@ pub(crate) fn A_Fire(actor: &mut mobj_t) {
 		}
 
 		// don't move it if the vile lost sight
-		if P_CheckSight(&mut *actor.target, &mut *dest) == 0 {
+		if P_CheckSight(&*actor.target, &*dest) == 0 {
 			return;
 		}
 
@@ -1303,7 +1300,7 @@ pub(crate) fn A_SkullAttack(actor: &mut mobj_t) {
 		actor.momx = FixedMul(SKULLSPEED, finecos(an));
 		actor.momy = FixedMul(SKULLSPEED, finesine[an]);
 		let mut dist = P_AproxDistance((*dest).x - actor.x, (*dest).y - actor.y);
-		dist = dist / SKULLSPEED;
+		dist /= SKULLSPEED;
 
 		if dist < 1 {
 			dist = 1;

@@ -100,10 +100,6 @@ pub static mut firstflat: usize = 0;
 pub static mut lastflat: usize = 0;
 static mut numflats: usize = 0;
 
-static mut firstpatch: usize = 0;
-static mut lastpatch: usize = 0;
-static mut numpatches: usize = 0;
-
 #[unsafe(no_mangle)]
 pub static mut firstspritelump: usize = 0;
 #[unsafe(no_mangle)]

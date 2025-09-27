@@ -1115,15 +1115,8 @@ pub extern "C" fn P_CrossSpecialLine(linenum: usize, side: usize, thing: &mut mo
 #[unsafe(no_mangle)]
 pub extern "C" fn P_ShootSpecialLine(thing: &mut mobj_t, line: &mut line_t) {
 	//	Impacts that other things can activate.
-	if thing.player.is_null() {
-		let mut ok = false;
-		match line.special {
-			46 => ok = true, // OPEN DOOR IMPACT
-			_ => (),
-		}
-		if !ok {
-			return;
-		}
+	if thing.player.is_null() && line.special != 46 {
+		return;
 	}
 
 	match line.special {
@@ -1222,11 +1215,11 @@ static mut levelTimeCount: usize = 0;
 
 unsafe extern "C" {}
 
-#[allow(static_mut_refs)]
+#[allow(static_mut_refs, clippy::needless_range_loop)]
 pub(crate) fn P_UpdateSpecials() {
 	unsafe {
 		//	LEVEL TIMER
-		if levelTimer == true {
+		if levelTimer {
 			levelTimeCount -= 1;
 			if levelTimeCount == 0 {
 				G_ExitLevel();
@@ -1251,12 +1244,9 @@ pub(crate) fn P_UpdateSpecials() {
 		//	ANIMATE LINE SPECIALS
 		for i in 0..numlinespecials {
 			let line = &mut *linespeciallist[i];
-			match line.special {
-				48 => {
-					// EFFECT FIRSTCOL SCROLL +
-					(*sides.wrapping_add(line.sidenum[0] as usize)).textureoffset += FRACUNIT;
-				}
-				_ => (),
+			if line.special == 48 {
+				// EFFECT FIRSTCOL SCROLL +
+				(*sides.wrapping_add(line.sidenum[0] as usize)).textureoffset += FRACUNIT;
 			}
 		}
 
@@ -1346,6 +1336,7 @@ static mut numlinespecials: usize = 0;
 static mut linespeciallist: [*mut line_t; MAXLINEANIMS] = [null_mut(); MAXLINEANIMS];
 
 // Parses command line parameters.
+#[allow(clippy::needless_range_loop)]
 pub(crate) fn P_SpawnSpecials() {
 	unsafe {
 		// See if -TIMER needs to be used.
