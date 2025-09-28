@@ -37,7 +37,8 @@ use crate::{
 	myargc, myargv,
 	p_inter::maxammo,
 	p_local::MAXHEALTH,
-	p_mobj::{MF_SHADOW, P_SpawnPlayer, mobj_t},
+	p_map::P_CheckPosition,
+	p_mobj::{MF_SHADOW, P_RemoveMobj, P_SpawnMobj, P_SpawnPlayer, mobj_t},
 	p_saveg::{
 		P_ArchivePlayers, P_ArchiveSpecials, P_ArchiveThinkers, P_ArchiveWorld, P_UnArchivePlayers,
 		P_UnArchiveSpecials, P_UnArchiveThinkers, P_UnArchiveWorld, save_p,
@@ -769,10 +770,7 @@ pub(crate) fn G_PlayerReborn(player: usize) {
 // because something is occupying it
 
 unsafe extern "C" {
-	fn P_CheckPosition(thing: *const mobj_t, x: fixed_t, y: fixed_t) -> boolean;
-	fn P_RemoveMobj(thing: *mut mobj_t);
 	fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t;
-	fn P_SpawnMobj(x: fixed_t, y: fixed_t, floorheight: i32, mt_tfog: mobjtype_t) -> *mut mobj_t;
 }
 
 fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
@@ -792,13 +790,13 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 		let x = ((*mthing).x as i32) << FRACBITS;
 		let y = ((*mthing).y as i32) << FRACBITS;
 
-		if P_CheckPosition(players[playernum].mo, x, y) != 0 {
+		if P_CheckPosition(&mut *players[playernum].mo, x, y) {
 			return 0;
 		}
 
 		// flush an old corpse if needed
 		if bodyqueslot >= BODYQUESIZE {
-			P_RemoveMobj(bodyque[bodyqueslot % BODYQUESIZE]);
+			P_RemoveMobj(&mut *bodyque[bodyqueslot % BODYQUESIZE]);
 		}
 		bodyque[bodyqueslot % BODYQUESIZE] = players[playernum].mo;
 		bodyqueslot += 1;

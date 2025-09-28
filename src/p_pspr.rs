@@ -14,6 +14,7 @@ use crate::{
 	p_enemy::P_NoiseAlert,
 	p_inter::P_DamageMobj,
 	p_local::{MELEERANGE, MISSILERANGE},
+	p_map::{P_AimLineAttack, P_LineAttack, linetarget},
 	p_mobj::{MF_JUSTATTACKED, P_SetMobjState, P_SpawnMobj, P_SpawnPlayerMissile, mobj_t},
 	p_tick::leveltime,
 	s_sound::S_StartSound,
@@ -360,16 +361,7 @@ pub(crate) fn A_GunFlash(player: &mut player_t, _psp: &mut pspdef_t) {
 // WEAPON ATTACKS
 
 unsafe extern "C" {
-	static mut linetarget: *mut mobj_t;
-	fn P_AimLineAttack(t1: *mut mobj_t, angle: angle_t, distance: fixed_t) -> fixed_t;
 	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
-	fn P_LineAttack(
-		t1: *mut mobj_t,
-		angle: angle_t,
-		distance: fixed_t,
-		slope: fixed_t,
-		damage: i32,
-	);
 }
 
 // A_Punch
@@ -383,8 +375,8 @@ pub(crate) fn A_Punch(player: &mut player_t, _psp: &mut pspdef_t) {
 
 		let mut angle = (*player.mo).angle;
 		angle += ((P_Random() - P_Random()) << 18) as usize;
-		let slope = P_AimLineAttack(player.mo, angle, MELEERANGE);
-		P_LineAttack(player.mo, angle, MELEERANGE, slope, damage);
+		let slope = P_AimLineAttack(&mut *player.mo, angle, MELEERANGE);
+		P_LineAttack(&mut *player.mo, angle, MELEERANGE, slope, damage);
 
 		// turn to face target
 		if !linetarget.is_null() {
@@ -403,8 +395,8 @@ pub(crate) fn A_Saw(player: &mut player_t, _psp: &mut pspdef_t) {
 		angle += ((P_Random() - P_Random()) << 18) as usize;
 
 		// use meleerange + 1 se the puff doesn't skip the flash
-		let slope = P_AimLineAttack(player.mo, angle, MELEERANGE + 1);
-		P_LineAttack(player.mo, angle, MELEERANGE + 1, slope, damage);
+		let slope = P_AimLineAttack(&mut *player.mo, angle, MELEERANGE + 1);
+		P_LineAttack(&mut *player.mo, angle, MELEERANGE + 1, slope, damage);
 
 		if linetarget.is_null() {
 			S_StartSound(player.mo.cast(), sfxenum_t::sfx_sawful);
@@ -552,7 +544,7 @@ pub(crate) fn A_FireShotgun2(player: &mut player_t, _psp: &mut pspdef_t) {
 			let mut angle = (*player.mo).angle;
 			angle += ((P_Random() - P_Random()) << 19) as usize;
 			P_LineAttack(
-				player.mo,
+				&mut *player.mo,
 				angle,
 				MISSILERANGE,
 				bulletslope + ((P_Random() - P_Random()) << 5),
@@ -613,7 +605,7 @@ pub(crate) fn A_BFGSpray(mo: &mut mobj_t) {
 
 			// mo.target is the originator (player)
 			//  of the missile
-			P_AimLineAttack(mo.target, an, 16 * 64 * FRACUNIT);
+			P_AimLineAttack(&mut *mo.target, an, 16 * 64 * FRACUNIT);
 
 			if linetarget.is_null() {
 				continue;

@@ -10,7 +10,8 @@ use crate::{
 	info::{state_t, statenum_t},
 	m_fixed::{FRACUNIT, FixedMul, fixed_t},
 	p_local::VIEWHEIGHT,
-	p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW, mobj_t},
+	p_map::P_UseLines,
+	p_mobj::{MF_JUSTATTACKED, MF_NOCLIP, MF_SHADOW, P_SetMobjState},
 	p_pspr::P_MovePsprites,
 	p_spec::P_PlayerInSpecialSector,
 	p_tick::leveltime,
@@ -103,7 +104,6 @@ fn P_CalcHeight(player: &mut player_t) {
 }
 
 unsafe extern "C" {
-	fn P_SetMobjState(mobj: *mut mobj_t, state: statenum_t) -> i32;
 	static mut states: [state_t; statenum_t::NUMSTATES as usize];
 }
 
@@ -198,10 +198,6 @@ fn P_DeathThink(player: &mut player_t) {
 			player.playerstate = playerstate_t::PST_REBORN;
 		}
 	}
-}
-
-unsafe extern "C" {
-	fn P_UseLines(player: &mut player_t);
 }
 
 // P_PlayerThink

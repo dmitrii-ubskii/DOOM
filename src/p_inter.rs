@@ -24,12 +24,13 @@ use crate::{
 	g_game::{consoleplayer, deathmatch, gameskill, netgame, players},
 	i_system::{I_Error, I_Tactile},
 	info::{mobjtype_t, spritenum_t, statenum_t, states},
-	m_fixed::{FRACUNIT, FixedMul, fixed_t},
+	m_fixed::{FRACUNIT, FixedMul},
 	m_random::P_Random,
 	p_local::{BASETHRESHOLD, MAXHEALTH, ONFLOORZ},
 	p_mobj::{
 		MF_CORPSE, MF_COUNTITEM, MF_COUNTKILL, MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_JUSTHIT,
-		MF_NOCLIP, MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID, mobj_t,
+		MF_NOCLIP, MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID, P_RemoveMobj,
+		P_SetMobjState, P_SpawnMobj, mobj_t,
 	},
 	sounds::sfxenum_t,
 	tables::{ANG180, ANGLETOFINESHIFT, angle_t, finecos, finesine},
@@ -264,13 +265,8 @@ pub extern "C" fn P_GivePower(player: &mut player_t, power: powertype_t) -> bool
 	1
 }
 
-unsafe extern "C" {
-	fn P_RemoveMobj(thing: *mut mobj_t);
-}
-
 // P_TouchSpecialThing
-#[unsafe(no_mangle)]
-pub extern "C" fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
+pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 	let delta = special.z - toucher.z;
 
 	if delta > toucher.height || delta < -8 * FRACUNIT {
@@ -635,7 +631,7 @@ pub extern "C" fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t
 	if special.flags & MF_COUNTITEM != 0 {
 		player.itemcount += 1;
 	}
-	unsafe { P_RemoveMobj(special) };
+	P_RemoveMobj(special);
 	player.bonuscount += BONUSADD;
 	unsafe {
 		if std::ptr::eq(player, &raw const players[consoleplayer]) {
@@ -646,8 +642,6 @@ pub extern "C" fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t
 
 unsafe extern "C" {
 	fn P_DropWeapon(player: *mut player_t);
-	fn P_SetMobjState(mobj: *mut mobj_t, state: statenum_t) -> boolean;
-	fn P_SpawnMobj(x: fixed_t, y: fixed_t, floorheight: i32, mt_tfog: mobjtype_t) -> *mut mobj_t;
 }
 
 // KillMobj
@@ -746,8 +740,7 @@ unsafe extern "C" {
 // Source and inflictor are the same for melee attacks.
 // Source can be NULL for slime, barrel explosions
 // and other environmental stuff.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn P_DamageMobj(
+pub unsafe fn P_DamageMobj(
 	target: &mut mobj_t,
 	inflictor: *mut mobj_t,
 	source: *mut mobj_t,

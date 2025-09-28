@@ -658,8 +658,7 @@ pub(crate) fn P_FindMinSurroundingLight(sector: &mut sector_t, max: i32) -> i32 
 // P_CrossSpecialLine - TRIGGER
 // Called every time a thing origin is about
 //  to cross a line with a non 0 special.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_CrossSpecialLine(linenum: usize, side: usize, thing: &mut mobj_t) {
+pub fn P_CrossSpecialLine(linenum: usize, side: usize, thing: &mut mobj_t) {
 	unsafe {
 		let line = &mut *lines.wrapping_add(linenum);
 
@@ -1112,8 +1111,7 @@ pub extern "C" fn P_CrossSpecialLine(linenum: usize, side: usize, thing: &mut mo
 
 // P_ShootSpecialLine - IMPACT SPECIALS
 // Called when a thing shoots a special line.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_ShootSpecialLine(thing: &mut mobj_t, line: &mut line_t) {
+pub fn P_ShootSpecialLine(thing: &mut mobj_t, line: &mut line_t) {
 	//	Impacts that other things can activate.
 	if thing.player.is_null() && line.special != 46 {
 		return;

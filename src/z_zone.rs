@@ -250,7 +250,10 @@ pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c
 			}
 
 			// mark as in use, but unowned
-			(*base).user = 2 as *mut *mut c_void;
+			#[allow(clippy::manual_dangling_ptr)]
+			{
+				(*base).user = 2 as *mut *mut c_void;
+			}
 		}
 		(*base).tag = tag;
 

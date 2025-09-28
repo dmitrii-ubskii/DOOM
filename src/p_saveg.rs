@@ -18,7 +18,7 @@ use crate::{
 	m_fixed::FRACBITS,
 	p_ceiling::{P_AddActiveCeiling, activeceilings},
 	p_local::thinkercap,
-	p_mobj::mobj_t,
+	p_mobj::{P_RemoveMobj, mobj_t},
 	p_plats::P_AddActivePlat,
 	p_pspr::psprnum_t,
 	p_setup::{lines, numlines, numsectors, sectors, sides},
@@ -257,7 +257,6 @@ pub(crate) fn P_ArchiveThinkers() {
 }
 
 unsafe extern "C" {
-	fn P_RemoveMobj(thing: *mut mobj_t);
 	fn P_SetThingPosition(thing: *mut mobj_t);
 }
 
@@ -270,7 +269,7 @@ pub(crate) fn P_UnArchiveThinkers() {
 			let next = (*currentthinker).next;
 
 			if (*currentthinker).function.is_mobj() {
-				P_RemoveMobj(currentthinker.cast());
+				P_RemoveMobj(&mut *currentthinker.cast());
 			} else {
 				Z_Free(currentthinker.cast());
 			}

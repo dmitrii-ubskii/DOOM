@@ -83,18 +83,20 @@ use crate::{
 	p_local::{
 		FLOATSPEED, GRAVITY, ITEMQUESIZE, MAXMOVE, MELEERANGE, ONCEILINGZ, ONFLOORZ, VIEWHEIGHT,
 	},
+	p_map::{
+		P_AimLineAttack, P_CheckPosition, P_SlideMove, P_TryMove, attackrange, ceilingline,
+		linetarget,
+	},
 	p_pspr::P_SetupPsprites,
 	p_setup::{deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_AddThinker, P_RemoveThinker, leveltime},
-	r_defs::{line_t, subsector_t},
+	r_defs::subsector_t,
 	r_sky::skyflatnum,
 	s_sound::{S_StartSound, S_StopSound},
 	sounds::sfxenum_t,
 	tables::{ANG45, ANGLETOFINESHIFT, angle_t, finecos, finesine},
 	z_zone::{PU_LEVEL, Z_Malloc},
 };
-
-type boolean = i32;
 
 // Misc. mobj flags
 
@@ -265,13 +267,12 @@ pub struct mobj_t {
 
 // P_SetMobjState
 // Returns true if the mobj is still present.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> boolean {
+pub fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> bool {
 	loop {
 		if state == statenum_t::S_NULL {
 			mobj.state = null_mut();
 			P_RemoveMobj(mobj);
-			return 0;
+			return false;
 		}
 
 		let st = unsafe { &mut states[state as usize] };
@@ -300,7 +301,7 @@ pub extern "C" fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> bo
 		}
 	}
 
-	1
+	true
 }
 
 // P_ExplodeMissile
@@ -324,13 +325,6 @@ fn P_ExplodeMissile(mo: &mut mobj_t) {
 			S_StartSound((mo as *mut mobj_t).cast(), (*mo.info).deathsound);
 		}
 	}
-}
-
-unsafe extern "C" {
-	static mut ceilingline: *mut line_t;
-
-	fn P_TryMove(thing: *mut mobj_t, x: fixed_t, y: fixed_t) -> boolean;
-	fn P_SlideMove(thing: *mut mobj_t) -> boolean;
 }
 
 // P_XYMovement
@@ -376,7 +370,7 @@ fn P_XYMovement(mo: &mut mobj_t) {
 				ymove = 0;
 			}
 
-			if P_TryMove(mo, ptryx, ptryy) == 0 {
+			if !P_TryMove(mo, ptryx, ptryy) {
 				// blocked move
 				if !mo.player.is_null() {
 					// try to slide along it
@@ -546,7 +540,6 @@ fn P_ZMovement(mo: &mut mobj_t) {
 }
 
 unsafe extern "C" {
-	fn P_CheckPosition(thing: *const mobj_t, x: fixed_t, y: fixed_t) -> boolean;
 	fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t;
 }
 
@@ -564,7 +557,7 @@ fn P_NightmareRespawn(mobj: &mut mobj_t) {
 		let y = (mobj.spawnpoint.y as i32) << FRACBITS;
 
 		// somthing is occupying it's position?
-		if P_CheckPosition(mobj, x, y) == 0 {
+		if !P_CheckPosition(mobj, x, y) {
 			return; // no respwan
 		}
 
@@ -674,8 +667,7 @@ unsafe extern "C" {
 	fn P_SetThingPosition(thing: *mut mobj_t);
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut mobj_t {
+pub fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut mobj_t {
 	unsafe {
 		let mobj = Z_Malloc(size_of::<mobj_t>(), PU_LEVEL, null_mut());
 		libc::memset(mobj, 0, size_of::<mobj_t>());
@@ -738,8 +730,7 @@ static mut itemrespawntime: [usize; ITEMQUESIZE] = [0; ITEMQUESIZE];
 pub(crate) static mut iquehead: usize = 0;
 pub(crate) static mut iquetail: usize = 0;
 
-#[unsafe(no_mangle)]
-pub extern "C" fn P_RemoveMobj(mobj: &mut mobj_t) {
+pub fn P_RemoveMobj(mobj: &mut mobj_t) {
 	if mobj.flags & MF_SPECIAL != 0
 		&& mobj.flags & MF_DROPPED == 0
 		&& mobj.ty != mobjtype_t::MT_INV
@@ -991,12 +982,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 // GAME SPAWN FUNCTIONS
 
 // P_SpawnPuff
-unsafe extern "C" {
-	static mut attackrange: fixed_t;
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnPuff(x: fixed_t, y: fixed_t, mut z: fixed_t) {
+pub fn P_SpawnPuff(x: fixed_t, y: fixed_t, mut z: fixed_t) {
 	unsafe {
 		z += (P_Random() - P_Random()) << 10;
 
@@ -1016,8 +1002,7 @@ pub extern "C" fn P_SpawnPuff(x: fixed_t, y: fixed_t, mut z: fixed_t) {
 }
 
 // P_SpawnBlood
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnBlood(x: fixed_t, y: fixed_t, mut z: fixed_t, damage: i32) {
+pub fn P_SpawnBlood(x: fixed_t, y: fixed_t, mut z: fixed_t, damage: i32) {
 	unsafe {
 		z += (P_Random() - P_Random()) << 10;
 		let th = &mut *P_SpawnMobj(x, y, z, mobjtype_t::MT_BLOOD);
@@ -1031,7 +1016,7 @@ pub extern "C" fn P_SpawnBlood(x: fixed_t, y: fixed_t, mut z: fixed_t, damage: i
 		match damage {
 			..9 => P_SetMobjState(th, statenum_t::S_BLOOD3),
 			9..=12 => P_SetMobjState(th, statenum_t::S_BLOOD2),
-			_ => 0,
+			_ => return,
 		};
 	}
 }
@@ -1051,7 +1036,7 @@ fn P_CheckMissileSpawn(th: &mut mobj_t) {
 	th.y += th.momy >> 1;
 	th.z += th.momz >> 1;
 
-	if unsafe { P_TryMove(th, th.x, th.y) } == 0 {
+	if !P_TryMove(th, th.x, th.y) {
 		P_ExplodeMissile(th);
 	}
 }
@@ -1100,11 +1085,6 @@ pub extern "C" fn P_SpawnMissile(
 
 		th
 	}
-}
-
-unsafe extern "C" {
-	static mut linetarget: *mut mobj_t;
-	fn P_AimLineAttack(t1: *mut mobj_t, angle: angle_t, distance: fixed_t) -> fixed_t;
 }
 
 // P_SpawnPlayerMissile

@@ -3,8 +3,8 @@
 use crate::{
 	d_think::thinker_t,
 	info::mobjtype_t,
-	m_fixed::fixed_t,
 	p_local::thinkercap,
+	p_map::P_TeleportMove,
 	p_mobj::{MF_MISSILE, P_SpawnMobj, mobj_t},
 	p_setup::{numsectors, sectors},
 	r_defs::line_t,
@@ -12,10 +12,6 @@ use crate::{
 	sounds::sfxenum_t,
 	tables::{ANGLETOFINESHIFT, finecos, finesine},
 };
-
-unsafe extern "C" {
-	fn P_TeleportMove(thing: *mut mobj_t, x: fixed_t, y: fixed_t) -> bool;
-}
 
 // TELEPORTATION
 #[unsafe(no_mangle)]

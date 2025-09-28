@@ -23,6 +23,10 @@ use crate::{
 	p_floor::EV_DoFloor,
 	p_inter::P_DamageMobj,
 	p_local::{FLOATSPEED, MAPBLOCKSHIFT, MAXRADIUS, MELEERANGE, MISSILERANGE, thinkercap},
+	p_map::{
+		P_AimLineAttack, P_CheckPosition, P_LineAttack, P_RadiusAttack, P_TeleportMove, P_TryMove,
+		floatok, numspechit, spechit, tmfloorz,
+	},
 	p_mobj::{
 		MF_AMBUSH, MF_CORPSE, MF_FLOAT, MF_INFLOAT, MF_JUSTATTACKED, MF_JUSTHIT, MF_SHADOW,
 		MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID, P_RemoveMobj, P_SetMobjState, P_SpawnMissile,
@@ -174,14 +178,14 @@ fn P_CheckMeleeRange(actor: &mobj_t) -> bool {
 		if dist >= MELEERANGE - 20 * FRACUNIT + (*pl.info).radius {
 			return false;
 		}
-		P_CheckSight(actor, &*actor.target) != 0
+		P_CheckSight(actor, &*actor.target)
 	}
 }
 
 // P_CheckMissileRange
 fn P_CheckMissileRange(actor: &mut mobj_t) -> bool {
 	unsafe {
-		if P_CheckSight(actor, &*actor.target) == 0 {
+		if !P_CheckSight(actor, &*actor.target) {
 			return false;
 		}
 
@@ -242,17 +246,6 @@ fn P_CheckMissileRange(actor: &mut mobj_t) -> bool {
 const xspeed: [fixed_t; 8] = [FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000];
 const yspeed: [fixed_t; 8] = [0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000];
 
-const MAXSPECIALCROSS: usize = 8;
-
-unsafe extern "C" {
-	static mut floatok: boolean;
-	static mut tmfloorz: fixed_t;
-	static mut numspechit: usize;
-	static mut spechit: [*mut line_t; MAXSPECIALCROSS];
-
-	fn P_TryMove(thing: *mut mobj_t, x: fixed_t, y: fixed_t) -> boolean;
-}
-
 fn P_Move(actor: &mut mobj_t) -> bool {
 	unsafe {
 		if actor.movedir == dirtype_t::DI_NODIR {
@@ -268,9 +261,9 @@ fn P_Move(actor: &mut mobj_t) -> bool {
 
 		let try_ok = P_TryMove(actor, tryx, tryy);
 
-		if try_ok == 0 {
+		if !try_ok {
 			// open any specials
-			if actor.flags & MF_FLOAT != 0 && floatok != 0 {
+			if actor.flags & MF_FLOAT != 0 && floatok {
 				// must adjust height
 				if actor.z < tmfloorz {
 					actor.z += FLOATSPEED;
@@ -294,7 +287,7 @@ fn P_Move(actor: &mut mobj_t) -> bool {
 				// if the special is not a door
 				// that can be opened,
 				// return false
-				if P_UseSpecialLine(actor, &mut *ld, 0) != 0 {
+				if P_UseSpecialLine(actor, &mut *ld, 0) {
 					good = true;
 				}
 			}
@@ -469,7 +462,7 @@ fn P_LookForPlayers(actor: &mut mobj_t, allaround: bool) -> bool {
 				continue; // dead
 			}
 
-			if P_CheckSight(actor, &*player.mo) == 0 {
+			if !P_CheckSight(actor, &*player.mo) {
 				continue; // out of sight
 			}
 
@@ -549,7 +542,7 @@ pub(crate) fn A_Look(actor: &mut mobj_t) {
 			actor.target = targ;
 
 			if actor.flags & MF_AMBUSH != 0
-				&& P_CheckSight(actor, &*actor.target) == 0
+				&& !P_CheckSight(actor, &*actor.target)
 				&& !P_LookForPlayers(actor, false)
 			{
 				return;
@@ -663,7 +656,7 @@ pub(crate) fn A_Chase(actor: &mut mobj_t) {
 		// possibly choose another target
 		if netgame != 0
 			&& actor.threshold == 0
-			&& P_CheckSight(actor, &*actor.target) == 0
+			&& !P_CheckSight(actor, &*actor.target)
 			&& P_LookForPlayers(actor, true)
 		{
 			return; // got a new target
@@ -698,17 +691,6 @@ pub(crate) fn A_FaceTarget(actor: &mut mobj_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn P_AimLineAttack(t1: *mut mobj_t, angle: angle_t, distance: fixed_t) -> fixed_t;
-	fn P_LineAttack(
-		t1: *mut mobj_t,
-		angle: angle_t,
-		distance: fixed_t,
-		slope: fixed_t,
-		damage: i32,
-	);
-}
-
 // A_PosAttack
 pub(crate) fn A_PosAttack(actor: &mut mobj_t) {
 	if actor.target.is_null() {
@@ -717,48 +699,44 @@ pub(crate) fn A_PosAttack(actor: &mut mobj_t) {
 
 	A_FaceTarget(actor);
 	let mut angle = actor.angle;
-	let slope = unsafe { P_AimLineAttack(actor, angle, MISSILERANGE) };
+	let slope = P_AimLineAttack(actor, angle, MISSILERANGE);
 
 	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_pistol);
 	angle += Wrapping(((P_Random() - P_Random()) << 20) as usize);
 	let damage = ((P_Random() % 5) + 1) * 3;
-	unsafe { P_LineAttack(actor, angle, MISSILERANGE, slope, damage) };
+	P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
 pub(crate) fn A_SPosAttack(actor: &mut mobj_t) {
-	unsafe {
-		if actor.target.is_null() {
-			return;
-		}
-
-		S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_shotgn);
-		A_FaceTarget(actor);
-		let bangle = actor.angle;
-		let slope = P_AimLineAttack(actor, bangle, MISSILERANGE);
-
-		for _ in 0..3 {
-			let angle = bangle + Wrapping(((P_Random() - P_Random()) << 20) as usize);
-			let damage = ((P_Random() % 5) + 1) * 3;
-			P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
-		}
+	if actor.target.is_null() {
+		return;
 	}
-}
 
-pub(crate) fn A_CPosAttack(actor: &mut mobj_t) {
-	unsafe {
-		if actor.target.is_null() {
-			return;
-		}
+	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_shotgn);
+	A_FaceTarget(actor);
+	let bangle = actor.angle;
+	let slope = P_AimLineAttack(actor, bangle, MISSILERANGE);
 
-		S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_shotgn);
-		A_FaceTarget(actor);
-		let bangle = actor.angle;
-		let slope = P_AimLineAttack(actor, bangle, MISSILERANGE);
-
+	for _ in 0..3 {
 		let angle = bangle + Wrapping(((P_Random() - P_Random()) << 20) as usize);
 		let damage = ((P_Random() % 5) + 1) * 3;
 		P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 	}
+}
+
+pub(crate) fn A_CPosAttack(actor: &mut mobj_t) {
+	if actor.target.is_null() {
+		return;
+	}
+
+	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_shotgn);
+	A_FaceTarget(actor);
+	let bangle = actor.angle;
+	let slope = P_AimLineAttack(actor, bangle, MISSILERANGE);
+
+	let angle = bangle + Wrapping(((P_Random() - P_Random()) << 20) as usize);
+	let damage = ((P_Random() % 5) + 1) * 3;
+	P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
 pub(crate) fn A_CPosRefire(actor: &mut mobj_t) {
@@ -772,7 +750,7 @@ pub(crate) fn A_CPosRefire(actor: &mut mobj_t) {
 
 		if actor.target.is_null()
 			|| (*actor.target).health <= 0
-			|| P_CheckSight(actor, &*actor.target) == 0
+			|| !P_CheckSight(actor, &*actor.target)
 		{
 			P_SetMobjState(actor, (*actor.info).seestate);
 		}
@@ -790,7 +768,7 @@ pub(crate) fn A_SpidRefire(actor: &mut mobj_t) {
 
 		if actor.target.is_null()
 			|| (*actor.target).health <= 0
-			|| P_CheckSight(actor, &*actor.target) == 0
+			|| !P_CheckSight(actor, &*actor.target)
 		{
 			P_SetMobjState(actor, (*actor.info).seestate);
 		}
@@ -1016,10 +994,6 @@ static mut vileobj: *mut mobj_t = null_mut();
 static mut viletryx: fixed_t = 0;
 static mut viletryy: fixed_t = 0;
 
-unsafe extern "C" {
-	fn P_CheckPosition(thing: *const mobj_t, x: fixed_t, y: fixed_t) -> boolean;
-}
-
 extern "C" fn PIT_VileCheck(thing: *mut mobj_t) -> boolean {
 	unsafe {
 		let thing = &mut *thing;
@@ -1047,7 +1021,7 @@ extern "C" fn PIT_VileCheck(thing: *mut mobj_t) -> boolean {
 		(*corpsehit).momx = 0;
 		(*corpsehit).momy = 0;
 		(*corpsehit).height <<= 2;
-		let check = P_CheckPosition(corpsehit, (*corpsehit).x, (*corpsehit).y) != 0;
+		let check = P_CheckPosition(&mut *corpsehit, (*corpsehit).x, (*corpsehit).y);
 		(*corpsehit).height >>= 2;
 
 		// !check: doesn't fit here
@@ -1143,7 +1117,7 @@ pub(crate) fn A_Fire(actor: &mut mobj_t) {
 		}
 
 		// don't move it if the vile lost sight
-		if P_CheckSight(&*actor.target, &*dest) == 0 {
+		if !P_CheckSight(&*actor.target, &*dest) {
 			return;
 		}
 
@@ -1182,10 +1156,6 @@ pub(crate) fn A_VileTarget(actor: &mut mobj_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn P_RadiusAttack(spot: *mut mobj_t, source: *mut mobj_t, damage: i32);
-}
-
 // A_VileAttack
 pub(crate) fn A_VileAttack(actor: &mut mobj_t) {
 	unsafe {
@@ -1195,7 +1165,7 @@ pub(crate) fn A_VileAttack(actor: &mut mobj_t) {
 
 		A_FaceTarget(actor);
 
-		if P_CheckSight(actor, &*actor.target) == 0 {
+		if !P_CheckSight(actor, &*actor.target) {
 			return;
 		}
 
@@ -1203,17 +1173,13 @@ pub(crate) fn A_VileAttack(actor: &mut mobj_t) {
 		P_DamageMobj(&mut *actor.target, actor, actor, 20);
 		(*actor.target).momz = 1000 * FRACUNIT / (*(*actor.target).info).mass;
 
-		let fire = actor.tracer;
-
-		if fire.is_null() {
-			return;
-		}
+		let Some(fire) = actor.tracer.as_mut() else { return };
 
 		let an = (actor.angle >> ANGLETOFINESHIFT).0;
 
 		// move the fire between the vile and the player
-		(*fire).x = (*actor.target).x - FixedMul(24 * FRACUNIT, finecos(an));
-		(*fire).y = (*actor.target).y - FixedMul(24 * FRACUNIT, finesine[an]);
+		fire.x = (*actor.target).x - FixedMul(24 * FRACUNIT, finecos(an));
+		fire.y = (*actor.target).y - FixedMul(24 * FRACUNIT, finesine[an]);
 		P_RadiusAttack(fire, actor, 70);
 	}
 }
@@ -1345,7 +1311,7 @@ fn A_PainShootSkull(actor: &mut mobj_t, angle: angle_t) {
 		let newmobj = P_SpawnMobj(x, y, z, mobjtype_t::MT_SKULL);
 
 		// Check for movements.
-		if P_TryMove(newmobj, (*newmobj).x, (*newmobj).y) == 0 {
+		if !P_TryMove(&mut *newmobj, (*newmobj).x, (*newmobj).y) {
 			// kill it immediately
 			P_DamageMobj(&mut *newmobj, actor, actor, 10000);
 			return;
@@ -1421,7 +1387,7 @@ pub(crate) fn A_Fall(actor: &mut mobj_t) {
 
 // A_Explode
 pub(crate) fn A_Explode(thingy: &mut mobj_t) {
-	unsafe { P_RadiusAttack(thingy, thingy.target, 128) };
+	P_RadiusAttack(thingy, thingy.target, 128);
 }
 
 // A_BossDeath
@@ -1678,10 +1644,6 @@ pub(crate) fn A_BrainSpit(mo: &mut mobj_t) {
 pub(crate) fn A_SpawnSound(mo: &mut mobj_t) {
 	S_StartSound((mo as *mut mobj_t).cast(), sfxenum_t::sfx_boscub);
 	A_SpawnFly(mo);
-}
-
-unsafe extern "C" {
-	fn P_TeleportMove(thing: *mut mobj_t, x: fixed_t, y: fixed_t) -> bool;
 }
 
 pub(crate) fn A_SpawnFly(mo: &mut mobj_t) {

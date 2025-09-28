@@ -56,10 +56,10 @@ pub struct maplinedef_t {
 // LineDef attributes.
 
 // Solid, is an obstacle.
-pub const ML_BLOCKING: u8 = 1;
+pub const ML_BLOCKING: i16 = 1;
 
 // Blocks monsters only.
-pub const ML_BLOCKMONSTERS: u8 = 2;
+pub const ML_BLOCKMONSTERS: i16 = 2;
 
 // Backside will not be present at all
 //  if not two sided.

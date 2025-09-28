@@ -83,7 +83,7 @@ unsafe extern "C" {
 // P_CrossSubsector
 // Returns true
 //  if strace crosses the given subsector successfully.
-fn P_CrossSubsector(num: i32) -> i32 {
+fn P_CrossSubsector(num: i32) -> bool {
 	let mut divl = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
 
 	unsafe {
@@ -135,7 +135,7 @@ fn P_CrossSubsector(num: i32) -> i32 {
 			// stop because it is not two sided anyway
 			// might do this after updating validcount?
 			if line.flags & ML_TWOSIDED == 0 {
-				return 0;
+				return false;
 			}
 
 			// crosses a two sided line
@@ -164,7 +164,7 @@ fn P_CrossSubsector(num: i32) -> i32 {
 
 			// quick test for totally closed doors
 			if openbottom >= opentop {
-				return 0; // stop
+				return false; // stop
 			}
 
 			#[allow(static_mut_refs)]
@@ -185,19 +185,19 @@ fn P_CrossSubsector(num: i32) -> i32 {
 			}
 
 			if topslope <= bottomslope {
-				return 0; // stop
+				return false; // stop
 			}
 		}
 
 		// passed the subsector ok
-		1
+		true
 	}
 }
 
 // P_CrossBSPNode
 // Returns true
 //  if strace crosses the given node successfully.
-fn P_CrossBSPNode(bspnum: usize) -> i32 {
+fn P_CrossBSPNode(bspnum: usize) -> bool {
 	unsafe {
 		if bspnum & NF_SUBSECTOR != 0 {
 			if bspnum == usize::MAX {
@@ -216,14 +216,14 @@ fn P_CrossBSPNode(bspnum: usize) -> i32 {
 		}
 
 		// cross the starting side
-		if (P_CrossBSPNode((*bsp).children[side as usize] as usize)) == 0 {
-			return 0;
+		if !P_CrossBSPNode((*bsp).children[side as usize] as usize) {
+			return false;
 		}
 
 		// the partition plane is crossed here
 		if side == P_DivlineSide(t2x, t2y, &mut *(bsp.cast())) {
 			// the line doesn't touch the other side
-			return 1;
+			return true;
 		}
 
 		// cross the ending side
@@ -235,8 +235,7 @@ fn P_CrossBSPNode(bspnum: usize) -> i32 {
 // Returns true
 //  if a straight line between t1 and t2 is unobstructed.
 // Uses REJECT.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> i32 {
+pub fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> bool {
 	unsafe {
 		// First check for trivial rejection.
 
@@ -252,7 +251,7 @@ pub extern "C" fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> i32 {
 			sightcounts[0] += 1;
 
 			// can't possibly be connected
-			return 0;
+			return false;
 		}
 
 		// An unobstructed LOS is possible.

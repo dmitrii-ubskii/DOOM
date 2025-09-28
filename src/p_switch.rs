@@ -23,8 +23,6 @@ use crate::{
 	sounds::sfxenum_t,
 };
 
-type boolean = i32;
-
 // CHANGE THE TEXTURE OF A WALL SWITCH TO ITS OPPOSITE
 static alphSwitchList: [switchlist_t; 41] = [
 	// Doom shareware episode 1 switches
@@ -192,14 +190,13 @@ pub(crate) fn P_ChangeSwitchTexture(line: &mut line_t, useAgain: bool) {
 // P_UseSpecialLine
 // Called when a thing uses a special line.
 // Only the front sides of lines are usable.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_UseSpecialLine(thing: &mut mobj_t, line: &mut line_t, side: i32) -> boolean {
+pub fn P_UseSpecialLine(thing: &mut mobj_t, line: &mut line_t, side: i32) -> bool {
 	// Err...
 	// Use the back sides of VERY SPECIAL lines...
 	if side != 0 {
 		match line.special {
 			124 => (), // Sliding door open&close / UNUSED?
-			_ => return 0,
+			_ => return false,
 		}
 	}
 
@@ -207,13 +204,13 @@ pub extern "C" fn P_UseSpecialLine(thing: &mut mobj_t, line: &mut line_t, side: 
 	if thing.player.is_null() {
 		// never open secret doors
 		if line.flags as usize & ML_SECRET != 0 {
-			return 0;
+			return false;
 		}
 
 		match line.special {
 			// MANUAL DOOR RAISE | MANUAL BLUE | MANUAL RED | MANUAL YELLOW
 			1 | 32 | 33 | 34 => (),
-			_ => return 0,
+			_ => return false,
 		}
 	}
 
@@ -571,5 +568,5 @@ pub extern "C" fn P_UseSpecialLine(thing: &mut mobj_t, line: &mut line_t, side: 
 		_ => (),
 	}
 
-	1
+	true
 }

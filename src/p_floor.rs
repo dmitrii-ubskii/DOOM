@@ -8,6 +8,7 @@ use crate::{
 	d_think::think_t,
 	doomdata::ML_TWOSIDED,
 	m_fixed::{FRACUNIT, fixed_t},
+	p_map::P_ChangeSector,
 	p_setup::sectors,
 	p_spec::{
 		FLOORSPEED, P_FindHighestFloorSurrounding, P_FindLowestCeilingSurrounding,
@@ -22,12 +23,6 @@ use crate::{
 	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
-type boolean = i32;
-
-unsafe extern "C" {
-	fn P_ChangeSector(sector: *mut sector_t, crunch: boolean) -> boolean;
-}
-
 // Move a plane (floor or ceiling) and check for crushing
 pub(crate) fn T_MovePlane(
 	sector: &mut sector_t,
@@ -37,127 +32,125 @@ pub(crate) fn T_MovePlane(
 	floorOrCeiling: i32,
 	direction: i32,
 ) -> result_e {
-	unsafe {
-		match floorOrCeiling {
-			0 => {
-				// FLOOR
-				match direction {
-					-1 => {
-						// DOWN
-						if sector.floorheight - speed < dest {
-							let lastpos = sector.floorheight;
-							sector.floorheight = dest;
-							let flag = P_ChangeSector(sector, crush as boolean);
-							if flag == 1 {
-								sector.floorheight = lastpos;
-								P_ChangeSector(sector, crush as boolean);
-								//return crushed;
-							}
-							return result_e::pastdest;
-						} else {
-							let lastpos = sector.floorheight;
-							sector.floorheight -= speed;
-							let flag = P_ChangeSector(sector, crush as boolean);
-							if flag == 1 {
-								sector.floorheight = lastpos;
-								P_ChangeSector(sector, crush as boolean);
-								return result_e::crushed;
-							}
+	match floorOrCeiling {
+		0 => {
+			// FLOOR
+			match direction {
+				-1 => {
+					// DOWN
+					if sector.floorheight - speed < dest {
+						let lastpos = sector.floorheight;
+						sector.floorheight = dest;
+						let flag = P_ChangeSector(sector, crush);
+						if flag {
+							sector.floorheight = lastpos;
+							P_ChangeSector(sector, crush);
+							//return crushed;
+						}
+						return result_e::pastdest;
+					} else {
+						let lastpos = sector.floorheight;
+						sector.floorheight -= speed;
+						let flag = P_ChangeSector(sector, crush);
+						if flag {
+							sector.floorheight = lastpos;
+							P_ChangeSector(sector, crush);
+							return result_e::crushed;
 						}
 					}
-
-					1 => {
-						// UP
-						if sector.floorheight + speed > dest {
-							let lastpos = sector.floorheight;
-							sector.floorheight = dest;
-							let flag = P_ChangeSector(sector, crush as boolean);
-							if flag == 1 {
-								sector.floorheight = lastpos;
-								P_ChangeSector(sector, crush as boolean);
-								//return crushed;
-							}
-							return result_e::pastdest;
-						} else {
-							// COULD GET CRUSHED
-							let lastpos = sector.floorheight;
-							sector.floorheight += speed;
-							let flag = P_ChangeSector(sector, crush as boolean);
-							if flag == 1 {
-								if crush {
-									return result_e::crushed;
-								}
-								sector.floorheight = lastpos;
-								P_ChangeSector(sector, crush as boolean);
-								return result_e::crushed;
-							}
-						}
-					}
-
-					_ => (),
 				}
-			}
 
-			1 => {
-				// CEILING
-				match direction {
-					-1 => {
-						// DOWN
-						if sector.ceilingheight - speed < dest {
-							let lastpos = sector.ceilingheight;
-							sector.ceilingheight = dest;
-							let flag = P_ChangeSector(sector, crush as boolean);
-
-							if flag == 1 {
-								sector.ceilingheight = lastpos;
-								P_ChangeSector(sector, crush as boolean);
-								//return result_e::crushed;
-							}
-							return result_e::pastdest;
-						} else {
-							// COULD GET CRUSHED
-							let lastpos = sector.ceilingheight;
-							sector.ceilingheight -= speed;
-							let flag = P_ChangeSector(sector, crush as boolean);
-
-							if flag == 1 {
-								if crush {
-									return result_e::crushed;
-								}
-								sector.ceilingheight = lastpos;
-								P_ChangeSector(sector, crush as boolean);
+				1 => {
+					// UP
+					if sector.floorheight + speed > dest {
+						let lastpos = sector.floorheight;
+						sector.floorheight = dest;
+						let flag = P_ChangeSector(sector, crush);
+						if flag {
+							sector.floorheight = lastpos;
+							P_ChangeSector(sector, crush);
+							//return crushed;
+						}
+						return result_e::pastdest;
+					} else {
+						// COULD GET CRUSHED
+						let lastpos = sector.floorheight;
+						sector.floorheight += speed;
+						let flag = P_ChangeSector(sector, crush);
+						if flag {
+							if crush {
 								return result_e::crushed;
 							}
+							sector.floorheight = lastpos;
+							P_ChangeSector(sector, crush);
+							return result_e::crushed;
 						}
 					}
-
-					1 => {
-						// UP
-						if sector.ceilingheight + speed > dest {
-							let lastpos = sector.ceilingheight;
-							sector.ceilingheight = dest;
-							let flag = P_ChangeSector(sector, crush as boolean);
-							if flag == 1 {
-								sector.ceilingheight = lastpos;
-								P_ChangeSector(sector, crush as boolean);
-								//return result_e::crushed;
-							}
-							return result_e::pastdest;
-						} else {
-							// let lastpos = sector.ceilingheight;
-							sector.ceilingheight += speed;
-							P_ChangeSector(sector, crush as boolean);
-						}
-					}
-
-					_ => unreachable!(),
 				}
-			}
 
-			_ => unreachable!(),
+				_ => (),
+			}
 		}
-		result_e::ok
+
+		1 => {
+			// CEILING
+			match direction {
+				-1 => {
+					// DOWN
+					if sector.ceilingheight - speed < dest {
+						let lastpos = sector.ceilingheight;
+						sector.ceilingheight = dest;
+						let flag = P_ChangeSector(sector, crush);
+
+						if flag {
+							sector.ceilingheight = lastpos;
+							P_ChangeSector(sector, crush);
+							//return result_e::crushed;
+						}
+						return result_e::pastdest;
+					} else {
+						// COULD GET CRUSHED
+						let lastpos = sector.ceilingheight;
+						sector.ceilingheight -= speed;
+						let flag = P_ChangeSector(sector, crush);
+
+						if flag {
+							if crush {
+								return result_e::crushed;
+							}
+							sector.ceilingheight = lastpos;
+							P_ChangeSector(sector, crush);
+							return result_e::crushed;
+						}
+					}
+				}
+
+				1 => {
+					// UP
+					if sector.ceilingheight + speed > dest {
+						let lastpos = sector.ceilingheight;
+						sector.ceilingheight = dest;
+						let flag = P_ChangeSector(sector, crush);
+						if flag {
+							sector.ceilingheight = lastpos;
+							P_ChangeSector(sector, crush);
+							//return result_e::crushed;
+						}
+						return result_e::pastdest;
+					} else {
+						// let lastpos = sector.ceilingheight;
+						sector.ceilingheight += speed;
+						P_ChangeSector(sector, crush);
+					}
+				}
+
+				_ => unreachable!(),
+			}
+		}
+
+		_ => unreachable!(),
 	}
+	result_e::ok
 }
 
 // MOVE A FLOOR TO IT'S DESTINATION (UP OR DOWN)

@@ -66,16 +66,16 @@ pub struct divline_t {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct intercept_t {
-	frac: fixed_t, // along trace line
-	isaline: i32,
-	d: intercept_t_union,
+	pub frac: fixed_t, // along trace line
+	pub isaline: i32,
+	pub d: intercept_t_union,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-union intercept_t_union {
-	thing: *mut mobj_t,
-	line: *mut line_t,
+pub union intercept_t_union {
+	pub thing: *mut mobj_t,
+	pub line: *mut line_t,
 }
 
 pub const MAXINTERCEPTS: usize = 128;
@@ -99,8 +99,6 @@ unsafe extern "C" {
 pub static mut opentop: fixed_t = 0;
 #[unsafe(no_mangle)]
 pub static mut openbottom: fixed_t = 0;
-#[unsafe(no_mangle)]
-pub static mut lowfloor: fixed_t = 0;
 */
 
 pub const PT_ADDLINES: i32 = 1;
@@ -110,23 +108,6 @@ pub const PT_EARLYOUT: i32 = 4;
 /*
 #[unsafe(no_mangle)]
 pub static mut trace: divline_t = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
-
-// P_MAP
-
-// If "floatok" true, move would be ok
-// if within "tmfloorz - tmceilingz".
-#[unsafe(no_mangle)]
-pub static mut floatok: i32 = 0;
-#[unsafe(no_mangle)]
-pub static mut tmfloorz: fixed_t = 0;
-#[unsafe(no_mangle)]
-pub static mut tmceilingz: fixed_t = 0;
-
-#[unsafe(no_mangle)]
-pub static mut ceilingline: *mut line_t = null_mut();
-
-#[unsafe(no_mangle)]
-pub static mut linetarget: *mut mobj_t = null_mut(); // who got hit (or NULL)
 */
 
 // P_SETUP

@@ -91,6 +91,7 @@ pub struct side_t {
 
 // Move clipping aid for LineDefs.
 #[repr(C)]
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
 pub enum slopetype_t {
 	ST_HORIZONTAL,
 	ST_VERTICAL,
