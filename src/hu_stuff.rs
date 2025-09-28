@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::{c_char, c_int, c_void},
+	ffi::{c_char, c_int},
 	ptr::{null, null_mut},
 };
 
@@ -39,6 +39,7 @@ use crate::{
 	},
 	m_menu::showMessages,
 	r_defs::patch_t,
+	s_sound::S_StartSound,
 	sounds::sfxenum_t,
 	w_wad::W_CacheLumpName,
 	z_zone::PU_STATIC,
@@ -468,10 +469,6 @@ pub(crate) fn HU_Erase() {
 		HUlib_eraseIText(&mut w_chat);
 		HUlib_eraseTextLine(&mut w_title);
 	}
-}
-
-unsafe extern "C" {
-	fn S_StartSound(origin: *mut c_void, sound_id: sfxenum_t);
 }
 
 #[allow(static_mut_refs)]

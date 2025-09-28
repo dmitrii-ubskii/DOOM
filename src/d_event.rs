@@ -78,7 +78,3 @@ pub static mut events: [event_t; MAXEVENTS] =
 pub static mut eventhead: usize = 0;
 #[unsafe(no_mangle)]
 pub static mut eventtail: usize = 0;
-
-unsafe extern "C" {
-	pub static mut gameaction: gameaction_t;
-}

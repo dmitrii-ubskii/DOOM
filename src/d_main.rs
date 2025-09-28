@@ -16,7 +16,7 @@ use libc::{
 use crate::{
 	am_map::{AM_Drawer, automapactive},
 	d_englsh::{D_CDROM, D_DEVSTR},
-	d_event::{MAXEVENTS, event_t, eventhead, events, eventtail, gameaction, gameaction_t},
+	d_event::{MAXEVENTS, event_t, eventhead, events, eventtail, gameaction_t},
 	d_net::BACKUPTICS,
 	d_player::{player_t, playerstate_t},
 	d_ticcmd::ticcmd_t,
@@ -29,8 +29,8 @@ use crate::{
 	g_game::{
 		G_BeginRecording, G_BuildTiccmd, G_DeferedPlayDemo, G_InitNew, G_LoadGame, G_RecordDemo,
 		G_Responder, G_Ticker, G_TimeDemo, consoleplayer, deathmatch, demorecording, displayplayer,
-		forwardmove, gametic, netgame, nodrawers, paused, sidemove, singledemo, statcopy, usergame,
-		viewactive,
+		forwardmove, gameaction, gamestate, gametic, netgame, nodrawers, paused, players, sidemove,
+		singledemo, statcopy, usergame, viewactive,
 	},
 	hu_stuff::{HU_Drawer, HU_Erase, HU_Init},
 	i_system::{I_Error, I_GetTime, I_Init},
@@ -39,11 +39,10 @@ use crate::{
 	m_misc::M_LoadDefaults,
 	myargc, myargv,
 	p_setup::P_Init,
-	p_tick::players,
 	s_sound::{S_Init, S_StartMusic, S_UpdateSounds, snd_MusicVolume, snd_SfxVolume},
 	sounds::musicenum_t,
 	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
-	w_wad::{W_CheckNumForName, W_InitMultipleFiles},
+	w_wad::{W_CacheLumpName, W_CheckNumForName, W_InitMultipleFiles},
 	wi_stuff::WI_Drawer,
 	z_zone::{PU_CACHE, Z_Init},
 };
@@ -137,7 +136,6 @@ unsafe extern "C" {
 	static mut viewheight: i32;
 	static mut viewwindowx: usize;
 	static mut viewwindowy: usize;
-	static mut gamestate: gamestate_t;
 
 	fn F_Drawer();
 	fn I_FinishUpdate();
@@ -149,7 +147,6 @@ unsafe extern "C" {
 	fn R_FillBackScreen();
 	fn R_RenderPlayerView(player: &mut player_t);
 	fn ST_Drawer(_: boolean, redrawsbar: boolean);
-	fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void;
 }
 
 fn D_Display() {

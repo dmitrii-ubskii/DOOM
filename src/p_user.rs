@@ -7,7 +7,7 @@ use crate::{
 	d_player::{CF_NOCLIP, CF_NOMOMENTUM, player_t, playerstate_t},
 	doomdef::{GameMode_t, powertype_t, weapontype_t},
 	doomstat::gamemode,
-	info::{state_t, statenum_t},
+	info::{statenum_t, states},
 	m_fixed::{FRACUNIT, FixedMul, fixed_t},
 	p_local::VIEWHEIGHT,
 	p_map::P_UseLines,
@@ -101,10 +101,6 @@ fn P_CalcHeight(player: &mut player_t) {
 			player.viewz = mo.ceilingz - 4 * FRACUNIT;
 		}
 	}
-}
-
-unsafe extern "C" {
-	static mut states: [state_t; statenum_t::NUMSTATES as usize];
 }
 
 // P_MovePlayer

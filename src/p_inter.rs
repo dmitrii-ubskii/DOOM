@@ -3,7 +3,7 @@
 // DESCRIPTION:
 //	Handling interactions (i.e., collisions).
 
-use std::{ffi::c_void, ptr::null_mut};
+use std::ptr::null_mut;
 
 use crate::{
 	am_map::{AM_Stop, automapactive},
@@ -32,6 +32,8 @@ use crate::{
 		MF_NOCLIP, MF_NOGRAVITY, MF_SHADOW, MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID, P_RemoveMobj,
 		P_SetMobjState, P_SpawnMobj, mobj_t,
 	},
+	p_pspr::P_DropWeapon,
+	s_sound::S_StartSound,
 	sounds::sfxenum_t,
 	tables::{ANG180, ANGLETOFINESHIFT, angle_t, finecos, finesine},
 };
@@ -123,10 +125,6 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 
 		1
 	}
-}
-
-unsafe extern "C" {
-	fn S_StartSound(origin: *mut c_void, sound_id: sfxenum_t);
 }
 
 // P_GiveWeapon
@@ -640,10 +638,6 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn P_DropWeapon(player: *mut player_t);
-}
-
 // KillMobj
 #[allow(static_mut_refs)]
 fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
@@ -682,7 +676,7 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 
 			target.flags &= !MF_SOLID;
 			(*target.player).playerstate = playerstate_t::PST_DEAD;
-			P_DropWeapon(target.player);
+			P_DropWeapon(&mut *target.player);
 
 			if std::ptr::eq(target.player, &raw const players[consoleplayer]) && automapactive != 0
 			{

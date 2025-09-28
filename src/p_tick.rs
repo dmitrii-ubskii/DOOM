@@ -1,10 +1,9 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use crate::{
-	d_player::player_t,
 	d_think::{think_t, thinker_t},
 	doomdef::MAXPLAYERS,
-	g_game::paused,
+	g_game::{consoleplayer, demoplayback, netgame, paused, playeringame, players},
 	m_menu::menuactive,
 	p_local::thinkercap,
 	p_mobj::{P_MobjThinker, P_RespawnSpecials},
@@ -81,14 +80,6 @@ fn run_thinkers() {
 	}
 }
 
-unsafe extern "C" {
-	static netgame: i32;
-	static demoplayback: i32;
-	pub static mut players: [player_t; MAXPLAYERS];
-	pub static playeringame: [i32; MAXPLAYERS];
-	static mut consoleplayer: i32;
-}
-
 // P_Ticker
 pub(crate) fn P_Ticker() {
 	unsafe {
@@ -98,11 +89,7 @@ pub(crate) fn P_Ticker() {
 		}
 
 		// pause if in menu and at least one tic has been run
-		if netgame == 0
-			&& menuactive
-			&& demoplayback == 0
-			&& players[consoleplayer as usize].viewz != 1
-		{
+		if netgame == 0 && menuactive && demoplayback == 0 && players[consoleplayer].viewz != 1 {
 			return;
 		}
 

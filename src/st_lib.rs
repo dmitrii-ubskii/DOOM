@@ -1,21 +1,15 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{
-	ffi::{c_char, c_void},
-	ptr::null_mut,
-};
+use std::ptr::null_mut;
 
 use crate::{
 	i_system::I_Error,
 	r_defs::patch_t,
 	st_stuff::ST_Y,
 	v_video::{V_CopyRect, V_DrawPatch},
+	w_wad::W_CacheLumpName,
 	z_zone::PU_STATIC,
 };
-
-unsafe extern "C" {
-	fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void;
-}
 
 // Background and foreground screen numbers
 const BG: usize = 4;

@@ -1211,8 +1211,6 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 static mut levelTimer: bool = false;
 static mut levelTimeCount: usize = 0;
 
-unsafe extern "C" {}
-
 #[allow(static_mut_refs, clippy::needless_range_loop)]
 pub(crate) fn P_UpdateSpecials() {
 	unsafe {
