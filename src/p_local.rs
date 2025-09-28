@@ -9,6 +9,8 @@ use crate::{
 	r_defs::line_t,
 };
 
+type boolean = i32;
+
 pub const FLOATSPEED: i32 = FRACUNIT * 4;
 
 pub const MAXHEALTH: i32 = 100;
@@ -67,7 +69,7 @@ pub struct divline_t {
 #[derive(Clone, Copy)]
 pub struct intercept_t {
 	pub frac: fixed_t, // along trace line
-	pub isaline: i32,
+	pub isaline: boolean,
 	pub d: intercept_t_union,
 }
 
@@ -80,35 +82,10 @@ pub union intercept_t_union {
 
 pub const MAXINTERCEPTS: usize = 128;
 
-/*
-#[unsafe(no_mangle)]
-pub static mut intercepts: [intercept_t; MAXINTERCEPTS] =
-	[intercept_t { frac: 0, isaline: 0, d: intercept_t_union { thing: null_mut() } };
-		MAXINTERCEPTS];
-#[unsafe(no_mangle)]
-pub static mut intercept_p: *mut intercept_t = null_mut();
-*/
-
-unsafe extern "C" {
-	pub static mut opentop: fixed_t;
-	pub static mut openbottom: fixed_t;
-}
-
-/*
-#[unsafe(no_mangle)]
-pub static mut opentop: fixed_t = 0;
-#[unsafe(no_mangle)]
-pub static mut openbottom: fixed_t = 0;
-*/
-
 pub const PT_ADDLINES: i32 = 1;
 pub const PT_ADDTHINGS: i32 = 2;
 pub const PT_EARLYOUT: i32 = 4;
 
-/*
-#[unsafe(no_mangle)]
-pub static mut trace: divline_t = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
-*/
 
 // P_SETUP
 /*

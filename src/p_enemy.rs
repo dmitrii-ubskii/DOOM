@@ -27,6 +27,10 @@ use crate::{
 		P_AimLineAttack, P_CheckPosition, P_LineAttack, P_RadiusAttack, P_TeleportMove, P_TryMove,
 		floatok, numspechit, spechit, tmfloorz,
 	},
+	p_maputl::{
+		P_AproxDistance, P_BlockThingsIterator, P_LineOpening, P_SetThingPosition,
+		P_UnsetThingPosition, openrange,
+	},
 	p_mobj::{
 		MF_AMBUSH, MF_CORPSE, MF_FLOAT, MF_INFLOAT, MF_JUSTATTACKED, MF_JUSTHIT, MF_SHADOW,
 		MF_SHOOTABLE, MF_SKULLFLY, MF_SOLID, P_RemoveMobj, P_SetMobjState, P_SpawnMissile,
@@ -42,8 +46,6 @@ use crate::{
 	sounds::sfxenum_t,
 	tables::{ANG90, ANG180, ANG270, ANGLETOFINESHIFT, angle_t, finecos, finesine},
 };
-
-type boolean = i32;
 
 #[repr(C)]
 #[allow(clippy::upper_case_acronyms)] // ???
@@ -106,9 +108,6 @@ static mut soundtarget: *mut mobj_t = null_mut();
 
 unsafe extern "C" {
 	static mut validcount: i32;
-	static mut openrange: fixed_t;
-
-	fn P_LineOpening(linedef: *mut line_t);
 }
 
 fn P_RecursiveSound(sec: &mut sector_t, soundblocks: i32) {
@@ -161,10 +160,6 @@ pub extern "C" fn P_NoiseAlert(target: *mut mobj_t, emmiter: &mut mobj_t) {
 		validcount += 1;
 		P_RecursiveSound(&mut *(*emmiter.subsector).sector, 0);
 	}
-}
-
-unsafe extern "C" {
-	fn P_AproxDistance(x: fixed_t, y: fixed_t) -> fixed_t;
 }
 
 // P_CheckMeleeRange
@@ -994,27 +989,25 @@ static mut vileobj: *mut mobj_t = null_mut();
 static mut viletryx: fixed_t = 0;
 static mut viletryy: fixed_t = 0;
 
-extern "C" fn PIT_VileCheck(thing: *mut mobj_t) -> boolean {
+fn PIT_VileCheck(thing: &mut mobj_t) -> bool {
 	unsafe {
-		let thing = &mut *thing;
-
 		if thing.flags & MF_CORPSE == 0 {
-			return 1; // not a monster
+			return true; // not a monster
 		}
 
 		if thing.tics != -1 {
-			return 1; // not lying still yet
+			return true; // not lying still yet
 		}
 
 		if (*thing.info).raisestate == statenum_t::S_NULL {
-			return 1; // monster doesn't have a raise state
+			return true; // monster doesn't have a raise state
 		}
 
 		let maxdist = (*thing.info).radius + mobjinfo[mobjtype_t::MT_VILE as usize].radius;
 
 		if fixed_t::abs(thing.x - viletryx) > maxdist || fixed_t::abs(thing.y - viletryy) > maxdist
 		{
-			return 1; // not actually touching
+			return true; // not actually touching
 		}
 
 		corpsehit = thing;
@@ -1026,16 +1019,8 @@ extern "C" fn PIT_VileCheck(thing: *mut mobj_t) -> boolean {
 
 		// !check: doesn't fit here
 		// check: got one, so stop checking
-		(!check) as boolean
+		!check
 	}
-}
-
-unsafe extern "C" {
-	fn P_BlockThingsIterator(
-		x: i32,
-		y: i32,
-		func: unsafe extern "C" fn(*mut mobj_t) -> boolean,
-	) -> boolean;
 }
 
 // A_VileChase
@@ -1058,7 +1043,7 @@ pub(crate) fn A_VileChase(actor: &mut mobj_t) {
 					// Call PIT_VileCheck to check
 					// whether object is a corpse
 					// that canbe raised.
-					if P_BlockThingsIterator(bx, by, PIT_VileCheck as _) == 0 {
+					if !P_BlockThingsIterator(bx, by, PIT_VileCheck) {
 						// got one!
 						let temp = actor.target;
 						actor.target = corpsehit;
@@ -1102,11 +1087,6 @@ pub(crate) fn A_StartFire(actor: &mut mobj_t) {
 pub(crate) fn A_FireCrackle(actor: &mut mobj_t) {
 	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_flame);
 	A_Fire(actor);
-}
-
-unsafe extern "C" {
-	fn P_SetThingPosition(thing: *mut mobj_t);
-	fn P_UnsetThingPosition(thing: *mut mobj_t);
 }
 
 pub(crate) fn A_Fire(actor: &mut mobj_t) {

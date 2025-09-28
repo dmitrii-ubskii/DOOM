@@ -18,6 +18,7 @@ use crate::{
 	m_fixed::FRACBITS,
 	p_ceiling::{P_AddActiveCeiling, activeceilings},
 	p_local::thinkercap,
+	p_maputl::P_SetThingPosition,
 	p_mobj::{P_RemoveMobj, mobj_t},
 	p_plats::P_AddActivePlat,
 	p_pspr::psprnum_t,
@@ -256,10 +257,6 @@ pub(crate) fn P_ArchiveThinkers() {
 	}
 }
 
-unsafe extern "C" {
-	fn P_SetThingPosition(thing: *mut mobj_t);
-}
-
 // P_UnArchiveThinkers
 pub(crate) fn P_UnArchiveThinkers() {
 	unsafe {
@@ -296,7 +293,7 @@ pub(crate) fn P_UnArchiveThinkers() {
 						(*mobj).player = &raw mut players[(*mobj).player as usize - 1];
 						(*(*mobj).player).mo = mobj;
 					}
-					P_SetThingPosition(mobj);
+					P_SetThingPosition(&mut *mobj);
 					(*mobj).info = &raw mut mobjinfo[(*mobj).ty as usize];
 					(*mobj).floorz = (*(*(*mobj).subsector).sector).floorheight;
 					(*mobj).ceilingz = (*(*(*mobj).subsector).sector).ceilingheight;

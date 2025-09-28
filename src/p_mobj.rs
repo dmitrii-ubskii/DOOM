@@ -87,6 +87,7 @@ use crate::{
 		P_AimLineAttack, P_CheckPosition, P_SlideMove, P_TryMove, attackrange, ceilingline,
 		linetarget,
 	},
+	p_maputl::{P_AproxDistance, P_SetThingPosition, P_UnsetThingPosition},
 	p_pspr::P_SetupPsprites,
 	p_setup::{deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_AddThinker, P_RemoveThinker, leveltime},
@@ -450,10 +451,6 @@ fn P_XYMovement(mo: &mut mobj_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn P_AproxDistance(x: fixed_t, y: fixed_t) -> fixed_t;
-}
-
 // P_ZMovement
 fn P_ZMovement(mo: &mut mobj_t) {
 	unsafe {
@@ -662,11 +659,6 @@ pub extern "C" fn P_MobjThinker(mobj: &mut mobj_t) {
 }
 
 // P_SpawnMobj
-
-unsafe extern "C" {
-	fn P_SetThingPosition(thing: *mut mobj_t);
-}
-
 pub fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut mobj_t {
 	unsafe {
 		let mobj = Z_Malloc(size_of::<mobj_t>(), PU_LEVEL, null_mut());
@@ -719,10 +711,6 @@ pub fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut m
 	}
 }
 
-unsafe extern "C" {
-	fn P_UnsetThingPosition(thing: *mut mobj_t);
-}
-
 // P_RemoveMobj
 static mut itemrespawnque: [mapthing_t; ITEMQUESIZE] =
 	[mapthing_t { x: 0, y: 0, angle: 0, ty: 0, options: 0 }; ITEMQUESIZE];
@@ -749,7 +737,7 @@ pub fn P_RemoveMobj(mobj: &mut mobj_t) {
 	}
 
 	// unlink from sector and block lists
-	unsafe { P_UnsetThingPosition(mobj) };
+	P_UnsetThingPosition(mobj);
 
 	// stop any playing sound
 	S_StopSound((mobj as *mut mobj_t).cast());

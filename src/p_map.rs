@@ -14,9 +14,11 @@ use crate::{
 	m_fixed::{FRACBITS, FRACUNIT, FixedDiv, FixedMul, fixed_t},
 	m_random::P_Random,
 	p_inter::{P_DamageMobj, P_TouchSpecialThing},
-	p_local::{
-		MAPBLOCKSHIFT, MAXRADIUS, PT_ADDLINES, PT_ADDTHINGS, USERANGE, divline_t, intercept_t,
-		openbottom, opentop,
+	p_local::{MAPBLOCKSHIFT, MAXRADIUS, PT_ADDLINES, PT_ADDTHINGS, USERANGE, intercept_t},
+	p_maputl::{
+		P_AproxDistance, P_BlockLinesIterator, P_BlockThingsIterator, P_BoxOnLineSide,
+		P_LineOpening, P_PathTraverse, P_PointOnLineSide, P_SetThingPosition, P_UnsetThingPosition,
+		lowfloor, openbottom, openrange, opentop, trace,
 	},
 	p_mobj::{
 		MF_DROPOFF, MF_DROPPED, MF_FLOAT, MF_MISSILE, MF_NOBLOOD, MF_NOCLIP, MF_PICKUP,
@@ -34,8 +36,6 @@ use crate::{
 	sounds::sfxenum_t,
 	tables::{ANG180, ANGLETOFINESHIFT, angle_t, finecos, finesine},
 };
-
-type boolean = i32;
 
 static mut tmbbox: [fixed_t; 4] = [0; 4];
 static mut tmthing: *mut mobj_t = null_mut();
@@ -65,34 +65,32 @@ pub static mut numspechit: usize = 0;
 // TELEPORT MOVE
 
 // PIT_StompThing
-pub unsafe extern "C" fn PIT_StompThing(thing: *mut mobj_t) -> boolean {
+pub fn PIT_StompThing(thing: &mut mobj_t) -> bool {
 	unsafe {
-		let thing = &mut *thing;
-
 		if thing.flags & MF_SHOOTABLE == 0 {
-			return 1;
+			return true;
 		}
 
 		let blockdist = thing.radius + (*tmthing).radius;
 
 		if i32::abs(thing.x - tmx) >= blockdist || i32::abs(thing.y - tmy) >= blockdist {
 			// didn't hit it
-			return 1;
+			return true;
 		}
 
 		// don't clip against self
 		if ptr::eq(thing, tmthing) {
-			return 1;
+			return true;
 		}
 
 		// monsters don't stomp things except on boss level
 		if (*tmthing).player.is_null() && gamemap != 30 {
-			return 0;
+			return false;
 		}
 
 		P_DamageMobj(thing, tmthing, tmthing, 10000);
 
-		1
+		true
 	}
 }
 
@@ -100,20 +98,6 @@ unsafe extern "C" {
 	static mut validcount: i32;
 
 	fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t;
-	fn P_SetThingPosition(thing: *mut mobj_t);
-	fn P_UnsetThingPosition(thing: *mut mobj_t);
-
-	fn P_BlockThingsIterator(
-		x: i32,
-		y: i32,
-		func: unsafe extern "C" fn(*mut mobj_t) -> boolean,
-	) -> boolean;
-
-	fn P_BlockLinesIterator(
-		x: i32,
-		y: i32,
-		func: unsafe extern "C" fn(*mut line_t) -> boolean,
-	) -> boolean;
 }
 
 // P_TeleportMove
@@ -153,7 +137,7 @@ pub fn P_TeleportMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 
 		for bx in xl..=xh {
 			for by in yl..=yh {
-				if P_BlockThingsIterator(bx, by, PIT_StompThing) == 0 {
+				if !P_BlockThingsIterator(bx, by, PIT_StompThing) {
 					return false;
 				}
 			}
@@ -176,29 +160,21 @@ pub fn P_TeleportMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 
 // MOVEMENT ITERATOR FUNCTIONS
 
-unsafe extern "C" {
-	static mut lowfloor: fixed_t;
-
-	fn P_BoxOnLineSide(tmbox: *const fixed_t, ld: *mut line_t) -> i32;
-	fn P_LineOpening(linedef: *mut line_t);
-}
-
 // PIT_CheckLine
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 #[allow(static_mut_refs)]
-pub unsafe extern "C" fn PIT_CheckLine(ld: *mut line_t) -> boolean {
+pub fn PIT_CheckLine(ld: &mut line_t) -> bool {
 	unsafe {
-		let ld = &mut *ld;
 		if tmbbox[BOXRIGHT] <= ld.bbox[BOXLEFT]
 			|| tmbbox[BOXLEFT] >= ld.bbox[BOXRIGHT]
 			|| tmbbox[BOXTOP] <= ld.bbox[BOXBOTTOM]
 			|| tmbbox[BOXBOTTOM] >= ld.bbox[BOXTOP]
 		{
-			return 1;
+			return true;
 		}
 
-		if P_BoxOnLineSide(tmbbox.as_ptr(), ld) != -1 {
-			return 1;
+		if P_BoxOnLineSide(&tmbbox, ld).is_some() {
+			return true;
 		}
 
 		// A line has been hit
@@ -213,16 +189,16 @@ pub unsafe extern "C" fn PIT_CheckLine(ld: *mut line_t) -> boolean {
 		// could be crossed in either order.
 
 		if ld.backsector.is_null() {
-			return 0; // one sided line
+			return false; // one sided line
 		}
 
 		if (*tmthing).flags & MF_MISSILE == 0 {
 			if ld.flags & ML_BLOCKING != 0 {
-				return 0; // explicitly blocking everything
+				return false; // explicitly blocking everything
 			}
 
 			if (*tmthing).player.is_null() && ld.flags & ML_BLOCKMONSTERS != 0 {
-				return 0; // block monsters only
+				return false; // block monsters only
 			}
 		}
 
@@ -249,29 +225,27 @@ pub unsafe extern "C" fn PIT_CheckLine(ld: *mut line_t) -> boolean {
 			numspechit += 1;
 		}
 
-		1
+		true
 	}
 }
 
 // PIT_CheckThing
-pub unsafe extern "C" fn PIT_CheckThing(thing: *mut mobj_t) -> boolean {
+pub fn PIT_CheckThing(thing: &mut mobj_t) -> bool {
 	unsafe {
-		let thing = &mut *thing;
-
 		if thing.flags & (MF_SOLID | MF_SPECIAL | MF_SHOOTABLE) == 0 {
-			return 1;
+			return true;
 		}
 
 		let blockdist = thing.radius + (*tmthing).radius;
 
 		if i32::abs(thing.x - tmx) >= blockdist || i32::abs(thing.y - tmy) >= blockdist {
 			// didn't hit it
-			return 1;
+			return true;
 		}
 
 		// don't clip against self
 		if ptr::eq(thing, tmthing) {
-			return 1;
+			return true;
 		}
 
 		// check for skulls slamming into things
@@ -287,17 +261,17 @@ pub unsafe extern "C" fn PIT_CheckThing(thing: *mut mobj_t) -> boolean {
 
 			P_SetMobjState(&mut *tmthing, (*(*tmthing).info).spawnstate);
 
-			return 0; // stop moving
+			return false; // stop moving
 		}
 
 		// missiles can hit other things
 		if (*tmthing).flags & MF_MISSILE != 0 {
 			// see if it went over / under
 			if (*tmthing).z > thing.z + thing.height {
-				return 1; // overhead
+				return true; // overhead
 			}
 			if (*tmthing).z + (*tmthing).height < thing.z {
-				return 1; // underneath
+				return true; // underneath
 			}
 
 			if !(*tmthing).target.is_null()
@@ -309,19 +283,19 @@ pub unsafe extern "C" fn PIT_CheckThing(thing: *mut mobj_t) -> boolean {
 			{
 				// Don't hit same species as originator.
 				if ptr::eq(thing, (*tmthing).target) {
-					return 1;
+					return true;
 				}
 
 				if thing.ty != mobjtype_t::MT_PLAYER {
 					// Explode, but do no damage.
 					// Let players missile other players.
-					return 0;
+					return false;
 				}
 			}
 
 			if thing.flags & MF_SHOOTABLE == 0 {
 				// didn't do any damage
-				return (thing.flags & MF_SOLID == 0) as boolean;
+				return thing.flags & MF_SOLID == 0;
 			}
 
 			// damage / explode
@@ -329,20 +303,20 @@ pub unsafe extern "C" fn PIT_CheckThing(thing: *mut mobj_t) -> boolean {
 			P_DamageMobj(thing, tmthing, (*tmthing).target, damage);
 
 			// don't traverse any more
-			return 0;
+			return false;
 		}
 
 		// check for special pickup
 		if thing.flags & MF_SPECIAL != 0 {
-			let solid = thing.flags & MF_SOLID;
+			let solid = (thing.flags & MF_SOLID) != 0;
 			if tmflags & MF_PICKUP != 0 {
 				// can remove thing
 				P_TouchSpecialThing(thing, &mut *tmthing);
 			}
-			return (solid == 0) as boolean;
+			return !solid;
 		}
 
-		(thing.flags & MF_SOLID == 0) as boolean
+		thing.flags & MF_SOLID == 0
 	}
 }
 
@@ -413,7 +387,7 @@ pub fn P_CheckPosition(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 
 		for bx in xl..=xh {
 			for by in yl..=yh {
-				if P_BlockThingsIterator(bx, by, PIT_CheckThing) == 0 {
+				if !P_BlockThingsIterator(bx, by, PIT_CheckThing) {
 					return false;
 				}
 			}
@@ -427,7 +401,7 @@ pub fn P_CheckPosition(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 
 		for bx in xl..=xh {
 			for by in yl..=yh {
-				if P_BlockLinesIterator(bx, by, PIT_CheckLine) == 0 {
+				if !P_BlockLinesIterator(bx, by, PIT_CheckLine) {
 					return false;
 				}
 			}
@@ -435,10 +409,6 @@ pub fn P_CheckPosition(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 
 		true
 	}
-}
-
-unsafe extern "C" {
-	fn P_PointOnLineSide(x: fixed_t, y: fixed_t, line: *const line_t) -> usize;
 }
 
 // P_TryMove
@@ -490,11 +460,11 @@ pub fn P_TryMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 				numspechit -= 1;
 				// see if the line was crossed
 				let ld = spechit[numspechit];
-				let side = P_PointOnLineSide(thing.x, thing.y, ld);
-				let oldside = P_PointOnLineSide(oldx, oldy, ld);
+				let side = P_PointOnLineSide(thing.x, thing.y, &*ld);
+				let oldside = P_PointOnLineSide(oldx, oldy, &*ld);
 				if side != oldside {
 					if (*ld).special != 0 {
-						P_CrossSpecialLine(ld.offset_from(lines) as usize, oldside, thing);
+						P_CrossSpecialLine(ld.offset_from(lines) as usize, oldside as usize, thing);
 					}
 				}
 			}
@@ -551,7 +521,6 @@ static mut tmymove: fixed_t = 0;
 
 unsafe extern "C" {
 	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
-	fn P_AproxDistance(x: fixed_t, y: fixed_t) -> fixed_t;
 }
 
 // P_HitSlideLine
@@ -582,7 +551,7 @@ fn P_HitSlideLine(ld: &line_t) {
 
 		let mut lineangle = R_PointToAngle2(0, 0, ld.dx, ld.dy);
 
-		if side == 1 {
+		if side {
 			lineangle += ANG180;
 		}
 
@@ -604,25 +573,19 @@ fn P_HitSlideLine(ld: &line_t) {
 	}
 }
 
-unsafe extern "C" {
-	static mut openrange: fixed_t;
-}
-
 // PTR_SlideTraverse
-pub unsafe extern "C" fn PTR_SlideTraverse(intercept: *mut intercept_t) -> boolean {
+pub fn PTR_SlideTraverse(intercept: &mut intercept_t) -> bool {
 	unsafe {
-		let intercept = &mut *intercept;
-
 		if intercept.isaline == 0 {
 			I_Error(c"PTR_SlideTraverse: not a line?".as_ptr());
 		}
 
-		let li = intercept.d.line;
+		let li = &mut *intercept.d.line;
 
-		if (*li).flags & ML_TWOSIDED == 0 {
-			if P_PointOnLineSide((*slidemo).x, (*slidemo).y, li) != 0 {
+		if li.flags & ML_TWOSIDED == 0 {
+			if P_PointOnLineSide((*slidemo).x, (*slidemo).y, li) {
 				// don't hit the back side
-				return 1;
+				return true;
 			}
 		} else {
 			// set openrange, opentop, openbottom
@@ -636,7 +599,7 @@ pub unsafe extern "C" fn PTR_SlideTraverse(intercept: *mut intercept_t) -> boole
 				// too big a step up
 			} else {
 				// this line doesn't block movement
-				return 1;
+				return true;
 			}
 		}
 
@@ -649,19 +612,8 @@ pub unsafe extern "C" fn PTR_SlideTraverse(intercept: *mut intercept_t) -> boole
 			bestslideline = li;
 		}
 
-		0 // stop
+		false // stop
 	}
-}
-
-unsafe extern "C" {
-	fn P_PathTraverse(
-		x1: fixed_t,
-		y1: fixed_t,
-		x2: fixed_t,
-		y2: fixed_t,
-		flags: i32,
-		trav: unsafe extern "C" fn(*mut intercept_t) -> boolean,
-	) -> boolean;
 }
 
 // P_SlideMove
@@ -798,15 +750,13 @@ static mut aimslope: fixed_t = 0;
 
 // PTR_AimTraverse
 // Sets linetaget and aimslope when a target is aimed at.
-unsafe extern "C" fn PTR_AimTraverse(intercept: *mut intercept_t) -> boolean {
+fn PTR_AimTraverse(intercept: &mut intercept_t) -> bool {
 	unsafe {
-		let intercept = &mut *intercept;
-
 		if intercept.isaline != 0 {
-			let li = intercept.d.line;
+			let li = &*intercept.d.line;
 
-			if (*li).flags & ML_TWOSIDED == 0 {
-				return 0; // stop
+			if li.flags & ML_TWOSIDED == 0 {
+				return false; // stop
 			}
 
 			// Crosses a two sided line.
@@ -815,19 +765,19 @@ unsafe extern "C" fn PTR_AimTraverse(intercept: *mut intercept_t) -> boolean {
 			P_LineOpening(li);
 
 			if openbottom >= opentop {
-				return 0; // stop
+				return false; // stop
 			}
 
 			let dist = FixedMul(attackrange, intercept.frac);
 
-			if (*(*li).frontsector).floorheight != (*(*li).backsector).floorheight {
+			if (*li.frontsector).floorheight != (*li.backsector).floorheight {
 				let slope = FixedDiv(openbottom - shootz, dist);
 				if slope > bottomslope {
 					bottomslope = slope;
 				}
 			}
 
-			if (*(*li).frontsector).ceilingheight != (*(*li).backsector).ceilingheight {
+			if (*li.frontsector).ceilingheight != (*li.backsector).ceilingheight {
 				let slope = FixedDiv(opentop - shootz, dist);
 				if slope < topslope {
 					topslope = slope;
@@ -835,20 +785,20 @@ unsafe extern "C" fn PTR_AimTraverse(intercept: *mut intercept_t) -> boolean {
 			}
 
 			if topslope <= bottomslope {
-				return 0; // stop
+				return false; // stop
 			}
 
-			return 1; // shot continues
+			return true; // shot continues
 		}
 
 		// shoot a thing
 		let th = intercept.d.thing;
 		if ptr::eq(th, shootthing) {
-			return 1; // can't shoot self
+			return true; // can't shoot self
 		}
 
 		if (*th).flags & MF_SHOOTABLE == 0 {
-			return 1; // corpse or something
+			return true; // corpse or something
 		}
 
 		// check angles to see if the thing can be aimed at
@@ -856,13 +806,13 @@ unsafe extern "C" fn PTR_AimTraverse(intercept: *mut intercept_t) -> boolean {
 		let mut thingtopslope = FixedDiv((*th).z + (*th).height - shootz, dist);
 
 		if thingtopslope < bottomslope {
-			return 1; // shot over the thing
+			return true; // shot over the thing
 		}
 
 		let mut thingbottomslope = FixedDiv((*th).z - shootz, dist);
 
 		if thingbottomslope > topslope {
-			return 1; // shot under the thing
+			return true; // shot under the thing
 		}
 
 		// this thing can be hit!
@@ -877,58 +827,52 @@ unsafe extern "C" fn PTR_AimTraverse(intercept: *mut intercept_t) -> boolean {
 		aimslope = (thingtopslope + thingbottomslope) / 2;
 		linetarget = th;
 
-		0 // don't go any farther
+		false // don't go any farther
 	}
 }
 
-unsafe extern "C" {
-	pub static mut trace: divline_t;
-}
-
 // PTR_ShootTraverse
-pub unsafe extern "C" fn PTR_ShootTraverse(intercept: *mut intercept_t) -> boolean {
+fn PTR_ShootTraverse(intercept: &mut intercept_t) -> bool {
 	unsafe {
-		if (*intercept).isaline != 0 {
-			let li = (*intercept).d.line;
+		if intercept.isaline != 0 {
+			let li = &mut *intercept.d.line;
 
-			if (*li).special != 0 {
-				P_ShootSpecialLine(&mut *shootthing, &mut *li);
+			if li.special != 0 {
+				P_ShootSpecialLine(&mut *shootthing, li);
 			}
 
-			if (*li).flags & ML_TWOSIDED != 0 {
+			if li.flags & ML_TWOSIDED != 0 {
 				// crosses a two sided line
 				P_LineOpening(li);
 
-				let dist = FixedMul(attackrange, (*intercept).frac);
+				let dist = FixedMul(attackrange, intercept.frac);
 
-				if !((*(*li).frontsector).floorheight != (*(*li).backsector).floorheight
+				if !((*li.frontsector).floorheight != (*li.backsector).floorheight
 					&& FixedDiv(openbottom - shootz, dist) > aimslope
-					|| (*(*li).frontsector).ceilingheight != (*(*li).backsector).ceilingheight
+					|| (*li.frontsector).ceilingheight != (*li.backsector).ceilingheight
 						&& FixedDiv(opentop - shootz, dist) < aimslope)
 				{
 					// shot continues
-					return 1;
+					return true;
 				}
 			}
 
 			// hit line
 			// position a bit closer
-			let frac = (*intercept).frac - FixedDiv(4 * FRACUNIT, attackrange);
+			let frac = intercept.frac - FixedDiv(4 * FRACUNIT, attackrange);
 			let x = trace.x + FixedMul(trace.dx, frac);
 			let y = trace.y + FixedMul(trace.dy, frac);
 			let z = shootz + FixedMul(aimslope, FixedMul(frac, attackrange));
 
-			if (*(*li).frontsector).ceilingpic as usize == skyflatnum {
+			if (*li.frontsector).ceilingpic as usize == skyflatnum {
 				// don't shoot the sky!
-				if z > (*(*li).frontsector).ceilingheight {
-					return 0;
+				if z > (*li.frontsector).ceilingheight {
+					return false;
 				}
 
 				// it's a sky hack wall
-				if !(*li).backsector.is_null()
-					&& (*(*li).backsector).ceilingpic as usize == skyflatnum
-				{
-					return 0;
+				if !li.backsector.is_null() && (*li.backsector).ceilingpic as usize == skyflatnum {
+					return false;
 				}
 			}
 
@@ -936,36 +880,36 @@ pub unsafe extern "C" fn PTR_ShootTraverse(intercept: *mut intercept_t) -> boole
 			P_SpawnPuff(x, y, z);
 
 			// don't go any farther
-			return 0;
+			return false;
 		}
 
 		// shoot a thing
-		let th = (*intercept).d.thing;
+		let th = intercept.d.thing;
 		if ptr::eq(th, shootthing) {
-			return 1; // can't shoot self
+			return true; // can't shoot self
 		}
 
 		if (*th).flags & MF_SHOOTABLE == 0 {
-			return 1; // corpse or something
+			return true; // corpse or something
 		}
 
 		// check angles to see if the thing can be aimed at
-		let dist = FixedMul(attackrange, (*intercept).frac);
+		let dist = FixedMul(attackrange, intercept.frac);
 		let thingtopslope = FixedDiv((*th).z + (*th).height - shootz, dist);
 
 		if thingtopslope < aimslope {
-			return 1; // shot over the thing
+			return true; // shot over the thing
 		}
 
 		let thingbottomslope = FixedDiv((*th).z - shootz, dist);
 
 		if thingbottomslope > aimslope {
-			return 1; // shot under the thing
+			return true; // shot under the thing
 		}
 
 		// hit thing
 		// position a bit closer
-		let frac = (*intercept).frac - FixedDiv(10 * FRACUNIT, attackrange);
+		let frac = intercept.frac - FixedDiv(10 * FRACUNIT, attackrange);
 
 		let x = trace.x + FixedMul(trace.dx, frac);
 		let y = trace.y + FixedMul(trace.dy, frac);
@@ -973,7 +917,7 @@ pub unsafe extern "C" fn PTR_ShootTraverse(intercept: *mut intercept_t) -> boole
 
 		// Spawn bullet puffs or blod spots,
 		// depending on target type.
-		if (*(*intercept).d.thing).flags & MF_NOBLOOD != 0 {
+		if (*intercept.d.thing).flags & MF_NOBLOOD != 0 {
 			P_SpawnPuff(x, y, z);
 		} else {
 			P_SpawnBlood(x, y, z, la_damage);
@@ -984,7 +928,7 @@ pub unsafe extern "C" fn PTR_ShootTraverse(intercept: *mut intercept_t) -> boole
 		}
 
 		// don't go any farther
-		0
+		false
 	}
 }
 
@@ -1042,29 +986,30 @@ pub fn P_LineAttack(
 // USE LINES
 static mut usething: *mut mobj_t = null_mut();
 
-pub unsafe extern "C" fn PTR_UseTraverse(intercept: *mut intercept_t) -> boolean {
+fn PTR_UseTraverse(intercept: &mut intercept_t) -> bool {
 	unsafe {
-		if (*(*intercept).d.line).special == 0 {
-			P_LineOpening((*intercept).d.line);
+		if (*intercept.d.line).special == 0 {
+			P_LineOpening(&*intercept.d.line);
 			if openrange <= 0 {
 				S_StartSound(usething.cast(), sfxenum_t::sfx_noway);
 
 				// can't use through a wall
-				return 0;
+				return false;
+			} else {
+				// not a special line, but keep checking
+				return true;
 			}
-			// not a special line, but keep checking
-			return 1;
 		}
 
 		let mut side = 0;
-		if P_PointOnLineSide((*usething).x, (*usething).y, (*intercept).d.line) == 1 {
+		if P_PointOnLineSide((*usething).x, (*usething).y, &*intercept.d.line) {
 			side = 1;
 		}
 
-		P_UseSpecialLine(&mut *usething, &mut *(*intercept).d.line, side);
+		P_UseSpecialLine(&mut *usething, &mut *intercept.d.line, side);
 
 		// can't use for than one special line in a row
-		0
+		false
 	}
 }
 
@@ -1093,17 +1038,16 @@ static mut bombdamage: i32 = 0;
 // PIT_RadiusAttack
 // "bombsource" is the creature
 // that caused the explosion at "bombspot".
-unsafe extern "C" fn PIT_RadiusAttack(thing: *mut mobj_t) -> boolean {
+fn PIT_RadiusAttack(thing: &mut mobj_t) -> bool {
 	unsafe {
-		let thing = &mut *thing;
 		if (thing.flags & MF_SHOOTABLE) == 0 {
-			return 1;
+			return true;
 		}
 
 		// Boss spider and cyborg
 		// take no damage from concussion.
 		if thing.ty == mobjtype_t::MT_CYBORG || thing.ty == mobjtype_t::MT_SPIDER {
-			return 1;
+			return true;
 		}
 
 		let dx = i32::abs(thing.x - (*bombspot).x);
@@ -1117,7 +1061,7 @@ unsafe extern "C" fn PIT_RadiusAttack(thing: *mut mobj_t) -> boolean {
 		}
 
 		if dist >= bombdamage {
-			return 1; // out of range
+			return true; // out of range
 		}
 
 		if P_CheckSight(thing, &*bombspot) {
@@ -1125,7 +1069,7 @@ unsafe extern "C" fn PIT_RadiusAttack(thing: *mut mobj_t) -> boolean {
 			P_DamageMobj(thing, bombspot, bombsource, bombdamage - dist);
 		}
 
-		1
+		true
 	}
 }
 
@@ -1165,13 +1109,11 @@ static mut crushchange: bool = false;
 static mut nofit: bool = false;
 
 // PIT_ChangeSector
-unsafe extern "C" fn PIT_ChangeSector(thing: *mut mobj_t) -> boolean {
+fn PIT_ChangeSector(thing: &mut mobj_t) -> bool {
 	unsafe {
-		let thing = &mut *thing;
-
 		if P_ThingHeightClip(thing) {
 			// keep checking
-			return 1;
+			return true;
 		}
 
 		// crunch bodies to giblets
@@ -1183,7 +1125,7 @@ unsafe extern "C" fn PIT_ChangeSector(thing: *mut mobj_t) -> boolean {
 			thing.radius = 0;
 
 			// keep checking
-			return 1;
+			return true;
 		}
 
 		// crunch dropped items
@@ -1191,12 +1133,12 @@ unsafe extern "C" fn PIT_ChangeSector(thing: *mut mobj_t) -> boolean {
 			P_RemoveMobj(thing);
 
 			// keep checking
-			return 1;
+			return true;
 		}
 
 		if thing.flags & MF_SHOOTABLE == 0 {
 			// assume it is bloody gibs or something
-			return 1;
+			return true;
 		}
 
 		nofit = true;
@@ -1213,7 +1155,7 @@ unsafe extern "C" fn PIT_ChangeSector(thing: *mut mobj_t) -> boolean {
 		}
 
 		// keep checking (crush other things)
-		1
+		true
 	}
 }
 
