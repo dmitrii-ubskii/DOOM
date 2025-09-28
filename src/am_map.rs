@@ -23,6 +23,7 @@ use crate::{
 	p_local::{MAPBLOCKUNITS, PLAYERRADIUS},
 	p_setup::{bmaporgx, bmaporgy, lines, numlines, numsectors, numvertexes, sectors, vertexes},
 	r_defs::patch_t,
+	st_stuff::ST_Responder,
 	tables::{ANGLETOFINESHIFT, angle_t, finecos, finesine},
 	v_video::{V_DrawPatch, V_MarkRect, screens},
 	w_wad::W_CacheLumpName,
@@ -33,9 +34,9 @@ type int = i32;
 type boolean = i32;
 
 // Used by ST StatusBar stuff.
-const AM_MSGHEADER: usize = ((b'a' as usize) << 24) + ((b'm' as usize) << 16);
-const AM_MSGENTERED: usize = AM_MSGHEADER | ((b'e' as usize) << 8);
-const AM_MSGEXITED: usize = AM_MSGHEADER | ((b'x' as usize) << 8);
+pub const AM_MSGHEADER: usize = ((b'a' as usize) << 24) + ((b'm' as usize) << 16);
+pub const AM_MSGENTERED: usize = AM_MSGHEADER | ((b'e' as usize) << 8);
+pub const AM_MSGEXITED: usize = AM_MSGHEADER | ((b'x' as usize) << 8);
 
 // For use if I do walls with outsides/insides
 const REDS: i32 = 256 - 5 * 16;
@@ -432,10 +433,7 @@ fn AM_changeWindowLoc() {
 	}
 }
 
-unsafe extern "C" {
-	fn ST_Responder(ev: *mut event_t) -> boolean;
-}
-
+#[allow(static_mut_refs)]
 fn AM_initVariables() {
 	unsafe {
 		static mut st_notify: event_t =
@@ -478,7 +476,7 @@ fn AM_initVariables() {
 		old_m_h = m_h;
 
 		// inform the status bar of the change
-		ST_Responder(&raw mut st_notify);
+		ST_Responder(&mut st_notify);
 	}
 }
 
@@ -534,6 +532,7 @@ fn AM_LevelInit() {
 	}
 }
 
+#[allow(static_mut_refs)]
 pub(crate) fn AM_Stop() {
 	unsafe {
 		static mut st_notify: event_t = event_t {
@@ -545,7 +544,7 @@ pub(crate) fn AM_Stop() {
 
 		AM_unloadPics();
 		automapactive = 0;
-		ST_Responder(&raw mut st_notify);
+		ST_Responder(&mut st_notify);
 		stopped = true;
 	}
 }
@@ -691,7 +690,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> boolean {
 					rc = false;
 				}
 			}
-			if deathmatch == 0 && cht_CheckCheat(&mut cheat_amap, (*ev).data1 as u8) != 0 {
+			if deathmatch == 0 && cht_CheckCheat(&mut cheat_amap, (*ev).data1 as u8) {
 				rc = false;
 				cheating = (cheating + 1) % 3;
 			}

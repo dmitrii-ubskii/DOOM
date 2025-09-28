@@ -95,6 +95,7 @@ use crate::{
 	r_sky::skyflatnum,
 	s_sound::{S_StartSound, S_StopSound},
 	sounds::sfxenum_t,
+	st_stuff::ST_Start,
 	tables::{ANG45, ANGLETOFINESHIFT, angle_t, finecos, finesine},
 	z_zone::{PU_LEVEL, Z_Malloc},
 };
@@ -795,10 +796,6 @@ pub(crate) fn P_RespawnSpecials() {
 		// pull it from the que
 		iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
 	}
-}
-
-unsafe extern "C" {
-	fn ST_Start();
 }
 
 // P_SpawnPlayer

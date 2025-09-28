@@ -184,6 +184,20 @@ pub enum powertype_t {
 	NUMPOWERS,
 }
 
+impl From<usize> for powertype_t {
+	fn from(value: usize) -> Self {
+		match value {
+			0 => Self::pw_invulnerability,
+			1 => Self::pw_strength,
+			2 => Self::pw_invisibility,
+			3 => Self::pw_ironfeet,
+			4 => Self::pw_allmap,
+			5 => Self::pw_infrared,
+			_ => panic!("powertype_t out of bounds"),
+		}
+	}
+}
+
 // Power up durations,
 //  how many seconds till expiration,
 //  assuming TICRATE is 35 ticks/second.

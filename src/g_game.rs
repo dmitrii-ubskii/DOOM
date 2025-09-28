@@ -50,6 +50,7 @@ use crate::{
 	r_sky::{SKYFLATNAME, skyflatnum, skytexture},
 	s_sound::{S_PauseSound, S_ResumeSound, S_StartSound},
 	sounds::sfxenum_t,
+	st_stuff::{ST_Responder, ST_Ticker},
 	tables::{ANG45, ANGLETOFINESHIFT, finecos, finesine},
 	v_video::screens,
 	w_wad::{W_CacheLumpName, W_CheckNumForName},
@@ -481,7 +482,6 @@ fn G_DoLoadLevel() {
 
 unsafe extern "C" {
 	fn F_Responder(ev: *mut event_t) -> boolean;
-	fn ST_Responder(ev: *mut event_t) -> boolean;
 }
 
 // G_Responder
@@ -526,7 +526,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 			if HU_Responder(ev) != 0 {
 				return 1; // chat ate the event
 			}
-			if ST_Responder(ev) != 0 {
+			if ST_Responder(ev) {
 				return 1; // status window ate it
 			}
 			if AM_Responder(ev) != 0 {
@@ -580,7 +580,6 @@ unsafe extern "C" {
 	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
 
 	fn F_StartFinale();
-	fn ST_Ticker();
 	fn F_Ticker();
 }
 

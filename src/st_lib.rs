@@ -12,8 +12,8 @@ use crate::{
 };
 
 // Background and foreground screen numbers
-const BG: usize = 4;
-const FG: usize = 0;
+pub const BG: usize = 4;
+pub const FG: usize = 0;
 
 // Typedefs of widgets
 
@@ -23,27 +23,27 @@ const FG: usize = 0;
 pub struct st_number_t {
 	// upper right-hand corner
 	//  of the number (right-justified)
-	x: usize,
-	y: usize,
+	pub x: usize,
+	pub y: usize,
 
 	// max # of digits in number
-	width: usize,
+	pub width: usize,
 
 	// last number value
-	oldnum: i32,
+	pub oldnum: i32,
 
 	// pointer to current value
-	num: *mut i32,
+	pub num: *mut i32,
 
 	// pointer to i32ean stating
 	//  whether to update number
-	on: *mut i32,
+	pub on: *mut i32,
 
 	// list of patches for 0-9
-	p: *mut *mut patch_t,
+	pub p: *mut *mut patch_t,
 
 	// user data
-	data: i32,
+	pub data: i32,
 }
 
 // Percent widget ("child" of number widget,
@@ -51,34 +51,34 @@ pub struct st_number_t {
 #[repr(C)]
 pub struct st_percent_t {
 	// number information
-	n: st_number_t,
+	pub n: st_number_t,
 
 	// percent sign graphic
-	p: *mut patch_t,
+	pub p: *mut patch_t,
 }
 
 // Multiple Icon widget
 #[repr(C)]
 pub struct st_multicon_t {
 	// center-justified location of icons
-	x: usize,
-	y: usize,
+	pub x: usize,
+	pub y: usize,
 
 	// last icon number
-	oldinum: i32,
+	pub oldinum: i32,
 
 	// pointer to current icon
-	inum: *mut i32,
+	pub inum: *mut i32,
 
 	// pointer to i32ean stating
 	//  whether to update icon
-	on: *mut i32,
+	pub on: *mut i32,
 
 	// list of icons
-	p: *mut *mut patch_t,
+	pub p: *mut *mut patch_t,
 
 	// user data
-	data: i32,
+	pub data: i32,
 }
 
 // Binary Icon widget
@@ -86,21 +86,21 @@ pub struct st_multicon_t {
 #[repr(C)]
 pub struct st_binicon_t {
 	// center-justified location of icon
-	x: usize,
-	y: usize,
+	pub x: usize,
+	pub y: usize,
 
 	// last icon value
-	oldval: i32,
+	pub oldval: i32,
 
 	// pointer to current icon status
-	val: *mut i32,
+	pub val: *mut i32,
 
 	// pointer to i32ean
 	//  stating whether to update icon
-	on: *mut i32,
+	pub on: *mut i32,
 
-	p: *mut patch_t, // icon
-	data: i32,       // user data
+	pub p: *mut patch_t, // icon
+	pub data: i32,       // user data
 }
 
 // Hack display negative frags.
@@ -122,8 +122,7 @@ pub extern "C" fn STlib_init() {
 // Number widget routines
 
 // ?
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_initNum(
+pub fn STlib_initNum(
 	n: &mut st_number_t,
 	x: usize,
 	y: usize,
@@ -144,7 +143,7 @@ pub extern "C" fn STlib_initNum(
 // A fairly efficient way to draw a number
 //  based on differences from the old number.
 // Note: worth the trouble?
-fn STlib_drawNum(n: &mut st_number_t, _refresh: i32) {
+fn STlib_drawNum(n: &mut st_number_t, _refresh: bool) {
 	unsafe {
 		let mut numdigits = n.width;
 		let mut num = *n.num;
@@ -202,8 +201,7 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: i32) {
 	}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_updateNum(n: &mut st_number_t, refresh: i32) {
+pub fn STlib_updateNum(n: &mut st_number_t, refresh: bool) {
 	unsafe {
 		if *n.on != 0 {
 			STlib_drawNum(n, refresh);
@@ -227,10 +225,9 @@ pub extern "C" fn STlib_initPercent(
 	p.p = percent;
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_updatePercent(per: &mut st_percent_t, refresh: i32) {
+pub fn STlib_updatePercent(per: &mut st_percent_t, refresh: bool) {
 	unsafe {
-		if refresh != 0 && *per.n.on != 0 {
+		if refresh && *per.n.on != 0 {
 			V_DrawPatch(per.n.x, per.n.y, FG, per.p);
 		}
 
@@ -257,10 +254,9 @@ pub extern "C" fn STlib_initMultIcon(
 	i.p = il;
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: i32) {
+pub fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 	unsafe {
-		if *mi.on != 0 && (mi.oldinum != *mi.inum || refresh != 0) && (*mi.inum != -1) {
+		if *mi.on != 0 && (mi.oldinum != *mi.inum || refresh) && (*mi.inum != -1) {
 			if mi.oldinum != -1 {
 				let x =
 					mi.x.checked_add_signed(
@@ -306,10 +302,9 @@ pub extern "C" fn STlib_initBinIcon(
 	b.p = i;
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: i32) {
+pub fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
 	unsafe {
-		if *bi.on != 0 && (bi.oldval != *bi.val || refresh != 0) {
+		if *bi.on != 0 && (bi.oldval != *bi.val || refresh) {
 			let x = bi.x.checked_add_signed(-((*bi.p).leftoffset) as isize).unwrap();
 			let y = bi.y.checked_add_signed(-((*bi.p).topoffset) as isize).unwrap();
 			let w = (*bi.p).width as usize;

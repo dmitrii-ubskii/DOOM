@@ -41,6 +41,7 @@ use crate::{
 	p_setup::P_Init,
 	s_sound::{S_Init, S_StartMusic, S_UpdateSounds, snd_MusicVolume, snd_SfxVolume},
 	sounds::musicenum_t,
+	st_stuff::{ST_Drawer, ST_Init},
 	v_video::{V_DrawPatch, V_DrawPatchDirect, V_Init},
 	w_wad::{W_CacheLumpName, W_CheckNumForName, W_InitMultipleFiles},
 	wi_stuff::WI_Drawer,
@@ -146,7 +147,6 @@ unsafe extern "C" {
 	fn R_ExecuteSetViewSize();
 	fn R_FillBackScreen();
 	fn R_RenderPlayerView(player: &mut player_t);
-	fn ST_Drawer(_: boolean, redrawsbar: boolean);
 }
 
 fn D_Display() {
@@ -163,7 +163,7 @@ fn D_Display() {
 			return; // for comparative timing / profiling
 		}
 
-		let mut redrawsbar = 0;
+		let mut redrawsbar = false;
 
 		// change the view size if needed
 		if setsizeneeded != 0 {
@@ -192,12 +192,12 @@ fn D_Display() {
 						AM_Drawer();
 					}
 					if wipe || (viewheight != 200 && fullscreen) {
-						redrawsbar = 1;
+						redrawsbar = true;
 					}
 					if inhelpscreensstate && !inhelpscreens {
-						redrawsbar = 1; // just put away the help screen
+						redrawsbar = true; // just put away the help screen
 					}
-					ST_Drawer((viewheight == 200) as boolean, redrawsbar);
+					ST_Drawer(viewheight == 200, redrawsbar);
 					fullscreen = viewheight == 200;
 				}
 			}
@@ -710,7 +710,6 @@ fn FindResponseFile() {
 unsafe extern "C" {
 	fn R_Init();
 	fn D_CheckNetGame();
-	fn ST_Init();
 }
 
 macro_rules! cdrom_savegamename {

@@ -61,7 +61,7 @@ unsafe impl Sync for musicinfo_t {}
 
 // Identifiers for all music in game.
 
-#[repr(i32)]
+#[repr(isize)]
 #[derive(Clone, Copy)]
 #[rustfmt::skip]
 pub enum musicenum_t {
@@ -75,6 +75,15 @@ pub enum musicenum_t {
 	mus_messag, mus_count2, mus_ddtbl3, mus_ampie, mus_theda3, mus_adrian, mus_messg2, mus_romer2,
 	mus_tense, mus_shawn3, mus_openin, mus_evil, mus_ultima, mus_read_m, mus_dm2ttl, mus_dm2int,
 	NUMMUSIC,
+}
+
+impl From<isize> for musicenum_t {
+	fn from(value: isize) -> Self {
+		if value > Self::NUMMUSIC as isize {
+			panic!("Invalid musicenum_t")
+		}
+		unsafe { std::mem::transmute(value) }
+	}
 }
 
 impl From<usize> for musicenum_t {

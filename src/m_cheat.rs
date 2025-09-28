@@ -25,8 +25,7 @@ fn scramble(a: u8) -> u8 {
 
 // Called in st_stuff module, which handles the input.
 // Returns a 1 if the cheat was successful, 0 if failed.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> i32 {
+pub fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
 	unsafe {
 		if firsttime != 0 {
 			firsttime = 0;
@@ -53,15 +52,14 @@ pub unsafe extern "C" fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> i32 {
 		} else if *cht.p == 0xff {
 			// end of sequence character
 			cht.p = cht.sequence;
-			return 1;
+			return true;
 		}
 
-		0
+		false
 	}
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn cht_GetParam(cht: &mut cheatseq_t, mut buffer: *mut u8) {
+pub unsafe fn cht_GetParam(cht: &mut cheatseq_t, mut buffer: *mut u8) {
 	unsafe {
 		let mut p = cht.sequence;
 

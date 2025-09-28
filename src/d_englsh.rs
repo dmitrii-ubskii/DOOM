@@ -327,28 +327,26 @@ pub const AMSTR_GRIDOFF: *const c_char = c"Grid OFF".as_ptr();
 pub const AMSTR_MARKEDSPOT: *const c_char = c"Marked Spot".as_ptr();
 pub const AMSTR_MARKSCLEARED: *const c_char = c"All Marks Cleared".as_ptr();
 
-/*
 //	ST_stuff.C
-//
 
-pub const STSTR_MUS: &CStr = c"Music Change";
-pub const STSTR_NOMUS: &CStr = c"IMPOSSIBLE SELECTION";
-pub const STSTR_DQDON: &CStr = c"Degreelessness Mode On";
-pub const STSTR_DQDOFF: &CStr = c"Degreelessness Mode Off";
+pub const STSTR_MUS: *const c_char = c"Music Change".as_ptr();
+pub const STSTR_NOMUS: *const c_char = c"IMPOSSIBLE SELECTION".as_ptr();
+pub const STSTR_DQDON: *const c_char = c"Degreelessness Mode On".as_ptr();
+pub const STSTR_DQDOFF: *const c_char = c"Degreelessness Mode Off".as_ptr();
 
-pub const STSTR_KFAADDED: &CStr = c"Very Happy Ammo Added";
-pub const STSTR_FAADDED: &CStr = c"Ammo (no keys) Added";
+pub const STSTR_KFAADDED: *const c_char = c"Very Happy Ammo Added".as_ptr();
+pub const STSTR_FAADDED: *const c_char = c"Ammo (no keys) Added".as_ptr();
 
-pub const STSTR_NCON: &CStr = c"No Clipping Mode ON";
-pub const STSTR_NCOFF: &CStr = c"No Clipping Mode OFF";
+pub const STSTR_NCON: *const c_char = c"No Clipping Mode ON".as_ptr();
+pub const STSTR_NCOFF: *const c_char = c"No Clipping Mode OFF".as_ptr();
 
-pub const STSTR_BEHOLD: &CStr = c"inVuln, Str, Inviso, Rad, Allmap, or Lite-amp";
-pub const STSTR_BEHOLDX: &CStr = c"Power-up Toggled";
+pub const STSTR_BEHOLD: *const c_char = c"inVuln, Str, Inviso, Rad, Allmap, or Lite-amp".as_ptr();
+pub const STSTR_BEHOLDX: *const c_char = c"Power-up Toggled".as_ptr();
 
-pub const STSTR_CHOPPERS: &CStr = c"... doesn't suck - GM";
-pub const STSTR_CLEV: &CStr = c"Changing Level...";
+pub const STSTR_CHOPPERS: *const c_char = c"... doesn't suck - GM".as_ptr();
+pub const STSTR_CLEV: *const c_char = c"Changing Level...".as_ptr();
 
-//
+/*
 //	F_Finale.C
 //
 #define E1TEXT \
