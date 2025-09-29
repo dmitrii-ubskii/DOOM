@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 libc = "0.2.172"
+x11 = "2.21.0"
 
 [build-dependencies]
 cc = "1.2.24"

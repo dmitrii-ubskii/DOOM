@@ -101,8 +101,7 @@ pub static gammatable: [[u8; 256]; 5] = [
 	],
 ];
 
-#[unsafe(no_mangle)]
-pub static mut usegamma: i32 = 0;
+pub static mut usegamma: usize = 0;
 
 // V_MarkRect
 #[unsafe(no_mangle)]

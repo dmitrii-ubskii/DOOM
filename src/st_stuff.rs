@@ -21,6 +21,7 @@ use crate::{
 	},
 	doomstat::gamemode,
 	g_game::{G_DeferedInitNew, consoleplayer, deathmatch, gameskill, netgame, players},
+	i_video::I_SetPalette,
 	m_cheat::{cheatseq_t, cht_CheckCheat, cht_GetParam},
 	m_random::M_Random,
 	p_inter::P_GivePower,
@@ -855,10 +856,6 @@ pub fn ST_Ticker() {
 }
 
 static mut st_palette: isize = 0;
-
-unsafe extern "C" {
-	fn I_SetPalette(palette: *mut u8);
-}
 
 fn ST_doPaletteStuff() {
 	unsafe {

@@ -31,6 +31,7 @@ use crate::{
 	},
 	hu_stuff::{HU_FONTSIZE, HU_FONTSTART, chat_on, hu_font, message_dontfuckwithme},
 	i_system::{I_GetTime, I_Quit, I_WaitVBL},
+	i_video::I_SetPalette,
 	m_argv::M_CheckParm,
 	s_sound::{S_SetMusicVolume, S_SetSfxVolume, S_StartSound, snd_MusicVolume, snd_SfxVolume},
 	sounds::sfxenum_t,
@@ -1099,10 +1100,6 @@ fn M_WriteText(x: usize, y: usize, string: *const c_char) {
 
 // CONTROL PANEL
 
-unsafe extern "C" {
-	fn I_SetPalette(palette: *mut u8);
-}
-
 // M_Responder
 #[allow(static_mut_refs)]
 pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
@@ -1363,7 +1360,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 					if usegamma > 4 {
 						usegamma = 0;
 					}
-					players[consoleplayer].message = gammamsg[usegamma as usize].as_ptr().cast();
+					players[consoleplayer].message = gammamsg[usegamma].as_ptr().cast();
 					I_SetPalette(W_CacheLumpName(c"PLAYPAL".as_ptr(), PU_CACHE).cast());
 					return true;
 				}

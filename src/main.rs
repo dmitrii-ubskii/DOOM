@@ -18,6 +18,7 @@ pub mod g_game;
 pub mod hu_lib;
 pub mod hu_stuff;
 pub mod i_system;
+pub mod i_video;
 pub mod info;
 pub mod m_argv;
 pub mod m_bbox;

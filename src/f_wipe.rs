@@ -8,6 +8,7 @@ use std::{ptr::null_mut, slice};
 use libc::memcpy;
 
 use crate::{
+	i_video::I_ReadScreen,
 	m_random::M_Random,
 	v_video::{V_DrawBlock, V_MarkRect, screens},
 	z_zone::{PU_STATIC, Z_Free, Z_Malloc},
@@ -166,10 +167,6 @@ fn wipe_doMelt(mut width: usize, height: usize, ticks: usize) -> i32 {
 fn wipe_exitMelt(_width: usize, _height: usize, _ticks: usize) -> i32 {
 	unsafe { Z_Free(y.cast()) };
 	0
-}
-
-unsafe extern "C" {
-	fn I_ReadScreen(scr: *mut u8);
 }
 
 pub(crate) fn wipe_StartScreen(_x: i32, _y: i32, _width: usize, _height: usize) -> i32 {

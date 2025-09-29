@@ -3,7 +3,6 @@ fn main() {
 		.files([
 			"linuxdoom-1.10/i_system.c",
 			"linuxdoom-1.10/i_sound.c",
-			"linuxdoom-1.10/i_video.c",
 			"linuxdoom-1.10/i_net.c",
 			"linuxdoom-1.10/f_finale.c",
 			"linuxdoom-1.10/d_net.c",

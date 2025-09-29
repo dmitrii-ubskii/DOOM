@@ -4,7 +4,9 @@ use std::{ffi::c_char, process::exit, ptr::null_mut};
 
 use libc::{gettimeofday, malloc, memset, timeval};
 
-use crate::{d_ticcmd::ticcmd_t, doomdef::TICRATE, m_misc::M_SaveDefaults};
+use crate::{
+	d_ticcmd::ticcmd_t, doomdef::TICRATE, i_video::I_ShutdownGraphics, m_misc::M_SaveDefaults,
+};
 
 pub(crate) static mut mb_used: usize = 6;
 
@@ -59,7 +61,6 @@ unsafe extern "C" {
 	fn D_QuitNetGame();
 	fn I_ShutdownSound();
 	fn I_ShutdownMusic();
-	fn I_ShutdownGraphics();
 }
 
 // I_Quit

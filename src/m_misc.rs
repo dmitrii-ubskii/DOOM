@@ -25,6 +25,7 @@ use crate::{
 	},
 	hu_stuff::chat_macros,
 	i_system::I_Error,
+	i_video::I_ReadScreen,
 	m_argv::M_CheckParm,
 	m_menu::{detailLevel, mouseSensitivity, screenblocks, showMessages},
 	myargc, myargv,
@@ -486,10 +487,6 @@ fn WritePCXfile(
 
 		Z_Free(pcx.cast());
 	}
-}
-
-unsafe extern "C" {
-	fn I_ReadScreen(scr: *mut u8);
 }
 
 // M_ScreenShot
