@@ -866,7 +866,8 @@ fn ST_doPaletteStuff() {
 
 		if (*plyr).powers[powertype_t::pw_strength as usize] != 0 {
 			// slowly fade the berzerk out
-			let bzc = 12 - ((*plyr).powers[powertype_t::pw_strength as usize] >> 6);
+			let bzc =
+				12usize.saturating_sub((*plyr).powers[powertype_t::pw_strength as usize] >> 6);
 
 			if bzc > cnt {
 				cnt = bzc;
