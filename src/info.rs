@@ -293,7 +293,7 @@ impl From<usize> for statenum_t {
 #[repr(C)]
 pub struct state_t {
 	pub sprite: spritenum_t,
-	pub frame: i32,
+	pub frame: usize,
 	pub tics: i32,
 	pub action: think_t,
 	pub nextstate: statenum_t,

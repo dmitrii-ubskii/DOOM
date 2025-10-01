@@ -204,7 +204,7 @@ pub struct mobj_t {
 	//More drawing info: to determine current sprite.
 	pub angle: angle_t,      // orientation
 	pub sprite: spritenum_t, // used to find patch_t and flip value
-	pub frame: i32,          // might be ORed with FF_FULLBRIGHT
+	pub frame: usize,        // might be ORed with FF_FULLBRIGHT
 
 	// Interaction info, by BLOCKMAP.
 	// Links in blocks (if needed).

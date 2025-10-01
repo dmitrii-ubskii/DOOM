@@ -226,31 +226,40 @@ pub type column_t = post_t;
 // Could even us emore than 32 levels.
 pub type lighttable_t = i8;
 
+// Silhouette, needed for clipping Segs (mainly)
+// and sprites representing things.
+pub const SIL_NONE: usize = 0;
+pub const SIL_BOTTOM: usize = 1;
+pub const SIL_TOP: usize = 2;
+pub const SIL_BOTH: usize = 3;
+
+pub const MAXDRAWSEGS: usize = 256;
+
 // ?
 #[repr(C)]
 pub struct drawseg_t {
-	curline: *mut seg_t,
-	x1: i32,
-	x2: i32,
+	pub curline: *mut seg_t,
+	pub x1: usize,
+	pub x2: usize,
 
-	scale1: fixed_t,
-	scale2: fixed_t,
-	scalestep: fixed_t,
+	pub scale1: fixed_t,
+	pub scale2: fixed_t,
+	pub scalestep: fixed_t,
 
 	// 0=none, 1=bottom, 2=top, 3=both
-	silhouette: i32,
+	pub silhouette: usize,
 
 	// do not clip sprites above this
-	bsilheight: fixed_t,
+	pub bsilheight: fixed_t,
 
 	// do not clip sprites below this
-	tsilheight: fixed_t,
+	pub tsilheight: fixed_t,
 
 	// Pointers to lists for sprite clipping,
 	//  all three adjusted so [x1] is first value.
-	sprtopclip: *mut i16,
-	sprbottomclip: *mut i16,
-	maskedtexturecol: *mut i16,
+	pub sprtopclip: *mut i16,
+	pub sprbottomclip: *mut i16,
+	pub maskedtexturecol: *mut i16,
 }
 
 // Patches.
@@ -275,36 +284,36 @@ pub struct patch_t {
 #[repr(C)]
 pub struct vissprite_t {
 	// Doubly linked list.
-	prev: *mut vissprite_t,
-	next: *mut vissprite_t,
+	pub prev: *mut vissprite_t,
+	pub next: *mut vissprite_t,
 
-	x1: i32,
-	x2: i32,
+	pub x1: usize,
+	pub x2: usize,
 
 	// for line side calculation
-	gx: fixed_t,
-	gy: fixed_t,
+	pub gx: fixed_t,
+	pub gy: fixed_t,
 
 	// global bottom / top for silhouette clipping
-	gz: fixed_t,
-	gzt: fixed_t,
+	pub gz: fixed_t,
+	pub gzt: fixed_t,
 
 	// horizontal position of x1
-	startfrac: fixed_t,
+	pub startfrac: fixed_t,
 
-	scale: fixed_t,
+	pub scale: fixed_t,
 
 	// negative if flipped
-	xiscale: fixed_t,
+	pub xiscale: fixed_t,
 
-	texturemid: fixed_t,
-	patch: i32,
+	pub texturemid: fixed_t,
+	pub patch: usize,
 
 	// for color translation and shadow draw,
 	//  maxbright frames as well
-	colormap: *mut lighttable_t,
+	pub colormap: *mut lighttable_t,
 
-	mobjflags: i32,
+	pub mobjflags: u32,
 }
 
 // Sprites are patches with a special naming convention
