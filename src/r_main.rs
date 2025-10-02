@@ -11,6 +11,7 @@ use crate::{
 	p_setup::{nodes, numnodes, subsectors},
 	r_data::{R_InitData, colormaps},
 	r_defs::{lighttable_t, node_t, seg_t, subsector_t},
+	r_plane::{distscale, yslope},
 	r_sky::R_InitSkyMap,
 	r_things::{R_ClearSprites, R_DrawMasked, pspriteiscale, pspritescale, screenheightarray},
 	tables::{
@@ -428,9 +429,6 @@ pub fn R_SetViewSize(blocks: usize, detail: i32) {
 unsafe extern "C" {
 	static mut scaledviewwidth: usize;
 	static mut viewheight: usize;
-
-	static mut yslope: [fixed_t; SCREENHEIGHT];
-	static mut distscale: [fixed_t; SCREENWIDTH];
 
 	fn R_InitBuffer(width: usize, height: usize);
 }

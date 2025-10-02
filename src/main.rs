@@ -51,6 +51,7 @@ pub mod p_user;
 pub mod r_data;
 pub mod r_defs;
 pub mod r_main;
+pub mod r_plane;
 pub mod r_sky;
 pub mod r_state;
 pub mod r_things;

@@ -355,20 +355,20 @@ pub struct spritedef_t {
 // Now what is a visplane, anyway?
 #[repr(C)]
 pub struct visplane_t {
-	height: fixed_t,
-	picnum: i32,
-	lightlevel: i32,
-	minx: i32,
-	maxx: i32,
+	pub height: fixed_t,
+	pub picnum: usize,
+	pub lightlevel: i32,
+	pub minx: isize,
+	pub maxx: isize,
 
 	// leave pads for [minx-1]/[maxx+1]
-	pad1: i8,
+	pub pad1: i8,
 	// Here lies the rub for all
 	//  dynamic resize/change of resolution.
-	top: [i8; SCREENWIDTH],
-	pad2: i8,
-	pad3: i8,
+	pub top: [u8; SCREENWIDTH],
+	pub pad2: i8,
+	pub pad3: i8,
 	// See above.
-	bottom: [i8; SCREENWIDTH],
-	pad4: i8,
+	pub bottom: [u8; SCREENWIDTH],
+	pub pad4: i8,
 }
