@@ -115,7 +115,7 @@ pub struct player_t {
 
 	// Current PLAYPAL, ???
 	//  can be set to REDCOLORMAP for pain, etc.
-	pub fixedcolormap: i32,
+	pub fixedcolormap: usize,
 
 	// Player skin colorshift,
 	//  0-3 for which color to draw player.

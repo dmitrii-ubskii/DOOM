@@ -17,9 +17,10 @@ use crate::{
 	p_map::{P_AimLineAttack, P_LineAttack, linetarget},
 	p_mobj::{MF_JUSTATTACKED, P_SetMobjState, P_SpawnMobj, P_SpawnPlayerMissile, mobj_t},
 	p_tick::leveltime,
+	r_main::R_PointToAngle2,
 	s_sound::S_StartSound,
 	sounds::sfxenum_t,
-	tables::{ANG90, ANG180, FINEANGLES, FINEMASK, angle_t, finecos, finesine},
+	tables::{ANG90, ANG180, FINEANGLES, FINEMASK, finecos, finesine},
 };
 
 // Frame flags:
@@ -359,10 +360,6 @@ pub(crate) fn A_GunFlash(player: &mut player_t, _psp: &mut pspdef_t) {
 }
 
 // WEAPON ATTACKS
-
-unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
-}
 
 // A_Punch
 pub(crate) fn A_Punch(player: &mut player_t, _psp: &mut pspdef_t) {

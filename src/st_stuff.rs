@@ -26,6 +26,7 @@ use crate::{
 	m_random::M_Random,
 	p_inter::P_GivePower,
 	r_defs::patch_t,
+	r_main::R_PointToAngle2,
 	s_sound::S_ChangeMusic,
 	sounds::musicenum_t,
 	st_lib::{
@@ -33,7 +34,7 @@ use crate::{
 		STlib_initPercent, STlib_updateBinIcon, STlib_updateMultIcon, STlib_updateNum,
 		STlib_updatePercent, st_binicon_t, st_multicon_t, st_number_t, st_percent_t,
 	},
-	tables::{ANG45, ANG180, angle_t},
+	tables::{ANG45, ANG180},
 	v_video::{V_CopyRect, V_DrawPatch, screens},
 	w_wad::{W_CacheLumpName, W_CacheLumpNum, W_GetNumForName},
 	z_zone::{PU_CACHE, PU_STATIC, Z_Malloc},
@@ -642,10 +643,6 @@ fn ST_calcPainOffset() -> usize {
 		}
 		lastcalc
 	}
-}
-
-unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // This is a not-very-pretty routine which handles

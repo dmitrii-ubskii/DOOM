@@ -86,7 +86,6 @@ pub const PT_ADDLINES: i32 = 1;
 pub const PT_ADDTHINGS: i32 = 2;
 pub const PT_EARLYOUT: i32 = 4;
 
-
 // P_SETUP
 /*
 #[unsafe(no_mangle)]

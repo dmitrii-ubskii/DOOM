@@ -15,11 +15,12 @@ use crate::{
 	p_pspr::P_MovePsprites,
 	p_spec::P_PlayerInSpecialSector,
 	p_tick::leveltime,
+	r_main::R_PointToAngle2,
 	tables::{ANG90, ANG180, ANGLETOFINESHIFT, FINEANGLES, FINEMASK, angle_t, finecos, finesine},
 };
 
 // Index of the special effects (INVUL inverse) map.
-const INVERSECOLORMAP: i32 = 32;
+const INVERSECOLORMAP: usize = 32;
 
 // Movement.
 
@@ -137,10 +138,6 @@ fn P_MovePlayer(player: &mut player_t) {
 			P_SetMobjState(mo, statenum_t::S_PLAY_RUN1);
 		}
 	}
-}
-
-unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // P_DeathThink

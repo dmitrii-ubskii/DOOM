@@ -92,6 +92,7 @@ use crate::{
 	p_setup::{deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_AddThinker, P_RemoveThinker, leveltime},
 	r_defs::subsector_t,
+	r_main::{R_PointInSubsector, R_PointToAngle2},
 	r_sky::skyflatnum,
 	s_sound::{S_StartSound, S_StopSound},
 	sounds::sfxenum_t,
@@ -535,10 +536,6 @@ fn P_ZMovement(mo: &mut mobj_t) {
 			}
 		}
 	}
-}
-
-unsafe extern "C" {
-	fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t;
 }
 
 // P_NightmareRespawn
@@ -1024,10 +1021,6 @@ fn P_CheckMissileSpawn(th: &mut mobj_t) {
 	if !P_TryMove(th, th.x, th.y) {
 		P_ExplodeMissile(th);
 	}
-}
-
-unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // P_SpawnMissile

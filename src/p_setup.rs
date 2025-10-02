@@ -4,10 +4,31 @@ use std::{ffi::c_char, num::Wrapping, ptr::null_mut};
 
 use crate::{
 	doomdata::{
-		maplinedef_t, mapnode_t, mapsector_t, mapseg_t, mapsidedef_t, mapsubsector_t, mapthing_t, mapvertex_t, ML_BLOCKMAP, ML_LINEDEFS, ML_NODES, ML_REJECT, ML_SECTORS, ML_SEGS, ML_SIDEDEFS, ML_SSECTORS, ML_THINGS, ML_TWOSIDED, ML_VERTEXES
-	}, doomdef::{skill_t, GameMode_t, MAXPLAYERS}, doomstat::gamemode, g_game::{
-		bodyqueslot, consoleplayer, deathmatch, playeringame, players, precache, totalitems, totalkills, totalsecret, wminfo, G_DeathMatchSpawnPlayer
-	}, i_system::I_Error, info::sprnames, m_bbox::{M_AddToBox, M_ClearBox, BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP}, m_fixed::{fixed_t, FixedDiv, FRACBITS}, p_local::{MAPBLOCKSHIFT, MAXRADIUS}, p_mobj::{iquehead, iquetail, mobj_t, P_SpawnMapThing}, p_spec::{P_InitPicAnims, P_SpawnSpecials}, p_switch::P_InitSwitchList, p_tick::{leveltime, P_InitThinkers}, r_data::{R_FlatNumForName, R_PrecacheLevel, R_TextureNumForName}, r_defs::{line_t, node_t, sector_t, seg_t, side_t, slopetype_t, subsector_t, vertex_t}, r_things::R_InitSprites, s_sound::S_Start, w_wad::{W_CacheLumpNum, W_GetNumForName, W_LumpLength, W_Reload}, z_zone::{Z_Free, Z_FreeTags, Z_Malloc, PU_LEVEL, PU_PURGELEVEL, PU_STATIC}
+		ML_BLOCKMAP, ML_LINEDEFS, ML_NODES, ML_REJECT, ML_SECTORS, ML_SEGS, ML_SIDEDEFS,
+		ML_SSECTORS, ML_THINGS, ML_TWOSIDED, ML_VERTEXES, maplinedef_t, mapnode_t, mapsector_t,
+		mapseg_t, mapsidedef_t, mapsubsector_t, mapthing_t, mapvertex_t,
+	},
+	doomdef::{GameMode_t, MAXPLAYERS, skill_t},
+	doomstat::gamemode,
+	g_game::{
+		G_DeathMatchSpawnPlayer, bodyqueslot, consoleplayer, deathmatch, playeringame, players,
+		precache, totalitems, totalkills, totalsecret, wminfo,
+	},
+	i_system::I_Error,
+	info::sprnames,
+	m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP, M_AddToBox, M_ClearBox},
+	m_fixed::{FRACBITS, FixedDiv, fixed_t},
+	p_local::{MAPBLOCKSHIFT, MAXRADIUS},
+	p_mobj::{P_SpawnMapThing, iquehead, iquetail, mobj_t},
+	p_spec::{P_InitPicAnims, P_SpawnSpecials},
+	p_switch::P_InitSwitchList,
+	p_tick::{P_InitThinkers, leveltime},
+	r_data::{R_FlatNumForName, R_PrecacheLevel, R_TextureNumForName},
+	r_defs::{line_t, node_t, sector_t, seg_t, side_t, slopetype_t, subsector_t, vertex_t},
+	r_things::R_InitSprites,
+	s_sound::S_Start,
+	w_wad::{W_CacheLumpNum, W_GetNumForName, W_LumpLength, W_Reload},
+	z_zone::{PU_LEVEL, PU_PURGELEVEL, PU_STATIC, Z_Free, Z_FreeTags, Z_Malloc},
 };
 
 // MAP related Lookup tables.

@@ -46,7 +46,7 @@ use crate::{
 	p_setup::{P_SetupLevel, deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_Ticker, leveltime},
 	r_data::{R_FlatNumForName, R_TextureNumForName},
-	r_defs::subsector_t,
+	r_main::{R_ExecuteSetViewSize, R_PointInSubsector, setsizeneeded},
 	r_sky::{SKYFLATNAME, skyflatnum, skytexture},
 	s_sound::{S_PauseSound, S_ResumeSound, S_StartSound},
 	sounds::sfxenum_t,
@@ -768,10 +768,6 @@ pub(crate) fn G_PlayerReborn(player: usize) {
 // at the given mapthing_t spot
 // because something is occupying it
 
-unsafe extern "C" {
-	fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t;
-}
-
 fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 	unsafe {
 		if players[playernum].mo.is_null() {
@@ -1056,10 +1052,6 @@ fn G_DoWorldDone() {
 
 // G_InitFromSavegame
 // Can be called by the startup code or the menu task.
-unsafe extern "C" {
-	static mut setsizeneeded: boolean;
-}
-
 static mut savename: [c_char; 256] = [0; 256];
 
 #[allow(static_mut_refs)]
@@ -1073,7 +1065,6 @@ pub(crate) unsafe fn G_LoadGame(name: *const c_char) {
 pub const VERSIONSIZE: usize = 16;
 
 unsafe extern "C" {
-	fn R_ExecuteSetViewSize();
 	fn R_FillBackScreen();
 }
 
@@ -1131,7 +1122,7 @@ fn G_DoLoadGame() {
 		// done
 		Z_Free(savebuffer.cast());
 
-		if setsizeneeded != 0 {
+		if setsizeneeded {
 			R_ExecuteSetViewSize();
 		}
 

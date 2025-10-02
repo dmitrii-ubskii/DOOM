@@ -10,8 +10,9 @@ use crate::{
 	m_fixed::{FRACBITS, FixedMul, fixed_t},
 	m_random::M_Random,
 	p_mobj::mobj_t,
+	r_main::R_PointToAngle2,
 	sounds::{S_music, S_sfx, musicenum_t, musicinfo_t, sfxenum_t, sfxinfo_t},
-	tables::{ANGLETOFINESHIFT, angle_t, finesine},
+	tables::{ANGLETOFINESHIFT, finesine},
 	w_wad::{W_CacheLumpNum, W_GetNumForName},
 	z_zone::{PU_CACHE, PU_MUSIC, PU_STATIC, Z_ChangeTag, Z_Malloc},
 };
@@ -505,10 +506,6 @@ fn S_StopChannel(cnum: usize) {
 			(*c).sfxinfo = null_mut();
 		}
 	}
-}
-
-unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // Changes volume, stereo-separation, and pitch variables

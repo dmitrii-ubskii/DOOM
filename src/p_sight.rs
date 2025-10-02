@@ -10,6 +10,7 @@ use crate::{
 	p_maputl::{openbottom, opentop},
 	p_mobj::mobj_t,
 	p_setup::rejectmatrix,
+	r_main::validcount,
 	r_state::{nodes, numnodes, numsectors, numsubsectors, sectors, segs, subsectors},
 };
 
@@ -75,10 +76,6 @@ fn P_InterceptVector2(v2: &mut divline_t, v1: &mut divline_t) -> fixed_t {
 	}
 	let num = FixedMul((v1.x - v2.x) >> 8, v1.dy) + FixedMul((v2.y - v1.y) >> 8, v1.dx);
 	FixedDiv(num, den)
-}
-
-unsafe extern "C" {
-	static mut validcount: i32;
 }
 
 // P_CrossSubsector

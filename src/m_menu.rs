@@ -33,6 +33,7 @@ use crate::{
 	i_system::{I_GetTime, I_Quit, I_WaitVBL},
 	i_video::I_SetPalette,
 	m_argv::M_CheckParm,
+	r_main::R_SetViewSize,
 	s_sound::{S_SetMusicVolume, S_SetSfxVolume, S_StartSound, snd_MusicVolume, snd_SfxVolume},
 	sounds::sfxenum_t,
 	v_video::{V_DrawPatchDirect, usegamma},
@@ -53,10 +54,10 @@ pub(crate) static mut showMessages: int = 0;
 #[unsafe(no_mangle)]
 pub static mut detailLevel: int = 0;
 #[unsafe(no_mangle)]
-pub static mut screenblocks: int = 0; // has default
+pub static mut screenblocks: usize = 0; // has default
 
 // temp for screenblocks (0-9)
-static mut screenSize: int = 0;
+static mut screenSize: usize = 0;
 
 // -1 = no quicksave slot picked!
 static mut quickSaveSlot: int = 0;
@@ -821,7 +822,7 @@ fn M_DrawOptions() {
 			OptionsDef.x as usize,
 			OptionsDef.y as usize + LINEHEIGHT * (options_e::scrnsize as usize + 1),
 			9,
-			screenSize as usize,
+			screenSize,
 		);
 	}
 }
@@ -969,10 +970,6 @@ fn M_ChangeDetail(_choice: i32) {
 
 	// FIXME - does not work. Remove anyway?
 	eprintln!("M_ChangeDetail: low detail mode n.a.");
-}
-
-unsafe extern "C" {
-	fn R_SetViewSize(blocks: i32, detail: i32);
 }
 
 fn M_SizeDisplay(choice: i32) {

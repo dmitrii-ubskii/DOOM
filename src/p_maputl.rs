@@ -17,7 +17,8 @@ use crate::{
 	p_setup::{
 		blocklinks, blockmap, blockmaplump, bmapheight, bmaporgx, bmaporgy, bmapwidth, lines,
 	},
-	r_defs::{line_t, slopetype_t, subsector_t},
+	r_defs::{line_t, slopetype_t},
+	r_main::{R_PointInSubsector, validcount},
 };
 
 // P_AproxDistance
@@ -246,10 +247,6 @@ pub fn P_UnsetThingPosition(thing: &mut mobj_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t;
-}
-
 // P_SetThingPosition
 // Links a thing into both a block and a subsector
 // based on it's x y.
@@ -309,10 +306,6 @@ pub fn P_SetThingPosition(thing: &mut mobj_t) {
 // call the passed PIT_* function.
 // If the function returns false,
 // exit with false without checking anything else.
-
-unsafe extern "C" {
-	static mut validcount: i32;
-}
 
 // P_BlockLinesIterator
 // The validcount flags are used to avoid checking lines

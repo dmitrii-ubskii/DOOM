@@ -8,7 +8,6 @@ use std::{
 };
 
 use crate::{
-	d_player::player_t,
 	doomdef::{SCREENWIDTH, powertype_t},
 	doomstat::modifiedgame,
 	i_system::I_Error,
@@ -20,10 +19,15 @@ use crate::{
 	},
 	r_defs::{
 		MAXDRAWSEGS, SIL_BOTH, SIL_BOTTOM, SIL_TOP, column_t, drawseg_t, lighttable_t, patch_t,
-		sector_t, seg_t, spritedef_t, spriteframe_t, vissprite_t,
+		sector_t, spritedef_t, spriteframe_t, vissprite_t,
 	},
-	r_main::{LIGHTLEVELS, LIGHTSCALESHIFT, LIGHTSEGSHIFT, MAXLIGHTSCALE},
-	tables::{ANG45, angle_t},
+	r_main::{
+		LIGHTLEVELS, LIGHTSCALESHIFT, LIGHTSEGSHIFT, MAXLIGHTSCALE, R_PointOnSegSide,
+		R_PointToAngle, basecolfunc, centerxfrac, centeryfrac, colfunc, extralight, fixedcolormap,
+		fuzzcolfunc, projection, scalelight, validcount, viewangleoffset, viewcos, viewplayer,
+		viewsin, viewx, viewy, viewz,
+	},
+	tables::ANG45,
 	w_wad::{W_CacheLumpNum, W_GetNumForName, lumpinfo},
 	z_zone::{PU_CACHE, PU_STATIC, Z_Malloc},
 };
@@ -356,10 +360,6 @@ unsafe extern "C" {
 	static mut dc_translation: *mut u8;
 	static mut translationtables: *mut u8;
 
-	static mut colfunc: unsafe extern "C" fn();
-	static mut basecolfunc: unsafe extern "C" fn();
-	static mut fuzzcolfunc: unsafe extern "C" fn();
-
 	fn R_DrawTranslatedColumn();
 }
 
@@ -402,19 +402,6 @@ fn R_DrawVisSprite(vis: &mut vissprite_t, _x1: usize, _x2: usize) {
 
 		colfunc = basecolfunc;
 	}
-}
-
-unsafe extern "C" {
-	static mut viewx: fixed_t;
-	static mut viewy: fixed_t;
-	static mut viewz: fixed_t;
-
-	static mut viewcos: fixed_t;
-	static mut viewsin: fixed_t;
-
-	static mut projection: fixed_t;
-
-	fn R_PointToAngle(x: fixed_t, y: fixed_t) -> angle_t;
 }
 
 // R_ProjectSprite
@@ -530,10 +517,6 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 	}
 }
 
-unsafe extern "C" {
-	static mut validcount: i32;
-}
-
 // R_AddSprites
 // During BSP traversal, this adds sprites by sector.
 #[unsafe(no_mangle)]
@@ -570,14 +553,9 @@ pub extern "C" fn R_AddSprites(sec: &mut sector_t) {
 }
 
 unsafe extern "C" {
-	static mut centerxfrac: fixed_t;
-	static mut centeryfrac: fixed_t;
-
 	static mut viewwidth: i32;
 
 	static mut detailshift: i32;
-
-	static mut fixedcolormap: *mut lighttable_t;
 }
 
 // R_DrawPSprite
@@ -665,12 +643,6 @@ fn R_DrawPSprite(psp: &pspdef_t) {
 	}
 }
 
-unsafe extern "C" {
-	static mut viewplayer: *mut player_t;
-	static mut extralight: i32;
-	static mut scalelight: [[*mut lighttable_t; MAXLIGHTSCALE]; LIGHTLEVELS];
-}
-
 // R_DrawPlayerSprites
 #[allow(static_mut_refs)]
 fn R_DrawPlayerSprites() {
@@ -756,7 +728,6 @@ fn R_SortVisSprites() {
 unsafe extern "C" {
 	static mut viewheight: i32;
 
-	fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: *mut seg_t) -> i32;
 }
 
 // R_DrawSprite
@@ -793,7 +764,7 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 			let scale = i32::max(ds.scale1, ds.scale2);
 
 			if scale < spr.scale
-				|| lowscale < spr.scale && R_PointOnSegSide(spr.gx, spr.gy, ds.curline) == 0
+				|| lowscale < spr.scale && R_PointOnSegSide(spr.gx, spr.gy, &mut *ds.curline) == 0
 			{
 				// masked mid texture?
 				if !ds.maskedtexturecol.is_null() {
@@ -860,7 +831,6 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 }
 
 unsafe extern "C" {
-	static mut viewangleoffset: i32;
 	static mut ds_p: *mut drawseg_t;
 	static mut drawsegs: [drawseg_t; MAXDRAWSEGS];
 
@@ -869,8 +839,7 @@ unsafe extern "C" {
 
 // R_DrawMasked
 #[allow(static_mut_refs)]
-#[unsafe(no_mangle)]
-pub extern "C" fn R_DrawMasked() {
+pub fn R_DrawMasked() {
 	unsafe {
 		R_SortVisSprites();
 

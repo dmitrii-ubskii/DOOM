@@ -30,7 +30,8 @@ use crate::{
 	p_spec::{P_CrossSpecialLine, P_ShootSpecialLine},
 	p_switch::P_UseSpecialLine,
 	p_tick::leveltime,
-	r_defs::{line_t, sector_t, slopetype_t, subsector_t},
+	r_defs::{line_t, sector_t, slopetype_t},
+	r_main::{R_PointInSubsector, R_PointToAngle2, validcount},
 	r_sky::skyflatnum,
 	s_sound::S_StartSound,
 	sounds::sfxenum_t,
@@ -92,12 +93,6 @@ pub fn PIT_StompThing(thing: &mut mobj_t) -> bool {
 
 		true
 	}
-}
-
-unsafe extern "C" {
-	static mut validcount: i32;
-
-	fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t;
 }
 
 // P_TeleportMove
@@ -519,24 +514,11 @@ static mut slidemo: *mut mobj_t = null_mut();
 static mut tmxmove: fixed_t = 0;
 static mut tmymove: fixed_t = 0;
 
-unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
-}
-
 // P_HitSlideLine
 // Adjusts the xmove / ymove
 // so that the next move will slide along the wall.
 fn P_HitSlideLine(ld: &line_t) {
 	unsafe {
-		// int			side;
-
-		// angle_t		lineangle;
-		// angle_t		moveangle;
-		// angle_t		deltaangle;
-
-		// fixed_t		movelen;
-		// fixed_t		newlen;
-
 		if ld.slopetype == slopetype_t::ST_HORIZONTAL {
 			tmymove = 0;
 			return;

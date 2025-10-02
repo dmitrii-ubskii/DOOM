@@ -18,7 +18,7 @@ use crate::{
 	d_englsh::{D_CDROM, D_DEVSTR},
 	d_event::{MAXEVENTS, event_t, eventhead, events, eventtail, gameaction_t},
 	d_net::BACKUPTICS,
-	d_player::{player_t, playerstate_t},
+	d_player::playerstate_t,
 	d_ticcmd::ticcmd_t,
 	doomdef::{
 		GameMode_t, Language_t, MAXPLAYERS, SCREENHEIGHT, SCREENWIDTH, VERSION, gamestate_t,
@@ -42,6 +42,7 @@ use crate::{
 	m_misc::M_LoadDefaults,
 	myargc, myargv,
 	p_setup::P_Init,
+	r_main::{R_ExecuteSetViewSize, R_Init, R_RenderPlayerView, setsizeneeded},
 	s_sound::{S_Init, S_StartMusic, S_UpdateSounds, snd_MusicVolume, snd_SfxVolume},
 	sounds::musicenum_t,
 	st_stuff::{ST_Drawer, ST_Init},
@@ -136,7 +137,6 @@ pub static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
 
 unsafe extern "C" {
 	static mut scaledviewwidth: i32;
-	static mut setsizeneeded: boolean;
 	static mut viewheight: i32;
 	static mut viewwindowx: usize;
 	static mut viewwindowy: usize;
@@ -144,9 +144,7 @@ unsafe extern "C" {
 	fn F_Drawer();
 	fn NetUpdate();
 	fn R_DrawViewBorder();
-	fn R_ExecuteSetViewSize();
 	fn R_FillBackScreen();
-	fn R_RenderPlayerView(player: &mut player_t);
 }
 
 fn D_Display() {
@@ -166,7 +164,7 @@ fn D_Display() {
 		let mut redrawsbar = false;
 
 		// change the view size if needed
-		if setsizeneeded != 0 {
+		if setsizeneeded {
 			R_ExecuteSetViewSize();
 			oldgamestate = gamestate_t::None; // force background redraw
 			borderdrawcount = 3;
@@ -705,7 +703,6 @@ fn FindResponseFile() {
 }
 
 unsafe extern "C" {
-	fn R_Init();
 	fn D_CheckNetGame();
 }
 

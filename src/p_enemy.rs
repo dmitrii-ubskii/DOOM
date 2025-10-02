@@ -42,6 +42,7 @@ use crate::{
 	p_spec::{floor_e, vldoor_e},
 	p_switch::P_UseSpecialLine,
 	r_defs::{line_t, sector_t, slopetype_t},
+	r_main::{R_PointToAngle2, validcount},
 	s_sound::S_StartSound,
 	sounds::sfxenum_t,
 	tables::{ANG90, ANG180, ANG270, ANGLETOFINESHIFT, angle_t, finecos, finesine},
@@ -105,10 +106,6 @@ const diags: [dirtype_t; 4] = [
 // sound blocking lines cut off traversal.
 
 static mut soundtarget: *mut mobj_t = null_mut();
-
-unsafe extern "C" {
-	static mut validcount: i32;
-}
 
 fn P_RecursiveSound(sec: &mut sector_t, soundblocks: i32) {
 	unsafe {
@@ -423,10 +420,6 @@ fn P_NewChaseDir(actor: &mut mobj_t) {
 
 		actor.movedir = dirtype_t::DI_NODIR; // can not move
 	}
-}
-
-unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // P_LookForPlayers

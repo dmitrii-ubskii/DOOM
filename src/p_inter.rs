@@ -33,9 +33,10 @@ use crate::{
 		P_SetMobjState, P_SpawnMobj, mobj_t,
 	},
 	p_pspr::P_DropWeapon,
+	r_main::R_PointToAngle2,
 	s_sound::S_StartSound,
 	sounds::sfxenum_t,
-	tables::{ANG180, ANGLETOFINESHIFT, angle_t, finecos, finesine},
+	tables::{ANG180, ANGLETOFINESHIFT, finecos, finesine},
 };
 
 type int = i32;
@@ -719,10 +720,6 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 		let mo = P_SpawnMobj(target.x, target.y, ONFLOORZ, item);
 		(*mo).flags |= MF_DROPPED; // special versions of items
 	}
-}
-
-unsafe extern "C" {
-	fn R_PointToAngle2(x_1: i32, y_1: i32, x_2: i32, y_2: i32) -> angle_t;
 }
 
 // P_DamageMobj
