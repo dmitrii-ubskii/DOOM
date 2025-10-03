@@ -2,7 +2,7 @@
 
 use std::{ffi::c_char, process::exit, ptr::null_mut};
 
-use libc::{gettimeofday, malloc, memset, timeval};
+use libc::{calloc, gettimeofday, malloc, timeval};
 
 use crate::{
 	d_ticcmd::ticcmd_t, doomdef::TICRATE, i_video::I_ShutdownGraphics, m_misc::M_SaveDefaults,
@@ -90,11 +90,7 @@ pub extern "C" fn I_WaitVBL(_count: i32) {
 }
 
 pub(crate) fn I_AllocLow(length: usize) -> *mut u8 {
-	unsafe {
-		let mem = malloc(length);
-		memset(mem, 0, length);
-		mem as _
-	}
+	unsafe { calloc(length, 1).cast() }
 }
 
 // I_Error

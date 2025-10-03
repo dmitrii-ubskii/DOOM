@@ -3,10 +3,10 @@
 use std::{
 	ffi::{CStr, c_char, c_void},
 	mem::MaybeUninit,
-	ptr::null_mut,
+	ptr::{self, null_mut},
 };
 
-use libc::{O_RDONLY, SEEK_SET, memset, open};
+use libc::{O_RDONLY, SEEK_SET, open};
 
 use crate::{
 	i_system::I_Error,
@@ -91,7 +91,7 @@ fn ExtractFileBase(path: *const c_char, mut dest: *mut c_char) {
 		}
 
 		// copy up to eight characters
-		memset(dest.cast(), 0, 8);
+		ptr::write_bytes(dest, 0, 8);
 		let mut length = 0;
 
 		while *src != 0 && *src != b'.' as i8 {
@@ -289,7 +289,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 			I_Error(c"Couldn't allocate lumpcache".as_ptr());
 		}
 
-		memset(lumpcache.cast(), 0, size);
+		ptr::write_bytes(lumpcache, 0, numlumps);
 	}
 }
 

@@ -3,7 +3,7 @@
 use std::{
 	ffi::{c_char, c_void},
 	mem,
-	ptr::{null, null_mut},
+	ptr::{self, null, null_mut},
 };
 
 use libc::O_RDONLY;
@@ -1524,7 +1524,7 @@ pub(crate) fn M_Drawer() {
 				let mut i = 0;
 				for _ in 0..libc::strlen(messageString.wrapping_add(start)) {
 					if *(messageString.wrapping_add(start + i)) == b'\n' as c_char {
-						libc::memset(string.as_mut_ptr().cast(), 0, 40);
+						string = [0; 40];
 						libc::strncpy(string.as_mut_ptr(), messageString.wrapping_add(start), i);
 						start += i + 1;
 						break;

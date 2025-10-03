@@ -3,7 +3,7 @@
 use std::{
 	ffi::{c_char, c_int, c_void},
 	num::Wrapping,
-	ptr::{null, null_mut},
+	ptr::{self, null, null_mut},
 };
 
 use crate::{
@@ -473,9 +473,7 @@ fn G_DoLoadLevel() {
 		sendpause = false;
 		sendsave = false;
 		paused = false;
-		// libc::memset(mousebuttons.cast(), 0, size_of_val(&mousebuttons));
 		mousearray = [mousearray[0], false, false, false];
-		// libc::memset(joybuttons.cast(), 0, size_of_val(&joybuttons));
 		joyarray = [joyarray[0], false, false, false, false];
 	}
 }
@@ -740,7 +738,7 @@ pub(crate) fn G_PlayerReborn(player: usize) {
 		let secretcount = players[player].secretcount;
 
 		let p = &raw mut players[player];
-		libc::memset(p.cast(), 0, size_of::<player_t>());
+		ptr::write_bytes(p, 0, 1);
 
 		players[player].frags = frags;
 		players[player].killcount = killcount;

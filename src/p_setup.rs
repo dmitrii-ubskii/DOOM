@@ -1,6 +1,10 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_char, num::Wrapping, ptr::null_mut};
+use std::{
+	ffi::c_char,
+	num::Wrapping,
+	ptr::{self, null_mut},
+};
 
 use crate::{
 	doomdata::{
@@ -143,7 +147,7 @@ fn P_LoadSegs(lump: usize) {
 	unsafe {
 		numsegs = W_LumpLength(lump) / size_of::<mapseg_t>();
 		segs = Z_Malloc(numsegs * size_of::<seg_t>(), PU_LEVEL, null_mut()).cast();
-		libc::memset(segs.cast(), 0, numsegs * size_of::<seg_t>());
+		ptr::write_bytes(segs, 0, numsegs);
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
 		let mut ml = data as *mut mapseg_t;
@@ -184,7 +188,7 @@ fn P_LoadSubsectors(lump: usize) {
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
 		let mut ms = data as *mut mapsubsector_t;
-		libc::memset(subsectors.cast(), 0, numsubsectors * size_of::<subsector_t>());
+		ptr::write_bytes(subsectors, 0, numsubsectors);
 		let mut ss = subsectors;
 
 		for _ in 0..numsubsectors {
@@ -203,7 +207,7 @@ fn P_LoadSectors(lump: usize) {
 	unsafe {
 		numsectors = W_LumpLength(lump) / size_of::<mapsector_t>();
 		sectors = Z_Malloc(numsectors * size_of::<sector_t>(), PU_LEVEL, null_mut()).cast();
-		libc::memset(sectors.cast(), 0, numsectors * size_of::<sector_t>());
+		ptr::write_bytes(sectors, 0, numsectors);
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
 		let mut ms = data as *mut mapsector_t;
@@ -301,7 +305,7 @@ fn P_LoadLineDefs(lump: usize) {
 	unsafe {
 		numlines = W_LumpLength(lump) / size_of::<maplinedef_t>();
 		lines = Z_Malloc(numlines * size_of::<line_t>(), PU_LEVEL, null_mut()).cast();
-		libc::memset(lines.cast(), 0, numlines * size_of::<line_t>());
+		ptr::write_bytes(lines, 0, numlines);
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
 		let mut mld = data as *mut maplinedef_t;
@@ -370,7 +374,7 @@ fn P_LoadSideDefs(lump: usize) {
 	unsafe {
 		numsides = W_LumpLength(lump) / size_of::<mapsidedef_t>();
 		sides = Z_Malloc(numsides * size_of::<side_t>(), PU_LEVEL, null_mut()).cast();
-		libc::memset(sides.cast(), 0, numsides * size_of::<side_t>());
+		ptr::write_bytes(sides, 0, numsides);
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
 		let mut msd = data as *mut mapsidedef_t;
@@ -404,7 +408,7 @@ fn P_LoadBlockMap(lump: usize) {
 		// clear out mobj chains
 		let count = size_of::<*mut mobj_t>() * bmapwidth * bmapheight;
 		blocklinks = Z_Malloc(count, PU_LEVEL, null_mut()).cast();
-		libc::memset(blocklinks.cast(), 0, count);
+		ptr::write_bytes(blocklinks, 0, bmapwidth * bmapheight);
 	}
 }
 

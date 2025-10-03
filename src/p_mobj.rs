@@ -62,7 +62,10 @@
 
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{num::Wrapping, ptr::null_mut};
+use std::{
+	num::Wrapping,
+	ptr::{self, null_mut},
+};
 
 use crate::{
 	d_main::nomonsters,
@@ -659,10 +662,10 @@ pub extern "C" fn P_MobjThinker(mobj: &mut mobj_t) {
 // P_SpawnMobj
 pub fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut mobj_t {
 	unsafe {
-		let mobj = Z_Malloc(size_of::<mobj_t>(), PU_LEVEL, null_mut());
-		libc::memset(mobj, 0, size_of::<mobj_t>());
+		let mobj = Z_Malloc(size_of::<mobj_t>(), PU_LEVEL, null_mut()).cast::<mobj_t>();
+		ptr::write_bytes(mobj, 0, 1);
 		let info = &mut mobjinfo[ty as usize];
-		let mobj = &mut *(mobj as *mut mobj_t);
+		let mobj = &mut *mobj;
 
 		mobj.ty = ty;
 		mobj.info = info;

@@ -216,7 +216,7 @@ pub extern "C" fn R_FindPlane(
 		(*check).minx = SCREENWIDTH as isize;
 		(*check).maxx = -1;
 
-		libc::memset((*check).top.as_mut_ptr().cast(), 0xff, size_of_val(&(*check).top));
+		(*check).top = [0xff; SCREENWIDTH];
 
 		check
 	}

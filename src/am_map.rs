@@ -1,6 +1,9 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_char, ptr::null_mut};
+use std::{
+	ffi::c_char,
+	ptr::{self, null_mut},
+};
 
 use crate::{
 	d_englsh::{
@@ -789,7 +792,7 @@ pub(crate) fn AM_Ticker() {
 
 // Clear automap frame buffer.
 fn AM_clearFB(color: i32) {
-	unsafe { libc::memset(fb.cast(), color, (f_w * f_h) as usize) };
+	unsafe { ptr::write_bytes(fb, color as u8, (f_w * f_h) as usize) };
 }
 
 // Automap clipping of lines.

@@ -175,7 +175,7 @@ fn R_InitSpriteDefs(namelist: *const *const u8) {
 		// Just compare 4 characters as ints
 		for i in 0..numsprites {
 			spritename = *namelist.wrapping_add(i);
-			libc::memset((&raw mut sprtemp).cast(), -1, size_of_val(&sprtemp));
+			ptr::write_bytes(&raw mut sprtemp, 0xff, 1);
 
 			maxframe = -1;
 			let intname = spritename.cast::<i32>().read_unaligned();

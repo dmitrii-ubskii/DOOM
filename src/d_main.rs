@@ -4,13 +4,13 @@ use std::{
 	env,
 	ffi::{CStr, CString, c_char, c_int, c_void},
 	mem::transmute,
-	ptr::{null, null_mut},
+	ptr::{self, null, null_mut},
 	str::FromStr,
 };
 
 use libc::{
-	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fread, fseek, ftell, malloc, memset, mkdir,
-	printf, sprintf, strcpy,
+	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fread, fseek, ftell, malloc, mkdir, printf,
+	sprintf, strcpy,
 };
 
 use crate::{
@@ -660,7 +660,7 @@ fn FindResponseFile() {
 
 				let firstargv = *myargv.wrapping_add(0);
 				myargv = malloc(size_of::<*const char>() * MAXARGVS) as *mut *mut c_char;
-				memset(myargv.cast(), 0, size_of::<*const char>() * MAXARGVS);
+				ptr::write_bytes(myargv, 0, MAXARGVS);
 				*myargv = firstargv;
 
 				let infile = file;
