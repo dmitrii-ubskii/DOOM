@@ -1483,7 +1483,7 @@ pub(crate) fn A_BossDeath(mo: &mut mobj_t) {
 					_ => (),
 				},
 
-				_ => unreachable!(),
+				_ => (),
 			}
 		}
 
