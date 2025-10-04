@@ -598,7 +598,7 @@ pub(crate) fn A_BFGSpray(mo: &mut mobj_t) {
 	unsafe {
 		// offset angles from its attack angle
 		for i in 0..40 {
-			let an = mo.angle - (ANG90 / Wrapping(2) - ANG90 / Wrapping(40 * i));
+			let an = mo.angle - (ANG90 / Wrapping(2) - ANG90 / Wrapping(40) * Wrapping(i));
 
 			// mo.target is the originator (player)
 			//  of the missile
