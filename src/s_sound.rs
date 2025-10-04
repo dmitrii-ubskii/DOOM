@@ -555,7 +555,7 @@ fn S_AdjustSoundParams(
 			}
 
 			*vol = 15
-				+ ((snd_SfxVolume - 15) * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS))
+				- ((15 - snd_SfxVolume) * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS))
 					/ S_ATTENUATOR;
 		} else {
 			// distance effect
