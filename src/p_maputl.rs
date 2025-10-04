@@ -150,7 +150,7 @@ fn P_MakeDivline(li: &line_t) -> divline_t {
 // This is only called by the addthings
 // and addlines traversers.
 fn P_InterceptVector(v2: &divline_t, v1: &divline_t) -> fixed_t {
-	let den = FixedMul(v1.dy >> 8, v2.dx) - FixedMul(v1.dx >> 8, v2.dy);
+	let den = FixedMul(v1.dy >> 8, v2.dx).wrapping_sub(FixedMul(v1.dx >> 8, v2.dy));
 
 	if den == 0 {
 		return 0;
