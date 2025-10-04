@@ -218,8 +218,7 @@ fn P_FireWeapon(player: &mut player_t) {
 
 // P_DropWeapon
 // Player died, so put the weapon away.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_DropWeapon(player: &mut player_t) {
+pub fn P_DropWeapon(player: &mut player_t) {
 	P_SetPsprite(player, psprnum_t::ps_weapon, weaponinfo[player.readyweapon as usize].downstate);
 }
 

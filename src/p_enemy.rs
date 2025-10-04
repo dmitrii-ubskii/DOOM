@@ -150,8 +150,7 @@ fn P_RecursiveSound(sec: &mut sector_t, soundblocks: i32) {
 // P_NoiseAlert
 // If a monster yells at a player,
 // it will alert other monsters to the player.
-#[unsafe(no_mangle)]
-pub extern "C" fn P_NoiseAlert(target: *mut mobj_t, emmiter: &mut mobj_t) {
+pub fn P_NoiseAlert(target: *mut mobj_t, emmiter: &mut mobj_t) {
 	unsafe {
 		soundtarget = target;
 		validcount += 1;

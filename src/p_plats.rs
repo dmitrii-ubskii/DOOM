@@ -212,8 +212,7 @@ fn P_ActivateInStasis(tag: i32) {
 	}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn EV_StopPlat(line: &mut line_t) {
+pub fn EV_StopPlat(line: &mut line_t) {
 	unsafe {
 		#[allow(clippy::needless_range_loop)]
 		for j in 0..MAXPLATS {

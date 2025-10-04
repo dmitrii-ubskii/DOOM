@@ -31,8 +31,7 @@ pub(crate) fn P_InitThinkers() {
 
 // P_AddThinker
 // Adds a new thinker at the end of the list.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn P_AddThinker(thinker: *mut thinker_t) {
+pub unsafe fn P_AddThinker(thinker: *mut thinker_t) {
 	unsafe {
 		(*thinkercap.prev).next = thinker;
 		let thinker_ref = &mut *thinker;
@@ -45,8 +44,7 @@ pub unsafe extern "C" fn P_AddThinker(thinker: *mut thinker_t) {
 // P_RemoveThinker
 // Deallocation is lazy -- it will not actually be freed
 // until its thinking turn comes up.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn P_RemoveThinker(thinker: &mut thinker_t) {
+pub unsafe fn P_RemoveThinker(thinker: &mut thinker_t) {
 	thinker.function = think_t::null;
 }
 

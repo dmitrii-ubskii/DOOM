@@ -481,8 +481,7 @@ pub(crate) fn getNextSector(line: *mut line_t, sec: *mut sector_t) -> *mut secto
 
 // P_FindLowestFloorSurrounding()
 // FIND LOWEST FLOOR HEIGHT IN SURROUNDING SECTORS
-#[unsafe(no_mangle)]
-pub extern "C" fn P_FindLowestFloorSurrounding(sec: &mut sector_t) -> fixed_t {
+pub fn P_FindLowestFloorSurrounding(sec: &mut sector_t) -> fixed_t {
 	unsafe {
 		let mut floor = sec.floorheight;
 
@@ -576,8 +575,7 @@ pub(crate) fn P_FindNextHighestFloor(sec: &mut sector_t, currentheight: fixed_t)
 }
 
 // FIND LOWEST CEILING IN THE SURROUNDING SECTORS
-#[unsafe(no_mangle)]
-pub extern "C" fn P_FindLowestCeilingSurrounding(sec: &mut sector_t) -> fixed_t {
+pub fn P_FindLowestCeilingSurrounding(sec: &mut sector_t) -> fixed_t {
 	unsafe {
 		let mut height = fixed_t::MAX;
 

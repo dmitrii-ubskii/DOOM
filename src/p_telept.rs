@@ -14,8 +14,7 @@ use crate::{
 };
 
 // TELEPORTATION
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) -> bool {
+pub unsafe fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) -> bool {
 	// don't teleport missiles
 	if thing.flags & MF_MISSILE != 0 {
 		return false;

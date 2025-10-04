@@ -24,16 +24,14 @@ pub(crate) static mut rndindex: i32 = 0;
 static mut prndindex: i32 = 0;
 
 // Which one is deterministic?
-#[unsafe(no_mangle)]
-pub extern "C" fn P_Random() -> i32 {
+pub fn P_Random() -> i32 {
 	unsafe {
 		prndindex = (prndindex + 1) & 0xff;
 		rndtable[prndindex as usize] as i32
 	}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn M_Random() -> i32 {
+pub fn M_Random() -> i32 {
 	unsafe {
 		rndindex = (rndindex + 1) & 0xff;
 		rndtable[rndindex as usize] as i32

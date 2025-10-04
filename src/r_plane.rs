@@ -67,8 +67,7 @@ static mut cachedystep: [fixed_t; SCREENHEIGHT] = [0; SCREENHEIGHT];
 
 // R_InitPlanes
 // Only at game startup.
-#[unsafe(no_mangle)]
-pub extern "C" fn R_InitPlanes() {
+pub fn R_InitPlanes() {
 	// Doh!
 }
 
@@ -150,8 +149,7 @@ unsafe extern "C" {
 // R_ClearPlanes
 // At begining of frame.
 #[allow(static_mut_refs)]
-#[unsafe(no_mangle)]
-pub extern "C" fn R_ClearPlanes() {
+pub fn R_ClearPlanes() {
 	unsafe {
 		// opening / clipping determination
 		for i in 0..viewwidth {
@@ -316,8 +314,7 @@ unsafe extern "C" {
 // R_DrawPlanes
 // At the end of each frame.
 #[allow(static_mut_refs)]
-#[unsafe(no_mangle)]
-pub extern "C" fn R_DrawPlanes() {
+pub fn R_DrawPlanes() {
 	unsafe {
 		let mut pl = visplanes.as_mut_ptr();
 		while !ptr::eq(pl, lastvisplane) {

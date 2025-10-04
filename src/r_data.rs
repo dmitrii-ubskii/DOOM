@@ -531,8 +531,7 @@ fn R_InitColormaps() {
 // Locates all the lumps
 //  that will be used by all views
 // Must be called after W_Init.
-#[unsafe(no_mangle)]
-pub extern "C" fn R_InitData() {
+pub fn R_InitData() {
 	R_InitTextures();
 	print!("\nInitTextures");
 	R_InitFlats();

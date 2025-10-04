@@ -11,7 +11,7 @@ use crate::{
 	p_setup::{nodes, numnodes, subsectors},
 	r_data::{R_InitData, colormaps},
 	r_defs::{lighttable_t, node_t, seg_t, subsector_t},
-	r_plane::{distscale, yslope},
+	r_plane::{R_ClearPlanes, R_DrawPlanes, R_InitPlanes, distscale, yslope},
 	r_sky::R_InitSkyMap,
 	r_things::{R_ClearSprites, R_DrawMasked, pspriteiscale, pspritescale, screenheightarray},
 	tables::{
@@ -515,7 +515,6 @@ pub fn R_ExecuteSetViewSize() {
 }
 
 unsafe extern "C" {
-	fn R_InitPlanes();
 	fn R_InitTranslationTables();
 }
 
@@ -606,9 +605,6 @@ fn R_SetupFrame(player: &mut player_t) {
 unsafe extern "C" {
 	fn R_ClearClipSegs();
 	fn R_ClearDrawSegs();
-
-	fn R_ClearPlanes();
-	fn R_DrawPlanes();
 
 	fn NetUpdate();
 

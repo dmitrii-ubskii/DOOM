@@ -211,8 +211,7 @@ pub fn STlib_updateNum(n: &mut st_number_t, refresh: bool) {
 
 // Percent widget routines
 
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_initPercent(
+pub fn STlib_initPercent(
 	p: &mut st_percent_t,
 	x: usize,
 	y: usize,
@@ -237,8 +236,7 @@ pub fn STlib_updatePercent(per: &mut st_percent_t, refresh: bool) {
 
 // Multiple Icon widget routines
 
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_initMultIcon(
+pub fn STlib_initMultIcon(
 	i: &mut st_multicon_t,
 	x: usize,
 	y: usize,
@@ -285,8 +283,7 @@ pub fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 
 // Binary Icon widget routines
 
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_initBinIcon(
+pub fn STlib_initBinIcon(
 	b: &mut st_binicon_t,
 	x: usize,
 	y: usize,

@@ -42,8 +42,7 @@ pub(crate) fn T_FireFlicker(flick: &mut fireflicker_t) {
 }
 
 // P_SpawnFireFlicker
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnFireFlicker(sector: &mut sector_t) {
+pub fn P_SpawnFireFlicker(sector: &mut sector_t) {
 	unsafe {
 		// Note that we are resetting sector attributes.
 		// Nothing special about it during gameplay.
@@ -87,8 +86,7 @@ pub(crate) fn T_LightFlash(flash: &mut lightflash_t) {
 // P_SpawnLightFlash
 // After the map has been loaded, scan each sector
 // for specials that spawn thinkers
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnLightFlash(sector: &mut sector_t) {
+pub fn P_SpawnLightFlash(sector: &mut sector_t) {
 	unsafe {
 		// nothing special about it during gameplay
 		sector.special = 0;
@@ -133,8 +131,7 @@ pub(crate) fn T_StrobeFlash(flash: &mut strobe_t) {
 // P_SpawnStrobeFlash
 // After the map has been loaded, scan each sector
 // for specials that spawn thinkers
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnStrobeFlash(sector: &mut sector_t, fastOrSlow: i32, inSync: i32) {
+pub fn P_SpawnStrobeFlash(sector: &mut sector_t, fastOrSlow: i32, inSync: i32) {
 	unsafe {
 		let flash = Z_Malloc(size_of::<strobe_t>(), PU_LEVSPEC, null_mut()) as *mut strobe_t;
 		let flash = &mut *flash;
@@ -164,8 +161,7 @@ pub extern "C" fn P_SpawnStrobeFlash(sector: &mut sector_t, fastOrSlow: i32, inS
 }
 
 // Start strobing lights (usually from a trigger)
-#[unsafe(no_mangle)]
-pub extern "C" fn EV_StartLightStrobing(line: &mut line_t) {
+pub fn EV_StartLightStrobing(line: &mut line_t) {
 	let secnum = -1;
 	unsafe {
 		while let secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
@@ -180,8 +176,7 @@ pub extern "C" fn EV_StartLightStrobing(line: &mut line_t) {
 }
 
 // TURN LINE'S TAG LIGHTS OFF
-#[unsafe(no_mangle)]
-pub extern "C" fn EV_TurnTagLightsOff(line: &mut line_t) {
+pub fn EV_TurnTagLightsOff(line: &mut line_t) {
 	unsafe {
 		for j in 0..numsectors as usize {
 			let sector = &mut *sectors.wrapping_add(j);
@@ -258,8 +253,7 @@ pub(crate) fn T_Glow(g: &mut glow_t) {
 	}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnGlowingLight(sector: &mut sector_t) {
+pub fn P_SpawnGlowingLight(sector: &mut sector_t) {
 	unsafe {
 		let g = Z_Malloc(size_of::<glow_t>(), PU_LEVSPEC, null_mut()) as *mut glow_t;
 		let g = &mut *g;

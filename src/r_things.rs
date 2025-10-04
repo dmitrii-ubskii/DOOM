@@ -272,11 +272,8 @@ pub fn R_InitSprites(namelist: *const *const u8) {
 // R_ClearSprites
 // Called at frame start.
 #[allow(static_mut_refs)]
-#[unsafe(no_mangle)]
-pub extern "C" fn R_ClearSprites() {
-	unsafe {
-		vissprite_p = vissprites.as_mut_ptr();
-	}
+pub fn R_ClearSprites() {
+	unsafe { vissprite_p = vissprites.as_mut_ptr() }
 }
 
 // R_NewVisSprite

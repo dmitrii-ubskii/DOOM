@@ -114,8 +114,7 @@ pub extern "C" fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
 }
 
 // V_CopyRect
-#[unsafe(no_mangle)]
-pub extern "C" fn V_CopyRect(
+pub fn V_CopyRect(
 	srcx: usize,
 	srcy: usize,
 	srcscrn: usize,
@@ -209,13 +208,7 @@ pub unsafe extern "C" fn V_DrawPatch(
 // V_DrawPatchFlipped
 // Masks a column based masked pic to the screen.
 // Flips horizontally, e.g. to mirror face.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn V_DrawPatchFlipped(
-	mut x: usize,
-	mut y: usize,
-	scrn: usize,
-	patch: *mut patch_t,
-) {
+pub unsafe fn V_DrawPatchFlipped(mut x: usize, mut y: usize, scrn: usize, patch: *mut patch_t) {
 	unsafe {
 		y = y.checked_add_signed(-(*patch).topoffset as isize).unwrap();
 		x = x.checked_add_signed(-(*patch).leftoffset as isize).unwrap();

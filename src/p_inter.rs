@@ -199,14 +199,14 @@ fn P_GiveBody(player: &mut player_t, num: int) -> boolean {
 // P_GiveArmor
 // Returns false if the armor is worse
 // than the current armor.
-fn P_GiveArmor(player: &mut player_t, armortype: int) -> boolean {
+fn P_GiveArmor(player: &mut player_t, armortype: int) -> bool {
 	let hits = armortype * 100;
 	if player.armorpoints >= hits {
-		0 // don't pick up
+		false // don't pick up
 	} else {
 		player.armortype = armortype;
 		player.armorpoints = hits;
-		1
+		true
 	}
 }
 
@@ -221,47 +221,45 @@ fn P_GiveCard(player: &mut player_t, card: card_t) {
 }
 
 // P_GivePower
-#[unsafe(no_mangle)]
-pub extern "C" fn P_GivePower(player: &mut player_t, power: powertype_t) -> boolean {
+pub fn P_GivePower(player: &mut player_t, power: powertype_t) -> bool {
 	match power {
 		powertype_t::pw_invulnerability => {
 			player.powers[power as usize] = INVULNTICS;
-			return 1;
+			true
 		}
 		powertype_t::pw_invisibility => {
 			player.powers[power as usize] = INVISTICS;
 			unsafe {
 				(*player.mo).flags |= MF_SHADOW;
 			}
-			return 1;
+			true
 		}
 		powertype_t::pw_infrared => {
 			player.powers[power as usize] = INFRATICS;
-			return 1;
+			true
 		}
 		powertype_t::pw_ironfeet => {
 			player.powers[power as usize] = IRONTICS;
-			return 1;
+			true
 		}
 
 		powertype_t::pw_strength => {
 			P_GiveBody(player, 100);
 			player.powers[power as usize] = 1;
-			return 1;
+			true
 		}
 
 		powertype_t::pw_allmap => {
 			if player.powers[power as usize] != 0 {
-				return 0; // already got it
+				return false; // already got it
 			}
 
 			player.powers[power as usize] = 1;
+			true
 		}
 
 		_ => unreachable!(),
 	}
-
-	1
 }
 
 // P_TouchSpecialThing
@@ -286,14 +284,14 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 	match special.sprite {
 		// armor
 		spritenum_t::SPR_ARM1 => {
-			if P_GiveArmor(player, 1) == 0 {
+			if !P_GiveArmor(player, 1) {
 				return;
 			}
 			player.message = GOTARMOR;
 		}
 
 		spritenum_t::SPR_ARM2 => {
-			if P_GiveArmor(player, 2) == 0 {
+			if !P_GiveArmor(player, 2) {
 				return;
 			}
 			player.message = GOTMEGA;
@@ -429,7 +427,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 
 		// power ups
 		spritenum_t::SPR_PINV => {
-			if P_GivePower(player, powertype_t::pw_invulnerability) == 0 {
+			if !P_GivePower(player, powertype_t::pw_invulnerability) {
 				return;
 			}
 			player.message = GOTINVUL;
@@ -437,7 +435,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_PSTR => {
-			if P_GivePower(player, powertype_t::pw_strength) == 0 {
+			if !P_GivePower(player, powertype_t::pw_strength) {
 				return;
 			}
 			player.message = GOTBERSERK;
@@ -448,7 +446,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_PINS => {
-			if P_GivePower(player, powertype_t::pw_invisibility) == 0 {
+			if !P_GivePower(player, powertype_t::pw_invisibility) {
 				return;
 			}
 			player.message = GOTINVIS;
@@ -456,7 +454,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_SUIT => {
-			if P_GivePower(player, powertype_t::pw_ironfeet) == 0 {
+			if !P_GivePower(player, powertype_t::pw_ironfeet) {
 				return;
 			}
 			player.message = GOTSUIT;
@@ -464,7 +462,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_PMAP => {
-			if P_GivePower(player, powertype_t::pw_allmap) == 0 {
+			if !P_GivePower(player, powertype_t::pw_allmap) {
 				return;
 			}
 			player.message = GOTMAP;
@@ -472,7 +470,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_PVIS => {
-			if P_GivePower(player, powertype_t::pw_infrared) == 0 {
+			if !P_GivePower(player, powertype_t::pw_infrared) {
 				return;
 			}
 			player.message = GOTVISOR;

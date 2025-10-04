@@ -352,8 +352,7 @@ pub extern "C" fn W_LumpLength(lump: usize) -> usize {
 // W_ReadLump
 // Loads the lump into the given buffer,
 //  which must be >= W_LumpLength().
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn W_ReadLump(lump: usize, dest: *mut c_void) {
+pub unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 	unsafe {
 		if lump >= numlumps {
 			I_Error(c"W_ReadLump: %i >= numlumps".as_ptr(), lump);

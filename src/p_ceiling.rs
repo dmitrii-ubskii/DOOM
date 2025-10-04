@@ -235,8 +235,7 @@ fn P_ActivateInStasisCeiling(line: &mut line_t) {
 
 // EV_CeilingCrushStop
 // Stop a ceiling from crushing!
-#[unsafe(no_mangle)]
-pub extern "C" fn EV_CeilingCrushStop(line: &mut line_t) -> boolean {
+pub fn EV_CeilingCrushStop(line: &mut line_t) -> boolean {
 	unsafe {
 		let mut rtn = 0;
 		#[allow(clippy::needless_range_loop)]

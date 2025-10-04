@@ -600,8 +600,7 @@ fn P_NightmareRespawn(mobj: &mut mobj_t) {
 }
 
 // P_MobjThinker
-#[unsafe(no_mangle)]
-pub extern "C" fn P_MobjThinker(mobj: &mut mobj_t) {
+pub fn P_MobjThinker(mobj: &mut mobj_t) {
 	unsafe {
 		// momentum movement
 		if mobj.momx != 0 || mobj.momy != 0 || mobj.flags & MF_SKULLFLY != 0 {
@@ -802,7 +801,6 @@ pub(crate) fn P_RespawnSpecials() {
 // Called when a player is spawned on the level.
 // Most of the player structure stays unchanged
 //  between levels.
-#[unsafe(no_mangle)]
 pub(crate) fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 	unsafe {
 		// not playing?
@@ -1027,12 +1025,7 @@ fn P_CheckMissileSpawn(th: &mut mobj_t) {
 }
 
 // P_SpawnMissile
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnMissile(
-	source: &mut mobj_t,
-	dest: &mut mobj_t,
-	ty: mobjtype_t,
-) -> *mut mobj_t {
+pub fn P_SpawnMissile(source: &mut mobj_t, dest: &mut mobj_t, ty: mobjtype_t) -> *mut mobj_t {
 	unsafe {
 		let th = &mut *P_SpawnMobj(source.x, source.y, source.z + 4 * 8 * FRACUNIT, ty);
 
@@ -1070,8 +1063,7 @@ pub extern "C" fn P_SpawnMissile(
 
 // P_SpawnPlayerMissile
 // Tries to aim at a nearby monster
-#[unsafe(no_mangle)]
-pub extern "C" fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
+pub fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
 	unsafe {
 		// see which target is to be aimed at
 		let mut an = source.angle;

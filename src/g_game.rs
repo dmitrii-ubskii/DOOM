@@ -895,8 +895,7 @@ static cpars: [usize; 32] = [
 // G_DoCompleted
 static mut secretexit: bool = false;
 
-#[unsafe(no_mangle)]
-pub extern "C" fn G_ExitLevel() {
+pub fn G_ExitLevel() {
 	unsafe {
 		secretexit = false;
 		gameaction = gameaction_t::ga_completed;
@@ -904,8 +903,7 @@ pub extern "C" fn G_ExitLevel() {
 }
 
 // Here's for the german edition.
-#[unsafe(no_mangle)]
-pub extern "C" fn G_SecretExitLevel() {
+pub fn G_SecretExitLevel() {
 	unsafe {
 		// IF NO WOLF3D LEVELS, NO SECRET EXIT!
 		secretexit =
@@ -1213,8 +1211,7 @@ static mut d_skill: skill_t = skill_t::sk_baby;
 static mut d_episode: usize = 0;
 static mut d_map: usize = 0;
 
-#[unsafe(no_mangle)]
-pub extern "C" fn G_DeferedInitNew(skill: skill_t, episode: usize, map: usize) {
+pub fn G_DeferedInitNew(skill: skill_t, episode: usize, map: usize) {
 	unsafe {
 		d_skill = skill;
 		d_episode = episode;

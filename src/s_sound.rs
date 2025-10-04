@@ -408,8 +408,7 @@ pub(crate) fn S_SetSfxVolume(volume: usize) {
 }
 
 // Starts some music with the music id found in sounds.h.
-#[unsafe(no_mangle)]
-pub extern "C" fn S_StartMusic(m_id: musicenum_t) {
+pub fn S_StartMusic(m_id: musicenum_t) {
 	S_ChangeMusic(m_id, false);
 }
 
@@ -420,8 +419,7 @@ unsafe extern "C" {
 
 // Start music using <music_id> from sounds.h,
 //  and set whether looping
-#[unsafe(no_mangle)]
-pub extern "C" fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
+pub fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 	unsafe {
 		let music = if (musicnum as usize) <= musicenum_t::mus_None as usize
 			|| musicnum as usize >= musicenum_t::NUMMUSIC as usize
