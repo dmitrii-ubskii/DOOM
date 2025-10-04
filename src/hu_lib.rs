@@ -154,7 +154,7 @@ pub(crate) fn HUlib_eraseTextLine(l: &mut hu_textline_t) {
 		// Only erases when NOT in automap and the screen is reduced,
 		// and the text must either need updating or refreshing
 		// (because of a recent change back from the automap)
-		if automapactive != 0 && viewwindowx != 0 && l.needsupdate != 0 {
+		if automapactive && viewwindowx != 0 && l.needsupdate != 0 {
 			let lh = (**l.f).height as usize + 1;
 			for y in l.y..l.y + lh {
 				let yoffset = y * SCREENWIDTH;

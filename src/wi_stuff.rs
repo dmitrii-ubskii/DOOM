@@ -1614,9 +1614,9 @@ pub(crate) fn WI_Ticker() {
 		if bcnt == 1 {
 			// intermission music
 			if gamemode == GameMode_t::commercial {
-				S_ChangeMusic(musicenum_t::mus_dm2int, 1);
+				S_ChangeMusic(musicenum_t::mus_dm2int, true);
 			} else {
-				S_ChangeMusic(musicenum_t::mus_inter, 1);
+				S_ChangeMusic(musicenum_t::mus_inter, true);
 			}
 		}
 

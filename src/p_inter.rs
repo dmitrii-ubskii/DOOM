@@ -679,8 +679,7 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 			(*target.player).playerstate = playerstate_t::PST_DEAD;
 			P_DropWeapon(&mut *target.player);
 
-			if std::ptr::eq(target.player, &raw const players[consoleplayer]) && automapactive != 0
-			{
+			if std::ptr::eq(target.player, &raw const players[consoleplayer]) && automapactive {
 				// don't die in auto map,
 				// switch view prior to dying
 				AM_Stop();

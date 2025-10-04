@@ -26,6 +26,7 @@ use crate::{
 	},
 	doomstat::{gamemission, gamemode},
 	dstrings::SAVEGAMENAME,
+	f_finale::{F_Responder, F_StartFinale, F_Ticker},
 	hu_stuff::{HU_Responder, HU_Ticker, HU_dequeueChatChar, player_names},
 	i_system::{I_BaseTiccmd, I_Error, I_GetTime, I_Quit},
 	info::{mobjinfo, mobjtype_t, statenum_t, states},
@@ -89,8 +90,7 @@ pub(crate) static mut nodrawers: bool = false; // for comparative timing purpose
 pub(crate) static mut noblit: bool = false; // for comparative timing purposes 
 static mut starttime: usize = 0; // for comparative timing purposes  	 
 
-#[unsafe(no_mangle)]
-pub static mut viewactive: boolean = 0;
+pub static mut viewactive: bool = false;
 
 #[unsafe(no_mangle)]
 pub static mut deathmatch: boolean = 0; // only if started as net death 
@@ -478,10 +478,6 @@ fn G_DoLoadLevel() {
 	}
 }
 
-unsafe extern "C" {
-	fn F_Responder(ev: *mut event_t) -> boolean;
-}
-
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
 pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
@@ -532,7 +528,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 			}
 		}
 
-		if gamestate == gamestate_t::GS_FINALE && F_Responder(ev) != 0 {
+		if gamestate == gamestate_t::GS_FINALE && F_Responder(ev) {
 			return 1; // finale ate the event
 		}
 
@@ -576,9 +572,6 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 
 unsafe extern "C" {
 	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
-
-	fn F_StartFinale();
-	fn F_Ticker();
 }
 
 // G_Ticker
@@ -933,7 +926,7 @@ fn G_DoCompleted() {
 			}
 		}
 
-		if automapactive != 0 {
+		if automapactive {
 			AM_Stop();
 		}
 
@@ -1008,8 +1001,8 @@ fn G_DoCompleted() {
 		}
 
 		gamestate = gamestate_t::GS_INTERMISSION;
-		viewactive = 0;
-		automapactive = 0;
+		viewactive = false;
+		automapactive = false;
 
 		if !statcopy.is_null() {
 			libc::memcpy(statcopy, (&raw mut wminfo).cast(), size_of::<wbstartstruct_t>());
@@ -1044,7 +1037,7 @@ fn G_DoWorldDone() {
 		gamemap = wminfo.next + 1;
 		G_DoLoadLevel();
 		gameaction = gameaction_t::ga_nothing;
-		viewactive = 1;
+		viewactive = true;
 	}
 }
 
@@ -1311,13 +1304,13 @@ pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 		usergame = 1; // will be set false if a demo
 		paused = false;
 		demoplayback = 0;
-		automapactive = 0;
-		viewactive = 1;
+		automapactive = false;
+		viewactive = true;
 		gameepisode = episode;
 		gamemap = map;
 		gameskill = skill;
 
-		viewactive = 1;
+		viewactive = true;
 
 		// set the sky map for the episode
 		if gamemode == GameMode_t::commercial {

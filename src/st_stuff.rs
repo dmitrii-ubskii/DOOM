@@ -513,7 +513,7 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 						if offset > 35 {
 							(*plyr).message = STSTR_NOMUS;
 						} else {
-							S_ChangeMusic(musnum.into(), 1);
+							S_ChangeMusic(musnum.into(), true);
 						}
 					} else {
 						let offset = (buf[0] - b'1') * 9 + (buf[1] - b'1');
@@ -522,7 +522,7 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 						if offset > 31 {
 							(*plyr).message = STSTR_NOMUS;
 						} else {
-							S_ChangeMusic(musnum.into(), 1);
+							S_ChangeMusic(musnum.into(), true);
 						}
 					}
 				}
@@ -954,7 +954,7 @@ fn ST_diffDraw() {
 
 pub fn ST_Drawer(fullscreen: bool, refresh: bool) {
 	unsafe {
-		st_statusbaron = (!fullscreen || (automapactive != 0)) as boolean;
+		st_statusbaron = (!fullscreen || automapactive) as boolean;
 		st_firsttime = st_firsttime || refresh;
 
 		// Do red-/gold-shifts from damage/items

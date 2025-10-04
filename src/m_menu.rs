@@ -3,7 +3,7 @@
 use std::{
 	ffi::{c_char, c_void},
 	mem,
-	ptr::{self, null, null_mut},
+	ptr::{null, null_mut},
 };
 
 use libc::O_RDONLY;
@@ -1251,7 +1251,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 			match ch {
 				_ if ch == KEY_MINUS as i32 => {
 					// Screen size down
-					if automapactive != 0 || chat_on != 0 {
+					if automapactive || chat_on != 0 {
 						return false;
 					}
 					M_SizeDisplay(0);
@@ -1261,7 +1261,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 
 				_ if ch == KEY_EQUALS as i32 => {
 					// Screen size up
-					if automapactive != 0 || chat_on != 0 {
+					if automapactive || chat_on != 0 {
 						return false;
 					}
 					M_SizeDisplay(1);

@@ -456,7 +456,7 @@ pub(crate) fn HU_Drawer() {
 	unsafe {
 		HUlib_drawSText(&mut w_message);
 		HUlib_drawIText(&mut w_chat);
-		if automapactive != 0 {
+		if automapactive {
 			HUlib_drawTextLine(&mut w_title, 0);
 		}
 	}

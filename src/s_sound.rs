@@ -161,7 +161,7 @@ pub(crate) fn S_Start() {
 		//  if (commercial && mnum > mus_e3m9)
 		//      mnum -= mus_e3m9;
 
-		S_ChangeMusic(mnum, 1);
+		S_ChangeMusic(mnum, true);
 
 		nextcleanup = 15;
 	}
@@ -410,7 +410,7 @@ pub(crate) fn S_SetSfxVolume(volume: usize) {
 // Starts some music with the music id found in sounds.h.
 #[unsafe(no_mangle)]
 pub extern "C" fn S_StartMusic(m_id: musicenum_t) {
-	S_ChangeMusic(m_id, 0);
+	S_ChangeMusic(m_id, false);
 }
 
 unsafe extern "C" {
@@ -421,7 +421,7 @@ unsafe extern "C" {
 // Start music using <music_id> from sounds.h,
 //  and set whether looping
 #[unsafe(no_mangle)]
-pub extern "C" fn S_ChangeMusic(musicnum: musicenum_t, looping: boolean) {
+pub extern "C" fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 	unsafe {
 		let music = if (musicnum as usize) <= musicenum_t::mus_None as usize
 			|| musicnum as usize >= musicenum_t::NUMMUSIC as usize
@@ -450,7 +450,7 @@ pub extern "C" fn S_ChangeMusic(musicnum: musicenum_t, looping: boolean) {
 		music.handle = I_RegisterSong(music.data);
 
 		// play it
-		I_PlaySong(music.handle, looping);
+		I_PlaySong(music.handle, looping as boolean);
 
 		mus_playing = music;
 	}

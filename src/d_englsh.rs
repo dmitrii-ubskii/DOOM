@@ -346,322 +346,302 @@ pub const STSTR_BEHOLDX: *const c_char = c"Power-up Toggled".as_ptr();
 pub const STSTR_CHOPPERS: *const c_char = c"... doesn't suck - GM".as_ptr();
 pub const STSTR_CLEV: *const c_char = c"Changing Level...".as_ptr();
 
-/*
 //	F_Finale.C
-//
-#define E1TEXT \
-"Once you beat the big badasses and\n"\
-"clean out the moon base you're supposed\n"\
-"to win, aren't you? Aren't you? Where's\n"\
-"your fat reward and ticket home? What\n"\
-"the hell is this? It's not supposed to\n"\
-"end this way!\n"\
-"\n" \
-"It stinks like rotten meat, but looks\n"\
-"like the lost Deimos base.  Looks like\n"\
-"you're stuck on The Shores of Hell.\n"\
-"The only way out is through.\n"\
-"\n"\
-"To continue the DOOM experience, play\n"\
-"The Shores of Hell and its amazing\n"\
-"sequel, Inferno!\n"
+pub const E1TEXT: *const c_char = c"Once you beat the big badasses and
+clean out the moon base you're supposed
+to win, aren't you? Aren't you? Where's
+your fat reward and ticket home? What
+the hell is this? It's not supposed to
+end this way!
 
+It stinks like rotten meat, but looks
+like the lost Deimos base.  Looks like
+you're stuck on The Shores of Hell.
+The only way out is through.
 
-#define E2TEXT \
-"You've done it! The hideous cyber-\n"\
-"demon lord that ruled the lost Deimos\n"\
-"moon base has been slain and you\n"\
-"are triumphant! But ... where are\n"\
-"you? You clamber to the edge of the\n"\
-"moon and look down to see the awful\n"\
-"truth.\n" \
-"\n"\
-"Deimos floats above Hell itself!\n"\
-"You've never heard of anyone escaping\n"\
-"from Hell, but you'll make the bastards\n"\
-"sorry they ever heard of you! Quickly,\n"\
-"you rappel down to  the surface of\n"\
-"Hell.\n"\
-"\n" \
-"Now, it's on to the final chapter of\n"\
-"DOOM! -- Inferno."
+To continue the DOOM experience, play
+The Shores of Hell and its amazing
+sequel, Inferno!\n"
+	.as_ptr();
 
+pub const E2TEXT: *const c_char = c"You've done it! The hideous cyber-
+demon lord that ruled the lost Deimos
+moon base has been slain and you
+are triumphant! But ... where are
+you? You clamber to the edge of the
+moon and look down to see the awful
+truth.
 
-#define E3TEXT \
-"The loathsome spiderdemon that\n"\
-"masterminded the invasion of the moon\n"\
-"bases and caused so much death has had\n"\
-"its ass kicked for all time.\n"\
-"\n"\
-"A hidden doorway opens and you enter.\n"\
-"You've proven too tough for Hell to\n"\
-"contain, and now Hell at last plays\n"\
-"fair -- for you emerge from the door\n"\
-"to see the green fields of Earth!\n"\
-"Home at last.\n" \
-"\n"\
-"You wonder what's been happening on\n"\
-"Earth while you were battling evil\n"\
-"unleashed. It's good that no Hell-\n"\
-"spawn could have come through that\n"\
-"door with you ..."
+Deimos floats above Hell itself!
+You've never heard of anyone escaping
+from Hell, but you'll make the bastards
+sorry they ever heard of you! Quickly,
+you rappel down to  the surface of
+Hell.
 
+Now, it's on to the final chapter of
+DOOM! -- Inferno."
+	.as_ptr();
 
-#define E4TEXT \
-"the spider mastermind must have sent forth\n"\
-"its legions of hellspawn before your\n"\
-"final confrontation with that terrible\n"\
-"beast from hell.  but you stepped forward\n"\
-"and brought forth eternal damnation and\n"\
-"suffering upon the horde as a true hero\n"\
-"would in the face of something so evil.\n"\
-"\n"\
-"besides, someone was gonna pay for what\n"\
-"happened to daisy, your pet rabbit.\n"\
-"\n"\
-"but now, you see spread before you more\n"\
-"potential pain and gibbitude as a nation\n"\
-"of demons run amok among our cities.\n"\
-"\n"\
-"next stop, hell on earth!"
+pub const E3TEXT: *const c_char = c"The loathsome spiderdemon that
+masterminded the invasion of the moon
+bases and caused so much death has had
+its ass kicked for all time.
 
+A hidden doorway opens and you enter.
+You've proven too tough for Hell to
+contain, and now Hell at last plays
+fair -- for you emerge from the door
+to see the green fields of Earth!
+Home at last.
+
+You wonder what's been happening on
+Earth while you were battling evil
+unleashed. It's good that no Hell-
+spawn could have come through that
+door with you ..."
+	.as_ptr();
+
+pub const E4TEXT: *const c_char = c"the spider mastermind must have sent forth
+its legions of hellspawn before your
+final confrontation with that terrible
+beast from hell.  but you stepped forward
+and brought forth eternal damnation and
+suffering upon the horde as a true hero
+would in the face of something so evil.
+
+besides, someone was gonna pay for what
+happened to daisy, your pet rabbit.
+
+but now, you see spread before you more
+potential pain and gibbitude as a nation
+of demons run amok among our cities.
+
+next stop, hell on earth!"
+	.as_ptr();
 
 // after level 6, put this:
 
-#define C1TEXT \
-"YOU HAVE ENTERED DEEPLY INTO THE INFESTED\n" \
-"STARPORT. BUT SOMETHING IS WRONG. THE\n" \
-"MONSTERS HAVE BROUGHT THEIR OWN REALITY\n" \
-"WITH THEM, AND THE STARPORT'S TECHNOLOGY\n" \
-"IS BEING SUBVERTED BY THEIR PRESENCE.\n" \
-"\n"\
-"AHEAD, YOU SEE AN OUTPOST OF HELL, A\n" \
-"FORTIFIED ZONE. IF YOU CAN GET PAST IT,\n" \
-"YOU CAN PENETRATE INTO THE HAUNTED HEART\n" \
-"OF THE STARBASE AND FIND THE CONTROLLING\n" \
-"SWITCH WHICH HOLDS EARTH'S POPULATION\n" \
-"HOSTAGE."
+pub const C1TEXT: *const c_char = c"YOU HAVE ENTERED DEEPLY INTO THE INFESTED
+STARPORT. BUT SOMETHING IS WRONG. THE
+MONSTERS HAVE BROUGHT THEIR OWN REALITY
+WITH THEM, AND THE STARPORT'S TECHNOLOGY
+IS BEING SUBVERTED BY THEIR PRESENCE.
+
+AHEAD, YOU SEE AN OUTPOST OF HELL, A
+FORTIFIED ZONE. IF YOU CAN GET PAST IT,
+YOU CAN PENETRATE INTO THE HAUNTED HEART
+OF THE STARBASE AND FIND THE CONTROLLING
+SWITCH WHICH HOLDS EARTH'S POPULATION
+HOSTAGE."
+	.as_ptr();
 
 // After level 11, put this:
 
-#define C2TEXT \
-"YOU HAVE WON! YOUR VICTORY HAS ENABLED\n" \
-"HUMANKIND TO EVACUATE EARTH AND ESCAPE\n"\
-"THE NIGHTMARE.  NOW YOU ARE THE ONLY\n"\
-"HUMAN LEFT ON THE FACE OF THE PLANET.\n"\
-"CANNIBAL MUTATIONS, CARNIVOROUS ALIENS,\n"\
-"AND EVIL SPIRITS ARE YOUR ONLY NEIGHBORS.\n"\
-"YOU SIT BACK AND WAIT FOR DEATH, CONTENT\n"\
-"THAT YOU HAVE SAVED YOUR SPECIES.\n"\
-"\n"\
-"BUT THEN, EARTH CONTROL BEAMS DOWN A\n"\
-"MESSAGE FROM SPACE: \"SENSORS HAVE LOCATED\n"\
-"THE SOURCE OF THE ALIEN INVASION. IF YOU\n"\
-"GO THERE, YOU MAY BE ABLE TO BLOCK THEIR\n"\
-"ENTRY.  THE ALIEN BASE IS IN THE HEART OF\n"\
-"YOUR OWN HOME CITY, NOT FAR FROM THE\n"\
-"STARPORT.\" SLOWLY AND PAINFULLY YOU GET\n"\
-"UP AND RETURN TO THE FRAY."
+pub const C2TEXT: *const c_char = c"YOU HAVE WON! YOUR VICTORY HAS ENABLED
+HUMANKIND TO EVACUATE EARTH AND ESCAPE
+THE NIGHTMARE.  NOW YOU ARE THE ONLY
+HUMAN LEFT ON THE FACE OF THE PLANET.
+CANNIBAL MUTATIONS, CARNIVOROUS ALIENS,
+AND EVIL SPIRITS ARE YOUR ONLY NEIGHBORS.
+YOU SIT BACK AND WAIT FOR DEATH, CONTENT
+THAT YOU HAVE SAVED YOUR SPECIES.
 
+BUT THEN, EARTH CONTROL BEAMS DOWN A
+MESSAGE FROM SPACE: \"SENSORS HAVE LOCATED
+THE SOURCE OF THE ALIEN INVASION. IF YOU
+GO THERE, YOU MAY BE ABLE TO BLOCK THEIR
+ENTRY.  THE ALIEN BASE IS IN THE HEART OF
+YOUR OWN HOME CITY, NOT FAR FROM THE
+STARPORT.\" SLOWLY AND PAINFULLY YOU GET
+UP AND RETURN TO THE FRAY."
+	.as_ptr();
 
 // After level 20, put this:
 
-#define C3TEXT \
-"YOU ARE AT THE CORRUPT HEART OF THE CITY,\n"\
-"SURROUNDED BY THE CORPSES OF YOUR ENEMIES.\n"\
-"YOU SEE NO WAY TO DESTROY THE CREATURES'\n"\
-"ENTRYWAY ON THIS SIDE, SO YOU CLENCH YOUR\n"\
-"TEETH AND PLUNGE THROUGH IT.\n"\
-"\n"\
-"THERE MUST BE A WAY TO CLOSE IT ON THE\n"\
-"OTHER SIDE. WHAT DO YOU CARE IF YOU'VE\n"\
-"GOT TO GO THROUGH HELL TO GET TO IT?"
+pub const C3TEXT: *const c_char = c"YOU ARE AT THE CORRUPT HEART OF THE CITY,
+SURROUNDED BY THE CORPSES OF YOUR ENEMIES.
+YOU SEE NO WAY TO DESTROY THE CREATURES'
+ENTRYWAY ON THIS SIDE, SO YOU CLENCH YOUR
+TEETH AND PLUNGE THROUGH IT.
 
+THERE MUST BE A WAY TO CLOSE IT ON THE
+OTHER SIDE. WHAT DO YOU CARE IF YOU'VE
+GOT TO GO THROUGH HELL TO GET TO IT?"
+	.as_ptr();
 
 // After level 29, put this:
 
-#define C4TEXT \
-"THE HORRENDOUS VISAGE OF THE BIGGEST\n"\
-"DEMON YOU'VE EVER SEEN CRUMBLES BEFORE\n"\
-"YOU, AFTER YOU PUMP YOUR ROCKETS INTO\n"\
-"HIS EXPOSED BRAIN. THE MONSTER SHRIVELS\n"\
-"UP AND DIES, ITS THRASHING LIMBS\n"\
-"DEVASTATING UNTOLD MILES OF HELL'S\n"\
-"SURFACE.\n"\
-"\n"\
-"YOU'VE DONE IT. THE INVASION IS OVER.\n"\
-"EARTH IS SAVED. HELL IS A WRECK. YOU\n"\
-"WONDER WHERE BAD FOLKS WILL GO WHEN THEY\n"\
-"DIE, NOW. WIPING THE SWEAT FROM YOUR\n"\
-"FOREHEAD YOU BEGIN THE LONG TREK BACK\n"\
-"HOME. REBUILDING EARTH OUGHT TO BE A\n"\
-"LOT MORE FUN THAN RUINING IT WAS.\n"
+pub const C4TEXT: *const c_char = c"THE HORRENDOUS VISAGE OF THE BIGGEST
+DEMON YOU'VE EVER SEEN CRUMBLES BEFORE
+YOU, AFTER YOU PUMP YOUR ROCKETS INTO
+HIS EXPOSED BRAIN. THE MONSTER SHRIVELS
+UP AND DIES, ITS THRASHING LIMBS
+DEVASTATING UNTOLD MILES OF HELL'S
+SURFACE.
 
-
+YOU'VE DONE IT. THE INVASION IS OVER.
+EARTH IS SAVED. HELL IS A WRECK. YOU
+WONDER WHERE BAD FOLKS WILL GO WHEN THEY
+DIE, NOW. WIPING THE SWEAT FROM YOUR
+FOREHEAD YOU BEGIN THE LONG TREK BACK
+HOME. REBUILDING EARTH OUGHT TO BE A
+LOT MORE FUN THAN RUINING IT WAS.\n"
+	.as_ptr();
 
 // Before level 31, put this:
 
-#define C5TEXT \
-"CONGRATULATIONS, YOU'VE FOUND THE SECRET\n"\
-"LEVEL! LOOKS LIKE IT'S BEEN BUILT BY\n"\
-"HUMANS, RATHER THAN DEMONS. YOU WONDER\n"\
-"WHO THE INMATES OF THIS CORNER OF HELL\n"\
-"WILL BE."
-
+pub const C5TEXT: *const c_char = c"CONGRATULATIONS, YOU'VE FOUND THE SECRET
+LEVEL! LOOKS LIKE IT'S BEEN BUILT BY
+HUMANS, RATHER THAN DEMONS. YOU WONDER
+WHO THE INMATES OF THIS CORNER OF HELL
+WILL BE."
+	.as_ptr();
 
 // Before level 32, put this:
 
-#define C6TEXT \
-"CONGRATULATIONS, YOU'VE FOUND THE\n"\
-"SUPER SECRET LEVEL!  YOU'D BETTER\n"\
-"BLAZE THROUGH THIS ONE!\n"
-
+pub const C6TEXT: *const c_char = c"CONGRATULATIONS, YOU'VE FOUND THE
+SUPER SECRET LEVEL!  YOU'D BETTER
+BLAZE THROUGH THIS ONE!\n"
+	.as_ptr();
 
 // after map 06
 
-#define P1TEXT  \
-"You gloat over the steaming carcass of the\n"\
-"Guardian.  With its death, you've wrested\n"\
-"the Accelerator from the stinking claws\n"\
-"of Hell.  You relax and glance around the\n"\
-"room.  Damn!  There was supposed to be at\n"\
-"least one working prototype, but you can't\n"\
-"see it. The demons must have taken it.\n"\
-"\n"\
-"You must find the prototype, or all your\n"\
-"struggles will have been wasted. Keep\n"\
-"moving, keep fighting, keep killing.\n"\
-"Oh yes, keep living, too."
+pub const P1TEXT: *const c_char = c"You gloat over the steaming carcass of the
+Guardian.  With its death, you've wrested
+the Accelerator from the stinking claws
+of Hell.  You relax and glance around the
+room.  Damn!  There was supposed to be at
+least one working prototype, but you can't
+see it. The demons must have taken it.
 
+You must find the prototype, or all your
+struggles will have been wasted. Keep
+moving, keep fighting, keep killing.
+Oh yes, keep living, too."
+	.as_ptr();
 
 // after map 11
 
-#define P2TEXT \
-"Even the deadly Arch-Vile labyrinth could\n"\
-"not stop you, and you've gotten to the\n"\
-"prototype Accelerator which is soon\n"\
-"efficiently and permanently deactivated.\n"\
-"\n"\
-"You're good at that kind of thing."
+pub const P2TEXT: *const c_char = c"Even the deadly Arch-Vile labyrinth could
+not stop you, and you've gotten to the
+prototype Accelerator which is soon
+efficiently and permanently deactivated.
 
+You're good at that kind of thing."
+	.as_ptr();
 
 // after map 20
 
-#define P3TEXT \
-"You've bashed and battered your way into\n"\
-"the heart of the devil-hive.  Time for a\n"\
-"Search-and-Destroy mission, aimed at the\n"\
-"Gatekeeper, whose foul offspring is\n"\
-"cascading to Earth.  Yeah, he's bad. But\n"\
-"you know who's worse!\n"\
-"\n"\
-"Grinning evilly, you check your gear, and\n"\
-"get ready to give the bastard a little Hell\n"\
-"of your own making!"
+pub const P3TEXT: *const c_char = c"You've bashed and battered your way into
+the heart of the devil-hive.  Time for a
+Search-and-Destroy mission, aimed at the
+Gatekeeper, whose foul offspring is
+cascading to Earth.  Yeah, he's bad. But
+you know who's worse!
+
+Grinning evilly, you check your gear, and
+get ready to give the bastard a little Hell
+of your own making!"
+	.as_ptr();
 
 // after map 30
 
-#define P4TEXT \
-"The Gatekeeper's evil face is splattered\n"\
-"all over the place.  As its tattered corpse\n"\
-"collapses, an inverted Gate forms and\n"\
-"sucks down the shards of the last\n"\
-"prototype Accelerator, not to mention the\n"\
-"few remaining demons.  You're done. Hell\n"\
-"has gone back to pounding bad dead folks \n"\
-"instead of good live ones.  Remember to\n"\
-"tell your grandkids to put a rocket\n"\
-"launcher in your coffin. If you go to Hell\n"\
-"when you die, you'll need it for some\n"\
-"final cleaning-up ..."
+pub const P4TEXT: *const c_char = c"The Gatekeeper's evil face is splattered
+all over the place.  As its tattered corpse
+collapses, an inverted Gate forms and
+sucks down the shards of the last
+prototype Accelerator, not to mention the
+few remaining demons.  You're done. Hell
+has gone back to pounding bad dead folks 
+instead of good live ones.  Remember to
+tell your grandkids to put a rocket
+launcher in your coffin. If you go to Hell
+when you die, you'll need it for some
+final cleaning-up ..."
+	.as_ptr();
 
 // before map 31
 
-#define P5TEXT \
-"You've found the second-hardest level we\n"\
-"got. Hope you have a saved game a level or\n"\
-"two previous.  If not, be prepared to die\n"\
-"aplenty. For master marines only."
+pub const P5TEXT: *const c_char = c"You've found the second-hardest level we
+got. Hope you have a saved game a level or
+two previous.  If not, be prepared to die
+aplenty. For master marines only."
+	.as_ptr();
 
 // before map 32
 
-#define P6TEXT \
-"Betcha wondered just what WAS the hardest\n"\
-"level we had ready for ya?  Now you know.\n"\
-"No one gets out alive."
+pub const P6TEXT: *const c_char = c"Betcha wondered just what WAS the hardest
+level we had ready for ya?  Now you know.
+No one gets out alive."
+	.as_ptr();
 
+pub const T1TEXT: *const c_char = c"You've fought your way out of the infested
+experimental labs.   It seems that UAC has
+once again gulped it down.  With their
+high turnover, it must be hard for poor
+old UAC to buy corporate health insurance
+nowadays..
 
-#define T1TEXT \
-"You've fought your way out of the infested\n"\
-"experimental labs.   It seems that UAC has\n"\
-"once again gulped it down.  With their\n"\
-"high turnover, it must be hard for poor\n"\
-"old UAC to buy corporate health insurance\n"\
-"nowadays..\n"\
-"\n"\
-"Ahead lies the military complex, now\n"\
-"swarming with diseased horrors hot to get\n"\
-"their teeth into you. With luck, the\n"\
-"complex still has some warlike ordnance\n"\
-"laying around."
+Ahead lies the military complex, now
+swarming with diseased horrors hot to get
+their teeth into you. With luck, the
+complex still has some warlike ordnance
+laying around."
+	.as_ptr();
 
+pub const T2TEXT: *const c_char = c"You hear the grinding of heavy machinery
+ahead.  You sure hope they're not stamping
+out new hellspawn, but you're ready to
+ream out a whole herd if you have to.
+They might be planning a blood feast, but
+you feel about as mean as two thousand
+maniacs packed into one mad killer.
 
-#define T2TEXT \
-"You hear the grinding of heavy machinery\n"\
-"ahead.  You sure hope they're not stamping\n"\
-"out new hellspawn, but you're ready to\n"\
-"ream out a whole herd if you have to.\n"\
-"They might be planning a blood feast, but\n"\
-"you feel about as mean as two thousand\n"\
-"maniacs packed into one mad killer.\n"\
-"\n"\
-"You don't plan to go down easy."
+You don't plan to go down easy."
+	.as_ptr();
 
+pub const T3TEXT: *const c_char = c"The vista opening ahead looks real damn
+familiar. Smells familiar, too -- like
+fried excrement. You didn't like this
+place before, and you sure as hell ain't
+planning to like it now. The more you
+brood on it, the madder you get.
+Hefting your gun, an evil grin trickles
+onto your face. Time to take some names."
+	.as_ptr();
 
-#define T3TEXT \
-"The vista opening ahead looks real damn\n"\
-"familiar. Smells familiar, too -- like\n"\
-"fried excrement. You didn't like this\n"\
-"place before, and you sure as hell ain't\n"\
-"planning to like it now. The more you\n"\
-"brood on it, the madder you get.\n"\
-"Hefting your gun, an evil grin trickles\n"\
-"onto your face. Time to take some names."
+pub const T4TEXT: *const c_char = c"Suddenly, all is silent, from one horizon
+to the other. The agonizing echo of Hell
+fades away, the nightmare sky turns to
+blue, the heaps of monster corpses start 
+to evaporate along with the evil stench 
+that filled the air. Jeeze, maybe you've
+done it. Have you really won?
 
-#define T4TEXT \
-"Suddenly, all is silent, from one horizon\n"\
-"to the other. The agonizing echo of Hell\n"\
-"fades away, the nightmare sky turns to\n"\
-"blue, the heaps of monster corpses start \n"\
-"to evaporate along with the evil stench \n"\
-"that filled the air. Jeeze, maybe you've\n"\
-"done it. Have you really won?\n"\
-"\n"\
-"Something rumbles in the distance.\n"\
-"A blue light begins to glow inside the\n"\
-"ruined skull of the demon-spitter."
+Something rumbles in the distance.
+A blue light begins to glow inside the
+ruined skull of the demon-spitter."
+	.as_ptr();
 
+pub const T5TEXT: *const c_char = c"What now? Looks totally different. Kind
+of like King Tut's condo. Well,
+whatever's here can't be any worse
+than usual. Can it?  Or maybe it's best
+to let sleeping gods lie.."
+	.as_ptr();
 
-#define T5TEXT \
-"What now? Looks totally different. Kind\n"\
-"of like King Tut's condo. Well,\n"\
-"whatever's here can't be any worse\n"\
-"than usual. Can it?  Or maybe it's best\n"\
-"to let sleeping gods lie.."
+pub const T6TEXT: *const c_char = c"Time for a vacation. You've burst the
+bowels of hell and by golly you're ready
+for a break. You mutter to yourself,
+Maybe someone else can kick Hell's ass
+next time around. Ahead lies a quiet town,
+with peaceful flowing water, quaint
+buildings, and presumably no Hellspawn.
 
-
-#define T6TEXT \
-"Time for a vacation. You've burst the\n"\
-"bowels of hell and by golly you're ready\n"\
-"for a break. You mutter to yourself,\n"\
-"Maybe someone else can kick Hell's ass\n"\
-"next time around. Ahead lies a quiet town,\n"\
-"with peaceful flowing water, quaint\n"\
-"buildings, and presumably no Hellspawn.\n"\
-"\n"\
-"As you step off the transport, you hear\n"\
-"the stomp of a cyberdemon's iron shoe."
-*/
+As you step off the transport, you hear
+the stomp of a cyberdemon's iron shoe."
+	.as_ptr();
 
 // Character cast strings F_FINALE.C
 pub const CC_ZOMBIE: *const c_char = c"ZOMBIEMAN".as_ptr();

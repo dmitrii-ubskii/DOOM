@@ -25,6 +25,7 @@ use crate::{
 		skill_t,
 	},
 	doomstat::{gamemode, language, modifiedgame},
+	f_finale::F_Drawer,
 	f_wipe::{wipe_EndScreen, wipe_Melt, wipe_ScreenWipe, wipe_StartScreen},
 	g_game::{
 		G_BeginRecording, G_BuildTiccmd, G_DeferedPlayDemo, G_InitNew, G_LoadGame, G_RecordDemo,
@@ -141,7 +142,6 @@ unsafe extern "C" {
 	static mut viewwindowx: usize;
 	static mut viewwindowy: usize;
 
-	fn F_Drawer();
 	fn NetUpdate();
 	fn R_DrawViewBorder();
 	fn R_FillBackScreen();
@@ -186,7 +186,7 @@ fn D_Display() {
 		match gamestate {
 			gamestate_t::GS_LEVEL => {
 				if gametic != 0 {
-					if automapactive != 0 {
+					if automapactive {
 						AM_Drawer();
 					}
 					if wipe || (viewheight != 200 && fullscreen) {
@@ -209,7 +209,7 @@ fn D_Display() {
 		I_UpdateNoBlit();
 
 		// draw the view directly
-		if gamestate == gamestate_t::GS_LEVEL && automapactive == 0 && gametic != 0 {
+		if gamestate == gamestate_t::GS_LEVEL && !automapactive && gametic != 0 {
 			R_RenderPlayerView(&mut players[displayplayer]);
 		}
 
@@ -229,7 +229,7 @@ fn D_Display() {
 		}
 
 		// see if the border needs to be updated to the screen
-		if gamestate == gamestate_t::GS_LEVEL && automapactive == 0 && scaledviewwidth != 320 {
+		if gamestate == gamestate_t::GS_LEVEL && !automapactive && scaledviewwidth != 320 {
 			if menuactive || menuactivestate || !viewactivestate {
 				borderdrawcount = 3;
 			}
@@ -240,14 +240,14 @@ fn D_Display() {
 		}
 
 		menuactivestate = menuactive;
-		viewactivestate = viewactive != 0;
+		viewactivestate = viewactive;
 		inhelpscreensstate = inhelpscreens;
 		oldgamestate = gamestate;
 		wipegamestate = gamestate;
 
 		// draw pause pic
 		if paused {
-			let y = if automapactive != 0 { 4 } else { viewwindowy + 4 };
+			let y = if automapactive { 4 } else { viewwindowy + 4 };
 			let x = viewwindowx.wrapping_add_signed((scaledviewwidth as isize - 68) / 2);
 			V_DrawPatchDirect(x, y, 0, W_CacheLumpName(c"M_PAUSE".as_ptr(), PU_CACHE).cast());
 		}

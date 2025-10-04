@@ -242,8 +242,7 @@ static mut grid: int = 0;
 
 static mut leveljuststarted: int = 1; // kluge until AM_LevelInit() is called
 
-#[unsafe(no_mangle)]
-pub(crate) static mut automapactive: boolean = 0;
+pub static mut automapactive: bool = false;
 static mut finit_width: fixed_t = SCREENWIDTH as fixed_t;
 static mut finit_height: fixed_t = SCREENHEIGHT as fixed_t - 32;
 
@@ -442,7 +441,7 @@ fn AM_initVariables() {
 		static mut st_notify: event_t =
 			event_t { ty: evtype_t::ev_keyup, data1: AM_MSGENTERED as i32, data2: 0, data3: 0 };
 
-		automapactive = 1;
+		automapactive = true;
 		fb = screens[0];
 
 		f_oldloc.x = i32::MAX;
@@ -546,7 +545,7 @@ pub(crate) fn AM_Stop() {
 		};
 
 		AM_unloadPics();
-		automapactive = 0;
+		automapactive = false;
 		ST_Responder(&mut st_notify);
 		stopped = true;
 	}
@@ -599,10 +598,10 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> boolean {
 
 		let mut rc = false;
 
-		if automapactive == 0 {
+		if !automapactive {
 			if (*ev).ty == evtype_t::ev_keydown && (*ev).data1 == AM_STARTKEY as i32 {
 				AM_Start();
-				viewactive = 0;
+				viewactive = false;
 				rc = true;
 			}
 		} else if (*ev).ty == evtype_t::ev_keydown {
@@ -652,7 +651,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> boolean {
 				}
 				AM_ENDKEY => {
 					bigstate = 0;
-					viewactive = 1;
+					viewactive = true;
 					AM_Stop();
 				}
 				AM_GOBIGKEY => {
@@ -765,7 +764,7 @@ fn AM_doFollowPlayer() {
 // Updates on Game Tick
 pub(crate) fn AM_Ticker() {
 	unsafe {
-		if automapactive == 0 {
+		if !automapactive {
 			return;
 		}
 
@@ -1247,7 +1246,7 @@ fn AM_drawCrosshair(color: i32) {
 
 pub(crate) fn AM_Drawer() {
 	unsafe {
-		if automapactive == 0 {
+		if !automapactive {
 			return;
 		}
 

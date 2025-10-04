@@ -3,7 +3,7 @@
 use crate::doomdef::{GameMission_t, GameMode_t, Language_t};
 
 #[unsafe(no_mangle)]
-pub static mut gamemode: GameMode_t = GameMode_t::indetermined;
+pub static mut gamemode: GameMode_t = GameMode_t::commercial;
 #[unsafe(no_mangle)]
 pub static mut gamemission: GameMission_t = GameMission_t::doom;
 #[unsafe(no_mangle)]
