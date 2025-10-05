@@ -62,7 +62,7 @@ unsafe impl Sync for musicinfo_t {}
 // Identifiers for all music in game.
 
 #[repr(isize)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 #[rustfmt::skip]
 pub enum musicenum_t {
 	mus_None,

@@ -662,7 +662,7 @@ fn M_DrawSound() {
 			SoundDef.x as usize,
 			SoundDef.y as usize + LINEHEIGHT * (sound_e::sfx_vol as usize + 1),
 			16,
-			snd_MusicVolume,
+			snd_SfxVolume,
 		);
 
 		M_DrawThermo(

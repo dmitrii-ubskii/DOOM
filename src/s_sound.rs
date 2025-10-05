@@ -437,7 +437,7 @@ pub fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 		S_StopMusic();
 
 		// get lumpnum if neccessary
-		if music.lumpnum != 0 {
+		if music.lumpnum == 0 {
 			let mut namebuf = [0; 9];
 			libc::sprintf(namebuf.as_mut_ptr(), c"d_%s".as_ptr(), music.name);
 			music.lumpnum = W_GetNumForName(namebuf.as_ptr()) as usize;
