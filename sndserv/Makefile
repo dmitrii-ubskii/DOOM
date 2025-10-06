@@ -7,8 +7,8 @@
 #
 
 CC=gcc
-CFLAGS=-O -DNORMALUNIX -DLINUX
-LDFLAGS=
+CFLAGS=-m32 -g -DNORMALUNIX -DLINUX
+LDFLAGS=-L/usr/lib/i386-linux-gnu
 LIBS=-lm
 
 O=linux
@@ -33,7 +33,7 @@ $(O)/sndserver: \
 	echo make complete.
 
 # Rule
-$(O)/%.o: %.c
+$(O)/%.o: %.c Makefile 
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
