@@ -26,7 +26,7 @@ pub struct sfxinfo_t {
 	pub pitch: i32,
 
 	// volume if a link
-	pub volume: isize,
+	pub volume: i32,
 
 	// sound data
 	pub data: *mut c_void,
@@ -37,7 +37,7 @@ pub struct sfxinfo_t {
 	pub usefulness: i32,
 
 	// lump number of sfx
-	pub lumpnum: i32,
+	pub lumpnum: isize,
 }
 unsafe impl Sync for sfxinfo_t {}
 

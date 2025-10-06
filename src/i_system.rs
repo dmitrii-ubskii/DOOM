@@ -5,7 +5,11 @@ use std::{ffi::c_char, process::exit, ptr::null_mut};
 use libc::{calloc, gettimeofday, malloc, timeval};
 
 use crate::{
-	d_ticcmd::ticcmd_t, doomdef::TICRATE, i_video::I_ShutdownGraphics, m_misc::M_SaveDefaults,
+	d_ticcmd::ticcmd_t,
+	doomdef::TICRATE,
+	i_sound::{I_InitSound, I_ShutdownMusic, I_ShutdownSound},
+	i_video::I_ShutdownGraphics,
+	m_misc::M_SaveDefaults,
 };
 
 pub(crate) static mut mb_used: usize = 6;
@@ -44,23 +48,15 @@ pub extern "C" fn I_GetTime() -> usize {
 	}
 }
 
-unsafe extern "C" {
-	fn I_InitSound();
-}
-
 // I_Init
 #[unsafe(no_mangle)]
 pub extern "C" fn I_Init() {
-	unsafe {
-		I_InitSound();
-		//  I_InitGraphics();
-	}
+	I_InitSound();
+	//  I_InitGraphics();
 }
 
 unsafe extern "C" {
 	fn D_QuitNetGame();
-	fn I_ShutdownSound();
-	fn I_ShutdownMusic();
 }
 
 // I_Quit

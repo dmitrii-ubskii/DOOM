@@ -34,6 +34,7 @@ use crate::{
 		singledemo, statcopy, usergame, viewactive,
 	},
 	hu_stuff::{HU_Drawer, HU_Erase, HU_Init},
+	i_sound::I_UpdateSound,
 	i_system::{I_Error, I_GetTime, I_Init},
 	i_video::{
 		I_FinishUpdate, I_InitGraphics, I_SetPalette, I_StartFrame, I_StartTic, I_UpdateNoBlit,
@@ -339,7 +340,7 @@ pub(crate) fn D_DoomLoop() {
 
 			// #ifndef SNDSERV
 			// // Sound mixing for the buffer is snychronous.
-			// I_UpdateSound();
+			I_UpdateSound();
 			// #endif
 			// // Synchronous sound output is explicitly called.
 			// #ifndef SNDINTR

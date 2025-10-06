@@ -2,7 +2,6 @@ fn main() {
 	cc::Build::new()
 		.files([
 			"linuxdoom-1.10/i_system.c",
-			"linuxdoom-1.10/i_sound.c",
 			"linuxdoom-1.10/i_net.c",
 			"linuxdoom-1.10/d_net.c",
 			"linuxdoom-1.10/r_bsp.c",

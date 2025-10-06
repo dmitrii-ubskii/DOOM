@@ -6,6 +6,11 @@ use crate::{
 	doomdef::GameMode_t,
 	doomstat::gamemode,
 	g_game::{consoleplayer, gameepisode, gamemap, players},
+	i_sound::{
+		I_GetSfxLumpNum, I_PauseSong, I_PlaySong, I_RegisterSong, I_ResumeSong, I_SetChannels,
+		I_SetMusicVolume, I_SoundIsPlaying, I_StartSound, I_StopSong, I_StopSound,
+		I_UnRegisterSong, I_UpdateSoundParams,
+	},
 	i_system::I_Error,
 	m_fixed::{FRACBITS, FixedMul, fixed_t},
 	m_random::M_Random,
@@ -17,19 +22,17 @@ use crate::{
 	z_zone::{PU_CACHE, PU_MUSIC, PU_STATIC, Z_ChangeTag, Z_Malloc},
 };
 
-type boolean = i32;
-
 // when to clip out sounds
 // Does not fit the large outdoor areas.
-const S_CLIPPING_DIST: usize = 1200 * 0x10000;
+const S_CLIPPING_DIST: u32 = 1200 * 0x10000;
 
 // Distance tp origin when sounds should be maxed out.
 // This should relate to movement clipping resolution
 // (see BLOCKMAP handling).
 // Originally: (200*0x10000).
-const S_CLOSE_DIST: usize = 160 * 0x10000;
+const S_CLOSE_DIST: u32 = 160 * 0x10000;
 
-const S_ATTENUATOR: usize = (S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS;
+const S_ATTENUATOR: u32 = (S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS;
 
 // Adjustable by menu.
 
@@ -57,11 +60,11 @@ static mut channels: *mut channel_t = null_mut();
 // Maximum volume of a sound effect.
 // Internal default is max out of 0-15.
 #[unsafe(no_mangle)]
-pub static mut snd_SfxVolume: usize = 15;
+pub static mut snd_SfxVolume: u32 = 15;
 
 // Maximum volume of music. Useless so far.
 #[unsafe(no_mangle)]
-pub static mut snd_MusicVolume: usize = 15;
+pub static mut snd_MusicVolume: u32 = 15;
 
 // whether songs are mus_paused
 static mut mus_paused: bool = false;
@@ -76,14 +79,10 @@ pub(crate) static mut numChannels: usize = 0;
 
 static mut nextcleanup: i32 = 0;
 
-unsafe extern "C" {
-	fn I_SetChannels();
-}
-
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,
 //  allocates channel buffer, sets S_sfx lookup.
-pub(crate) fn S_Init(sfxVolume: usize, musicVolume: usize) {
+pub(crate) fn S_Init(sfxVolume: u32, musicVolume: u32) {
 	unsafe {
 		eprintln!("S_Init: default sfx volume {sfxVolume}");
 
@@ -167,12 +166,7 @@ pub(crate) fn S_Start() {
 	}
 }
 
-unsafe extern "C" {
-	fn I_StartSound(id: sfxenum_t, vol: usize, sep: i32, pitch: i32, priority: i32) -> i32;
-	fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> i32;
-}
-
-fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: usize) {
+fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u32) {
 	unsafe {
 		let origin = origin_p as *mut mobj_t;
 
@@ -301,11 +295,6 @@ pub(crate) fn S_StopSound(origin: *mut c_void) {
 	}
 }
 
-unsafe extern "C" {
-	fn I_PauseSong(handle: i32);
-	fn I_ResumeSong(handle: i32);
-}
-
 // Stop and resume music, during game PAUSE.
 pub(crate) fn S_PauseSound() {
 	unsafe {
@@ -325,11 +314,6 @@ pub(crate) fn S_ResumeSound() {
 	}
 }
 
-unsafe extern "C" {
-	fn I_SoundIsPlaying(handle: i32) -> boolean;
-	fn I_UpdateSoundParams(handle: i32, vol: usize, sep: i32, pitch: i32);
-}
-
 // Updates music & sounds
 pub(crate) fn S_UpdateSounds(listener_p: *mut c_void) {
 	unsafe {
@@ -337,7 +321,7 @@ pub(crate) fn S_UpdateSounds(listener_p: *mut c_void) {
 			let c = &mut *channels.wrapping_add(cnum);
 
 			if let Some(sfx) = c.sfxinfo.as_ref() {
-				if I_SoundIsPlaying(c.handle) != 0 {
+				if I_SoundIsPlaying(c.handle) {
 					// initialize parameters
 					let mut volume = snd_SfxVolume;
 					let mut pitch = NORM_PITCH;
@@ -381,11 +365,7 @@ pub(crate) fn S_UpdateSounds(listener_p: *mut c_void) {
 	}
 }
 
-unsafe extern "C" {
-	fn I_SetMusicVolume(volume: usize);
-}
-
-pub(crate) fn S_SetMusicVolume(volume: usize) {
+pub(crate) fn S_SetMusicVolume(volume: u32) {
 	unsafe {
 		if !(0..=127).contains(&volume) {
 			I_Error(c"Attempt to set music volume at %d".as_ptr(), volume);
@@ -397,7 +377,7 @@ pub(crate) fn S_SetMusicVolume(volume: usize) {
 	}
 }
 
-pub(crate) fn S_SetSfxVolume(volume: usize) {
+pub(crate) fn S_SetSfxVolume(volume: u32) {
 	unsafe {
 		if !(0..=127).contains(&volume) {
 			I_Error(c"Attempt to set sfx volume at %d".as_ptr(), volume);
@@ -410,11 +390,6 @@ pub(crate) fn S_SetSfxVolume(volume: usize) {
 // Starts some music with the music id found in sounds.h.
 pub fn S_StartMusic(m_id: musicenum_t) {
 	S_ChangeMusic(m_id, false);
-}
-
-unsafe extern "C" {
-	fn I_RegisterSong(data: *mut c_void) -> i32;
-	fn I_PlaySong(handle: i32, looping: boolean);
 }
 
 // Start music using <music_id> from sounds.h,
@@ -448,15 +423,10 @@ pub fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 		music.handle = I_RegisterSong(music.data);
 
 		// play it
-		I_PlaySong(music.handle, looping as boolean);
+		I_PlaySong(music.handle, looping);
 
 		mus_playing = music;
 	}
-}
-
-unsafe extern "C" {
-	fn I_UnRegisterSong(handle: i32);
-	fn I_StopSong(handle: i32);
 }
 
 fn S_StopMusic() {
@@ -476,17 +446,13 @@ fn S_StopMusic() {
 	}
 }
 
-unsafe extern "C" {
-	fn I_StopSound(handle: i32);
-}
-
 fn S_StopChannel(cnum: usize) {
 	unsafe {
 		let c = channels.wrapping_add(cnum);
 
 		if !(*c).sfxinfo.is_null() {
 			// stop the sound playing
-			if I_SoundIsPlaying((*c).handle) != 0 {
+			if I_SoundIsPlaying((*c).handle) {
 				I_StopSound((*c).handle);
 			}
 
@@ -513,18 +479,18 @@ fn S_StopChannel(cnum: usize) {
 fn S_AdjustSoundParams(
 	listener: &mut mobj_t,
 	source: &mut mobj_t,
-	vol: *mut usize,
+	vol: *mut u32,
 	sep: *mut i32,
 	_pitch: *mut i32,
 ) -> i32 {
 	unsafe {
 		// calculate the distance to sound origin
 		//  and clip it if necessary
-		let adx = i32::abs(listener.x - source.x) as usize;
-		let ady = i32::abs(listener.y - source.y) as usize;
+		let adx = i32::abs(listener.x - source.x) as u32;
+		let ady = i32::abs(listener.y - source.y) as u32;
 
 		// From _GG1_ p.428. Appox. eucledian distance fast.
-		let mut approx_dist = adx + ady - (usize::min(adx, ady) >> 1);
+		let mut approx_dist = adx + ady - (u32::min(adx, ady) >> 1);
 
 		if gamemap != 8 && approx_dist > S_CLIPPING_DIST {
 			return 0;
