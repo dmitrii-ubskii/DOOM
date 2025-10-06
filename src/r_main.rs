@@ -9,6 +9,7 @@ use crate::{
 	m_fixed::{FRACBITS, FRACUNIT, FixedDiv, FixedMul, fixed_t},
 	m_menu::{detailLevel, screenblocks},
 	p_setup::{nodes, numnodes, subsectors},
+	r_bsp::{R_ClearClipSegs, R_ClearDrawSegs, R_RenderBSPNode},
 	r_data::{R_InitData, colormaps},
 	r_defs::{lighttable_t, node_t, seg_t, subsector_t},
 	r_plane::{R_ClearPlanes, R_DrawPlanes, R_InitPlanes, distscale, yslope},
@@ -136,8 +137,7 @@ pub static mut spanfunc: unsafe extern "C" fn() = R_DrawColumn;
 // Traverse BSP (sub) tree,
 //  check point against partition plane.
 // Returns side 0 (front) or 1 (back).
-#[unsafe(no_mangle)]
-pub extern "C" fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &mut node_t) -> usize {
+pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &mut node_t) -> usize {
 	if node.dx == 0 {
 		return if x <= node.x { node.dy > 0 } else { node.dy < 0 } as usize;
 	}
@@ -603,12 +603,7 @@ fn R_SetupFrame(player: &mut player_t) {
 }
 
 unsafe extern "C" {
-	fn R_ClearClipSegs();
-	fn R_ClearDrawSegs();
-
 	fn NetUpdate();
-
-	fn R_RenderBSPNode(bspnum: usize);
 }
 
 // R_RenderView
@@ -626,7 +621,7 @@ pub fn R_RenderPlayerView(player: &mut player_t) {
 		NetUpdate();
 
 		// The head node is the last node output.
-		R_RenderBSPNode(numnodes - 1);
+		R_RenderBSPNode(numnodes as isize - 1);
 
 		// Check for new console commands.
 		NetUpdate();

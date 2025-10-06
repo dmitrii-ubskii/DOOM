@@ -14,12 +14,13 @@ use crate::{
 	m_fixed::{FRACBITS, FRACUNIT, FixedDiv, FixedMul, fixed_t},
 	p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT, mobj_t},
 	p_pspr::{FF_FRAMEMASK, FF_FULLBRIGHT, pspdef_t, psprnum_t},
+	r_bsp::{drawsegs, ds_p},
 	r_data::{
 		colormaps, firstspritelump, lastspritelump, spriteoffset, spritetopoffset, spritewidth,
 	},
 	r_defs::{
-		MAXDRAWSEGS, SIL_BOTH, SIL_BOTTOM, SIL_TOP, column_t, drawseg_t, lighttable_t, patch_t,
-		sector_t, spritedef_t, spriteframe_t, vissprite_t,
+		SIL_BOTH, SIL_BOTTOM, SIL_TOP, column_t, drawseg_t, lighttable_t, patch_t, sector_t,
+		spritedef_t, spriteframe_t, vissprite_t,
 	},
 	r_main::{
 		LIGHTLEVELS, LIGHTSCALESHIFT, LIGHTSEGSHIFT, MAXLIGHTSCALE, R_PointOnSegSide,
@@ -828,9 +829,6 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 }
 
 unsafe extern "C" {
-	static mut ds_p: *mut drawseg_t;
-	static mut drawsegs: [drawseg_t; MAXDRAWSEGS];
-
 	fn R_RenderMaskedSegRange(ds: *mut drawseg_t, x1: usize, x2: usize);
 }
 

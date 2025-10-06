@@ -50,6 +50,7 @@ pub mod p_switch;
 pub mod p_telept;
 pub mod p_tick;
 pub mod p_user;
+pub mod r_bsp;
 pub mod r_data;
 pub mod r_defs;
 pub mod r_main;

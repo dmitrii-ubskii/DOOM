@@ -4,7 +4,6 @@ fn main() {
 			"linuxdoom-1.10/i_system.c",
 			"linuxdoom-1.10/i_net.c",
 			"linuxdoom-1.10/d_net.c",
-			"linuxdoom-1.10/r_bsp.c",
 			"linuxdoom-1.10/r_draw.c",
 			"linuxdoom-1.10/r_segs.c",
 		])
