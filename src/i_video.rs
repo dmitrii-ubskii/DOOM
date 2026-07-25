@@ -609,7 +609,7 @@ pub fn I_InitGraphics() {
 		}
 		firsttime = false;
 
-		libc::signal(SIGINT, I_Quit as _);
+		libc::signal(SIGINT, I_Quit as *const () as _);
 
 		if M_CheckParm(c"-2".as_ptr()) != 0 {
 			multiply = 2;

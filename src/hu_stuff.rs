@@ -363,6 +363,7 @@ pub(crate) fn HU_Init() {
 		// load the heads-up font
 		let mut j = HU_FONTSTART;
 		#[allow(clippy::needless_range_loop)]
+		#[allow(clippy::explicit_counter_loop)]
 		for i in 0..HU_FONTSIZE as usize {
 			libc::sprintf(buffer.as_mut_ptr(), c"STCFN%.3d".as_ptr(), j as c_int);
 			j += 1;

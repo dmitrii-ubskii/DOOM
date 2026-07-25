@@ -164,37 +164,34 @@ pub(crate) fn EV_DoLockedDoor(line: &mut line_t, ty: vldoor_e, thing: &mut mobj_
 		let p = &mut *p;
 
 		match line.special {
-			99 | 133 => {
-				// Blue Lock
+			// Blue Lock
+			99 | 133
 				if p.cards[card_t::it_bluecard as usize] == 0
-					&& p.cards[card_t::it_blueskull as usize] == 0
-				{
-					p.message = PD_BLUEO;
-					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
-					return false;
-				}
+					&& p.cards[card_t::it_blueskull as usize] == 0 =>
+			{
+				p.message = PD_BLUEO;
+				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
+				return false;
 			}
 
-			134 | 135 => {
-				// Red Lock
+			// Red Lock
+			134 | 135
 				if p.cards[card_t::it_redcard as usize] == 0
-					&& p.cards[card_t::it_redskull as usize] == 0
-				{
-					p.message = PD_REDO;
-					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
-					return false;
-				}
+					&& p.cards[card_t::it_redskull as usize] == 0 =>
+			{
+				p.message = PD_REDO;
+				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
+				return false;
 			}
 
-			136 | 137 => {
-				// Yellow Lock
+			// Yellow Lock
+			136 | 137
 				if p.cards[card_t::it_yellowcard as usize] == 0
-					&& p.cards[card_t::it_yellowskull as usize] == 0
-				{
-					p.message = PD_YELLOWO;
-					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
-					return false;
-				}
+					&& p.cards[card_t::it_yellowskull as usize] == 0 =>
+			{
+				p.message = PD_YELLOWO;
+				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
+				return false;
 			}
 
 			_ => (),

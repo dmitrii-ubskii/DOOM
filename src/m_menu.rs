@@ -682,11 +682,7 @@ fn M_SfxVol(choice: i32) {
 	unsafe {
 		match choice {
 			0 => snd_SfxVolume = snd_SfxVolume.saturating_sub(1),
-			1 => {
-				if snd_SfxVolume < 15 {
-					snd_SfxVolume += 1;
-				}
-			}
+			1 if snd_SfxVolume < 15 => snd_SfxVolume += 1,
 			_ => (),
 		}
 
@@ -698,11 +694,7 @@ fn M_MusicVol(choice: i32) {
 	unsafe {
 		match choice {
 			0 => snd_MusicVolume = snd_MusicVolume.saturating_sub(1),
-			1 => {
-				if snd_MusicVolume < 15 {
-					snd_MusicVolume += 1;
-				}
-			}
+			1 if snd_MusicVolume < 15 => snd_MusicVolume += 1,
 			_ => (),
 		}
 
@@ -948,16 +940,8 @@ fn M_QuitDOOM(_choice: i32) {
 fn M_ChangeSensitivity(choice: i32) {
 	unsafe {
 		match choice {
-			0 => {
-				if mouseSensitivity != 0 {
-					mouseSensitivity -= 1;
-				}
-			}
-			1 => {
-				if mouseSensitivity < 9 {
-					mouseSensitivity += 1;
-				}
-			}
+			0 if mouseSensitivity != 0 => mouseSensitivity -= 1,
+			1 if mouseSensitivity < 9 => mouseSensitivity += 1,
 			_ => (),
 		}
 	}
@@ -975,17 +959,13 @@ fn M_ChangeDetail(_choice: i32) {
 fn M_SizeDisplay(choice: i32) {
 	unsafe {
 		match choice {
-			0 => {
-				if screenSize > 0 {
-					screenblocks -= 1;
-					screenSize -= 1;
-				}
+			0 if screenSize > 0 => {
+				screenblocks -= 1;
+				screenSize -= 1;
 			}
-			1 => {
-				if screenSize < 8 {
-					screenblocks += 1;
-					screenSize += 1;
-				}
+			1 if screenSize < 8 => {
+				screenblocks += 1;
+				screenSize += 1;
 			}
 			_ => (),
 		}

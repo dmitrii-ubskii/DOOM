@@ -114,6 +114,7 @@ pub extern "C" fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
 }
 
 // V_CopyRect
+#[allow(clippy::too_many_arguments)]
 pub fn V_CopyRect(
 	srcx: usize,
 	srcy: usize,
@@ -198,7 +199,6 @@ pub unsafe extern "C" fn V_DrawPatch(
 				}
 				column = column.wrapping_byte_add((*column).length as usize + 4);
 			}
-			x += 1;
 			col += 1;
 			desttop = desttop.wrapping_byte_add(1);
 		}
@@ -248,7 +248,6 @@ pub unsafe fn V_DrawPatchFlipped(mut x: usize, mut y: usize, scrn: usize, patch:
 				}
 				column = column.wrapping_byte_add((*column).length as usize + 4);
 			}
-			x += 1;
 			col += 1;
 			desttop = desttop.wrapping_byte_add(1);
 		}
