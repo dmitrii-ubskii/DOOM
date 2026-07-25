@@ -535,6 +535,7 @@ pub fn I_InitSound() {
 		audio_fd = libc::open(c"/dev/dsp".as_ptr(), O_WRONLY);
 		if audio_fd < 0 {
 			eprintln!("Could not open /dev/dsp");
+			return;
 		}
 
 		let mut i = 11 | (2 << 16);
