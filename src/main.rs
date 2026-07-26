@@ -18,6 +18,7 @@ pub mod f_wipe;
 pub mod g_game;
 pub mod hu_lib;
 pub mod hu_stuff;
+pub mod i_net;
 pub mod i_sound;
 pub mod i_system;
 pub mod i_video;
@@ -29,7 +30,6 @@ pub mod m_fixed;
 pub mod m_menu;
 pub mod m_misc;
 pub mod m_random;
-pub mod m_swap;
 pub mod p_ceiling;
 pub mod p_doors;
 pub mod p_enemy;
@@ -58,7 +58,6 @@ pub mod r_main;
 pub mod r_plane;
 pub mod r_segs;
 pub mod r_sky;
-pub mod r_state;
 pub mod r_things;
 pub mod s_sound;
 pub mod sounds;
@@ -80,9 +79,7 @@ use std::{
 
 use d_main::D_DoomMain;
 
-#[unsafe(no_mangle)]
 static mut myargc: usize = 0;
-#[unsafe(no_mangle)]
 static mut myargv: *mut *mut c_char = null_mut();
 
 fn main() {

@@ -11,13 +11,13 @@ use std::ptr::null_mut;
 use crate::{
 	d_think::think_t,
 	m_random::P_Random,
+	p_setup::{numsectors, sectors},
 	p_spec::{
 		GLOWSPEED, P_FindMinSurroundingLight, P_FindSectorFromLineTag, SLOWDARK, STROBEBRIGHT,
 		fireflicker_t, getNextSector, glow_t, lightflash_t, strobe_t,
 	},
 	p_tick::P_AddThinker,
 	r_defs::{line_t, sector_t},
-	r_state::{numsectors, sectors},
 	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
@@ -178,7 +178,7 @@ pub fn EV_StartLightStrobing(line: &mut line_t) {
 // TURN LINE'S TAG LIGHTS OFF
 pub fn EV_TurnTagLightsOff(line: &mut line_t) {
 	unsafe {
-		for j in 0..usize::try_from(numsectors).unwrap() {
+		for j in 0..numsectors {
 			let sector = &mut *sectors.wrapping_add(j);
 			if sector.tag == line.tag {
 				let mut min = sector.lightlevel;
@@ -201,7 +201,7 @@ pub fn EV_TurnTagLightsOff(line: &mut line_t) {
 // TURN LINE'S TAG LIGHTS ON
 pub(crate) fn EV_LightTurnOn(line: &mut line_t, mut bright: i32) {
 	unsafe {
-		for i in 0..usize::try_from(numsectors).unwrap() {
+		for i in 0..numsectors {
 			let sector = &mut *sectors.wrapping_add(i);
 			if sector.tag == line.tag {
 				// bright = 0 means to search

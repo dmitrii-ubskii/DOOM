@@ -17,13 +17,9 @@ use crate::{
 	am_map::{AM_Drawer, automapactive},
 	d_englsh::{D_CDROM, D_DEVSTR},
 	d_event::{MAXEVENTS, event_t, eventhead, events, eventtail, gameaction_t},
-	d_net::BACKUPTICS,
+	d_net::*,
 	d_player::playerstate_t,
-	d_ticcmd::ticcmd_t,
-	doomdef::{
-		GameMode_t, Language_t, MAXPLAYERS, SCREENHEIGHT, SCREENWIDTH, VERSION, gamestate_t,
-		skill_t,
-	},
+	doomdef::{GameMode_t, Language_t, SCREENHEIGHT, SCREENWIDTH, VERSION, gamestate_t, skill_t},
 	doomstat::{gamemode, language, modifiedgame},
 	f_finale::F_Drawer,
 	f_wipe::{wipe_EndScreen, wipe_Melt, wipe_ScreenWipe, wipe_StartScreen},
@@ -72,39 +68,27 @@ pub(crate) static mut wadfiles: [*mut c_char; MAXWADFILES] = [null_mut(); MAXWAD
 
 type boolean = i32;
 
-#[unsafe(no_mangle)]
 pub static mut devparm: boolean = 0; // started game with -devparm
-#[unsafe(no_mangle)]
 pub static mut nomonsters: boolean = 0; // checkparm of -nomonsters
-#[unsafe(no_mangle)]
 pub static mut respawnparm: boolean = 0; // checkparm of -respawn
-#[unsafe(no_mangle)]
 pub static mut fastparm: boolean = 0; // checkparm of -fast
 
-#[unsafe(no_mangle)]
 pub static mut singletics: boolean = 0; // debug flag to cancel adaptiveness
 
-#[unsafe(no_mangle)]
 pub static mut startskill: skill_t = skill_t::sk_baby;
-#[unsafe(no_mangle)]
 pub static mut startepisode: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut startmap: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut autostart: boolean = 0;
 
-#[unsafe(no_mangle)]
 pub static mut debugfile: *const libc::FILE = null();
 
-#[unsafe(no_mangle)]
 pub static mut advancedemo: boolean = 0;
 
 pub(crate) static mut basedefault: [c_char; 1024] = [0; 1024]; // default file
 
 // D_PostEvent
 // Called by the I/O functions when input is detected
-#[unsafe(no_mangle)]
-pub extern "C" fn D_PostEvent(ev: &mut event_t) {
+pub fn D_PostEvent(ev: &mut event_t) {
 	unsafe {
 		events[eventhead] = *ev;
 		eventhead = (eventhead + 1) & (MAXEVENTS - 1);
@@ -113,8 +97,7 @@ pub extern "C" fn D_PostEvent(ev: &mut event_t) {
 
 // D_ProcessEvents
 // Send all the events of the given timestamp down the responder chain
-#[unsafe(no_mangle)]
-pub extern "C" fn D_ProcessEvents() {
+pub fn D_ProcessEvents() {
 	unsafe {
 		// IF STORE DEMO, DO NOT ACCEPT INPUT
 		if gamemode == GameMode_t::commercial && W_CheckNumForName(c"map01".as_ptr()) < 0 {
@@ -137,12 +120,7 @@ pub extern "C" fn D_ProcessEvents() {
 //  draw current display, possibly wiping it from the previous
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
-#[unsafe(no_mangle)]
 pub static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
-
-unsafe extern "C" {
-	fn NetUpdate();
-}
 
 fn D_Display() {
 	unsafe {
@@ -287,14 +265,6 @@ fn D_Display() {
 	}
 }
 
-//  D_DoomLoop
-unsafe extern "C" {
-	static mut maketic: usize;
-	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
-	fn TryRunTics();
-}
-
-#[unsafe(no_mangle)]
 pub(crate) fn D_DoomLoop() {
 	unsafe {
 		if demorecording != 0 {
@@ -381,8 +351,7 @@ pub(crate) fn D_AdvanceDemo() {
 
 // This cycles through the demo sequences.
 // FIXME - version dependend demo numbers?
-#[unsafe(no_mangle)]
-pub extern "C" fn D_DoAdvanceDemo() {
+pub fn D_DoAdvanceDemo() {
 	unsafe {
 		players[consoleplayer].playerstate = playerstate_t::PST_LIVE; // not reborn
 		advancedemo = 0;
@@ -460,7 +429,6 @@ pub(crate) fn D_StartTitle() {
 }
 
 //      print title for every printed line
-#[unsafe(no_mangle)]
 pub static mut title: [c_char; 128] = [0; 128];
 
 // D_AddFile
@@ -529,7 +497,7 @@ fn IdentifyVersion() {
 		let doom2fwad = format!("{doomwaddir}/doom2f.wad\0");
 
 		let Ok(home) = env::var("HOME") else {
-			I_Error(c"Please set $HOME to your home directory".as_ptr());
+			I_Error!(c"Please set $HOME to your home directory".as_ptr());
 		};
 		let home = CString::from_str(&home).unwrap();
 		sprintf(basedefault.as_mut_ptr(), c"%s/.doomrc".as_ptr(), home.as_ptr());
@@ -705,10 +673,6 @@ fn FindResponseFile() {
 	}
 }
 
-unsafe extern "C" {
-	fn D_CheckNetGame();
-}
-
 macro_rules! cdrom_savegamename {
 	($s:literal) => {
 		concat!("c:\\doomdata\\doomsav", $s, "\0").as_ptr().cast()
@@ -722,9 +686,8 @@ macro_rules! savegamename {
 }
 
 // D_DoomMain
-#[unsafe(no_mangle)]
 #[allow(static_mut_refs)]
-pub extern "C" fn D_DoomMain() {
+pub fn D_DoomMain() {
 	unsafe {
 		FindResponseFile();
 
@@ -989,7 +952,7 @@ pub extern "C" fn D_DoomMain() {
 			];
 
 			if gamemode == GameMode_t::shareware {
-				I_Error(c"\nYou cannot -file with the shareware version. Register!".as_ptr());
+				I_Error!(c"\nYou cannot -file with the shareware version. Register!".as_ptr());
 			}
 
 			// Check for fake IWAD with right name,
@@ -997,7 +960,7 @@ pub extern "C" fn D_DoomMain() {
 			if gamemode == GameMode_t::registered {
 				for n in name {
 					if W_CheckNumForName(n) < 0 {
-						I_Error(c"\nThis is not the registered version.".as_ptr());
+						I_Error!(c"\nThis is not the registered version.".as_ptr());
 					}
 				}
 			}

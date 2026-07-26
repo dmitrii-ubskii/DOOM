@@ -38,7 +38,7 @@ macro_rules! Z_ChangeTag {
 			.wrapping_byte_sub(size_of::<$crate::z_zone::memblock_t>())
 			.cast::<$crate::z_zone::memblock_t>();
 		if (*block).id != 0x1d4a11 {
-			crate::i_system::I_Error(
+			crate::i_system::I_Error!(
 				concat!("Z_CT at ", file!(), ":%i", line!(), "\0").as_ptr().cast(),
 			);
 		}
@@ -110,13 +110,12 @@ pub(crate) fn Z_Init() {
 }
 
 // Z_Free
-#[unsafe(no_mangle)]
-pub extern "C" fn Z_Free(ptr: *mut c_void) {
+pub fn Z_Free(ptr: *mut c_void) {
 	unsafe {
 		let mut block = &mut *(ptr.wrapping_byte_sub(size_of::<memblock_t>()).cast::<memblock_t>());
 
 		if block.id != ZONEID {
-			I_Error(c"Z_Free: freed a pointer without ZONEID".as_ptr());
+			I_Error!(c"Z_Free: freed a pointer without ZONEID".as_ptr());
 		}
 
 		if block.user.addr() > 0x100 {
@@ -165,8 +164,7 @@ pub extern "C" fn Z_Free(ptr: *mut c_void) {
 // You can pass a NULL user if the tag is < PU_PURGELEVEL.
 const MINFRAGMENT: usize = 64;
 
-#[unsafe(no_mangle)]
-pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c_void {
+pub fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c_void {
 	unsafe {
 		// int		extra;
 		// memblock_t*	start;
@@ -198,7 +196,7 @@ pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c
 		loop {
 			if std::ptr::eq(rover, start) {
 				// scanned all the way around the list
-				I_Error(c"Z_Malloc: failed on allocation of %i bytes".as_ptr(), size);
+				I_Error!(c"Z_Malloc: failed on allocation of %i bytes".as_ptr(), size);
 			}
 
 			if !(*rover).user.is_null() {
@@ -249,7 +247,7 @@ pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c
 			*user.cast::<*mut c_void>() = (base.wrapping_byte_add(size_of::<memblock_t>())).cast();
 		} else {
 			if tag >= PU_PURGELEVEL {
-				I_Error(c"Z_Malloc: an owner is required for purgable blocks".as_ptr());
+				I_Error!(c"Z_Malloc: an owner is required for purgable blocks".as_ptr());
 			}
 
 			// mark as in use, but unowned
@@ -298,15 +296,15 @@ pub(crate) fn Z_CheckHeap() {
 			}
 
 			if !std::ptr::eq(block.wrapping_byte_add((*block).size), (*block).next) {
-				I_Error(c"Z_CheckHeap: block size does not touch the next block\n".as_ptr());
+				I_Error!(c"Z_CheckHeap: block size does not touch the next block\n".as_ptr());
 			}
 
 			if !std::ptr::eq((*(*block).next).prev, block) {
-				I_Error(c"Z_CheckHeap: next block doesn't have proper back link\n".as_ptr());
+				I_Error!(c"Z_CheckHeap: next block doesn't have proper back link\n".as_ptr());
 			}
 
 			if (*block).user.is_null() && (*(*block).next).user.is_null() {
-				I_Error(c"Z_CheckHeap: two consecutive free blocks\n".as_ptr());
+				I_Error!(c"Z_CheckHeap: two consecutive free blocks\n".as_ptr());
 			}
 			block = (*block).next;
 		}
@@ -314,17 +312,16 @@ pub(crate) fn Z_CheckHeap() {
 }
 
 // Z_ChangeTag
-#[unsafe(no_mangle)]
-pub extern "C" fn Z_ChangeTag2(ptr: *mut c_void, tag: usize) {
+pub fn Z_ChangeTag2(ptr: *mut c_void, tag: usize) {
 	unsafe {
 		let block = ptr.wrapping_byte_sub(size_of::<memblock_t>()).cast::<memblock_t>();
 
 		if (*block).id != ZONEID {
-			I_Error(c"Z_ChangeTag: freed a pointer without ZONEID".as_ptr());
+			I_Error!(c"Z_ChangeTag: freed a pointer without ZONEID".as_ptr());
 		}
 
 		if tag >= PU_PURGELEVEL && (*block).user.addr() < 0x100 {
-			I_Error(c"Z_ChangeTag: an owner is required for purgable blocks".as_ptr());
+			I_Error!(c"Z_ChangeTag: an owner is required for purgable blocks".as_ptr());
 		}
 
 		(*block).tag = tag;

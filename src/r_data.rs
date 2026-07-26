@@ -18,8 +18,9 @@ use crate::{
 	p_local::thinkercap,
 	p_mobj::mobj_t,
 	p_setup::{numsectors, numsides, sectors, sides},
-	r_defs::{column_t, lighttable_t, patch_t, spritedef_t},
+	r_defs::{column_t, lighttable_t, patch_t},
 	r_sky::skytexture,
+	r_things::{numsprites, sprites},
 	w_wad::{
 		W_CacheLumpName, W_CacheLumpNum, W_CheckNumForName, W_GetNumForName, W_LumpLength,
 		W_ReadLump, lumpinfo,
@@ -94,17 +95,12 @@ struct texture_t {
 	pub patches: [texpatch_t; 1],
 }
 
-#[unsafe(no_mangle)]
 pub static mut firstflat: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut lastflat: usize = 0;
 static mut numflats: usize = 0;
 
-#[unsafe(no_mangle)]
 pub static mut firstspritelump: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut lastspritelump: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut numspritelumps: usize = 0;
 
 static mut numtextures: usize = 0;
@@ -112,7 +108,6 @@ static mut textures: *mut *mut texture_t = null_mut();
 
 static mut texturewidthmask: *mut usize = null_mut();
 // needed for texture pegging
-#[unsafe(no_mangle)]
 pub static mut textureheight: *mut fixed_t = null_mut();
 static mut texturecompositesize: *mut usize = null_mut();
 static mut texturecolumnlump: *mut *mut short = null_mut();
@@ -120,20 +115,14 @@ static mut texturecolumnofs: *mut *mut u16 = null_mut();
 static mut texturecomposite: *mut *mut byte = null_mut();
 
 // for global animation
-#[unsafe(no_mangle)]
 pub static mut flattranslation: *mut usize = null_mut();
-#[unsafe(no_mangle)]
 pub static mut texturetranslation: *mut usize = null_mut();
 
 // needed for pre rendering
-#[unsafe(no_mangle)]
 pub static mut spritewidth: *mut fixed_t = null_mut();
-#[unsafe(no_mangle)]
 pub static mut spriteoffset: *mut fixed_t = null_mut();
-#[unsafe(no_mangle)]
 pub static mut spritetopoffset: *mut fixed_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub static mut colormaps: *mut lighttable_t = null_mut();
 
 // MAPTEXTURE_T CACHING
@@ -309,7 +298,7 @@ fn R_GenerateLookup(texnum: usize) {
 				if *texturecompositesize.wrapping_add(texnum)
 					> 0x10000 - usize::try_from(texture.height).unwrap()
 				{
-					I_Error(c"R_GenerateLookup: texture %i is >64k".as_ptr(), texnum);
+					I_Error!(c"R_GenerateLookup: texture %i is >64k".as_ptr(), texnum);
 				}
 
 				*texturecompositesize.wrapping_add(texnum) +=
@@ -320,8 +309,7 @@ fn R_GenerateLookup(texnum: usize) {
 }
 
 // R_GetColumn
-#[unsafe(no_mangle)]
-pub extern "C" fn R_GetColumn(tex: usize, mut col: usize) -> *mut u8 {
+pub fn R_GetColumn(tex: usize, mut col: usize) -> *mut u8 {
 	unsafe {
 		col &= *texturewidthmask.wrapping_add(tex);
 		let lump = *(*texturecolumnlump.wrapping_add(tex)).wrapping_add(col);
@@ -421,7 +409,7 @@ fn R_InitTextures() {
 			let offset = *directory;
 
 			if offset > maxoff {
-				I_Error(c"R_InitTextures: bad texture directory".as_ptr());
+				I_Error!(c"R_InitTextures: bad texture directory".as_ptr());
 			}
 
 			let mtexture: *mut maptexture_t = maptex.wrapping_byte_add(offset).cast();
@@ -453,7 +441,7 @@ fn R_InitTextures() {
 				patch.originy = i32::from(mpatch.originy);
 				patch.patch = patchlookup[usize::try_from(mpatch.patch).unwrap()];
 				if patch.patch == -1 {
-					I_Error(
+					I_Error!(
 						c"R_InitTextures: Missing patch in texture %s".as_ptr(),
 						texture.name.as_ptr(),
 					);
@@ -575,7 +563,7 @@ pub(crate) fn R_FlatNumForName(name: *const c_char) -> usize {
 		if i == -1 {
 			namet[8] = 0;
 			libc::memcpy(namet.as_mut_ptr().cast(), name.cast(), 8);
-			I_Error(c"R_FlatNumForName: %s not found".as_ptr(), namet.as_ptr());
+			I_Error!(c"R_FlatNumForName: %s not found".as_ptr(), namet.as_ptr());
 		}
 		usize::try_from(i).unwrap() - firstflat
 	}
@@ -607,7 +595,7 @@ pub(crate) fn R_CheckTextureNumForName(name: *const c_char) -> i32 {
 pub(crate) fn R_TextureNumForName(name: *const c_char) -> usize {
 	let i = R_CheckTextureNumForName(name);
 	if i == -1 {
-		unsafe { I_Error(c"R_TextureNumForName: %s not found".as_ptr(), name) };
+		unsafe { I_Error!(c"R_TextureNumForName: %s not found".as_ptr(), name) };
 	}
 	usize::try_from(i).unwrap()
 }
@@ -617,11 +605,6 @@ pub(crate) fn R_TextureNumForName(name: *const c_char) -> usize {
 static mut flatmemory: usize = 0;
 static mut texturememory: usize = 0;
 static mut spritememory: usize = 0;
-
-unsafe extern "C" {
-	static mut numsprites: usize;
-	static mut sprites: *mut spritedef_t;
-}
 
 pub(crate) fn R_PrecacheLevel() {
 	unsafe {

@@ -314,7 +314,7 @@ pub(crate) fn P_UnArchiveThinkers() {
 					P_AddThinker(&mut (*mobj).thinker);
 				}
 
-				_ => I_Error(c"Unknown tclass %i in savegame".as_ptr(), c_int::from(tclass)),
+				_ => I_Error!(c"Unknown tclass %i in savegame".as_ptr(), c_int::from(tclass)),
 			}
 		}
 	}

@@ -9,16 +9,15 @@ use crate::{
 	p_local::divline_t,
 	p_maputl::{openbottom, opentop},
 	p_mobj::mobj_t,
-	p_setup::rejectmatrix,
+	p_setup::{
+		nodes, numnodes, numsectors, numsubsectors, rejectmatrix, sectors, segs, subsectors,
+	},
 	r_main::validcount,
-	r_state::{nodes, numnodes, numsectors, numsubsectors, sectors, segs, subsectors},
 };
 
 // P_CheckSight
 static mut sightzstart: fixed_t = 0; // eye z of looker
-#[unsafe(no_mangle)]
 pub static mut topslope: fixed_t = 0;
-#[unsafe(no_mangle)]
 pub static mut bottomslope: fixed_t = 0; // slopes to top and bottom of target
 
 pub static mut strace: divline_t = divline_t { x: 0, y: 0, dx: 0, dy: 0 }; // from t1 to t2
@@ -85,8 +84,8 @@ fn P_CrossSubsector(num: i32) -> bool {
 	let mut divl = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
 
 	unsafe {
-		if num >= numsubsectors {
-			I_Error(c"P_CrossSubsector: ss %i with numss = %i".as_ptr(), num, numsubsectors);
+		if num >= i32::try_from(numsubsectors).unwrap() {
+			I_Error!(c"P_CrossSubsector: ss %i with numss = %i".as_ptr(), num, numsubsectors);
 		}
 
 		let sub = &mut *subsectors.wrapping_add(usize::try_from(num).unwrap());
@@ -270,6 +269,6 @@ pub fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> bool {
 		strace.dy = t2.y - t1.y;
 
 		// the head node is the last node output
-		P_CrossBSPNode(usize::try_from(numnodes).unwrap() - 1)
+		P_CrossBSPNode(numnodes - 1)
 	}
 }

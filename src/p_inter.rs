@@ -62,7 +62,7 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 		}
 
 		// if (ammo < 0 || ammo > NUMAMMO) {
-		// 	I_Error("P_GiveAmmo: bad type %i", ammo);
+		// 	I_Error!("P_GiveAmmo: bad type %i", ammo);
 		// }
 
 		if (*player).ammo[usize::from(ammo)] == (*player).maxammo[usize::from(ammo)] {
@@ -621,7 +621,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		_ => unsafe {
-			I_Error(c"P_SpecialThing: Unknown gettable thing".as_ptr());
+			I_Error!(c"P_SpecialThing: Unknown gettable thing".as_ptr());
 		},
 	}
 

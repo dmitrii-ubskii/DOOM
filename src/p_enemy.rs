@@ -262,7 +262,7 @@ fn P_Move(actor: &mut mobj_t) -> bool {
 		}
 
 		if actor.movedir == dirtype_t::NUMDIRS {
-			I_Error(c"Weird actor.movedir!".as_ptr());
+			I_Error!(c"Weird actor.movedir!".as_ptr());
 		}
 
 		let tryx = actor.x + (*actor.info).speed * xspeed[usize::from(actor.movedir)];
@@ -332,7 +332,7 @@ fn P_TryWalk(actor: &mut mobj_t) -> bool {
 fn P_NewChaseDir(actor: &mut mobj_t) {
 	unsafe {
 		if actor.target.is_null() {
-			I_Error(c"P_NewChaseDir: called with no target".as_ptr());
+			I_Error!(c"P_NewChaseDir: called with no target".as_ptr());
 		}
 
 		let olddir = actor.movedir;

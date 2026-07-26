@@ -12,13 +12,11 @@ use crate::{
 	r_defs::{column_t, patch_t},
 };
 
-#[unsafe(no_mangle)]
 pub static mut screens: [*mut u8; 5] = [null_mut(); 5];
 
 static mut dirtybox: [i32; 4] = [0; 4];
 
 // Now where did these came from?
-#[unsafe(no_mangle)]
 pub static gammatable: [[u8; 256]; 5] = [
 	[
 		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
@@ -104,8 +102,7 @@ pub static gammatable: [[u8; 256]; 5] = [
 pub static mut usegamma: usize = 0;
 
 // V_MarkRect
-#[unsafe(no_mangle)]
-pub extern "C" fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
+pub fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
 	#[allow(static_mut_refs)]
 	unsafe {
 		M_AddToBox(&mut dirtybox, fixed_t::try_from(x).unwrap(), fixed_t::try_from(y).unwrap());
@@ -138,7 +135,7 @@ pub fn V_CopyRect(
 			|| srcscrn > 4
 			|| destscrn > 4
 		{
-			I_Error(c"Bad V_CopyRect".as_ptr());
+			I_Error!(c"Bad V_CopyRect".as_ptr());
 		}
 		// #endif
 		V_MarkRect(destx, desty, width, height);
@@ -156,8 +153,7 @@ pub fn V_CopyRect(
 
 // V_DrawPatch
 // Masks a column based masked pic to the screen.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn V_DrawPatch(
+pub unsafe fn V_DrawPatch(
 	mut x: usize,
 	mut y: usize,
 	scrn: usize,
@@ -228,7 +224,7 @@ pub unsafe fn V_DrawPatchFlipped(mut x: usize, mut y: usize, scrn: usize, patch:
 			|| scrn > 4
 		{
 			eprintln!("Patch origin {x},{y} exceeds LFB",);
-			I_Error(c"Bad V_DrawPatch in V_DrawPatchFlipped".as_ptr());
+			I_Error!(c"Bad V_DrawPatch in V_DrawPatchFlipped".as_ptr());
 		}
 		// #endif
 
@@ -291,7 +287,7 @@ pub(crate) fn V_DrawBlock(
 	unsafe {
 		// #ifdef RANGECHECK
 		if x + width > SCREENWIDTH || y + height > SCREENHEIGHT || scrn > 4 {
-			I_Error(c"Bad V_DrawBlock".as_ptr());
+			I_Error!(c"Bad V_DrawBlock".as_ptr());
 		}
 		// #endif
 

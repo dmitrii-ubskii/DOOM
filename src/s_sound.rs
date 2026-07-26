@@ -59,11 +59,9 @@ static mut channels: *mut channel_t = null_mut();
 // These are not used, but should be (menu).
 // Maximum volume of a sound effect.
 // Internal default is max out of 0-15.
-#[unsafe(no_mangle)]
 pub static mut snd_SfxVolume: u32 = 15;
 
 // Maximum volume of music. Useless so far.
-#[unsafe(no_mangle)]
 pub static mut snd_MusicVolume: u32 = 15;
 
 // whether songs are mus_paused
@@ -177,7 +175,7 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u3
 
 		// check for bogus sound #
 		if (usize::from(sfx_id)) < 1 || usize::from(sfx_id) > usize::from(sfxenum_t::NUMSFX) {
-			I_Error(c"Bad sfx #: %d".as_ptr(), sfx_id);
+			I_Error!(c"Bad sfx #: %d".as_ptr(), sfx_id);
 		}
 
 		let sfx = &mut S_sfx[usize::from(sfx_id)];
@@ -274,8 +272,7 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u3
 
 // Start sound for thing at <origin>
 //  using <sound_id> from sounds.h
-#[unsafe(no_mangle)]
-pub extern "C" fn S_StartSound(origin: *mut c_void, sfx_id: sfxenum_t) {
+pub fn S_StartSound(origin: *mut c_void, sfx_id: sfxenum_t) {
 	unsafe {
 		S_StartSoundAtVolume(origin, sfx_id, snd_SfxVolume);
 	}
@@ -368,7 +365,7 @@ pub(crate) fn S_UpdateSounds(listener_p: *mut c_void) {
 pub(crate) fn S_SetMusicVolume(volume: u32) {
 	unsafe {
 		if !(0..=127).contains(&volume) {
-			I_Error(c"Attempt to set music volume at %d".as_ptr(), volume);
+			I_Error!(c"Attempt to set music volume at %d".as_ptr(), volume);
 		}
 
 		I_SetMusicVolume(127);
@@ -380,7 +377,7 @@ pub(crate) fn S_SetMusicVolume(volume: u32) {
 pub(crate) fn S_SetSfxVolume(volume: u32) {
 	unsafe {
 		if !(0..=127).contains(&volume) {
-			I_Error(c"Attempt to set sfx volume at %d".as_ptr(), volume);
+			I_Error!(c"Attempt to set sfx volume at %d".as_ptr(), volume);
 		}
 
 		snd_SfxVolume = volume;
@@ -399,7 +396,7 @@ pub fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 		let music = if (usize::from(musicnum)) <= usize::from(musicenum_t::mus_None)
 			|| usize::from(musicnum) >= usize::from(musicenum_t::NUMMUSIC)
 		{
-			I_Error(c"Bad music number %d".as_ptr(), musicnum);
+			I_Error!(c"Bad music number %d".as_ptr(), musicnum);
 		} else {
 			&mut S_music[usize::from(musicnum)]
 		};

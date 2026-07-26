@@ -73,7 +73,7 @@ pub fn R_DrawColumn() {
 			|| dc_yl < 0
 			|| dc_yh >= SCREENHEIGHT.try_into().unwrap()
 		{
-			I_Error(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
+			I_Error!(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
 		}
 
 		// Framebuffer destination address.
@@ -116,7 +116,7 @@ pub fn R_DrawColumnLow() {
 			|| dc_yl < 0
 			|| dc_yh >= SCREENHEIGHT.try_into().unwrap()
 		{
-			I_Error(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
+			I_Error!(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
 		}
 
 		// Blocky mode, need to multiply by 2.
@@ -186,7 +186,7 @@ pub fn R_DrawFuzzColumn() {
 			|| dc_yl < 0
 			|| dc_yh >= SCREENHEIGHT.try_into().unwrap()
 		{
-			I_Error(c"R_DrawFuzzColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
+			I_Error!(c"R_DrawFuzzColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
 		}
 
 		// Does not work with blocky mode.
@@ -241,7 +241,7 @@ pub fn R_DrawTranslatedColumn() {
 			|| dc_yl < 0
 			|| dc_yh >= SCREENHEIGHT.try_into().unwrap()
 		{
-			I_Error(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
+			I_Error!(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
 		}
 
 		// FIXME. As above.
@@ -325,7 +325,7 @@ pub static mut ds_source: *mut u8 = null_mut();
 pub fn R_DrawSpan() {
 	unsafe {
 		if ds_x2 < ds_x1 || ds_x2 >= SCREENWIDTH || ds_y > SCREENHEIGHT {
-			I_Error(c"R_DrawSpan: %i to %i at %i".as_ptr(), ds_x1, ds_x2, ds_y);
+			I_Error!(c"R_DrawSpan: %i to %i at %i".as_ptr(), ds_x1, ds_x2, ds_y);
 		}
 
 		let mut xfrac = ds_xfrac;
@@ -357,7 +357,7 @@ pub fn R_DrawSpan() {
 pub fn R_DrawSpanLow() {
 	unsafe {
 		if ds_x2 < ds_x1 || ds_x2 >= SCREENWIDTH || ds_y > SCREENHEIGHT {
-			I_Error(c"R_DrawSpan: %i to %i at %i".as_ptr(), ds_x1, ds_x2, ds_y);
+			I_Error!(c"R_DrawSpan: %i to %i at %i".as_ptr(), ds_x1, ds_x2, ds_y);
 		}
 
 		let mut xfrac = ds_xfrac;

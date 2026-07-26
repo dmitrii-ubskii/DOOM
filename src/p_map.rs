@@ -563,7 +563,7 @@ fn P_HitSlideLine(ld: &line_t) {
 pub fn PTR_SlideTraverse(intercept: &mut intercept_t) -> bool {
 	unsafe {
 		if intercept.isaline == 0 {
-			I_Error(c"PTR_SlideTraverse: not a line?".as_ptr());
+			I_Error!(c"PTR_SlideTraverse: not a line?".as_ptr());
 		}
 
 		let li = &mut *intercept.d.line;

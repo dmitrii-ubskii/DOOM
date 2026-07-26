@@ -48,27 +48,21 @@ const BASEYCENTER: i32 = 100;
 // This is not the same as the angle,
 //  which increases counter clockwise (protractor).
 // There was a lot of stuff grabbed wrong, so I changed it...
-#[unsafe(no_mangle)]
 pub static mut pspritescale: fixed_t = 0;
-#[unsafe(no_mangle)]
 pub static mut pspriteiscale: fixed_t = 0;
 
 static mut spritelights: *mut *mut lighttable_t = null_mut();
 
 // constant arrays
 //  used for psprite clipping and initializing clipping
-#[unsafe(no_mangle)]
 pub static mut negonearray: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
-#[unsafe(no_mangle)]
 pub static mut screenheightarray: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
 
 // INITIALIZATION FUNCTIONS
 
 // variables used to look up
 //  and range check thing_t sprites patches
-#[unsafe(no_mangle)]
 pub static mut sprites: *mut spritedef_t = null_mut();
-#[unsafe(no_mangle)]
 pub static mut numsprites: usize = 0;
 
 static mut sprtemp: [spriteframe_t; 29] = unsafe { mem::zeroed() };
@@ -80,7 +74,7 @@ static mut spritename: *const u8 = null();
 fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 	unsafe {
 		if frame >= 29 || rotation > 8 {
-			I_Error(c"R_InstallSpriteLump: Bad frame characters in lump %i".as_ptr(), lump);
+			I_Error!(c"R_InstallSpriteLump: Bad frame characters in lump %i".as_ptr(), lump);
 		}
 
 		if i32::from(frame) > maxframe {
@@ -92,7 +86,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 		if rotation == 0 {
 			// the lump should be used for all rotations
 			if sprtemp[frame].rotate == 0 {
-				I_Error(
+				I_Error!(
 					c"R_InitSprites: Sprite %s frame %c has multip rot=0 lump".as_ptr(),
 					spritename,
 					usize::from(b'A') + frame,
@@ -100,7 +94,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 			}
 
 			if sprtemp[frame].rotate == 1 {
-				I_Error(
+				I_Error!(
 					c"R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump".as_ptr(),
 					spritename,
 					usize::from(b'A') + frame,
@@ -119,7 +113,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 
 		// the lump is only used for one rotation
 		if sprtemp[frame].rotate == 0 {
-			I_Error(
+			I_Error!(
 				c"R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump".as_ptr(),
 				spritename,
 				usize::from(b'A') + frame,
@@ -131,7 +125,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 		// make 0 based
 		let rotation = usize::from(rotation) - 1;
 		if sprtemp[frame].lump[rotation] != -1 {
-			I_Error(
+			I_Error!(
 				c"R_InitSprites: Sprite %s : %c : %c has two lumps mapped to it".as_ptr(),
 				spritename,
 				usize::from(b'A') + frame,
@@ -229,7 +223,7 @@ fn R_InitSpriteDefs(namelist: *const *const u8) {
 				match sprtemp[frame].rotate {
 					-1 => {
 						// no rotations were found for that frame at all
-						I_Error(
+						I_Error!(
 							c"R_InitSprites: No patches found for %s frame %c".as_ptr(),
 							*namelist.wrapping_add(i),
 							frame + usize::from(b'A'),
@@ -240,7 +234,7 @@ fn R_InitSpriteDefs(namelist: *const *const u8) {
 						// must have all 8 frames
 						for rotation in 0..8 {
 							if sprtemp[frame].lump[rotation] == -1 {
-								I_Error(
+								I_Error!(
 									c"R_InitSprites: Sprite %s frame %c is missing rotations"
 										.as_ptr(),
 									*namelist.wrapping_add(i),
@@ -310,18 +304,13 @@ fn R_NewVisSprite() -> *mut vissprite_t {
 // Used for sprites and masked mid textures.
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
-#[unsafe(no_mangle)]
 pub static mut mfloorclip: *mut i16 = null_mut();
-#[unsafe(no_mangle)]
 pub static mut mceilingclip: *mut i16 = null_mut();
 
-#[unsafe(no_mangle)]
 pub static mut spryscale: fixed_t = 0;
-#[unsafe(no_mangle)]
 pub static mut sprtopscreen: fixed_t = 0;
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn R_DrawMaskedColumn(mut column: *mut column_t) {
+pub unsafe fn R_DrawMaskedColumn(mut column: *mut column_t) {
 	unsafe {
 		let basetexturemid = dc_texturemid;
 

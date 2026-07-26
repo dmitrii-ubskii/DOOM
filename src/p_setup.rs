@@ -41,32 +41,21 @@ pub(crate) static mut numvertexes: usize = 0;
 pub(crate) static mut vertexes: *mut vertex_t = null_mut();
 
 pub(crate) static mut numsegs: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut segs: *mut seg_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub static mut numsectors: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut sectors: *mut sector_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub static mut numsubsectors: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut subsectors: *mut subsector_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub static mut numnodes: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut nodes: *mut node_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub static mut numlines: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut lines: *mut line_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub static mut numsides: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut sides: *mut side_t = null_mut();
 
 // BLOCKMAP
@@ -77,22 +66,15 @@ pub static mut sides: *mut side_t = null_mut();
 // by spatial subdivision in 2D.
 
 // Blockmap size.
-#[unsafe(no_mangle)]
 pub static mut bmapwidth: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut bmapheight: usize = 0; // size in mapblocks
-#[unsafe(no_mangle)]
 pub static mut blockmap: *mut i16 = null_mut(); // usize for larger maps
 // offsets in blockmap are from here
-#[unsafe(no_mangle)]
 pub static mut blockmaplump: *mut i16 = null_mut();
 // origin of block map
-#[unsafe(no_mangle)]
 pub static mut bmaporgx: fixed_t = 0;
-#[unsafe(no_mangle)]
 pub static mut bmaporgy: fixed_t = 0;
 // for thing chains
-#[unsafe(no_mangle)]
 pub static mut blocklinks: *mut *mut mobj_t = null_mut();
 
 // REJECT
@@ -471,7 +453,7 @@ fn P_GroupLines() {
 			if linebuffer.offset_from((*sector).lines)
 				!= isize::try_from((*sector).linecount).unwrap()
 			{
-				I_Error(c"P_GroupLines: miscounted".as_ptr());
+				I_Error!(c"P_GroupLines: miscounted".as_ptr());
 			}
 
 			// set the degenmobj_t to the middle of the bounding box

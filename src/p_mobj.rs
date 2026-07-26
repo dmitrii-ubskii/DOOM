@@ -919,7 +919,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		}
 
 		if i == mobjtype_t::NUMMOBJTYPES {
-			I_Error(
+			I_Error!(
 				c"P_SpawnMapThing: Unknown ty %i at (%i, %i)".as_ptr(),
 				i32::from(mthing.ty),
 				i32::from(mthing.x),

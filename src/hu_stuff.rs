@@ -379,9 +379,8 @@ fn HU_Stop() {
 	}
 }
 
-#[unsafe(no_mangle)]
 #[allow(static_mut_refs)]
-pub extern "C" fn HU_Start() {
+pub fn HU_Start() {
 	unsafe {
 		if headsupactive {
 			HU_Stop();

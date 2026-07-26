@@ -21,7 +21,6 @@ use crate::{
 	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
-#[unsafe(no_mangle)]
 pub static mut activeplats: [*mut plat_t; MAXPLATS] = [null_mut(); MAXPLATS];
 
 // Move a plat up and down
@@ -239,7 +238,7 @@ pub(crate) fn P_AddActivePlat(plat: *mut plat_t) {
 				return;
 			}
 		}
-		I_Error(c"P_AddActivePlat: no more plats!".as_ptr());
+		I_Error!(c"P_AddActivePlat: no more plats!".as_ptr());
 	}
 }
 
@@ -255,6 +254,6 @@ fn P_RemoveActivePlat(plat: *mut plat_t) {
 				return;
 			}
 		}
-		I_Error(c"P_RemoveActivePlat: can't find plat!".as_ptr());
+		I_Error!(c"P_RemoveActivePlat: can't find plat!".as_ptr());
 	}
 }

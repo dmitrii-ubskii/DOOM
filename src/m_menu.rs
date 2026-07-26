@@ -1808,8 +1808,7 @@ fn M_SetupNextMenu(menudef: *mut menu_t) {
 }
 
 // M_Ticker
-#[unsafe(no_mangle)]
-pub extern "C" fn M_Ticker() {
+pub fn M_Ticker() {
 	unsafe {
 		skullAnimCounter -= 1;
 		if skullAnimCounter <= 0 {

@@ -1,15 +1,4 @@
 fn main() {
-	cc::Build::new()
-		.files([
-			"linuxdoom-1.10/i_system.c",
-			"linuxdoom-1.10/i_net.c",
-			"linuxdoom-1.10/d_net.c",
-		])
-		.no_default_flags(true)
-		.compiler("gcc")
-		.flags(["-m32", "-g", "-fpermissive", "-DNORMALUNIX", "-DLINUX"])
-		.cargo_warnings(false)
-		.compile("xdoom");
 	println!("cargo::rerun-if-changed=linuxdoom-1.10");
 	println!("cargo::rustc-link-lib=Xext");
 	println!("cargo::rustc-link-lib=X11");

@@ -29,8 +29,7 @@ pub const FINEMASK: usize = FINEANGLES - 1;
 // 0x100000000 to 0x2000
 pub const ANGLETOFINESHIFT: usize = 19;
 
-#[unsafe(no_mangle)]
-pub extern "C" fn SlopeDiv(num: usize, den: usize) -> usize {
+pub fn SlopeDiv(num: usize, den: usize) -> usize {
 	if den < 512 {
 		return SLOPERANGE;
 	}
@@ -51,7 +50,6 @@ pub const DBITS: i32 = FRACBITS - SLOPEBITS;
 pub type angle_t = Wrapping<usize>;
 
 // Effective size is 10240.
-#[unsafe(no_mangle)]
 pub static finesine: [fixed_t; 5 * FINEANGLES / 4] = [
 	25, 75, 125, 175, 226, 276, 326, 376, 427, 477, 527, 578, 628, 678, 728, 779, 829, 879, 929,
 	980, 1030, 1080, 1130, 1181, 1231, 1281, 1331, 1382, 1432, 1482, 1532, 1583, 1633, 1683, 1733,
@@ -858,7 +856,6 @@ pub static finesine: [fixed_t; 5 * FINEANGLES / 4] = [
 ];
 
 // Re-use data, is just PI/2 pahse shift.
-#[unsafe(no_mangle)]
 pub static finecosine: &fixed_t = &finesine[FINEANGLES / 4];
 
 pub fn finecos(angle: usize) -> fixed_t {
@@ -866,7 +863,6 @@ pub fn finecos(angle: usize) -> fixed_t {
 }
 
 // Effective size is 4096.
-#[unsafe(no_mangle)]
 pub static finetangent: [fixed_t; FINEANGLES / 2] = [
 	-170910304, -56965752, -34178904, -24413316, -18988036, -15535599, -13145455, -11392683,
 	-10052327, -8994149, -8137527, -7429880, -6835455, -6329090, -5892567, -5512368, -5178251,
@@ -1217,7 +1213,6 @@ pub static finetangent: [fixed_t; FINEANGLES / 2] = [
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y
 //  without additional checking.
-#[unsafe(no_mangle)]
 #[rustfmt::skip]
 pub static tantoangle: [angle_t; SLOPERANGE + 1] = [
 	Wrapping(0), Wrapping(333772), Wrapping(667544), Wrapping(1001315), 

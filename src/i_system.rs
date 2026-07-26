@@ -1,10 +1,11 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_char, process::exit, ptr::null_mut};
+use std::{process::exit, ptr::null_mut};
 
 use libc::{calloc, gettimeofday, malloc, timeval};
 
 use crate::{
+	d_net::D_QuitNetGame,
 	d_ticcmd::ticcmd_t,
 	doomdef::TICRATE,
 	i_sound::{I_InitSound, I_ShutdownMusic, I_ShutdownSound},
@@ -33,8 +34,7 @@ pub(crate) fn I_ZoneBase(size: &mut usize) -> *mut u8 {
 
 // I_GetTime
 // returns time in 1/70th second tics
-#[unsafe(no_mangle)]
-pub extern "C" fn I_GetTime() -> usize {
+pub fn I_GetTime() -> usize {
 	let mut tp = timeval { tv_sec: 0, tv_usec: 0 };
 	static mut basetime: i32 = 0;
 
@@ -50,31 +50,22 @@ pub extern "C" fn I_GetTime() -> usize {
 }
 
 // I_Init
-#[unsafe(no_mangle)]
-pub extern "C" fn I_Init() {
+pub fn I_Init() {
 	I_InitSound();
 	//  I_InitGraphics();
 }
 
-unsafe extern "C" {
-	fn D_QuitNetGame();
-}
-
 // I_Quit
-#[unsafe(no_mangle)]
-pub extern "C" fn I_Quit() {
-	unsafe {
-		D_QuitNetGame();
-		I_ShutdownSound();
-		I_ShutdownMusic();
-		M_SaveDefaults();
-		I_ShutdownGraphics();
-		exit(0);
-	}
+pub fn I_Quit() {
+	D_QuitNetGame();
+	I_ShutdownSound();
+	I_ShutdownMusic();
+	M_SaveDefaults();
+	I_ShutdownGraphics();
+	exit(0);
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn I_WaitVBL(_count: i32) {
+pub fn I_WaitVBL(_count: i32) {
 	// #ifdef SGI
 	//     sginap(1);
 	// #else
@@ -90,7 +81,25 @@ pub(crate) fn I_AllocLow(length: usize) -> *mut u8 {
 	unsafe { calloc(length, 1).cast() }
 }
 
-// I_Error
-unsafe extern "C" {
-	pub fn I_Error(error: *const c_char, ...) -> !;
+macro_rules! I_Error {
+	($formatstr:expr $(, $arg:expr)* $(,)?) => {{
+		unsafe extern "C" { static stderr: *mut libc::FILE; }
+
+		eprint!("Error: ");
+		libc::fprintf(stderr, $formatstr, $($arg),*);
+		eprintln!();
+
+		libc::fflush(stderr);
+
+		// Shutdown. Here might be other errors.
+		if crate::g_game::demorecording != 0 {
+			crate::g_game::G_CheckDemoStatus();
+		}
+
+		crate::d_net::D_QuitNetGame();
+		crate::i_video::I_ShutdownGraphics();
+
+		libc::exit(-1);
+	}};
 }
+pub(crate) use I_Error;

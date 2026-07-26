@@ -11,6 +11,7 @@ use crate::{
 	doomdata::NF_SUBSECTOR,
 	m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP},
 	m_fixed::fixed_t,
+	p_setup::{nodes, segs, subsectors},
 	r_defs::{MAXDRAWSEGS, drawseg_t, line_t, sector_t, seg_t, side_t},
 	r_draw::viewwidth,
 	r_main::{
@@ -20,7 +21,6 @@ use crate::{
 	r_plane::{R_FindPlane, ceilingplane, floorplane},
 	r_segs::{R_StoreWallRange, rw_angle1},
 	r_sky::skyflatnum,
-	r_state::{nodes, segs, subsectors},
 	r_things::R_AddSprites,
 	tables::{ANG90, ANG180, ANGLETOFINESHIFT},
 };

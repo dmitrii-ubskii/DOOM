@@ -33,23 +33,18 @@ use crate::{
 const MAXVISPLANES: usize = 128;
 static mut visplanes: [visplane_t; MAXVISPLANES] = unsafe { mem::zeroed() };
 static mut lastvisplane: *mut visplane_t = null_mut();
-#[unsafe(no_mangle)]
 pub static mut floorplane: *mut visplane_t = null_mut();
-#[unsafe(no_mangle)]
 pub static mut ceilingplane: *mut visplane_t = null_mut();
 
 // ?
 const MAXOPENINGS: usize = SCREENWIDTH * 64;
 static mut openings: [i16; MAXOPENINGS] = [0; MAXOPENINGS];
-#[unsafe(no_mangle)]
 pub static mut lastopening: *mut i16 = null_mut();
 
 // Clip values are the solid pixel bounding the range.
 //  floorclip starts out SCREENHEIGHT
 //  ceilingclip starts out -1
-#[unsafe(no_mangle)]
 pub static mut floorclip: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
-#[unsafe(no_mangle)]
 pub static mut ceilingclip: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
 
 // spanstart holds the start of a plane span
@@ -160,8 +155,7 @@ pub fn R_ClearPlanes() {
 
 // R_FindPlane
 #[allow(static_mut_refs)]
-#[unsafe(no_mangle)]
-pub extern "C" fn R_FindPlane(
+pub fn R_FindPlane(
 	mut height: fixed_t,
 	picnum: usize,
 	mut lightlevel: i32,
@@ -189,7 +183,7 @@ pub extern "C" fn R_FindPlane(
 		}
 
 		if lastvisplane.offset_from_unsigned(visplanes.as_ptr()) == MAXVISPLANES {
-			I_Error(c"R_FindPlane: no more visplanes".as_ptr());
+			I_Error!(c"R_FindPlane: no more visplanes".as_ptr());
 		}
 
 		lastvisplane = lastvisplane.wrapping_add(1);
@@ -207,8 +201,7 @@ pub extern "C" fn R_FindPlane(
 }
 
 // R_CheckPlane
-#[unsafe(no_mangle)]
-pub extern "C" fn R_CheckPlane(pl: &mut visplane_t, start: isize, stop: isize) -> *mut visplane_t {
+pub fn R_CheckPlane(pl: &mut visplane_t, start: isize, stop: isize) -> *mut visplane_t {
 	let intrl;
 	let unionl;
 	if start < pl.minx {

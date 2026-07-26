@@ -112,8 +112,7 @@ static mut sttminus: *mut patch_t = null_mut();
 // Initializes widget library.
 // More precisely, initialize STMINUS,
 //  everything else is done somewhere else.
-#[unsafe(no_mangle)]
-pub extern "C" fn STlib_init() {
+pub fn STlib_init() {
 	unsafe {
 		sttminus = W_CacheLumpName(c"STTMINUS".as_ptr(), PU_STATIC).cast();
 	}
@@ -169,7 +168,7 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: bool) {
 		let mut x = n.x - numdigits * w;
 
 		if n.y < ST_Y {
-			I_Error(c"drawNum: n.y - ST_Y < 0".as_ptr());
+			I_Error!(c"drawNum: n.y - ST_Y < 0".as_ptr());
 		}
 
 		V_CopyRect(x, n.y - ST_Y, BG, w * numdigits, h, x, n.y, FG);
@@ -276,7 +275,7 @@ pub fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 				.unwrap();
 
 				if y < ST_Y {
-					I_Error(c"updateMultIcon: y - ST_Y < 0".as_ptr());
+					I_Error!(c"updateMultIcon: y - ST_Y < 0".as_ptr());
 				}
 
 				V_CopyRect(x, y - ST_Y, BG, w, h, x, y, FG);
@@ -314,7 +313,7 @@ pub fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
 			let h = usize::try_from((*bi.p).height).unwrap();
 
 			if y < ST_Y {
-				I_Error(c"updateBinIcon: y - ST_Y < 0".as_ptr());
+				I_Error!(c"updateBinIcon: y - ST_Y < 0".as_ptr());
 			}
 
 			if *bi.val != 0 {

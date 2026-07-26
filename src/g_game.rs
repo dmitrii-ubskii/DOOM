@@ -16,7 +16,7 @@ use crate::{
 	d_main::{
 		D_AdvanceDemo, D_PageTicker, fastparm, nomonsters, respawnparm, singletics, wipegamestate,
 	},
-	d_net::BACKUPTICS,
+	d_net::*,
 	d_player::{player_t, playerstate_t, wbplayerstruct_t, wbstartstruct_t},
 	d_ticcmd::ticcmd_t,
 	doomdata::mapthing_t,
@@ -68,22 +68,16 @@ type boolean = i32;
 pub const SAVEGAMESIZE: usize = 0x2c000;
 pub const SAVESTRINGSIZE: usize = 24;
 
-#[unsafe(no_mangle)]
 pub static mut gameaction: gameaction_t = gameaction_t::ga_nothing;
-#[unsafe(no_mangle)]
 pub static mut gamestate: gamestate_t = gamestate_t::GS_LEVEL;
-#[unsafe(no_mangle)]
 pub static mut gameskill: skill_t = skill_t::sk_baby;
 pub(crate) static mut respawnmonsters: bool = false;
-#[unsafe(no_mangle)]
 pub static mut gameepisode: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut gamemap: usize = 0;
 
 pub(crate) static mut paused: bool = false;
 static mut sendpause: bool = false; // send a pause event next tic 
 static mut sendsave: bool = false; // send a save event next tic 
-#[unsafe(no_mangle)]
 pub static mut usergame: boolean = 0; // ok to save / end game 
 
 static mut timingdemo: bool = false; // if true, exit with report on completion 
@@ -93,33 +87,23 @@ static mut starttime: usize = 0; // for comparative timing purposes
 
 pub static mut viewactive: bool = false;
 
-#[unsafe(no_mangle)]
 pub static mut deathmatch: boolean = 0; // only if started as net death 
-#[unsafe(no_mangle)]
 pub static mut netgame: boolean = 0; // only true if packets are broadcast 
-#[unsafe(no_mangle)]
 pub static mut playeringame: [boolean; MAXPLAYERS] = [0; MAXPLAYERS];
-#[unsafe(no_mangle)]
 pub static mut players: [player_t; MAXPLAYERS] = [player_t::new(); MAXPLAYERS];
 
-#[unsafe(no_mangle)]
 pub static mut consoleplayer: usize = 0; // player taking events and displaying 
-#[unsafe(no_mangle)]
 pub static mut displayplayer: usize = 0; // view being displayed 
-#[unsafe(no_mangle)]
 pub static mut gametic: int = 0;
 static mut levelstarttic: int = 0; // gametic at level start 
 
 // for intermission
 pub(crate) static mut totalkills: int = 0;
 pub(crate) static mut totalitems: int = 0;
-#[unsafe(no_mangle)]
 pub static mut totalsecret: int = 0;
 
 static mut demoname: [c_char; 32] = [0; 32];
-#[unsafe(no_mangle)]
 pub static mut demorecording: boolean = 0;
-#[unsafe(no_mangle)]
 pub static mut demoplayback: boolean = 0;
 static mut netdemo: bool = false;
 static mut demobuffer: *mut byte = null_mut();
@@ -151,7 +135,6 @@ pub(crate) static mut wminfo: wbstartstruct_t = wbstartstruct_t {
 	}; 4],
 }; // parms for world map / intermission 
 
-#[unsafe(no_mangle)]
 pub static mut consistancy: [[short; BACKUPTICS]; MAXPLAYERS] = [[0; BACKUPTICS]; MAXPLAYERS];
 
 static mut savebuffer: *mut byte = null_mut();
@@ -182,11 +165,8 @@ pub const MAXPLMOVE: fixed_t = 0x32; // forwardmove[1]
 
 pub const TURBOTHRESHOLD: usize = 0x32;
 
-#[unsafe(no_mangle)]
 pub static mut forwardmove: [fixed_t; 2] = [0x19, 0x32];
-#[unsafe(no_mangle)]
 pub static mut sidemove: [fixed_t; 2] = [0x18, 0x28];
-#[unsafe(no_mangle)]
 pub static mut angleturn: [fixed_t; 3] = [640, 1280, 320]; // + slow turn 
 
 pub const SLOWTURNTICS: usize = 6;
@@ -226,18 +206,11 @@ pub(crate) static mut bodyqueslot: usize = 0;
 
 pub(crate) static mut statcopy: *mut c_void = null_mut(); // for statistics driver
 
-//  D_DoomLoop
-unsafe extern "C" {
-	static mut maketic: usize;
-	static mut ticdup: usize;
-}
-
 // G_BuildTiccmd
 // Builds a ticcmd from all of the available inputs
 // or reads it from the demo buffer.
 // If recording a demo, write it out
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
+pub unsafe fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 	unsafe {
 		let base = I_BaseTiccmd(); // empty, or external driver
 		libc::memcpy(cmd.cast(), base.cast(), size_of::<ticcmd_t>());
@@ -578,15 +551,10 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 	}
 }
 
-unsafe extern "C" {
-	static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS];
-}
-
 // G_Ticker
 // Make ticcmd_ts for the players.
-#[unsafe(no_mangle)]
 #[allow(static_mut_refs)]
-pub extern "C" fn G_Ticker() {
+pub fn G_Ticker() {
 	unsafe {
 		// do player reborns if needed
 		for i in 0..MAXPLAYERS {
@@ -653,7 +621,7 @@ pub extern "C" fn G_Ticker() {
 					if gametic > i32::try_from(BACKUPTICS).unwrap()
 						&& consistancy[i][buf] != (*cmd).consistancy
 					{
-						I_Error(
+						I_Error!(
 							c"consistency failure (%i should be %i)".as_ptr(),
 							c_int::from((*cmd).consistancy),
 							c_int::from(consistancy[i][buf]),
@@ -825,7 +793,7 @@ pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 	unsafe {
 		let selections = deathmatch_p.offset_from(deathmatchstarts.as_mut_ptr());
 		if selections < 4 {
-			I_Error(c"Only %i deathmatch spots, 4 required".as_ptr(), selections);
+			I_Error!(c"Only %i deathmatch spots, 4 required".as_ptr(), selections);
 		}
 
 		for _ in 0..20 {
@@ -1112,7 +1080,7 @@ fn G_DoLoadGame() {
 		P_UnArchiveSpecials();
 
 		if *save_p != 0x1d {
-			I_Error(c"Bad savegame".as_ptr());
+			I_Error!(c"Bad savegame".as_ptr());
 		}
 
 		// done
@@ -1130,9 +1098,8 @@ fn G_DoLoadGame() {
 // G_SaveGame
 // Called by the menu task.
 // Description is a 24 byte text string
-#[unsafe(no_mangle)]
 #[allow(static_mut_refs)]
-pub unsafe extern "C" fn G_SaveGame(slot: usize, description: *const c_char) {
+pub unsafe fn G_SaveGame(slot: usize, description: *const c_char) {
 	unsafe {
 		savegameslot = slot;
 		libc::strcpy(savedescription.as_mut_ptr(), description);
@@ -1197,7 +1164,7 @@ fn G_DoSaveGame() {
 
 		let length = save_p.offset_from(savebuffer);
 		if usize::try_from(length).unwrap() > SAVEGAMESIZE {
-			I_Error(c"Savegame buffer overrun".as_ptr());
+			I_Error!(c"Savegame buffer overrun".as_ptr());
 		}
 
 		M_WriteFile(name.as_ptr(), savebuffer.cast(), usize::try_from(length).unwrap());
@@ -1524,13 +1491,12 @@ pub(crate) fn G_TimeDemo(name: *const c_char) {
 ===================
 */
 
-#[unsafe(no_mangle)]
 #[allow(static_mut_refs)]
-pub extern "C" fn G_CheckDemoStatus() -> boolean {
+pub fn G_CheckDemoStatus() -> boolean {
 	unsafe {
 		if timingdemo {
 			let endtime = I_GetTime();
-			I_Error(c"timed %i gametics in %i realtics".as_ptr(), gametic, endtime - starttime);
+			I_Error!(c"timed %i gametics in %i realtics".as_ptr(), gametic, endtime - starttime);
 		}
 
 		if demoplayback != 0 {
@@ -1564,7 +1530,7 @@ pub extern "C" fn G_CheckDemoStatus() -> boolean {
 			);
 			Z_Free(demobuffer.cast());
 			demorecording = 0;
-			I_Error(c"Demo %s recorded".as_ptr(), demoname);
+			I_Error!(c"Demo %s recorded".as_ptr(), demoname);
 		}
 
 		0

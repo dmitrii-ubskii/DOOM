@@ -3,6 +3,7 @@
 use std::{mem, num::Wrapping, ptr::null_mut};
 
 use crate::{
+	d_net::*,
 	d_player::player_t,
 	doomdata::NF_SUBSECTOR,
 	doomdef::{SCREENHEIGHT, SCREENWIDTH},
@@ -51,82 +52,63 @@ pub static mut viewangleoffset: i32 = 0;
 // increment every time a check is made
 pub static mut validcount: i32 = 1;
 
-#[unsafe(no_mangle)]
 pub static mut fixedcolormap: *mut lighttable_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub static mut centerx: usize = 0;
 pub static mut centery: usize = 0;
 
-#[unsafe(no_mangle)]
 pub static mut centerxfrac: fixed_t = 0;
-#[unsafe(no_mangle)]
 pub static mut centeryfrac: fixed_t = 0;
 pub static mut projection: fixed_t = 0;
 
 // just for profiling purposes
 pub static mut framecount: i32 = 0;
 
-#[unsafe(no_mangle)]
 pub static mut sscount: i32 = 0;
 pub static mut linecount: i32 = 0;
 pub static mut loopcount: i32 = 0;
 
-#[unsafe(no_mangle)]
 pub static mut viewx: fixed_t = 0;
-#[unsafe(no_mangle)]
 pub static mut viewy: fixed_t = 0;
-#[unsafe(no_mangle)]
 pub static mut viewz: fixed_t = 0;
 
-#[unsafe(no_mangle)]
 pub static mut viewangle: angle_t = Wrapping(0);
 
 pub static mut viewcos: fixed_t = 0;
 pub static mut viewsin: fixed_t = 0;
 
-#[unsafe(no_mangle)]
 pub static mut viewplayer: *mut player_t = null_mut();
 
 // 0 = high, 1 = low
-#[unsafe(no_mangle)]
 pub static mut detailshift: i32 = 0;
 
 // precalculated math tables
-#[unsafe(no_mangle)]
 pub static mut clipangle: angle_t = Wrapping(0);
 
 // The viewangletox[viewangle + FINEANGLES/4] lookup
 // maps the visible view angles to screen X coordinates,
 // flattening the arc to a flat projection plane.
 // There will be many angles mapped to the same X.
-#[unsafe(no_mangle)]
 pub static mut viewangletox: [u32; FINEANGLES / 2] = [0; FINEANGLES / 2];
 
 // The xtoviewangleangle[] table maps a screen pixel
 // to the lowest viewangle that maps back to x ranges
 // from clipangle to -clipangle.
-#[unsafe(no_mangle)]
 pub static mut xtoviewangle: [angle_t; SCREENWIDTH + 1] = [Wrapping(0); SCREENWIDTH + 1];
 
-#[unsafe(no_mangle)]
 pub static mut scalelight: [[*mut lighttable_t; MAXLIGHTSCALE]; LIGHTLEVELS] =
 	[[null_mut(); MAXLIGHTSCALE]; LIGHTLEVELS];
 pub static mut scalelightfixed: [*mut lighttable_t; MAXLIGHTSCALE] = [null_mut(); MAXLIGHTSCALE];
-#[unsafe(no_mangle)]
 pub static mut zlight: [[*mut lighttable_t; MAXLIGHTZ]; LIGHTLEVELS] =
 	[[null_mut(); MAXLIGHTZ]; LIGHTLEVELS];
 
 // bumped light from gun blasts
-#[unsafe(no_mangle)]
 pub static mut extralight: i32 = 0;
 
-#[unsafe(no_mangle)]
 pub static mut colfunc: unsafe fn() = R_DrawColumn;
 pub static mut basecolfunc: unsafe fn() = R_DrawColumn;
 pub static mut fuzzcolfunc: unsafe fn() = R_DrawColumn;
 pub static mut transcolfunc: unsafe fn() = R_DrawColumn;
-#[unsafe(no_mangle)]
 pub static mut spanfunc: unsafe fn() = R_DrawColumn;
 
 // R_PointOnSide
@@ -194,7 +176,6 @@ pub fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: &mut seg_t) -> i32 {
 //  the y (<=x) is scaled and divided by x to get a
 //  tangent (slope) value which is looked up in the
 //  tantoangle[] table.
-#[unsafe(no_mangle)]
 pub fn R_PointToAngle(mut x: fixed_t, mut y: fixed_t) -> angle_t {
 	unsafe {
 		x -= viewx;
@@ -271,8 +252,7 @@ pub fn R_PointToAngle2(x1: fixed_t, y1: fixed_t, x2: fixed_t, y2: fixed_t) -> an
 	}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn R_PointToDist(x: fixed_t, y: fixed_t) -> fixed_t {
+pub fn R_PointToDist(x: fixed_t, y: fixed_t) -> fixed_t {
 	unsafe {
 		let mut dx = fixed_t::abs(x - viewx);
 		let mut dy = fixed_t::abs(y - viewy);
@@ -299,8 +279,7 @@ fn R_InitPointToAngle() {
 //  for the current line (horizontal span)
 //  at the given angle.
 // rw_distance must be calculated first.
-#[unsafe(no_mangle)]
-pub extern "C" fn R_ScaleFromGlobalAngle(visangle: angle_t) -> fixed_t {
+pub fn R_ScaleFromGlobalAngle(visangle: angle_t) -> fixed_t {
 	unsafe {
 		let anglea = ANG90 + (visangle - viewangle);
 		let angleb = ANG90 + (visangle - rw_normalangle);
@@ -579,10 +558,6 @@ fn R_SetupFrame(player: &mut player_t) {
 		framecount += 1;
 		validcount += 1;
 	}
-}
-
-unsafe extern "C" {
-	fn NetUpdate();
 }
 
 // R_RenderView

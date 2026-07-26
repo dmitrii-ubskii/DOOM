@@ -423,7 +423,7 @@ pub(crate) fn P_InitPicAnims() {
 			(*lastanim).numpics = (*lastanim).picnum - (*lastanim).basepic + 1;
 
 			if (*lastanim).numpics < 2 {
-				I_Error(
+				I_Error!(
 					c"P_InitPicAnims: bad cycle from %s to %s".as_ptr(),
 					animdefs[i].startname,
 					animdefs[i].endname,
@@ -1202,7 +1202,7 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 			}
 
 			_ => {
-				I_Error(
+				I_Error!(
 					c"P_PlayerInSpecialSector: unknown special %i".as_ptr(),
 					c_int::from(sector.special),
 				);

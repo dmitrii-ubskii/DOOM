@@ -44,7 +44,6 @@ pub struct lumpinfo_t {
 // GLOBALS
 
 // Location of each lump on disk.
-#[unsafe(no_mangle)]
 pub static mut lumpinfo: *mut lumpinfo_t = null_mut();
 pub(crate) static mut numlumps: usize = 0;
 
@@ -71,7 +70,7 @@ fn filelength(handle: i32) -> usize {
 		let mut fileinfo = MaybeUninit::uninit();
 
 		if libc::fstat(handle, fileinfo.as_mut_ptr()) == -1 {
-			I_Error(c"Error fstating".as_ptr());
+			I_Error!(c"Error fstating".as_ptr());
 		}
 
 		usize::try_from(fileinfo.assume_init().st_size).unwrap()
@@ -97,7 +96,7 @@ fn ExtractFileBase(path: *const c_char, mut dest: *mut c_char) {
 		while *src != 0 && *src != i8::try_from(b'.').unwrap() {
 			length += 1;
 			if length == 9 {
-				I_Error(c"Filename base of %s >8 chars".as_ptr(), path);
+				I_Error!(c"Filename base of %s >8 chars".as_ptr(), path);
 			}
 
 			*dest = toupper(*src);
@@ -172,7 +171,7 @@ fn W_AddFile(mut filename: *const c_char) {
 			if libc::strncmp(header.identification.as_ptr(), c"IWAD".as_ptr(), 4) != 0 {
 				// Homebrew levels?
 				if libc::strncmp(header.identification.as_ptr(), c"PWAD".as_ptr(), 4) != 0 {
-					I_Error(c"Wad file %s doesn't have IWAD or PWAD id\n".as_ptr(), filename);
+					I_Error!(c"Wad file %s doesn't have IWAD or PWAD id\n".as_ptr(), filename);
 				}
 
 				// ???modifiedgame = true;
@@ -189,7 +188,7 @@ fn W_AddFile(mut filename: *const c_char) {
 		lumpinfo = libc::realloc(lumpinfo.cast(), numlumps * size_of::<lumpinfo_t>()).cast();
 
 		if lumpinfo.is_null() {
-			I_Error(c"Couldn't realloc lumpinfo".as_ptr());
+			I_Error!(c"Couldn't realloc lumpinfo".as_ptr());
 		}
 
 		let mut lump_p = lumpinfo.wrapping_add(startlump);
@@ -222,7 +221,7 @@ pub(crate) fn W_Reload() {
 
 		let handle = open(reloadname, O_RDONLY /*| O_BINARY*/);
 		if handle == -1 {
-			I_Error(c"W_Reload: couldn't open %s".as_ptr(), reloadname);
+			I_Error!(c"W_Reload: couldn't open %s".as_ptr(), reloadname);
 		}
 
 		let mut header = MaybeUninit::<wadinfo_t>::uninit();
@@ -278,7 +277,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 		}
 
 		if numlumps == 0 {
-			I_Error(c"W_InitFiles: no files found".as_ptr());
+			I_Error!(c"W_InitFiles: no files found".as_ptr());
 		}
 
 		// set up caching
@@ -286,7 +285,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 		lumpcache = libc::malloc(size).cast();
 
 		if lumpcache.is_null() {
-			I_Error(c"Couldn't allocate lumpcache".as_ptr());
+			I_Error!(c"Couldn't allocate lumpcache".as_ptr());
 		}
 
 		ptr::write_bytes(lumpcache, 0, numlumps);
@@ -295,8 +294,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 
 // W_CheckNumForName
 // Returns -1 if name not found.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn W_CheckNumForName(name: *const c_char) -> isize {
+pub unsafe fn W_CheckNumForName(name: *const c_char) -> isize {
 	unsafe {
 		let mut name8 = [0; 9];
 
@@ -326,11 +324,10 @@ pub unsafe extern "C" fn W_CheckNumForName(name: *const c_char) -> isize {
 
 // W_GetNumForName
 // Calls W_CheckNumForName, but bombs out if not found.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn W_GetNumForName(name: *const c_char) -> isize {
+pub unsafe fn W_GetNumForName(name: *const c_char) -> isize {
 	unsafe {
 		match W_CheckNumForName(name) {
-			-1 => I_Error(c"W_GetNumForName: %s not found!".as_ptr(), name),
+			-1 => I_Error!(c"W_GetNumForName: %s not found!".as_ptr(), name),
 			i => i,
 		}
 	}
@@ -338,11 +335,10 @@ pub unsafe extern "C" fn W_GetNumForName(name: *const c_char) -> isize {
 
 // W_LumpLength
 // Returns the buffer size needed to load the given lump.
-#[unsafe(no_mangle)]
-pub extern "C" fn W_LumpLength(lump: usize) -> usize {
+pub fn W_LumpLength(lump: usize) -> usize {
 	unsafe {
 		if lump >= numlumps {
-			I_Error(c"W_LumpLength: %i >= numlumps".as_ptr(), lump);
+			I_Error!(c"W_LumpLength: %i >= numlumps".as_ptr(), lump);
 		}
 
 		(*lumpinfo.wrapping_add(lump)).size
@@ -355,7 +351,7 @@ pub extern "C" fn W_LumpLength(lump: usize) -> usize {
 pub unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 	unsafe {
 		if lump >= numlumps {
-			I_Error(c"W_ReadLump: %i >= numlumps".as_ptr(), lump);
+			I_Error!(c"W_ReadLump: %i >= numlumps".as_ptr(), lump);
 		}
 
 		let l = lumpinfo.wrapping_add(lump);
@@ -367,7 +363,7 @@ pub unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 			// reloadable file, so use open / read / close
 			handle = open(reloadname, O_RDONLY /*| O_BINARY*/);
 			if handle == -1 {
-				I_Error(c"W_ReadLump: couldn't open %s".as_ptr(), reloadname);
+				I_Error!(c"W_ReadLump: couldn't open %s".as_ptr(), reloadname);
 			}
 		} else {
 			handle = (*l).handle;
@@ -377,7 +373,7 @@ pub unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 		let c = libc::read(handle, dest, (*l).size);
 
 		if c < isize::try_from((*l).size).unwrap() {
-			I_Error(c"W_ReadLump: only read %i of %i on lump %i".as_ptr(), c, (*l).size, lump);
+			I_Error!(c"W_ReadLump: only read %i of %i on lump %i".as_ptr(), c, (*l).size, lump);
 		}
 
 		if (*l).handle == -1 {
@@ -389,11 +385,10 @@ pub unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 }
 
 // W_CacheLumpNum
-#[unsafe(no_mangle)]
-pub extern "C" fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
+pub fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
 	unsafe {
 		if lump >= numlumps {
-			I_Error(c"W_CacheLumpNum: %i >= numlumps".as_ptr(), lump);
+			I_Error!(c"W_CacheLumpNum: %i >= numlumps".as_ptr(), lump);
 		}
 
 		let lump_p = lumpcache.wrapping_add(lump);
@@ -414,7 +409,6 @@ pub extern "C" fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
 }
 
 // W_CacheLumpName
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void {
+pub unsafe fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void {
 	unsafe { W_CacheLumpNum(usize::try_from(W_GetNumForName(name)).unwrap(), tag) }
 }
