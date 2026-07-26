@@ -96,7 +96,7 @@ pub static mut clipangle: angle_t = Wrapping(0);
 // flattening the arc to a flat projection plane.
 // There will be many angles mapped to the same X.
 #[unsafe(no_mangle)]
-pub static mut viewangletox: [i32; FINEANGLES / 2] = [0; FINEANGLES / 2];
+pub static mut viewangletox: [u32; FINEANGLES / 2] = [0; FINEANGLES / 2];
 
 // The xtoviewangleangle[] table maps a screen pixel
 // to the lowest viewangle that maps back to x ranges
@@ -344,15 +344,15 @@ fn R_InitTextureMapping() {
 		let focallength = FixedDiv(centerxfrac, finetangent[FINEANGLES / 4 + FIELDOFVIEW / 2]);
 
 		for i in 0..FINEANGLES / 2 {
-			let mut t: i32;
+			let t: u32;
 			if finetangent[i] > FRACUNIT * 2 {
-				t = -1;
+				t = u32::MAX;
 			} else if finetangent[i] < -FRACUNIT * 2 {
-				t = viewwidth as i32 + 1;
+				t = viewwidth as u32 + 1;
 			} else {
-				t = FixedMul(finetangent[i], focallength);
-				t = (centerxfrac - t + FRACUNIT - 1) >> FRACBITS;
-				t = t.clamp(-1, viewwidth as i32 + 1);
+				let t_ = FixedMul(finetangent[i], focallength);
+				let t_ = (centerxfrac - t_ + FRACUNIT - 1) >> FRACBITS;
+				t = t_.clamp(-1, viewwidth as i32 + 1) as u32;
 			}
 			viewangletox[i] = t;
 		}
@@ -363,7 +363,7 @@ fn R_InitTextureMapping() {
 		#[allow(clippy::needless_range_loop)]
 		for x in 0..=viewwidth {
 			let mut i = 0;
-			while viewangletox[i] > x as i32 {
+			while viewangletox[i] > x as u32 {
 				i += 1;
 			}
 			xtoviewangle[x] = Wrapping(i << ANGLETOFINESHIFT) - ANG90;
@@ -372,10 +372,10 @@ fn R_InitTextureMapping() {
 		// Take out the fencepost cases from viewangletox.
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..FINEANGLES / 2 {
-			if viewangletox[i] == -1 {
+			if viewangletox[i] == u32::MAX {
 				viewangletox[i] = 0;
-			} else if viewangletox[i] == viewwidth as i32 + 1 {
-				viewangletox[i] = viewwidth as i32;
+			} else if viewangletox[i] == viewwidth as u32 + 1 {
+				viewangletox[i] = viewwidth as u32;
 			}
 		}
 

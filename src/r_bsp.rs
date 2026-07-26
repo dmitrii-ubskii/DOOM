@@ -52,8 +52,8 @@ pub fn R_ClearDrawSegs() {
 // and includes it in the new clip list.
 #[derive(Debug, Clone, Copy)]
 struct cliprange_t {
-	first: i32,
-	last: i32,
+	first: u32,
+	last: u32,
 }
 
 const MAXSEGS: usize = 32;
@@ -63,7 +63,7 @@ static mut newend: *mut cliprange_t = null_mut();
 static mut solidsegs: [cliprange_t; MAXSEGS] = [cliprange_t { first: 0, last: 0 }; MAXSEGS];
 
 unsafe extern "C" {
-	fn R_StoreWallRange(start: i32, stop: i32);
+	fn R_StoreWallRange(start: u32, stop: u32);
 }
 
 // R_ClipSolidWallSegment
@@ -71,12 +71,12 @@ unsafe extern "C" {
 //  e.g. single sided LineDefs (middle texture)
 //  that entirely block the view.
 #[allow(static_mut_refs)]
-fn R_ClipSolidWallSegment(first: i32, last: i32) {
+fn R_ClipSolidWallSegment(first: u32, last: u32) {
 	unsafe {
 		// Find the first range that touches the range
 		//  (adjacent pixels are touching).
 		let mut start = solidsegs.as_mut_ptr();
-		while (*start).last < first - 1 {
+		while (*start).last < first.wrapping_sub(1) {
 			start = start.wrapping_add(1);
 		}
 
@@ -110,7 +110,7 @@ fn R_ClipSolidWallSegment(first: i32, last: i32) {
 
 		let mut next = start;
 		let mut crunch = false;
-		while last >= (*(next.wrapping_add(1))).first - 1 {
+		while last >= (*(next.wrapping_add(1))).first.wrapping_sub(1) {
 			// There is a fragment between two posts.
 			R_StoreWallRange((*next).last + 1, (*(next.wrapping_add(1))).first - 1);
 			next = next.wrapping_add(1);
@@ -155,14 +155,14 @@ fn R_ClipSolidWallSegment(first: i32, last: i32) {
 // Does handle windows,
 //  e.g. LineDefs with upper and lower texture.
 #[allow(static_mut_refs)]
-fn R_ClipPassWallSegment(first: i32, last: i32) {
+fn R_ClipPassWallSegment(first: u32, last: u32) {
 	unsafe {
 		// cliprange_t*	start;
 
 		// Find the first range that touches the range
 		//  (adjacent pixels are touching).
 		let mut start = solidsegs.as_mut_ptr();
-		while (*start).last < first - 1 {
+		while (*start).last < first.wrapping_sub(1) {
 			start = start.wrapping_add(1);
 		}
 
@@ -182,7 +182,7 @@ fn R_ClipPassWallSegment(first: i32, last: i32) {
 			return;
 		}
 
-		while last >= (*(start.wrapping_add(1))).first - 1 {
+		while last >= (*(start.wrapping_add(1))).first.wrapping_sub(1) {
 			// There is a fragment between two posts.
 			R_StoreWallRange((*start).last + 1, (*(start.wrapping_add(1))).first - 1);
 			start = start.wrapping_add(1);
@@ -204,9 +204,9 @@ unsafe extern "C" {
 // R_ClearClipSegs
 pub fn R_ClearClipSegs() {
 	unsafe {
-		solidsegs[0].first = -0x7fffffff;
-		solidsegs[0].last = -1;
-		solidsegs[1].first = viewwidth as i32;
+		solidsegs[0].first = 0x80000001;
+		solidsegs[0].last = u32::MAX;
+		solidsegs[1].first = viewwidth as u32;
 		solidsegs[1].last = 0x7fffffff;
 		newend = &raw mut solidsegs[2];
 	}
