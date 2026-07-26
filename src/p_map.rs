@@ -459,7 +459,11 @@ pub fn P_TryMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 				let oldside = P_PointOnLineSide(oldx, oldy, &*ld);
 				if side != oldside {
 					if (*ld).special != 0 {
-						P_CrossSpecialLine(ld.offset_from(lines) as usize, oldside as usize, thing);
+						P_CrossSpecialLine(
+							usize::try_from(ld.offset_from(lines)).unwrap(),
+							usize::from(oldside),
+							thing,
+						);
 					}
 				}
 			}
@@ -846,14 +850,16 @@ fn PTR_ShootTraverse(intercept: &mut intercept_t) -> bool {
 			let y = trace.y + FixedMul(trace.dy, frac);
 			let z = shootz + FixedMul(aimslope, FixedMul(frac, attackrange));
 
-			if (*li.frontsector).ceilingpic as usize == skyflatnum {
+			if usize::try_from((*li.frontsector).ceilingpic).unwrap() == skyflatnum {
 				// don't shoot the sky!
 				if z > (*li.frontsector).ceilingheight {
 					return false;
 				}
 
 				// it's a sky hack wall
-				if !li.backsector.is_null() && (*li.backsector).ceilingpic as usize == skyflatnum {
+				if !li.backsector.is_null()
+					&& usize::try_from((*li.backsector).ceilingpic).unwrap() == skyflatnum
+				{
 					return false;
 				}
 			}

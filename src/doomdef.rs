@@ -111,6 +111,30 @@ impl From<u8> for skill_t {
 	}
 }
 
+impl From<skill_t> for u8 {
+	fn from(value: skill_t) -> Self {
+		match value {
+			skill_t::sk_baby => 0,
+			skill_t::sk_easy => 1,
+			skill_t::sk_medium => 2,
+			skill_t::sk_hard => 3,
+			skill_t::sk_nightmare => 4,
+		}
+	}
+}
+
+impl From<skill_t> for usize {
+	fn from(value: skill_t) -> Self {
+		match value {
+			skill_t::sk_baby => 0,
+			skill_t::sk_easy => 1,
+			skill_t::sk_medium => 2,
+			skill_t::sk_hard => 3,
+			skill_t::sk_nightmare => 4,
+		}
+	}
+}
+
 // Key cards.
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -123,6 +147,26 @@ pub enum card_t {
 	it_redskull,
 
 	NUMCARDS,
+}
+
+impl card_t {
+	pub(crate) const fn to_usize(self) -> usize {
+		match self {
+			card_t::it_bluecard => 0,
+			card_t::it_yellowcard => 1,
+			card_t::it_redcard => 2,
+			card_t::it_blueskull => 3,
+			card_t::it_yellowskull => 4,
+			card_t::it_redskull => 5,
+			card_t::NUMCARDS => 6,
+		}
+	}
+}
+
+impl From<card_t> for usize {
+	fn from(value: card_t) -> Self {
+		value.to_usize()
+	}
 }
 
 // The defined weapons,
@@ -147,6 +191,36 @@ pub enum weapontype_t {
 	wp_nochange,
 }
 
+impl weapontype_t {
+	pub const fn to_usize(self) -> usize {
+		match self {
+			weapontype_t::wp_fist => 0,
+			weapontype_t::wp_pistol => 1,
+			weapontype_t::wp_shotgun => 2,
+			weapontype_t::wp_chaingun => 3,
+			weapontype_t::wp_missile => 4,
+			weapontype_t::wp_plasma => 5,
+			weapontype_t::wp_bfg => 6,
+			weapontype_t::wp_chainsaw => 7,
+			weapontype_t::wp_supershotgun => 8,
+			weapontype_t::NUMWEAPONS => 9,
+			weapontype_t::wp_nochange => 10,
+		}
+	}
+}
+
+impl From<weapontype_t> for i32 {
+	fn from(value: weapontype_t) -> Self {
+		value.to_usize().try_into().unwrap()
+	}
+}
+
+impl From<weapontype_t> for usize {
+	fn from(value: weapontype_t) -> Self {
+		value.to_usize()
+	}
+}
+
 // Ammunition types defined.
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -159,6 +233,30 @@ pub enum ammotype_t {
 	am_noammo, // Unlimited for chainsaw / fist.
 }
 
+impl ammotype_t {
+	pub(crate) const fn to_u8(self) -> u8 {
+		match self {
+			ammotype_t::am_clip => 0,
+			ammotype_t::am_shell => 1,
+			ammotype_t::am_cell => 2,
+			ammotype_t::am_misl => 3,
+			ammotype_t::NUMAMMO => 4,
+			ammotype_t::am_noammo => 5,
+		}
+	}
+
+	pub(crate) const fn to_usize(self) -> usize {
+		match self {
+			ammotype_t::am_clip => 0,
+			ammotype_t::am_shell => 1,
+			ammotype_t::am_cell => 2,
+			ammotype_t::am_misl => 3,
+			ammotype_t::NUMAMMO => 4,
+			ammotype_t::am_noammo => 5,
+		}
+	}
+}
+
 impl From<u8> for ammotype_t {
 	fn from(value: u8) -> Self {
 		match value {
@@ -168,6 +266,18 @@ impl From<u8> for ammotype_t {
 			3 => Self::am_misl,
 			_ => panic!("ammo_t out of bounds"),
 		}
+	}
+}
+
+impl From<ammotype_t> for u8 {
+	fn from(value: ammotype_t) -> Self {
+		value.to_u8()
+	}
+}
+
+impl From<ammotype_t> for usize {
+	fn from(value: ammotype_t) -> Self {
+		value.to_usize()
 	}
 }
 
@@ -184,6 +294,20 @@ pub enum powertype_t {
 	NUMPOWERS,
 }
 
+impl powertype_t {
+	pub(crate) const fn to_usize(self) -> usize {
+		match self {
+			powertype_t::pw_invulnerability => 0,
+			powertype_t::pw_strength => 1,
+			powertype_t::pw_invisibility => 2,
+			powertype_t::pw_ironfeet => 3,
+			powertype_t::pw_allmap => 4,
+			powertype_t::pw_infrared => 5,
+			powertype_t::NUMPOWERS => 6,
+		}
+	}
+}
+
 impl From<usize> for powertype_t {
 	fn from(value: usize) -> Self {
 		match value {
@@ -195,6 +319,12 @@ impl From<usize> for powertype_t {
 			5 => Self::pw_infrared,
 			_ => panic!("powertype_t out of bounds"),
 		}
+	}
+}
+
+impl From<powertype_t> for usize {
+	fn from(value: powertype_t) -> Self {
+		value.to_usize()
 	}
 }
 

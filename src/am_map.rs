@@ -1,4 +1,5 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
+#![allow(clippy::as_conversions)]
 
 use std::{
 	ffi::c_char,
@@ -6,6 +7,7 @@ use std::{
 };
 
 use crate::{
+	const_conv::*,
 	d_englsh::{
 		AMSTR_FOLLOWOFF, AMSTR_FOLLOWON, AMSTR_GRIDOFF, AMSTR_GRIDON, AMSTR_MARKEDSPOT,
 		AMSTR_MARKSCLEARED,
@@ -37,9 +39,9 @@ type int = i32;
 type boolean = i32;
 
 // Used by ST StatusBar stuff.
-pub const AM_MSGHEADER: usize = ((b'a' as usize) << 24) + ((b'm' as usize) << 16);
-pub const AM_MSGENTERED: usize = AM_MSGHEADER | ((b'e' as usize) << 8);
-pub const AM_MSGEXITED: usize = AM_MSGHEADER | ((b'x' as usize) << 8);
+pub const AM_MSGHEADER: usize = ((usize_from_u8(b'a')) << 24) + ((usize_from_u8(b'm')) << 16);
+pub const AM_MSGENTERED: usize = AM_MSGHEADER | (usize_from_u8(b'e') << 8);
+pub const AM_MSGEXITED: usize = AM_MSGHEADER | (usize_from_u8(b'x') << 8);
 
 // For use if I do walls with outsides/insides
 const REDS: i32 = 256 - 5 * 16;
@@ -438,8 +440,12 @@ fn AM_changeWindowLoc() {
 #[allow(static_mut_refs)]
 fn AM_initVariables() {
 	unsafe {
-		static mut st_notify: event_t =
-			event_t { ty: evtype_t::ev_keyup, data1: AM_MSGENTERED as i32, data2: 0, data3: 0 };
+		static mut st_notify: event_t = event_t {
+			ty: evtype_t::ev_keyup,
+			data1: i32_from_usize(AM_MSGENTERED),
+			data2: 0,
+			data3: 0,
+		};
 
 		automapactive = true;
 		fb = screens[0];
@@ -526,7 +532,7 @@ fn AM_LevelInit() {
 		AM_clearMarks();
 
 		AM_findMinMaxBoundaries();
-		scale_mtof = FixedDiv(min_scale_mtof, (0.7 * FRACUNIT as f64) as fixed_t);
+		scale_mtof = FixedDiv(min_scale_mtof, (0.7 * f64::from(FRACUNIT)).to_int_unchecked());
 		if scale_mtof > max_scale_mtof {
 			scale_mtof = min_scale_mtof;
 		}
@@ -539,8 +545,8 @@ pub(crate) fn AM_Stop() {
 	unsafe {
 		static mut st_notify: event_t = event_t {
 			ty: evtype_t::ev_keydown, /*0 // FIXME bug?*/
-			data1: evtype_t::ev_keyup as i32,
-			data2: AM_MSGEXITED as i32,
+			data1: evtype_t::ev_keyup.as_i32(),
+			data2: i32_from_usize(AM_MSGEXITED),
 			data3: 0,
 		};
 
@@ -560,10 +566,12 @@ fn AM_Start() {
 			AM_Stop();
 		}
 		stopped = false;
-		if lastlevel != gamemap as i32 || lastepisode != gameepisode as i32 {
+		if lastlevel != i32::try_from(gamemap).unwrap()
+			|| lastepisode != i32::try_from(gameepisode).unwrap()
+		{
 			AM_LevelInit();
-			lastlevel = gamemap as i32;
-			lastepisode = gameepisode as i32;
+			lastlevel = i32::try_from(gamemap).unwrap();
+			lastepisode = i32::try_from(gameepisode).unwrap();
 		}
 		AM_initVariables();
 		AM_loadPics();
@@ -599,14 +607,14 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> boolean {
 		let mut rc = false;
 
 		if !automapactive {
-			if (*ev).ty == evtype_t::ev_keydown && (*ev).data1 == AM_STARTKEY as i32 {
+			if (*ev).ty == evtype_t::ev_keydown && (*ev).data1 == i32::from(AM_STARTKEY) {
 				AM_Start();
 				viewactive = false;
 				rc = true;
 			}
 		} else if (*ev).ty == evtype_t::ev_keydown {
 			rc = true;
-			match (*ev).data1 as u8 {
+			match u8::try_from((*ev).data1).unwrap() {
 				AM_PANRIGHTKEY => {
 					// pan right
 					if followplayer == 0 {
@@ -692,13 +700,15 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> boolean {
 					rc = false;
 				}
 			}
-			if deathmatch == 0 && cht_CheckCheat(&mut cheat_amap, (*ev).data1 as u8) {
+			if deathmatch == 0
+				&& cht_CheckCheat(&mut cheat_amap, u8::try_from((*ev).data1).unwrap())
+			{
 				rc = false;
 				cheating = (cheating + 1) % 3;
 			}
 		} else if (*ev).ty == evtype_t::ev_keyup {
 			rc = false;
-			match (*ev).data1 as u8 {
+			match u8::try_from((*ev).data1).unwrap() {
 				AM_PANRIGHTKEY => {
 					if followplayer == 0 {
 						m_paninc.x = 0;
@@ -727,7 +737,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> boolean {
 			}
 		}
 
-		rc as boolean
+		boolean::from(rc)
 	}
 }
 
@@ -791,7 +801,9 @@ pub(crate) fn AM_Ticker() {
 
 // Clear automap frame buffer.
 fn AM_clearFB(color: i32) {
-	unsafe { ptr::write_bytes(fb, color as u8, (f_w * f_h) as usize) };
+	unsafe {
+		ptr::write_bytes(fb, u8::try_from(color).unwrap(), usize::try_from(f_w * f_h).unwrap())
+	};
 }
 
 // Automap clipping of lines.
@@ -940,7 +952,9 @@ fn AM_drawFline(fl: &fline_t, color: i32) {
 			return;
 		}
 
-		let PUTDOT = |xx: usize, yy: usize, cc: u8| *fb.wrapping_add(yy * f_w as usize + xx) = cc;
+		let PUTDOT = |xx: usize, yy: usize, cc: u8| {
+			*fb.wrapping_add(yy * usize::try_from(f_w).unwrap() + xx) = cc
+		};
 
 		let dx = fl.b.x - fl.a.x;
 		let ax = 2 * (if dx < 0 { -dx } else { dx });
@@ -956,7 +970,11 @@ fn AM_drawFline(fl: &fline_t, color: i32) {
 		if ax > ay {
 			let mut d = ay - ax / 2;
 			loop {
-				PUTDOT(x as usize, y as usize, color as u8);
+				PUTDOT(
+					usize::try_from(x).unwrap(),
+					usize::try_from(y).unwrap(),
+					u8::try_from(color).unwrap(),
+				);
 				if x == fl.b.x {
 					return;
 				}
@@ -970,7 +988,11 @@ fn AM_drawFline(fl: &fline_t, color: i32) {
 		} else {
 			let mut d = ax - ay / 2;
 			loop {
-				PUTDOT(x as usize, y as usize, color as u8);
+				PUTDOT(
+					usize::try_from(x).unwrap(),
+					usize::try_from(y).unwrap(),
+					u8::try_from(color).unwrap(),
+				);
 				if y == fl.b.y {
 					return;
 				}
@@ -1013,7 +1035,7 @@ fn AM_drawGrid(color: i32) {
 		// draw vertical gridlines
 		ml.a.y = m_y;
 		ml.b.y = m_y + m_h;
-		for x in (start..end).step_by((MAPBLOCKUNITS << FRACBITS) as usize) {
+		for x in (start..end).step_by(usize::try_from(MAPBLOCKUNITS << FRACBITS).unwrap()) {
 			ml.a.x = x;
 			ml.b.x = x;
 			AM_drawMline(&ml, color);
@@ -1030,7 +1052,7 @@ fn AM_drawGrid(color: i32) {
 		// draw horizontal gridlines
 		ml.a.x = m_x;
 		ml.b.x = m_x + m_w;
-		for y in (start..end).step_by((MAPBLOCKUNITS << FRACBITS) as usize) {
+		for y in (start..end).step_by(usize::try_from(MAPBLOCKUNITS << FRACBITS).unwrap()) {
 			ml.a.y = y;
 			ml.b.y = y;
 			AM_drawMline(&ml, color);
@@ -1051,8 +1073,8 @@ fn AM_drawWalls() {
 			l.a.y = (*(*line).v1).y;
 			l.b.x = (*(*line).v2).x;
 			l.b.y = (*(*line).v2).y;
-			if cheating != 0 || (*line).flags as usize & ML_MAPPED != 0 {
-				if (*line).flags as usize & LINE_NEVERSEE != 0 && cheating == 0 {
+			if cheating != 0 || usize::try_from((*line).flags).unwrap() & ML_MAPPED != 0 {
+				if usize::try_from((*line).flags).unwrap() & LINE_NEVERSEE != 0 && cheating == 0 {
 					continue;
 				}
 				if (*line).backsector.is_null() {
@@ -1060,7 +1082,7 @@ fn AM_drawWalls() {
 				} else if (*line).special == 39 {
 					// teleporters
 					AM_drawMline(&l, WALLCOLORS + WALLRANGE / 2);
-				} else if (*line).flags as usize & ML_SECRET != 0 {
+				} else if usize::try_from((*line).flags).unwrap() & ML_SECRET != 0 {
 					// secret door
 					if cheating != 0 {
 						AM_drawMline(&l, SECRETWALLCOLORS + lightlev);
@@ -1076,8 +1098,8 @@ fn AM_drawWalls() {
 				} else if cheating != 0 {
 					AM_drawMline(&l, TSWALLCOLORS + lightlev);
 				}
-			} else if (*plr).powers[powertype_t::pw_allmap as usize] != 0
-				&& (*line).flags as usize & LINE_NEVERSEE == 0
+			} else if (*plr).powers[usize::from(powertype_t::pw_allmap)] != 0
+				&& usize::try_from((*line).flags).unwrap() & LINE_NEVERSEE == 0
 			{
 				AM_drawMline(&l, GRAYS + 3);
 			}
@@ -1184,10 +1206,10 @@ fn AM_drawPlayers() {
 				continue;
 			}
 
-			let color = if (*p).powers[powertype_t::pw_invisibility as usize] != 0 {
+			let color = if (*p).powers[usize::from(powertype_t::pw_invisibility)] != 0 {
 				246 // *close* to black
 			} else {
-				their_colors[their_color as usize]
+				their_colors[usize::try_from(their_color).unwrap()]
 			};
 
 			AM_drawLineCharacter(
@@ -1232,7 +1254,12 @@ fn AM_drawMarks() {
 				let fx = CXMTOF(markpoints[i].x);
 				let fy = CYMTOF(markpoints[i].y);
 				if fx >= f_x && fx <= f_w - w && fy >= f_y && fy <= f_h - h {
-					V_DrawPatch(fx as usize, fy as usize, FB, marknums[i]);
+					V_DrawPatch(
+						usize::try_from(fx).unwrap(),
+						usize::try_from(fy).unwrap(),
+						FB,
+						marknums[i],
+					);
 				}
 			}
 		}
@@ -1241,7 +1268,11 @@ fn AM_drawMarks() {
 
 fn AM_drawCrosshair(color: i32) {
 	// single point for now
-	unsafe { *fb.wrapping_add((f_w as usize * (f_h as usize + 1)) / 2) = color as u8 };
+	unsafe {
+		*fb.wrapping_add(
+			(usize::try_from(f_w).unwrap() * (usize::try_from(f_h).unwrap() + 1)) / 2,
+		) = u8::try_from(color).unwrap()
+	};
 }
 
 pub(crate) fn AM_Drawer() {
@@ -1263,6 +1294,11 @@ pub(crate) fn AM_Drawer() {
 
 		AM_drawMarks();
 
-		V_MarkRect(f_x as usize, f_y as usize, f_w as usize, f_h as usize);
+		V_MarkRect(
+			usize::try_from(f_x).unwrap(),
+			usize::try_from(f_y).unwrap(),
+			usize::try_from(f_w).unwrap(),
+			usize::try_from(f_h).unwrap(),
+		);
 	}
 }

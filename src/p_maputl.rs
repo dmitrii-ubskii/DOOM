@@ -236,8 +236,8 @@ pub fn P_UnsetThingPosition(thing: &mut mobj_t) {
 				let blocky = (thing.y - bmaporgy) >> MAPBLOCKSHIFT;
 
 				if blockx >= 0 && blocky >= 0 {
-					let blockx = blockx as usize;
-					let blocky = blocky as usize;
+					let blockx = usize::try_from(blockx).unwrap();
+					let blocky = usize::try_from(blocky).unwrap();
 					if blockx < bmapwidth && blocky < bmapheight {
 						*blocklinks.wrapping_add(blocky * bmapwidth + blockx) = thing.bnext;
 					}
@@ -278,12 +278,12 @@ pub fn P_SetThingPosition(thing: &mut mobj_t) {
 			let blocky = (thing.y - bmaporgy) >> MAPBLOCKSHIFT;
 
 			if blockx >= 0
-				&& (blockx as usize) < bmapwidth
+				&& (usize::try_from(blockx).unwrap()) < bmapwidth
 				&& blocky >= 0
-				&& (blocky as usize) < bmapheight
+				&& (usize::try_from(blocky).unwrap()) < bmapheight
 			{
-				let blockx = blockx as usize;
-				let blocky = blocky as usize;
+				let blockx = usize::try_from(blockx).unwrap();
+				let blocky = usize::try_from(blocky).unwrap();
 				let link = blocklinks.wrapping_add(blocky * bmapwidth + blockx);
 				thing.bprev = null_mut();
 				thing.bnext = *link;
@@ -315,17 +315,20 @@ pub fn P_SetThingPosition(thing: &mut mobj_t) {
 // to it.
 pub fn P_BlockLinesIterator(x: i32, y: i32, func: fn(&mut line_t) -> bool) -> bool {
 	unsafe {
-		if x < 0 || y < 0 || (x as usize) >= bmapwidth || (y as usize) >= bmapheight {
+		if x < 0
+			|| y < 0 || (usize::try_from(x).unwrap()) >= bmapwidth
+			|| (usize::try_from(y).unwrap()) >= bmapheight
+		{
 			return true;
 		}
 
-		let offset = y as usize * bmapwidth + x as usize;
+		let offset = usize::try_from(y).unwrap() * bmapwidth + usize::try_from(x).unwrap();
 		let offset = *blockmap.wrapping_add(offset);
 
 		// for ( list = blockmaplump+offset ; *list != -1 ; list++)
-		let mut list = blockmaplump.wrapping_add(offset as usize);
+		let mut list = blockmaplump.wrapping_add(usize::try_from(offset).unwrap());
 		while *list != -1 {
-			let ld = &mut *lines.wrapping_add(*list as usize);
+			let ld = &mut *lines.wrapping_add(usize::try_from(*list).unwrap());
 
 			if ld.validcount != validcount {
 				// line hasn't been checked yet
@@ -344,11 +347,15 @@ pub fn P_BlockLinesIterator(x: i32, y: i32, func: fn(&mut line_t) -> bool) -> bo
 // P_BlockThingsIterator
 pub fn P_BlockThingsIterator(x: i32, y: i32, func: fn(&mut mobj_t) -> bool) -> bool {
 	unsafe {
-		if x < 0 || y < 0 || x as usize >= bmapwidth || y as usize >= bmapheight {
+		if x < 0
+			|| y < 0 || usize::try_from(x).unwrap() >= bmapwidth
+			|| usize::try_from(y).unwrap() >= bmapheight
+		{
 			return true;
 		}
 
-		let mut mobj = *blocklinks.wrapping_add(y as usize * bmapwidth + x as usize);
+		let mut mobj = *blocklinks
+			.wrapping_add(usize::try_from(y).unwrap() * bmapwidth + usize::try_from(x).unwrap());
 		while !mobj.is_null() {
 			if !func(&mut *mobj) {
 				return false;

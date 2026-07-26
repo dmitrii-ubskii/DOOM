@@ -54,7 +54,7 @@ static mut lumpcache: *mut *mut c_void = null_mut();
 const strcmpi: unsafe extern "C" fn(*const i8, *const i8) -> i32 = libc::strcasecmp;
 
 fn toupper(c: c_char) -> i8 {
-	(c as u8 as char).to_ascii_uppercase() as c_char
+	c_char::try_from(u32::from(char::from(u8::try_from(c).unwrap()).to_ascii_uppercase())).unwrap()
 }
 
 fn strupr(mut s: *mut c_char) {
@@ -74,7 +74,7 @@ fn filelength(handle: i32) -> usize {
 			I_Error(c"Error fstating".as_ptr());
 		}
 
-		fileinfo.assume_init().st_size as usize
+		usize::try_from(fileinfo.assume_init().st_size).unwrap()
 	}
 }
 
@@ -84,8 +84,8 @@ fn ExtractFileBase(path: *const c_char, mut dest: *mut c_char) {
 
 		// back up until a \ or the start
 		while src != path
-			&& *(src.wrapping_sub(1)) != b'\\' as i8
-			&& *(src.wrapping_sub(1)) != b'/' as i8
+			&& *(src.wrapping_sub(1)) != i8::try_from(b'\\').unwrap()
+			&& *(src.wrapping_sub(1)) != i8::try_from(b'/').unwrap()
 		{
 			src = src.wrapping_byte_offset(-1);
 		}
@@ -94,7 +94,7 @@ fn ExtractFileBase(path: *const c_char, mut dest: *mut c_char) {
 		ptr::write_bytes(dest, 0, 8);
 		let mut length = 0;
 
-		while *src != 0 && *src != b'.' as i8 {
+		while *src != 0 && *src != i8::try_from(b'.').unwrap() {
 			length += 1;
 			if length == 9 {
 				I_Error(c"Filename base of %s >8 chars".as_ptr(), path);
@@ -139,7 +139,7 @@ fn W_AddFile(mut filename: *const c_char) {
 		// open the file and add to directory
 
 		// handle reload indicator.
-		if *filename == b'~' as c_char {
+		if *filename == c_char::try_from(b'~').unwrap() {
 			filename = filename.wrapping_byte_add(1);
 			reloadname = filename;
 			reloadlump = numlumps;
@@ -283,7 +283,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 
 		// set up caching
 		let size = numlumps * size_of::<*mut c_void>();
-		lumpcache = libc::malloc(size) as *mut *mut c_void;
+		lumpcache = libc::malloc(size).cast();
 
 		if lumpcache.is_null() {
 			I_Error(c"Couldn't allocate lumpcache".as_ptr());
@@ -376,7 +376,7 @@ pub unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 		libc::lseek(handle, (*l).position, SEEK_SET);
 		let c = libc::read(handle, dest, (*l).size);
 
-		if c < (*l).size as isize {
+		if c < isize::try_from((*l).size).unwrap() {
 			I_Error(c"W_ReadLump: only read %i of %i on lump %i".as_ptr(), c, (*l).size, lump);
 		}
 
@@ -416,5 +416,5 @@ pub extern "C" fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
 // W_CacheLumpName
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void {
-	unsafe { W_CacheLumpNum(W_GetNumForName(name) as usize, tag) }
+	unsafe { W_CacheLumpNum(usize::try_from(W_GetNumForName(name)).unwrap(), tag) }
 }

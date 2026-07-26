@@ -123,7 +123,7 @@ fn R_MapPlane(y: usize, x1: usize, x2: usize) {
 		if !fixedcolormap.is_null() {
 			ds_colormap = fixedcolormap;
 		} else {
-			let mut index = (distance >> LIGHTZSHIFT) as usize;
+			let mut index = usize::try_from(distance >> LIGHTZSHIFT).unwrap();
 
 			if index >= MAXLIGHTZ {
 				index = MAXLIGHTZ - 1;
@@ -153,7 +153,7 @@ pub fn R_ClearPlanes() {
 	unsafe {
 		// opening / clipping determination
 		for i in 0..viewwidth {
-			floorclip[i] = viewheight as i16;
+			floorclip[i] = i16::try_from(viewheight).unwrap();
 			ceilingclip[i] = -1;
 		}
 
@@ -211,7 +211,7 @@ pub extern "C" fn R_FindPlane(
 		(*check).height = height;
 		(*check).picnum = picnum;
 		(*check).lightlevel = lightlevel;
-		(*check).minx = SCREENWIDTH as isize;
+		(*check).minx = isize::try_from(SCREENWIDTH).unwrap();
 		(*check).maxx = -1;
 
 		(*check).top = [0xff; SCREENWIDTH];
@@ -245,7 +245,7 @@ pub extern "C" fn R_CheckPlane(pl: &mut visplane_t, start: isize, stop: isize) -
 
 	let mut x = intrl;
 	while x <= intrh {
-		if pl.top[x as usize] != 0xff {
+		if pl.top[usize::try_from(x).unwrap()] != 0xff {
 			break;
 		}
 		x += 1;
@@ -278,22 +278,22 @@ pub extern "C" fn R_CheckPlane(pl: &mut visplane_t, start: isize, stop: isize) -
 fn R_MakeSpans(x: usize, mut t1: u8, mut b1: u8, mut t2: u8, mut b2: u8) {
 	unsafe {
 		while t1 < t2 && t1 <= b1 {
-			R_MapPlane(t1 as usize, spanstart[t1 as usize], x - 1);
+			R_MapPlane(usize::from(t1), spanstart[usize::from(t1)], x - 1);
 			t1 += 1;
 		}
 
 		while b1 > b2 && b1 >= t1 {
-			R_MapPlane(b1 as usize, spanstart[b1 as usize], x - 1);
+			R_MapPlane(usize::from(b1), spanstart[usize::from(b1)], x - 1);
 			b1 -= 1;
 		}
 
 		while t2 < t1 && t2 <= b2 {
-			spanstart[t2 as usize] = x;
+			spanstart[usize::from(t2)] = x;
 			t2 += 1;
 		}
 
 		while b2 > b1 && b2 >= t2 {
-			spanstart[b2 as usize] = x;
+			spanstart[usize::from(b2)] = x;
 			b2 -= 1;
 		}
 	}
@@ -335,12 +335,13 @@ pub fn R_DrawPlanes() {
 				dc_texturemid = skytexturemid;
 				#[allow(clippy::needless_range_loop)]
 				for x in (*pl).minx..=(*pl).maxx {
-					dc_yl = (*pl).top[x as usize] as i32;
-					dc_yh = (*pl).bottom[x as usize] as i32;
+					dc_yl = i32::from((*pl).top[usize::try_from(x).unwrap()]);
+					dc_yh = i32::from((*pl).bottom[usize::try_from(x).unwrap()]);
 
 					if dc_yl <= dc_yh {
-						let angle = (viewangle + xtoviewangle[x as usize]).0 >> ANGLETOSKYSHIFT.0;
-						dc_x = x as i32;
+						let angle = (viewangle + xtoviewangle[usize::try_from(x).unwrap()]).0
+							>> ANGLETOSKYSHIFT.0;
+						dc_x = i32::try_from(x).unwrap();
 						dc_source = R_GetColumn(skytexture, angle);
 						colfunc();
 					}
@@ -355,10 +356,10 @@ pub fn R_DrawPlanes() {
 					.cast();
 
 			planeheight = fixed_t::abs((*pl).height - viewz);
-			let light =
-				(((*pl).lightlevel >> LIGHTSEGSHIFT) + extralight).clamp(0, LIGHTLEVELS as i32 - 1);
+			let light = (((*pl).lightlevel >> LIGHTSEGSHIFT) + extralight)
+				.clamp(0, i32::try_from(LIGHTLEVELS).unwrap() - 1);
 
-			planezlight = zlight[light as usize].as_mut_ptr();
+			planezlight = zlight[usize::try_from(light).unwrap()].as_mut_ptr();
 
 			// CAN BE OUT OF BOUNDS!
 			*(*pl).top.as_mut_ptr().wrapping_offset((*pl).maxx + 1) = 0xff;
@@ -368,7 +369,7 @@ pub fn R_DrawPlanes() {
 
 			for x in (*pl).minx..=stop {
 				R_MakeSpans(
-					x as usize,
+					usize::try_from(x).unwrap(),
 					*(*pl).top.as_mut_ptr().wrapping_offset(x - 1),
 					*(*pl).bottom.as_mut_ptr().wrapping_offset(x - 1),
 					*(*pl).top.as_mut_ptr().wrapping_offset(x),

@@ -46,8 +46,8 @@ const BONUSADD: usize = 6;
 
 // a weapon is found with two clip loads,
 // a big item has five clip loads
-pub static mut maxammo: [usize; ammotype_t::NUMAMMO as usize] = [200, 50, 300, 50];
-static mut clipammo: [usize; ammotype_t::NUMAMMO as usize] = [10, 4, 20, 1];
+pub static mut maxammo: [usize; ammotype_t::NUMAMMO.to_usize()] = [200, 50, 300, 50];
+static mut clipammo: [usize; ammotype_t::NUMAMMO.to_usize()] = [10, 4, 20, 1];
 
 // GET STUFF
 
@@ -65,14 +65,14 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 		// 	I_Error("P_GiveAmmo: bad type %i", ammo);
 		// }
 
-		if (*player).ammo[ammo as usize] == (*player).maxammo[ammo as usize] {
+		if (*player).ammo[usize::from(ammo)] == (*player).maxammo[usize::from(ammo)] {
 			return 0;
 		}
 
 		if num != 0 {
-			num *= clipammo[ammo as usize];
+			num *= clipammo[usize::from(ammo)];
 		} else {
-			num = clipammo[ammo as usize] / 2;
+			num = clipammo[usize::from(ammo)] / 2;
 		}
 
 		if gameskill == skill_t::sk_baby || gameskill == skill_t::sk_nightmare {
@@ -81,11 +81,11 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 			num <<= 1;
 		}
 
-		let oldammo = (*player).ammo[ammo as usize];
-		(*player).ammo[ammo as usize] += num;
+		let oldammo = (*player).ammo[usize::from(ammo)];
+		(*player).ammo[usize::from(ammo)] += num;
 
-		if (*player).ammo[ammo as usize] > (*player).maxammo[ammo as usize] {
-			(*player).ammo[ammo as usize] = (*player).maxammo[ammo as usize];
+		if (*player).ammo[usize::from(ammo)] > (*player).maxammo[usize::from(ammo)] {
+			(*player).ammo[usize::from(ammo)] = (*player).maxammo[usize::from(ammo)];
 		}
 
 		// If non zero ammo,
@@ -100,24 +100,24 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 		// Preferences are not user selectable.
 		match (ammo, (*player).readyweapon) {
 			(ammotype_t::am_clip, weapontype_t::wp_fist) => {
-				if (*player).weaponowned[weapontype_t::wp_chaingun as usize] != 0 {
+				if (*player).weaponowned[usize::from(weapontype_t::wp_chaingun)] != 0 {
 					(*player).pendingweapon = weapontype_t::wp_chaingun;
 				} else {
 					(*player).pendingweapon = weapontype_t::wp_pistol;
 				}
 			}
 			(ammotype_t::am_shell, weapontype_t::wp_fist | weapontype_t::wp_pistol) => {
-				if (*player).weaponowned[weapontype_t::wp_shotgun as usize] != 0 {
+				if (*player).weaponowned[usize::from(weapontype_t::wp_shotgun)] != 0 {
 					(*player).pendingweapon = weapontype_t::wp_shotgun;
 				}
 			}
 			(ammotype_t::am_cell, weapontype_t::wp_fist | weapontype_t::wp_pistol) => {
-				if (*player).weaponowned[weapontype_t::wp_plasma as usize] != 0 {
+				if (*player).weaponowned[usize::from(weapontype_t::wp_plasma)] != 0 {
 					(*player).pendingweapon = weapontype_t::wp_plasma;
 				}
 			}
 			(ammotype_t::am_misl, weapontype_t::wp_fist) => {
-				if (*player).weaponowned[weapontype_t::wp_missile as usize] != 0 {
+				if (*player).weaponowned[usize::from(weapontype_t::wp_missile)] != 0 {
 					(*player).pendingweapon = weapontype_t::wp_missile;
 				}
 			}
@@ -134,17 +134,17 @@ fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: boolean) -
 	unsafe {
 		if netgame != 0 && deathmatch != 2 && dropped == 0 {
 			// leave placed weapons forever on net games
-			if (*player).weaponowned[weapon as usize] != 0 {
+			if (*player).weaponowned[usize::from(weapon)] != 0 {
 				return 0;
 			}
 
 			(*player).bonuscount += BONUSADD;
-			(*player).weaponowned[weapon as usize] = 1;
+			(*player).weaponowned[usize::from(weapon)] = 1;
 
 			if deathmatch != 0 {
-				P_GiveAmmo(player, weaponinfo[weapon as usize].ammo, 5);
+				P_GiveAmmo(player, weaponinfo[usize::from(weapon)].ammo, 5);
 			} else {
-				P_GiveAmmo(player, weaponinfo[weapon as usize].ammo, 2);
+				P_GiveAmmo(player, weaponinfo[usize::from(weapon)].ammo, 2);
 			}
 			(*player).pendingweapon = weapon;
 
@@ -155,28 +155,28 @@ fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: boolean) -
 		}
 
 		let gaveammo;
-		if weaponinfo[weapon as usize].ammo != ammotype_t::am_noammo {
+		if weaponinfo[usize::from(weapon)].ammo != ammotype_t::am_noammo {
 			// give one clip with a dropped weapon,
 			// two clips with a found weapon
 			if dropped != 0 {
-				gaveammo = P_GiveAmmo(player, weaponinfo[weapon as usize].ammo, 1);
+				gaveammo = P_GiveAmmo(player, weaponinfo[usize::from(weapon)].ammo, 1);
 			} else {
-				gaveammo = P_GiveAmmo(player, weaponinfo[weapon as usize].ammo, 2);
+				gaveammo = P_GiveAmmo(player, weaponinfo[usize::from(weapon)].ammo, 2);
 			}
 		} else {
 			gaveammo = 0;
 		}
 
 		let gaveweapon;
-		if (*player).weaponowned[weapon as usize] != 0 {
+		if (*player).weaponowned[usize::from(weapon)] != 0 {
 			gaveweapon = 0;
 		} else {
 			gaveweapon = 1;
-			(*player).weaponowned[weapon as usize] = 1;
+			(*player).weaponowned[usize::from(weapon)] = 1;
 			(*player).pendingweapon = weapon;
 		}
 
-		(gaveweapon != 0 || gaveammo != 0) as boolean
+		boolean::from(gaveweapon != 0 || gaveammo != 0)
 	}
 }
 
@@ -212,49 +212,49 @@ fn P_GiveArmor(player: &mut player_t, armortype: int) -> bool {
 
 // P_GiveCard
 fn P_GiveCard(player: &mut player_t, card: card_t) {
-	if player.cards[card as usize] != 0 {
+	if player.cards[usize::from(card)] != 0 {
 		return;
 	}
 
 	player.bonuscount = BONUSADD;
-	player.cards[card as usize] = 1;
+	player.cards[usize::from(card)] = 1;
 }
 
 // P_GivePower
 pub fn P_GivePower(player: &mut player_t, power: powertype_t) -> bool {
 	match power {
 		powertype_t::pw_invulnerability => {
-			player.powers[power as usize] = INVULNTICS;
+			player.powers[usize::from(power)] = INVULNTICS;
 			true
 		}
 		powertype_t::pw_invisibility => {
-			player.powers[power as usize] = INVISTICS;
+			player.powers[usize::from(power)] = INVISTICS;
 			unsafe {
 				(*player.mo).flags |= MF_SHADOW;
 			}
 			true
 		}
 		powertype_t::pw_infrared => {
-			player.powers[power as usize] = INFRATICS;
+			player.powers[usize::from(power)] = INFRATICS;
 			true
 		}
 		powertype_t::pw_ironfeet => {
-			player.powers[power as usize] = IRONTICS;
+			player.powers[usize::from(power)] = IRONTICS;
 			true
 		}
 
 		powertype_t::pw_strength => {
 			P_GiveBody(player, 100);
-			player.powers[power as usize] = 1;
+			player.powers[usize::from(power)] = 1;
 			true
 		}
 
 		powertype_t::pw_allmap => {
-			if player.powers[power as usize] != 0 {
+			if player.powers[usize::from(power)] != 0 {
 				return false; // already got it
 			}
 
-			player.powers[power as usize] = 1;
+			player.powers[usize::from(power)] = 1;
 			true
 		}
 
@@ -346,7 +346,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		// cards
 		// leave cards for everyone
 		spritenum_t::SPR_BKEY => unsafe {
-			if (player.cards[card_t::it_bluecard as usize]) == 0 {
+			if (player.cards[usize::from(card_t::it_bluecard)]) == 0 {
 				player.message = GOTBLUECARD;
 			}
 			P_GiveCard(player, card_t::it_bluecard);
@@ -356,7 +356,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		},
 
 		spritenum_t::SPR_YKEY => unsafe {
-			if player.cards[card_t::it_yellowcard as usize] == 0 {
+			if player.cards[usize::from(card_t::it_yellowcard)] == 0 {
 				player.message = GOTYELWCARD;
 			}
 			P_GiveCard(player, card_t::it_yellowcard);
@@ -366,7 +366,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		},
 
 		spritenum_t::SPR_RKEY => unsafe {
-			if (player.cards[card_t::it_redcard as usize]) == 0 {
+			if (player.cards[usize::from(card_t::it_redcard)]) == 0 {
 				player.message = GOTREDCARD;
 			}
 			P_GiveCard(player, card_t::it_redcard);
@@ -376,7 +376,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		},
 
 		spritenum_t::SPR_BSKU => unsafe {
-			if player.cards[card_t::it_blueskull as usize] == 0 {
+			if player.cards[usize::from(card_t::it_blueskull)] == 0 {
 				player.message = GOTBLUESKUL;
 			}
 			P_GiveCard(player, card_t::it_blueskull);
@@ -386,7 +386,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		},
 
 		spritenum_t::SPR_YSKU => unsafe {
-			if player.cards[card_t::it_yellowskull as usize] == 0 {
+			if player.cards[usize::from(card_t::it_yellowskull)] == 0 {
 				player.message = GOTYELWSKUL;
 			}
 			P_GiveCard(player, card_t::it_yellowskull);
@@ -396,7 +396,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		},
 
 		spritenum_t::SPR_RSKU => unsafe {
-			if player.cards[card_t::it_redskull as usize] == 0 {
+			if player.cards[usize::from(card_t::it_redskull)] == 0 {
 				player.message = GOTREDSKULL;
 			}
 			P_GiveCard(player, card_t::it_redskull);
@@ -537,12 +537,12 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 
 		spritenum_t::SPR_BPAK => {
 			if player.backpack == 0 {
-				for i in 0..ammotype_t::NUMAMMO as usize {
+				for i in 0..usize::from(ammotype_t::NUMAMMO) {
 					player.maxammo[i] *= 2;
 				}
 				player.backpack = 1;
 			}
-			for i in 0..ammotype_t::NUMAMMO as u8 {
+			for i in 0..u8::from(ammotype_t::NUMAMMO) {
 				P_GiveAmmo(player, ammotype_t::from(i), 1);
 			}
 			player.message = GOTBACKPACK;
@@ -561,7 +561,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 			if P_GiveWeapon(
 				player,
 				weapontype_t::wp_chaingun,
-				(special.flags & MF_DROPPED) as boolean,
+				boolean::try_from(special.flags & MF_DROPPED).unwrap(),
 			) == 0
 			{
 				return;
@@ -598,7 +598,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 			if P_GiveWeapon(
 				player,
 				weapontype_t::wp_shotgun,
-				(special.flags & MF_DROPPED) as boolean,
+				boolean::try_from(special.flags & MF_DROPPED).unwrap(),
 			) == 0
 			{
 				return;
@@ -611,7 +611,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 			if P_GiveWeapon(
 				player,
 				weapontype_t::wp_supershotgun,
-				(special.flags & MF_DROPPED) as boolean,
+				boolean::try_from(special.flags & MF_DROPPED).unwrap(),
 			) == 0
 			{
 				return;
@@ -656,8 +656,8 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 			}
 
 			if !target.player.is_null() {
-				(*(*source).player).frags[target.player.offset_from(players.as_ptr()) as usize] +=
-					1;
+				(*(*source).player).frags
+					[usize::try_from(target.player.offset_from(players.as_ptr())).unwrap()] += 1;
 			}
 		} else if netgame == 0 && (target.flags & MF_COUNTKILL != 0) {
 			// count all monster deaths,
@@ -670,7 +670,8 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 		unsafe {
 			// count environment kills against you
 			if source.is_null() {
-				(*target.player).frags[target.player.offset_from(players.as_ptr()) as usize] += 1;
+				(*target.player).frags
+					[usize::try_from(target.player.offset_from(players.as_ptr())).unwrap()] += 1;
 			}
 
 			target.flags &= !MF_SOLID;
@@ -778,7 +779,7 @@ pub unsafe fn P_DamageMobj(
 			}
 
 			ang >>= ANGLETOFINESHIFT;
-			let ang = ang.0 as usize;
+			let ang = ang.0;
 			target.momx += FixedMul(thrust, finecos(ang));
 			target.momy += FixedMul(thrust, finesine[ang]);
 		}
@@ -794,7 +795,7 @@ pub unsafe fn P_DamageMobj(
 			// ignore damage in GOD mode, or with INVUL power.
 			if damage < 1000
 				&& ((*player).cheats & CF_GODMODE != 0
-					|| (*player).powers[powertype_t::pw_invulnerability as usize] != 0)
+					|| (*player).powers[usize::from(powertype_t::pw_invulnerability)] != 0)
 			{
 				return;
 			}
@@ -853,7 +854,7 @@ pub unsafe fn P_DamageMobj(
 			// chase after this one
 			target.target = source;
 			target.threshold = BASETHRESHOLD;
-			if std::ptr::eq(target.state, &raw const states[(*target.info).spawnstate as usize])
+			if std::ptr::eq(target.state, &raw const states[usize::from((*target.info).spawnstate)])
 				&& (*target.info).seestate != statenum_t::S_NULL
 			{
 				P_SetMobjState(target, (*target.info).seestate);

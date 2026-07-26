@@ -99,7 +99,7 @@ pub(crate) fn EV_DoPlat(line: &mut line_t, ty: plattype_e, amount: i32) -> bool 
 
 		while let new_secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
 			secnum = new_secnum;
-			let sec = &mut *sectors.wrapping_add(secnum as usize);
+			let sec = &mut *sectors.wrapping_add(usize::try_from(secnum).unwrap());
 
 			if !sec.specialdata.is_null() {
 				continue;
@@ -107,7 +107,7 @@ pub(crate) fn EV_DoPlat(line: &mut line_t, ty: plattype_e, amount: i32) -> bool 
 
 			// Find lowest & highest floors around sector
 			rtn = true;
-			let plat_p = Z_Malloc(size_of::<plat_t>(), PU_LEVSPEC, null_mut()) as *mut plat_t;
+			let plat_p = Z_Malloc(size_of::<plat_t>(), PU_LEVSPEC, null_mut()).cast::<plat_t>();
 			let plat = &mut *plat_p;
 			P_AddThinker(&raw mut plat.thinker);
 
@@ -122,7 +122,8 @@ pub(crate) fn EV_DoPlat(line: &mut line_t, ty: plattype_e, amount: i32) -> bool 
 				plattype_e::raiseToNearestAndChange => {
 					plat.speed = PLATSPEED / 2;
 					sec.floorpic =
-						(*(*sides.wrapping_add(line.sidenum[0] as usize)).sector).floorpic;
+						(*(*sides.wrapping_add(usize::try_from(line.sidenum[0]).unwrap())).sector)
+							.floorpic;
 					plat.high = P_FindNextHighestFloor(sec, sec.floorheight);
 					plat.wait = 0;
 					plat.status = plat_e::up;
@@ -135,7 +136,8 @@ pub(crate) fn EV_DoPlat(line: &mut line_t, ty: plattype_e, amount: i32) -> bool 
 				plattype_e::raiseAndChange => {
 					plat.speed = PLATSPEED / 2;
 					sec.floorpic =
-						(*(*sides.wrapping_add(line.sidenum[0] as usize)).sector).floorpic;
+						(*(*sides.wrapping_add(usize::try_from(line.sidenum[0]).unwrap())).sector)
+							.floorpic;
 					plat.high = sec.floorheight + amount * FRACUNIT;
 					plat.wait = 0;
 					plat.status = plat_e::up;

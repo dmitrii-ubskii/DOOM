@@ -135,7 +135,7 @@ pub(crate) fn EV_DoCeiling(line: &mut line_t, ty: ceiling_e) -> bool {
 
 		while let new_secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
 			secnum = new_secnum;
-			let sec = &mut *sectors.wrapping_add(secnum as usize);
+			let sec = &mut *sectors.wrapping_add(usize::try_from(secnum).unwrap());
 			if !sec.specialdata.is_null() {
 				continue;
 			}
@@ -143,7 +143,7 @@ pub(crate) fn EV_DoCeiling(line: &mut line_t, ty: ceiling_e) -> bool {
 			// new door thinker
 			rtn = true;
 			let ceiling_p =
-				Z_Malloc(size_of::<ceiling_t>(), PU_LEVSPEC, null_mut()) as *mut ceiling_t;
+				Z_Malloc(size_of::<ceiling_t>(), PU_LEVSPEC, null_mut()).cast::<ceiling_t>();
 			let ceiling = &mut *ceiling_p;
 			P_AddThinker(&raw mut ceiling.thinker);
 			sec.specialdata = ceiling_p.cast();

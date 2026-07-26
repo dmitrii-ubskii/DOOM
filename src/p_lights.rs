@@ -31,10 +31,10 @@ pub(crate) fn T_FireFlicker(flick: &mut fireflicker_t) {
 
 		let amount = (P_Random() & 3) * 16;
 
-		if (*flick.sector).lightlevel as i32 - amount < flick.minlight {
-			(*flick.sector).lightlevel = flick.minlight as i16;
+		if i32::from((*flick.sector).lightlevel) - amount < flick.minlight {
+			(*flick.sector).lightlevel = i16::try_from(flick.minlight).unwrap();
 		} else {
-			(*flick.sector).lightlevel = (flick.maxlight - amount) as i16;
+			(*flick.sector).lightlevel = i16::try_from(flick.maxlight - amount).unwrap();
 		};
 
 		flick.count = 4;
@@ -49,15 +49,15 @@ pub fn P_SpawnFireFlicker(sector: &mut sector_t) {
 		sector.special = 0;
 
 		let flick =
-			Z_Malloc(size_of::<fireflicker_t>(), PU_LEVSPEC, null_mut()) as *mut fireflicker_t;
+			Z_Malloc(size_of::<fireflicker_t>(), PU_LEVSPEC, null_mut()).cast::<fireflicker_t>();
 		let flick = &mut *flick;
 
 		P_AddThinker(&raw mut flick.thinker);
 
 		flick.thinker.function = think_t::T_FireFlicker;
 		flick.sector = sector;
-		flick.maxlight = sector.lightlevel as i32;
-		flick.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel as i32) + 16;
+		flick.maxlight = i32::from(sector.lightlevel);
+		flick.minlight = P_FindMinSurroundingLight(sector, i32::from(sector.lightlevel)) + 16;
 		flick.count = 4;
 	}
 }
@@ -73,11 +73,11 @@ pub(crate) fn T_LightFlash(flash: &mut lightflash_t) {
 			return;
 		}
 
-		if (*flash.sector).lightlevel == flash.maxlight as i16 {
-			(*flash.sector).lightlevel = flash.minlight as i16;
+		if (*flash.sector).lightlevel == i16::try_from(flash.maxlight).unwrap() {
+			(*flash.sector).lightlevel = i16::try_from(flash.minlight).unwrap();
 			flash.count = (P_Random() & flash.mintime) + 1;
 		} else {
-			(*flash.sector).lightlevel = flash.maxlight as i16;
+			(*flash.sector).lightlevel = i16::try_from(flash.maxlight).unwrap();
 			flash.count = (P_Random() & flash.maxtime) + 1;
 		}
 	}
@@ -92,16 +92,16 @@ pub fn P_SpawnLightFlash(sector: &mut sector_t) {
 		sector.special = 0;
 
 		let flash =
-			Z_Malloc(size_of::<lightflash_t>(), PU_LEVSPEC, null_mut()) as *mut lightflash_t;
+			Z_Malloc(size_of::<lightflash_t>(), PU_LEVSPEC, null_mut()).cast::<lightflash_t>();
 		let flash = &mut *flash;
 
 		P_AddThinker(&raw mut flash.thinker);
 
 		flash.thinker.function = think_t::T_LightFlash;
 		flash.sector = sector;
-		flash.maxlight = sector.lightlevel as i32;
+		flash.maxlight = i32::from(sector.lightlevel);
 
-		flash.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel as i32);
+		flash.minlight = P_FindMinSurroundingLight(sector, i32::from(sector.lightlevel));
 		flash.maxtime = 64;
 		flash.mintime = 7;
 		flash.count = (P_Random() & flash.maxtime) + 1;
@@ -118,11 +118,11 @@ pub(crate) fn T_StrobeFlash(flash: &mut strobe_t) {
 			return;
 		}
 
-		if (*flash.sector).lightlevel == flash.minlight as i16 {
-			(*flash.sector).lightlevel = flash.maxlight as i16;
+		if (*flash.sector).lightlevel == i16::try_from(flash.minlight).unwrap() {
+			(*flash.sector).lightlevel = i16::try_from(flash.maxlight).unwrap();
 			flash.count = flash.brighttime;
 		} else {
-			(*flash.sector).lightlevel = flash.minlight as i16;
+			(*flash.sector).lightlevel = i16::try_from(flash.minlight).unwrap();
 			flash.count = flash.darktime;
 		}
 	}
@@ -133,7 +133,7 @@ pub(crate) fn T_StrobeFlash(flash: &mut strobe_t) {
 // for specials that spawn thinkers
 pub fn P_SpawnStrobeFlash(sector: &mut sector_t, fastOrSlow: i32, inSync: i32) {
 	unsafe {
-		let flash = Z_Malloc(size_of::<strobe_t>(), PU_LEVSPEC, null_mut()) as *mut strobe_t;
+		let flash = Z_Malloc(size_of::<strobe_t>(), PU_LEVSPEC, null_mut()).cast::<strobe_t>();
 		let flash = &mut *flash;
 
 		P_AddThinker(&raw mut flash.thinker);
@@ -142,8 +142,8 @@ pub fn P_SpawnStrobeFlash(sector: &mut sector_t, fastOrSlow: i32, inSync: i32) {
 		flash.darktime = fastOrSlow;
 		flash.brighttime = STROBEBRIGHT;
 		flash.thinker.function = think_t::T_StrobeFlash;
-		flash.maxlight = sector.lightlevel as i32;
-		flash.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel as i32);
+		flash.maxlight = i32::from(sector.lightlevel);
+		flash.minlight = P_FindMinSurroundingLight(sector, i32::from(sector.lightlevel));
 
 		if flash.minlight == flash.maxlight {
 			flash.minlight = 0;
@@ -165,7 +165,7 @@ pub fn EV_StartLightStrobing(line: &mut line_t) {
 	let secnum = -1;
 	unsafe {
 		while let secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
-			let sec = &mut *sectors.wrapping_add(secnum as usize);
+			let sec = &mut *sectors.wrapping_add(usize::try_from(secnum).unwrap());
 			if !sec.specialdata.is_null() {
 				continue;
 			}
@@ -178,7 +178,7 @@ pub fn EV_StartLightStrobing(line: &mut line_t) {
 // TURN LINE'S TAG LIGHTS OFF
 pub fn EV_TurnTagLightsOff(line: &mut line_t) {
 	unsafe {
-		for j in 0..numsectors as usize {
+		for j in 0..usize::try_from(numsectors).unwrap() {
 			let sector = &mut *sectors.wrapping_add(j);
 			if sector.tag == line.tag {
 				let mut min = sector.lightlevel;
@@ -201,7 +201,7 @@ pub fn EV_TurnTagLightsOff(line: &mut line_t) {
 // TURN LINE'S TAG LIGHTS ON
 pub(crate) fn EV_LightTurnOn(line: &mut line_t, mut bright: i32) {
 	unsafe {
-		for i in 0..numsectors as usize {
+		for i in 0..usize::try_from(numsectors).unwrap() {
 			let sector = &mut *sectors.wrapping_add(i);
 			if sector.tag == line.tag {
 				// bright = 0 means to search
@@ -216,11 +216,11 @@ pub(crate) fn EV_LightTurnOn(line: &mut line_t, mut bright: i32) {
 							continue;
 						}
 
-						if (*temp).lightlevel as i32 > bright {
-							bright = (*temp).lightlevel as i32;
+						if i32::from((*temp).lightlevel) > bright {
+							bright = i32::from((*temp).lightlevel);
 						}
 					}
-					sector.lightlevel = bright as i16;
+					sector.lightlevel = i16::try_from(bright).unwrap();
 				}
 			}
 		}
@@ -234,7 +234,7 @@ pub(crate) fn T_Glow(g: &mut glow_t) {
 			// DOWN
 			let sector = unsafe { &mut *g.sector };
 			sector.lightlevel -= GLOWSPEED;
-			if sector.lightlevel <= g.minlight as i16 {
+			if sector.lightlevel <= i16::try_from(g.minlight).unwrap() {
 				sector.lightlevel += GLOWSPEED;
 				g.direction = 1;
 			}
@@ -244,7 +244,7 @@ pub(crate) fn T_Glow(g: &mut glow_t) {
 			// UP
 			let sector = unsafe { &mut *g.sector };
 			sector.lightlevel += GLOWSPEED;
-			if sector.lightlevel >= g.maxlight as i16 {
+			if sector.lightlevel >= i16::try_from(g.maxlight).unwrap() {
 				sector.lightlevel -= GLOWSPEED;
 				g.direction = -1;
 			}
@@ -255,14 +255,14 @@ pub(crate) fn T_Glow(g: &mut glow_t) {
 
 pub fn P_SpawnGlowingLight(sector: &mut sector_t) {
 	unsafe {
-		let g = Z_Malloc(size_of::<glow_t>(), PU_LEVSPEC, null_mut()) as *mut glow_t;
+		let g = Z_Malloc(size_of::<glow_t>(), PU_LEVSPEC, null_mut()).cast::<glow_t>();
 		let g = &mut *g;
 
 		P_AddThinker(&raw mut g.thinker);
 
 		g.sector = sector;
-		g.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel as i32);
-		g.maxlight = sector.lightlevel as i32;
+		g.minlight = P_FindMinSurroundingLight(sector, i32::from(sector.lightlevel));
+		g.maxlight = i32::from(sector.lightlevel);
 		g.thinker.function = think_t::T_Glow;
 		g.direction = -1;
 

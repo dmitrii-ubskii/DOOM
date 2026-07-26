@@ -79,18 +79,30 @@ pub enum musicenum_t {
 
 impl From<isize> for musicenum_t {
 	fn from(value: isize) -> Self {
-		if value > Self::NUMMUSIC as isize {
+		if value > Self::NUMMUSIC.into() {
 			panic!("Invalid musicenum_t")
 		}
 		unsafe { std::mem::transmute(value) }
 	}
 }
 
+impl From<musicenum_t> for isize {
+	fn from(value: musicenum_t) -> Self {
+		unsafe { std::mem::transmute(value) }
+	}
+}
+
 impl From<usize> for musicenum_t {
 	fn from(value: usize) -> Self {
-		if value > Self::NUMMUSIC as usize {
+		if value > Self::NUMMUSIC.into() {
 			panic!("Invalid musicenum_t")
 		}
+		unsafe { std::mem::transmute(value) }
+	}
+}
+
+impl From<musicenum_t> for usize {
+	fn from(value: musicenum_t) -> Self {
 		unsafe { std::mem::transmute(value) }
 	}
 }
@@ -122,12 +134,24 @@ pub enum sfxenum_t {
 	NUMSFX,
 }
 
+impl sfxenum_t {
+	pub(crate) const fn to_usize(self) -> usize {
+		unsafe { std::mem::transmute(self) }
+	}
+}
+
 impl From<usize> for sfxenum_t {
 	fn from(value: usize) -> Self {
-		if value > Self::NUMSFX as usize {
+		if value > usize::from(Self::NUMSFX) {
 			panic!("Invalid musicenum_t")
 		}
 		unsafe { std::mem::transmute(value) }
+	}
+}
+
+impl From<sfxenum_t> for usize {
+	fn from(value: sfxenum_t) -> Self {
+		value.to_usize()
 	}
 }
 
@@ -1156,7 +1180,7 @@ pub static mut S_sfx: [sfxinfo_t; 109] = [
 		name: c"chgun".as_ptr(),
 		singularity: 0,
 		priority: 64,
-		link: unsafe { &raw mut S_sfx[sfx_pistol as usize] },
+		link: unsafe { &raw mut S_sfx[sfx_pistol.to_usize()] },
 		pitch: 150,
 		volume: 0,
 		data: null_mut(),

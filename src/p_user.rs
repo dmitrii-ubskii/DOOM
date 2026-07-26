@@ -1,4 +1,5 @@
 #![allow(non_snake_case, clippy::missing_safety_doc)]
+#![allow(clippy::as_conversions)]
 
 use std::num::Wrapping;
 

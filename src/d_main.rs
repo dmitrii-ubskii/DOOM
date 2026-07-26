@@ -2,7 +2,7 @@
 
 use std::{
 	env,
-	ffi::{CStr, CString, c_char, c_int, c_void},
+	ffi::{CStr, CString, c_char, c_int},
 	mem::transmute,
 	ptr::{self, null, null_mut},
 	str::FromStr,
@@ -249,7 +249,8 @@ fn D_Display() {
 		// draw pause pic
 		if paused {
 			let y = if automapactive { 4 } else { viewwindowy + 4 };
-			let x = viewwindowx.wrapping_add_signed((scaledviewwidth as isize - 68) / 2);
+			let x = viewwindowx
+				.wrapping_add_signed((isize::try_from(scaledviewwidth).unwrap() - 68) / 2);
 			V_DrawPatchDirect(x, y, 0, W_CacheLumpName(c"M_PAUSE".as_ptr(), PU_CACHE).cast());
 		}
 
@@ -632,7 +633,7 @@ fn FindResponseFile() {
 
 		for i in 1..myargc {
 			let arg = *myargv.add(i);
-			if *arg == b'@' as i8 {
+			if *arg == i8::try_from(b'@').unwrap() {
 				// READ THE RESPONSE FILE INTO MEMORY
 				let response_file = arg.wrapping_add(1);
 				let handle = libc::fopen(response_file, c"rb".as_ptr());
@@ -645,9 +646,9 @@ fn FindResponseFile() {
 					CStr::from_ptr(response_file).to_str().unwrap()
 				);
 				fseek(handle, 0, SEEK_END);
-				let size = ftell(handle) as usize;
+				let size = usize::try_from(ftell(handle)).unwrap();
 				fseek(handle, 0, SEEK_SET);
-				let file = libc::malloc(size) as *mut c_char;
+				let file = libc::malloc(size).cast::<c_char>();
 				fread(file.cast(), size, 1, handle);
 				fclose(handle);
 
@@ -660,7 +661,7 @@ fn FindResponseFile() {
 				}
 
 				let firstargv = *myargv.wrapping_add(0);
-				myargv = malloc(size_of::<*const char>() * MAXARGVS) as *mut *mut c_char;
+				myargv = malloc(size_of::<*const char>() * MAXARGVS).cast::<*mut c_char>();
 				ptr::write_bytes(myargv, 0, MAXARGVS);
 				*myargv = firstargv;
 
@@ -670,11 +671,16 @@ fn FindResponseFile() {
 				loop {
 					*myargv.wrapping_add(indexinfile) = infile.wrapping_add(k);
 					indexinfile += 1;
-					while k < size && (b' '..=b'z').contains(&(*infile.wrapping_add(k) as u8)) {
+					while k < size
+						&& (b' '..=b'z').contains(&(u8::try_from(*infile.wrapping_add(k)).unwrap()))
+					{
 						k += 1;
 					}
 					*infile.wrapping_add(k) = 0;
-					while k < size && !(b' '..=b'z').contains(&(*infile.wrapping_add(k) as u8)) {
+					while k < size
+						&& !(b' '..=b'z')
+							.contains(&(u8::try_from(*infile.wrapping_add(k)).unwrap()))
+					{
 						k += 1;
 					}
 					if k >= size {
@@ -731,10 +737,10 @@ pub extern "C" fn D_DoomMain() {
 		//setbuf(stdout, NULL);
 		modifiedgame = 0;
 
-		nomonsters = M_CheckParm(c"-nomonsters".as_ptr()) as boolean;
-		respawnparm = M_CheckParm(c"-respawn".as_ptr()) as boolean;
-		fastparm = M_CheckParm(c"-fast".as_ptr()) as boolean;
-		devparm = M_CheckParm(c"-devparm".as_ptr()) as boolean;
+		nomonsters = boolean::try_from(M_CheckParm(c"-nomonsters".as_ptr())).unwrap();
+		respawnparm = boolean::try_from(M_CheckParm(c"-respawn".as_ptr())).unwrap();
+		fastparm = boolean::try_from(M_CheckParm(c"-fast".as_ptr())).unwrap();
+		devparm = boolean::try_from(M_CheckParm(c"-devparm".as_ptr())).unwrap();
 		if M_CheckParm(c"-altdeath".as_ptr()) != 0 {
 			deathmatch = 2;
 		} else if M_CheckParm(c"-deathmatch".as_ptr()) != 0 {
@@ -837,7 +843,7 @@ pub extern "C" fn D_DoomMain() {
 		// prepend a tilde to the filename so wadfile will be reloadable
 		let p = M_CheckParm(c"-wart".as_ptr());
 		if p != 0 {
-			*(*myargv.wrapping_add(p)).wrapping_add(4) = b'p' as i8; // big hack, change to -warp
+			*(*myargv.wrapping_add(p)).wrapping_add(4) = i8::try_from(b'p').unwrap(); // big hack, change to -warp
 
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			let argvp2 = *myargv.wrapping_add(p + 2);
@@ -849,13 +855,13 @@ pub extern "C" fn D_DoomMain() {
 					sprintf(
 						file.as_mut_ptr(),
 						tilde_devmaps!("E%cM%c.wad"),
-						*argvp1 as c_int,
-						*argvp2 as c_int,
+						c_int::from(*argvp1),
+						c_int::from(*argvp2),
 					);
 					printf(c"Warping to Episode %s, Map %s.\n".as_ptr(), argvp1, argvp2);
 				}
 				GameMode_t::commercial | _ => {
-					let p = atoi(argvp1) as usize;
+					let p = usize::try_from(atoi(argvp1)).unwrap();
 					if p < 10 {
 						sprintf(file.as_mut_ptr(), tilde_devmaps!("cdata/map0%i.wad"), p);
 					} else {
@@ -873,7 +879,7 @@ pub extern "C" fn D_DoomMain() {
 			modifiedgame = 1; // homebrew levels
 			loop {
 				p += 1;
-				if p == myargc || **myargv.wrapping_add(p) == b'-' as i8 {
+				if p == myargc || **myargv.wrapping_add(p) == i8::try_from(b'-').unwrap() {
 					break;
 				}
 				D_AddFile(*myargv.wrapping_add(p));
@@ -902,14 +908,14 @@ pub extern "C" fn D_DoomMain() {
 		let p = M_CheckParm(c"-skill".as_ptr());
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
-			startskill = transmute::<i32, skill_t>(*argvp1 as i32 - b'1' as i32);
+			startskill = transmute::<i32, skill_t>(i32::from(*argvp1) - i32::from(b'1'));
 			autostart = 1;
 		}
 
 		let p = M_CheckParm(c"-episode".as_ptr());
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
-			startepisode = *argvp1 as usize - b'0' as usize;
+			startepisode = usize::try_from(*argvp1).unwrap() - usize::from(b'0');
 			startmap = 1;
 			autostart = 1;
 		}
@@ -935,10 +941,10 @@ pub extern "C" fn D_DoomMain() {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			let argvp2 = *myargv.wrapping_add(p + 2);
 			if gamemode == GameMode_t::commercial {
-				startmap = atoi(argvp1) as usize;
+				startmap = usize::try_from(atoi(argvp1)).unwrap();
 			} else {
-				startepisode = *argvp1 as usize - b'0' as usize;
-				startmap = *argvp2 as usize - b'0' as usize;
+				startepisode = usize::try_from(*argvp1).unwrap() - usize::from(b'0');
+				startmap = usize::try_from(*argvp2).unwrap() - usize::from(b'0');
 			}
 			autostart = 1;
 		}
@@ -1063,7 +1069,7 @@ pub extern "C" fn D_DoomMain() {
 		let p = M_CheckParm(c"-statcopy".as_ptr());
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
-			statcopy = atoi(argvp1) as *mut c_void;
+			statcopy = ptr::without_provenance_mut(usize::try_from(atoi(argvp1)).unwrap());
 			printf(c"External statistics registered.\n".as_ptr());
 		}
 
@@ -1095,9 +1101,13 @@ pub extern "C" fn D_DoomMain() {
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
-				sprintf(file.as_mut_ptr(), cdrom_savegamename!("%c.dsg"), *argvp1 as c_int);
+				sprintf(file.as_mut_ptr(), cdrom_savegamename!("%c.dsg"), c_int::from(*argvp1));
 			} else {
-				sprintf(file.as_mut_ptr(), savegamename!("%c.dsg"), *argvp1 as c_int);
+				sprintf(
+					file.as_mut_ptr(),
+					savegamename!("%c.dsg"),
+					c_int::from(*argvp1),
+				);
 			}
 			G_LoadGame(file.as_mut_ptr());
 		}

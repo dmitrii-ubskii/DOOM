@@ -27,14 +27,14 @@ static mut prndindex: i32 = 0;
 pub fn P_Random() -> i32 {
 	unsafe {
 		prndindex = (prndindex + 1) & 0xff;
-		rndtable[prndindex as usize] as i32
+		i32::from(rndtable[usize::try_from(prndindex).unwrap()])
 	}
 }
 
 pub fn M_Random() -> i32 {
 	unsafe {
 		rndindex = (rndindex + 1) & 0xff;
-		rndtable[rndindex as usize] as i32
+		i32::from(rndtable[usize::try_from(rndindex).unwrap()])
 	}
 }
 

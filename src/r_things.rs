@@ -79,11 +79,11 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 			I_Error(c"R_InstallSpriteLump: Bad frame characters in lump %i".as_ptr(), lump);
 		}
 
-		if frame as i32 > maxframe {
-			maxframe = frame as i32;
+		if i32::from(frame) > maxframe {
+			maxframe = i32::from(frame);
 		}
 
-		let frame = frame as usize;
+		let frame = usize::from(frame);
 
 		if rotation == 0 {
 			// the lump should be used for all rotations
@@ -91,7 +91,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 				I_Error(
 					c"R_InitSprites: Sprite %s frame %c has multip rot=0 lump".as_ptr(),
 					spritename,
-					b'A' as usize + frame,
+					usize::from(b'A') + frame,
 				);
 			}
 
@@ -99,15 +99,16 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 				I_Error(
 					c"R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump".as_ptr(),
 					spritename,
-					b'A' as usize + frame,
+					usize::from(b'A') + frame,
 				);
 			}
 
 			sprtemp[frame].rotate = 0;
 
 			for r in 0..8 {
-				sprtemp[frame].lump[r] = (lump - firstspritelump as isize) as i16;
-				sprtemp[frame].flip[r] = flipped as i8;
+				sprtemp[frame].lump[r] =
+					i16::try_from(lump - isize::try_from(firstspritelump).unwrap()).unwrap();
+				sprtemp[frame].flip[r] = i8::from(flipped);
 			}
 			return;
 		}
@@ -117,25 +118,26 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 			I_Error(
 				c"R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump".as_ptr(),
 				spritename,
-				b'A' as usize + frame,
+				usize::from(b'A') + frame,
 			);
 		}
 
 		sprtemp[frame].rotate = 1;
 
 		// make 0 based
-		let rotation = rotation as usize - 1;
+		let rotation = usize::from(rotation) - 1;
 		if sprtemp[frame].lump[rotation] != -1 {
 			I_Error(
 				c"R_InitSprites: Sprite %s : %c : %c has two lumps mapped to it".as_ptr(),
 				spritename,
-				b'A' as usize + frame,
-				b'1' as usize + rotation,
+				usize::from(b'A') + frame,
+				usize::from(b'1') + rotation,
 			);
 		}
 
-		sprtemp[frame].lump[rotation] = (lump - firstspritelump as isize) as i16;
-		sprtemp[frame].flip[rotation] = flipped as i8;
+		sprtemp[frame].lump[rotation] =
+			i16::try_from(lump - isize::try_from(firstspritelump).unwrap()).unwrap();
+		sprtemp[frame].flip[rotation] = i8::from(flipped);
 	}
 }
 
@@ -188,21 +190,24 @@ fn R_InitSpriteDefs(namelist: *const *const u8) {
 				if (*lumpinfo.wrapping_add(l)).name.as_ptr().cast::<i32>().read_unaligned()
 					== intname
 				{
-					let frame = (*lumpinfo.wrapping_add(l)).name[4] as u8 - b'A';
-					let rotation = (*lumpinfo.wrapping_add(l)).name[5] as u8 - b'0';
+					let frame = u8::try_from((*lumpinfo.wrapping_add(l)).name[4]).unwrap() - b'A';
+					let rotation =
+						u8::try_from((*lumpinfo.wrapping_add(l)).name[5]).unwrap() - b'0';
 
 					let patched = if modifiedgame != 0 {
 						W_GetNumForName((*lumpinfo.wrapping_add(l)).name.as_ptr())
 					} else {
-						l as isize
+						isize::try_from(l).unwrap()
 					};
 
 					R_InstallSpriteLump(patched, frame, rotation, false);
 
 					if (*lumpinfo.wrapping_add(l)).name[6] != 0 {
-						let frame = (*lumpinfo.wrapping_add(l)).name[6] as u8 - b'A';
-						let rotation = (*lumpinfo.wrapping_add(l)).name[7] as u8 - b'0';
-						R_InstallSpriteLump(l as isize, frame, rotation, true);
+						let frame =
+							u8::try_from((*lumpinfo.wrapping_add(l)).name[6]).unwrap() - b'A';
+						let rotation =
+							u8::try_from((*lumpinfo.wrapping_add(l)).name[7]).unwrap() - b'0';
+						R_InstallSpriteLump(isize::try_from(l).unwrap(), frame, rotation, true);
 					}
 				}
 			}
@@ -216,14 +221,14 @@ fn R_InitSpriteDefs(namelist: *const *const u8) {
 			maxframe += 1;
 
 			#[allow(clippy::needless_range_loop)]
-			for frame in 0..maxframe as usize {
+			for frame in 0..usize::try_from(maxframe).unwrap() {
 				match sprtemp[frame].rotate {
 					-1 => {
 						// no rotations were found for that frame at all
 						I_Error(
 							c"R_InitSprites: No patches found for %s frame %c".as_ptr(),
 							*namelist.wrapping_add(i),
-							frame + b'A' as usize,
+							frame + usize::from(b'A'),
 						)
 					}
 					0 => (), // only the first rotation is needed
@@ -235,7 +240,7 @@ fn R_InitSpriteDefs(namelist: *const *const u8) {
 									c"R_InitSprites: Sprite %s frame %c is missing rotations"
 										.as_ptr(),
 									*namelist.wrapping_add(i),
-									frame + b'A' as usize,
+									frame + usize::from(b'A'),
 								);
 							}
 						}
@@ -246,13 +251,16 @@ fn R_InitSpriteDefs(namelist: *const *const u8) {
 
 			// allocate space for the frames present and copy sprtemp to it
 			(*sprites.wrapping_add(i)).numframes = maxframe;
-			(*sprites.wrapping_add(i)).spriteframes =
-				Z_Malloc(maxframe as usize * size_of::<spriteframe_t>(), PU_STATIC, null_mut())
-					.cast();
+			(*sprites.wrapping_add(i)).spriteframes = Z_Malloc(
+				usize::try_from(maxframe).unwrap() * size_of::<spriteframe_t>(),
+				PU_STATIC,
+				null_mut(),
+			)
+			.cast();
 			libc::memcpy(
 				(*sprites.wrapping_add(i)).spriteframes.cast(),
 				sprtemp.as_mut_ptr().cast(),
-				maxframe as usize * size_of::<spriteframe_t>(),
+				usize::try_from(maxframe).unwrap() * size_of::<spriteframe_t>(),
 			);
 		}
 	}
@@ -327,28 +335,28 @@ pub unsafe extern "C" fn R_DrawMaskedColumn(mut column: *mut column_t) {
 		while (*column).topdelta != 0xff {
 			// calculate unclipped screen coordinates
 			//  for post
-			let topscreen = sprtopscreen + spryscale * (*column).topdelta as i32;
-			let bottomscreen = topscreen + spryscale * (*column).length as i32;
+			let topscreen = sprtopscreen + spryscale * i32::from((*column).topdelta);
+			let bottomscreen = topscreen + spryscale * i32::from((*column).length);
 
 			dc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
 			dc_yh = (bottomscreen - 1) >> FRACBITS;
 
-			if dc_yh >= *mfloorclip.wrapping_add(dc_x as usize) as i32 {
-				dc_yh = *mfloorclip.wrapping_add(dc_x as usize) as i32 - 1;
+			if dc_yh >= i32::from(*mfloorclip.wrapping_add(usize::try_from(dc_x).unwrap())) {
+				dc_yh = i32::from(*mfloorclip.wrapping_add(usize::try_from(dc_x).unwrap())) - 1;
 			}
-			if dc_yl <= *mceilingclip.wrapping_add(dc_x as usize) as i32 {
-				dc_yl = *mceilingclip.wrapping_add(dc_x as usize) as i32 + 1;
+			if dc_yl <= i32::from(*mceilingclip.wrapping_add(usize::try_from(dc_x).unwrap())) {
+				dc_yl = i32::from(*mceilingclip.wrapping_add(usize::try_from(dc_x).unwrap())) + 1;
 			}
 
 			if dc_yl <= dc_yh {
 				dc_source = column.cast::<u8>().wrapping_add(3);
-				dc_texturemid = basetexturemid - (((*column).topdelta as i32) << FRACBITS);
+				dc_texturemid = basetexturemid - (i32::from((*column).topdelta) << FRACBITS);
 
 				// Drawn by either R_DrawColumn
 				//  or (SHADOW) R_DrawFuzzColumn.
 				colfunc();
 			}
-			column = (column.wrapping_byte_add((*column).length as usize + 4)).cast();
+			column = (column.wrapping_byte_add(usize::from((*column).length) + 4)).cast();
 		}
 
 		dc_texturemid = basetexturemid;
@@ -376,7 +384,8 @@ fn R_DrawVisSprite(vis: &mut vissprite_t, _x1: usize, _x2: usize) {
 		} else if vis.mobjflags & MF_TRANSLATION != 0 {
 			colfunc = R_DrawTranslatedColumn;
 			dc_translation = translationtables.wrapping_offset(
-				((vis.mobjflags & MF_TRANSLATION) >> (MF_TRANSSHIFT - 8)) as isize - 256,
+				isize::try_from((vis.mobjflags & MF_TRANSLATION) >> (MF_TRANSSHIFT - 8)).unwrap()
+					- 256,
 			);
 		}
 
@@ -387,9 +396,9 @@ fn R_DrawVisSprite(vis: &mut vissprite_t, _x1: usize, _x2: usize) {
 		sprtopscreen = centeryfrac - FixedMul(dc_texturemid, spryscale);
 
 		for x in vis.x1..=vis.x2 {
-			dc_x = x as i32;
+			dc_x = i32::try_from(x).unwrap();
 
-			let texturecolumn = (frac >> FRACBITS) as usize;
+			let texturecolumn = usize::try_from(frac >> FRACBITS).unwrap();
 			let column = patch
 				.wrapping_byte_add(*(*patch).columnofs.as_ptr().wrapping_add(texturecolumn))
 				.cast();
@@ -434,7 +443,7 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 		}
 
 		// decide which patch to use for sprite relative to player
-		let sprdef = sprites.wrapping_add(thing.sprite as usize);
+		let sprdef = sprites.wrapping_add(usize::from(thing.sprite));
 		let sprframe = (*sprdef).spriteframes.wrapping_add(thing.frame & FF_FRAMEMASK);
 
 		let (lump, flip);
@@ -442,11 +451,11 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 			// choose a different rotation based on player view
 			let ang = R_PointToAngle(thing.x, thing.y);
 			let rot = (ang - thing.angle + (ANG45 / Wrapping(2)) * Wrapping(9)).0 >> 29;
-			lump = (*sprframe).lump[rot] as usize;
+			lump = usize::try_from((*sprframe).lump[rot]).unwrap();
 			flip = (*sprframe).flip[rot] != 0;
 		} else {
 			// use single rotation for all views
-			lump = (*sprframe).lump[0] as usize;
+			lump = usize::try_from((*sprframe).lump[0]).unwrap();
 			flip = (*sprframe).flip[0] != 0;
 		}
 
@@ -476,8 +485,8 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 		(*vis).gz = thing.z;
 		(*vis).gzt = thing.z + *spritetopoffset.wrapping_add(lump);
 		(*vis).texturemid = (*vis).gzt - viewz;
-		(*vis).x1 = i32::max(x1, 0) as usize;
-		(*vis).x2 = if x2 >= viewwidth { viewwidth - 1 } else { x2 } as usize;
+		(*vis).x1 = usize::try_from(i32::max(x1, 0)).unwrap();
+		(*vis).x2 = usize::try_from(if x2 >= viewwidth { viewwidth - 1 } else { x2 }).unwrap();
 		let iscale = FixedDiv(FRACUNIT, xscale);
 
 		if flip {
@@ -488,8 +497,8 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 			(*vis).xiscale = iscale;
 		}
 
-		if (*vis).x1 as i32 > x1 {
-			(*vis).startfrac += (*vis).xiscale * ((*vis).x1 as i32 - x1);
+		if i32::try_from((*vis).x1).unwrap() > x1 {
+			(*vis).startfrac += (*vis).xiscale * (i32::try_from((*vis).x1).unwrap() - x1);
 		}
 		(*vis).patch = lump;
 
@@ -505,7 +514,7 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 			(*vis).colormap = colormaps;
 		} else {
 			// diminished light
-			let mut index = xscale as usize >> (LIGHTSCALESHIFT - detailshift);
+			let mut index = usize::try_from(xscale).unwrap() >> (LIGHTSCALESHIFT - detailshift);
 
 			if index >= MAXLIGHTSCALE {
 				index = MAXLIGHTSCALE - 1;
@@ -532,14 +541,14 @@ pub extern "C" fn R_AddSprites(sec: &mut sector_t) {
 		// Well, now it will be done.
 		sec.validcount = validcount;
 
-		let lightnum = (sec.lightlevel >> LIGHTSEGSHIFT) + extralight as i16;
+		let lightnum = (sec.lightlevel >> LIGHTSEGSHIFT) + i16::try_from(extralight).unwrap();
 
 		spritelights = if lightnum < 0 {
 			scalelight[0].as_mut_ptr()
-		} else if lightnum as usize >= LIGHTLEVELS {
+		} else if usize::try_from(lightnum).unwrap() >= LIGHTLEVELS {
 			scalelight[LIGHTLEVELS - 1].as_mut_ptr()
 		} else {
-			scalelight[lightnum as usize].as_mut_ptr()
+			scalelight[usize::try_from(lightnum).unwrap()].as_mut_ptr()
 		};
 
 		// Handle all things in sector.
@@ -561,10 +570,10 @@ unsafe extern "C" {
 fn R_DrawPSprite(psp: &pspdef_t) {
 	unsafe {
 		// decide which patch to use
-		let sprdef = sprites.wrapping_add((*psp.state).sprite as usize);
+		let sprdef = sprites.wrapping_add(usize::from((*psp.state).sprite));
 		let sprframe = (*sprdef).spriteframes.wrapping_add((*psp.state).frame & FF_FRAMEMASK);
 
-		let lump = (*sprframe).lump[0] as usize;
+		let lump = usize::try_from((*sprframe).lump[0]).unwrap();
 		let flip = (*sprframe).flip[0] != 0;
 
 		// calculate edges of the shape
@@ -590,8 +599,8 @@ fn R_DrawPSprite(psp: &pspdef_t) {
 		let mut avis = vissprite_t {
 			prev: null_mut(),
 			next: null_mut(),
-			x1: i32::max(x1, 0) as usize,
-			x2: if x2 >= viewwidth { viewwidth - 1 } else { x2 } as usize,
+			x1: usize::try_from(i32::max(x1, 0)).unwrap(),
+			x2: usize::try_from(if x2 >= viewwidth { viewwidth - 1 } else { x2 }).unwrap(),
 			gx: 0,
 			gy: 0,
 			gz: 0,
@@ -614,14 +623,14 @@ fn R_DrawPSprite(psp: &pspdef_t) {
 			avis.startfrac = 0;
 		}
 
-		if avis.x1 as i32 > x1 {
-			avis.startfrac += avis.xiscale * (avis.x1 as i32 - x1);
+		if i32::try_from(avis.x1).unwrap() > x1 {
+			avis.startfrac += avis.xiscale * (i32::try_from(avis.x1).unwrap() - x1);
 		}
 
 		avis.patch = lump;
 
-		if (*viewplayer).powers[powertype_t::pw_invisibility as usize] > 4 * 32
-			|| (*viewplayer).powers[powertype_t::pw_invisibility as usize] & 8 != 0
+		if (*viewplayer).powers[usize::from(powertype_t::pw_invisibility)] > 4 * 32
+			|| (*viewplayer).powers[usize::from(powertype_t::pw_invisibility)] & 8 != 0
 		{
 			// shadow draw
 			avis.colormap = null_mut();
@@ -648,21 +657,21 @@ fn R_DrawPlayerSprites() {
 	unsafe {
 		// get light level
 		let lightnum = ((*(*(*(*viewplayer).mo).subsector).sector).lightlevel >> LIGHTSEGSHIFT)
-			+ extralight as i16;
+			+ i16::try_from(extralight).unwrap();
 
 		spritelights = if lightnum < 0 {
 			scalelight[0].as_mut_ptr()
-		} else if lightnum as usize >= LIGHTLEVELS {
+		} else if usize::try_from(lightnum).unwrap() >= LIGHTLEVELS {
 			scalelight[LIGHTLEVELS - 1].as_mut_ptr()
 		} else {
-			scalelight[lightnum as usize].as_mut_ptr()
+			scalelight[usize::try_from(lightnum).unwrap()].as_mut_ptr()
 		};
 
 		// clip to screen bounds
 		mfloorclip = screenheightarray.as_mut_ptr();
 		mceilingclip = negonearray.as_mut_ptr();
 
-		for i in 0..psprnum_t::NUMPSPRITES as usize {
+		for i in 0..usize::from(psprnum_t::NUMPSPRITES) {
 			let psp = &(*viewplayer).psprites[i];
 			if !psp.state.is_null() {
 				R_DrawPSprite(psp);
@@ -688,7 +697,7 @@ fn R_SortVisSprites() {
 		unsorted.prev = &raw mut unsorted;
 
 		#[allow(clippy::needless_range_loop)]
-		for ds in 0..vissprite_p.offset_from(vissprites.as_ptr()) as usize {
+		for ds in 0..usize::try_from(vissprite_p.offset_from(vissprites.as_ptr())).unwrap() {
 			let ds = &raw mut vissprites[ds];
 			(*ds).next = ds.offset(1);
 			(*ds).prev = ds.offset(-1);
@@ -744,7 +753,7 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 		// Scan drawsegs from end to start for obscuring segs.
 		// The first drawseg that has a greater scale
 		//  is the clip seg.
-		for ds in (0..ds_p.offset_from(drawsegs.as_ptr()) as usize).rev() {
+		for ds in (0..usize::try_from(ds_p.offset_from(drawsegs.as_ptr())).unwrap()).rev() {
 			let ds = &mut drawsegs[ds];
 
 			// determine if the drawseg obscures the sprite
@@ -767,7 +776,11 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 			{
 				// masked mid texture?
 				if !ds.maskedtexturecol.is_null() {
-					R_RenderMaskedSegRange(ds, r1 as i32, r2 as i32);
+					R_RenderMaskedSegRange(
+						ds,
+						i32::try_from(r1).unwrap(),
+						i32::try_from(r2).unwrap(),
+					);
 				}
 				// seg is behind sprite
 				continue;
@@ -815,7 +828,7 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 		// check for unclipped columns
 		for x in spr.x1..=spr.x2 {
 			if clipbot[x] == -2 {
-				clipbot[x] = viewheight as i16;
+				clipbot[x] = i16::try_from(viewheight).unwrap();
 			}
 
 			if cliptop[x] == -2 {
@@ -848,7 +861,11 @@ pub fn R_DrawMasked() {
 		let mut ds = ds_p.wrapping_offset(-1);
 		while ds.addr() >= drawsegs.as_ptr().addr() {
 			if !(*ds).maskedtexturecol.is_null() {
-				R_RenderMaskedSegRange(ds, (*ds).x1 as i32, (*ds).x2 as i32);
+				R_RenderMaskedSegRange(
+					ds,
+					i32::try_from((*ds).x1).unwrap(),
+					i32::try_from((*ds).x2).unwrap(),
+				);
 			}
 			ds = ds.wrapping_offset(-1);
 		}

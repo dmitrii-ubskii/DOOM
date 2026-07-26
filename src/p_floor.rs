@@ -2,7 +2,7 @@
 
 // FLOORS
 
-use std::ptr::null_mut;
+use std::ptr::{self, null_mut};
 
 use crate::{
 	d_think::think_t,
@@ -174,12 +174,12 @@ pub(crate) fn T_MoveFloor(floor: &mut floormove_t) {
 
 			if floor.direction == 1 {
 				if floor.ty == floor_e::donutRaise {
-					(*floor.sector).special = floor.newspecial as i16;
+					(*floor.sector).special = i16::try_from(floor.newspecial).unwrap();
 					(*floor.sector).floorpic = floor.texture;
 				}
 			} else if floor.direction == -1 {
 				if floor.ty == floor_e::lowerAndChange {
-					(*floor.sector).special = floor.newspecial as i16;
+					(*floor.sector).special = i16::try_from(floor.newspecial).unwrap();
 					(*floor.sector).floorpic = floor.texture;
 				}
 			}
@@ -197,7 +197,7 @@ pub(crate) fn EV_DoFloor(line: &mut line_t, floortype: floor_e) -> bool {
 		let mut rtn = false;
 		while let new_secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
 			secnum = new_secnum;
-			let sec = &mut *sectors.wrapping_add(secnum as usize);
+			let sec = &mut *sectors.wrapping_add(usize::try_from(secnum).unwrap());
 
 			// ALREADY MOVING?  IF SO, KEEP GOING...
 			if !sec.specialdata.is_null() {
@@ -207,9 +207,9 @@ pub(crate) fn EV_DoFloor(line: &mut line_t, floortype: floor_e) -> bool {
 			// new floor thinker
 			rtn = true;
 			let floor = &mut *(Z_Malloc(size_of::<floormove_t>(), PU_LEVSPEC, null_mut())
-				as *mut floormove_t);
+				.cast::<floormove_t>());
 			P_AddThinker(&raw mut floor.thinker);
-			sec.specialdata = (floor as *mut floormove_t).cast();
+			sec.specialdata = ptr::from_mut(floor).cast();
 			floor.thinker.function = think_t::T_MoveFloor;
 			floor.ty = floortype;
 			floor.crush = 0;
@@ -251,7 +251,7 @@ pub(crate) fn EV_DoFloor(line: &mut line_t, floortype: floor_e) -> bool {
 						floor.floordestheight = sec.ceilingheight;
 					}
 					floor.floordestheight -=
-						(8 * FRACUNIT) * (floortype == floor_e::raiseFloorCrush) as fixed_t;
+						(8 * FRACUNIT) * fixed_t::from(floortype == floor_e::raiseFloorCrush);
 				}
 
 				floor_e::raiseFloorTurbo => {
@@ -301,19 +301,21 @@ pub(crate) fn EV_DoFloor(line: &mut line_t, floortype: floor_e) -> bool {
 						if twoSided(secnum, i) {
 							let side = getSide(secnum, i, 0);
 							if (*side).bottomtexture >= 0
-								&& *textureheight.wrapping_add((*side).bottomtexture as usize)
+								&& *textureheight
+									.wrapping_add(usize::try_from((*side).bottomtexture).unwrap())
 									< minsize
 							{
-								minsize =
-									*textureheight.wrapping_add((*side).bottomtexture as usize);
+								minsize = *textureheight
+									.wrapping_add(usize::try_from((*side).bottomtexture).unwrap());
 							}
 							let side = getSide(secnum, i, 1);
 							if (*side).bottomtexture >= 0
-								&& *textureheight.wrapping_add((*side).bottomtexture as usize)
+								&& *textureheight
+									.wrapping_add(usize::try_from((*side).bottomtexture).unwrap())
 									< minsize
 							{
-								minsize =
-									*textureheight.wrapping_add((*side).bottomtexture as usize);
+								minsize = *textureheight
+									.wrapping_add(usize::try_from((*side).bottomtexture).unwrap());
 							}
 						}
 					}
@@ -334,7 +336,7 @@ pub(crate) fn EV_DoFloor(line: &mut line_t, floortype: floor_e) -> bool {
 
 								if (*sec).floorheight == floor.floordestheight {
 									floor.texture = (*sec).floorpic;
-									floor.newspecial = (*sec).special as i32;
+									floor.newspecial = i32::from((*sec).special);
 									break;
 								}
 							} else {
@@ -342,7 +344,7 @@ pub(crate) fn EV_DoFloor(line: &mut line_t, floortype: floor_e) -> bool {
 
 								if (*sec).floorheight == floor.floordestheight {
 									floor.texture = (*sec).floorpic;
-									floor.newspecial = (*sec).special as i32;
+									floor.newspecial = i32::from((*sec).special);
 									break;
 								}
 							}
@@ -364,7 +366,7 @@ pub(crate) fn EV_BuildStairs(line: &mut line_t, ty: stair_e) -> bool {
 		let mut rtn = false;
 		while let new_secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
 			secnum = new_secnum;
-			let mut sec = &mut *sectors.wrapping_add(secnum as usize);
+			let mut sec = &mut *sectors.wrapping_add(usize::try_from(secnum).unwrap());
 
 			// ALREADY MOVING?  IF SO, KEEP GOING...
 			if !sec.specialdata.is_null() {
@@ -374,9 +376,9 @@ pub(crate) fn EV_BuildStairs(line: &mut line_t, ty: stair_e) -> bool {
 			// new floor thinker
 			rtn = true;
 			let floor = &mut *(Z_Malloc(size_of::<floormove_t>(), PU_LEVSPEC, null_mut())
-				as *mut floormove_t);
+				.cast::<floormove_t>());
 			P_AddThinker(&raw mut floor.thinker);
-			sec.specialdata = (floor as *mut floormove_t).cast();
+			sec.specialdata = ptr::from_mut(floor).cast();
 			floor.thinker.function = think_t::T_MoveFloor;
 			floor.direction = 1;
 			floor.sector = sec;
@@ -424,10 +426,10 @@ pub(crate) fn EV_BuildStairs(line: &mut line_t, ty: stair_e) -> bool {
 					sec = &mut *tsec;
 					secnum = newsecnum;
 					let floor = &mut *(Z_Malloc(size_of::<floormove_t>(), PU_LEVSPEC, null_mut())
-						as *mut floormove_t);
+						.cast::<floormove_t>());
 					P_AddThinker(&raw mut floor.thinker);
 
-					sec.specialdata = (floor as *mut floormove_t).cast();
+					sec.specialdata = ptr::from_mut(floor).cast();
 					floor.thinker.function = think_t::T_MoveFloor;
 					floor.direction = 1;
 					floor.sector = sec;

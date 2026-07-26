@@ -1,3 +1,5 @@
+#![allow(clippy::as_conversions)]
+
 use std::ffi::{CStr, c_char};
 
 use crate::dstrings::Smuggle;

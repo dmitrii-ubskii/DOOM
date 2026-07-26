@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::ptr::null_mut;
+use std::ptr::{self, null_mut};
 
 use crate::{
 	d_englsh::{PD_BLUEK, PD_BLUEO, PD_REDK, PD_REDO, PD_YELLOWK, PD_YELLOWO},
@@ -166,8 +166,8 @@ pub(crate) fn EV_DoLockedDoor(line: &mut line_t, ty: vldoor_e, thing: &mut mobj_
 		match line.special {
 			// Blue Lock
 			99 | 133
-				if p.cards[card_t::it_bluecard as usize] == 0
-					&& p.cards[card_t::it_blueskull as usize] == 0 =>
+				if p.cards[usize::from(card_t::it_bluecard)] == 0
+					&& p.cards[usize::from(card_t::it_blueskull)] == 0 =>
 			{
 				p.message = PD_BLUEO;
 				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -176,8 +176,8 @@ pub(crate) fn EV_DoLockedDoor(line: &mut line_t, ty: vldoor_e, thing: &mut mobj_
 
 			// Red Lock
 			134 | 135
-				if p.cards[card_t::it_redcard as usize] == 0
-					&& p.cards[card_t::it_redskull as usize] == 0 =>
+				if p.cards[usize::from(card_t::it_redcard)] == 0
+					&& p.cards[usize::from(card_t::it_redskull)] == 0 =>
 			{
 				p.message = PD_REDO;
 				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -186,8 +186,8 @@ pub(crate) fn EV_DoLockedDoor(line: &mut line_t, ty: vldoor_e, thing: &mut mobj_
 
 			// Yellow Lock
 			136 | 137
-				if p.cards[card_t::it_yellowcard as usize] == 0
-					&& p.cards[card_t::it_yellowskull as usize] == 0 =>
+				if p.cards[usize::from(card_t::it_yellowcard)] == 0
+					&& p.cards[usize::from(card_t::it_yellowskull)] == 0 =>
 			{
 				p.message = PD_YELLOWO;
 				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -208,7 +208,7 @@ pub(crate) fn EV_DoDoor(line: &mut line_t, ty: vldoor_e) -> bool {
 
 		while let new_secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
 			secnum = new_secnum;
-			let sec = &mut *sectors.wrapping_add(secnum as usize);
+			let sec = &mut *sectors.wrapping_add(usize::try_from(secnum).unwrap());
 			if !sec.specialdata.is_null() {
 				continue;
 			}
@@ -216,9 +216,9 @@ pub(crate) fn EV_DoDoor(line: &mut line_t, ty: vldoor_e) -> bool {
 			// new door thinker
 			rtn = true;
 			let door =
-				&mut *(Z_Malloc(size_of::<vldoor_t>(), PU_LEVSPEC, null_mut()) as *mut vldoor_t);
+				&mut *(Z_Malloc(size_of::<vldoor_t>(), PU_LEVSPEC, null_mut()).cast::<vldoor_t>());
 			P_AddThinker(&raw mut door.thinker);
-			sec.specialdata = (door as *mut vldoor_t).cast();
+			sec.specialdata = ptr::from_mut(door).cast();
 
 			door.thinker.function = think_t::T_VerticalDoor;
 			door.sector = sec;
@@ -294,8 +294,8 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 				// Blue Lock
 				let Some(player) = player.as_mut() else { return };
 
-				if player.cards[card_t::it_bluecard as usize] == 0
-					&& player.cards[card_t::it_blueskull as usize] == 0
+				if player.cards[usize::from(card_t::it_bluecard)] == 0
+					&& player.cards[usize::from(card_t::it_blueskull)] == 0
 				{
 					player.message = PD_BLUEK;
 					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -307,8 +307,8 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 				// Yellow Lock
 				let Some(player) = player.as_mut() else { return };
 
-				if player.cards[card_t::it_yellowcard as usize] == 0
-					&& player.cards[card_t::it_yellowskull as usize] == 0
+				if player.cards[usize::from(card_t::it_yellowcard)] == 0
+					&& player.cards[usize::from(card_t::it_yellowskull)] == 0
 				{
 					player.message = PD_YELLOWK;
 					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -320,8 +320,8 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 				// Red Lock
 				let Some(player) = player.as_mut() else { return };
 
-				if player.cards[card_t::it_redcard as usize] == 0
-					&& player.cards[card_t::it_redskull as usize] == 0
+				if player.cards[usize::from(card_t::it_redcard)] == 0
+					&& player.cards[usize::from(card_t::it_redskull)] == 0
 				{
 					player.message = PD_REDK;
 					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -333,10 +333,10 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 		}
 
 		// if the sector has an active thinker, use it
-		let sec = (*sides.wrapping_add(line.sidenum[side ^ 1] as usize)).sector;
+		let sec = (*sides.wrapping_add(usize::try_from(line.sidenum[side ^ 1]).unwrap())).sector;
 
 		if !(*sec).specialdata.is_null() {
-			let door = &mut *((*sec).specialdata as *mut vldoor_t);
+			let door = &mut *((*sec).specialdata.cast::<vldoor_t>());
 			match line.special {
 				1 | 26 | 27 | 28 | 117 => {
 					// ONLY FOR "RAISE" DOORS, NOT "OPEN"s
@@ -368,9 +368,10 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 		}
 
 		// new door thinker
-		let door = &mut *(Z_Malloc(size_of::<vldoor_t>(), PU_LEVSPEC, null_mut()) as *mut vldoor_t);
+		let door =
+			&mut *(Z_Malloc(size_of::<vldoor_t>(), PU_LEVSPEC, null_mut()).cast::<vldoor_t>());
 		P_AddThinker(&raw mut door.thinker);
-		(*sec).specialdata = (door as *mut vldoor_t).cast();
+		(*sec).specialdata = ptr::from_mut(door).cast();
 		door.thinker.function = think_t::T_VerticalDoor;
 		door.sector = sec;
 		door.direction = 1;
@@ -410,11 +411,11 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 // Spawn a door that closes after 30 seconds
 pub(crate) fn P_SpawnDoorCloseIn30(sec: &mut sector_t) {
 	unsafe {
-		let door = &mut *(Z_Malloc(size_of::<vldoor_t>(), PU_LEVSPEC, null_mut()) as *mut vldoor_t);
+		let door = &mut *Z_Malloc(size_of::<vldoor_t>(), PU_LEVSPEC, null_mut()).cast::<vldoor_t>();
 
 		P_AddThinker(&raw mut door.thinker);
 
-		sec.specialdata = (door as *mut vldoor_t).cast();
+		sec.specialdata = ptr::from_mut(door).cast();
 		sec.special = 0;
 
 		door.thinker.function = think_t::T_VerticalDoor;
@@ -429,11 +430,12 @@ pub(crate) fn P_SpawnDoorCloseIn30(sec: &mut sector_t) {
 // Spawn a door that opens after 5 minutes
 pub(crate) fn P_SpawnDoorRaiseIn5Mins(sec: &mut sector_t, _secnum: usize) {
 	unsafe {
-		let door = &mut *(Z_Malloc(size_of::<vldoor_t>(), PU_LEVSPEC, null_mut()) as *mut vldoor_t);
+		let door =
+			&mut *(Z_Malloc(size_of::<vldoor_t>(), PU_LEVSPEC, null_mut()).cast::<vldoor_t>());
 
 		P_AddThinker(&raw mut door.thinker);
 
-		sec.specialdata = (door as *mut vldoor_t).cast();
+		sec.specialdata = ptr::from_mut(door).cast();
 		sec.special = 0;
 
 		door.thinker.function = think_t::T_VerticalDoor;

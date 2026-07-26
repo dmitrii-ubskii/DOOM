@@ -98,10 +98,12 @@ pub(crate) fn P_InitSwitchList() {
 
 			if alphSwitchList[i].episode <= episode {
 				switchlist[index] =
-					R_TextureNumForName(alphSwitchList[i].name1.as_ptr().cast()) as i16;
+					i16::try_from(R_TextureNumForName(alphSwitchList[i].name1.as_ptr().cast()))
+						.unwrap();
 				index += 1;
 				switchlist[index] =
-					R_TextureNumForName(alphSwitchList[i].name2.as_ptr().cast()) as i16;
+					i16::try_from(R_TextureNumForName(alphSwitchList[i].name2.as_ptr().cast()))
+						.unwrap();
 				index += 1;
 			}
 		}
@@ -142,7 +144,7 @@ pub(crate) fn P_ChangeSwitchTexture(line: &mut line_t, useAgain: bool) {
 			line.special = 0;
 		}
 
-		let side_0 = sides.wrapping_add(line.sidenum[0] as usize);
+		let side_0 = sides.wrapping_add(usize::try_from(line.sidenum[0]).unwrap());
 		let texTop = (*side_0).toptexture;
 		let texMid = (*side_0).midtexture;
 		let texBot = (*side_0).bottomtexture;
@@ -160,7 +162,7 @@ pub(crate) fn P_ChangeSwitchTexture(line: &mut line_t, useAgain: bool) {
 				(*side_0).toptexture = switchlist[i ^ 1];
 
 				if useAgain {
-					P_StartButton(line, bwhere_e::top, switchlist[i] as i32, BUTTONTIME);
+					P_StartButton(line, bwhere_e::top, i32::from(switchlist[i]), BUTTONTIME);
 				}
 
 				return;
@@ -169,7 +171,7 @@ pub(crate) fn P_ChangeSwitchTexture(line: &mut line_t, useAgain: bool) {
 				(*side_0).midtexture = switchlist[i ^ 1];
 
 				if useAgain {
-					P_StartButton(line, bwhere_e::middle, switchlist[i] as i32, BUTTONTIME);
+					P_StartButton(line, bwhere_e::middle, i32::from(switchlist[i]), BUTTONTIME);
 				}
 
 				return;
@@ -178,7 +180,7 @@ pub(crate) fn P_ChangeSwitchTexture(line: &mut line_t, useAgain: bool) {
 				(*side_0).bottomtexture = switchlist[i ^ 1];
 
 				if useAgain {
-					P_StartButton(line, bwhere_e::bottom, switchlist[i] as i32, BUTTONTIME);
+					P_StartButton(line, bwhere_e::bottom, i32::from(switchlist[i]), BUTTONTIME);
 				}
 
 				return;
@@ -203,7 +205,7 @@ pub fn P_UseSpecialLine(thing: &mut mobj_t, line: &mut line_t, side: i32) -> boo
 	// Switches that other things can activate.
 	if thing.player.is_null() {
 		// never open secret doors
-		if line.flags as usize & ML_SECRET != 0 {
+		if usize::try_from(line.flags).unwrap() & ML_SECRET != 0 {
 			return false;
 		}
 

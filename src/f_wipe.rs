@@ -31,7 +31,7 @@ static mut wipe_scr: *mut u8 = null_mut();
 
 fn wipe_shittyColMajorXform(array: *mut i16, width: usize, height: usize) {
 	unsafe {
-		let dest = Z_Malloc(width * height * 2, PU_STATIC, null_mut()) as *mut i16;
+		let dest = Z_Malloc(width * height * 2, PU_STATIC, null_mut()).cast::<i16>();
 
 		for y_ in 0..height {
 			for x in 0..width {
@@ -59,7 +59,7 @@ fn wipe_doColorXForm(width: usize, height: usize, ticks: usize) -> i32 {
 		while w != wipe_scr.wrapping_add(width * height) {
 			if *w != *e {
 				if *w > *e {
-					let newval = *w - ticks as u8;
+					let newval = *w - u8::try_from(ticks).unwrap();
 					if newval < *e {
 						*w = *e;
 					} else {
@@ -67,7 +67,7 @@ fn wipe_doColorXForm(width: usize, height: usize, ticks: usize) -> i32 {
 					}
 					changed = true;
 				} else if *w < *e {
-					let newval = *w + ticks as u8;
+					let newval = *w + u8::try_from(ticks).unwrap();
 					if newval > *e {
 						*w = *e;
 					} else {
@@ -80,7 +80,7 @@ fn wipe_doColorXForm(width: usize, height: usize, ticks: usize) -> i32 {
 			e = e.wrapping_add(1);
 		}
 
-		(!changed) as i32
+		i32::from(!changed)
 	}
 }
 
@@ -132,14 +132,15 @@ fn wipe_doMelt(mut width: usize, height: usize, ticks: usize) -> i32 {
 				if *item < 0 {
 					*item += 1;
 					done = false;
-				} else if *item < height as i32 {
+				} else if *item < i32::try_from(height).unwrap() {
 					let mut dy = if *item < 16 { *item + 1 } else { 8 };
-					if *item + dy >= height as i32 {
-						dy = height as i32 - *item;
+					if *item + dy >= i32::try_from(height).unwrap() {
+						dy = i32::try_from(height).unwrap() - *item;
 					}
-					let mut s =
-						(wipe_scr_end as *mut i16).wrapping_add(i * height + *item as usize);
-					let d = (wipe_scr as *mut i16).wrapping_add(*item as usize * width + i);
+					let mut s = (wipe_scr_end.cast::<i16>())
+						.wrapping_add(i * height + usize::try_from(*item).unwrap());
+					let d = (wipe_scr.cast::<i16>())
+						.wrapping_add(usize::try_from(*item).unwrap() * width + i);
 					let mut idx = 0;
 					for _ in (1..=dy).rev() {
 						*d.wrapping_add(idx) = *s;
@@ -147,10 +148,11 @@ fn wipe_doMelt(mut width: usize, height: usize, ticks: usize) -> i32 {
 						idx += width;
 					}
 					*item += dy;
-					let mut s = (wipe_scr_start as *mut i16).wrapping_add(i * height);
-					let d = (wipe_scr as *mut i16).wrapping_add(*item as usize * width + i);
+					let mut s = (wipe_scr_start.cast::<i16>()).wrapping_add(i * height);
+					let d = (wipe_scr.cast::<i16>())
+						.wrapping_add(usize::try_from(*item).unwrap() * width + i);
 					let mut idx = 0;
-					for _ in 0..height - *item as usize {
+					for _ in 0..height - usize::try_from(*item).unwrap() {
 						*d.wrapping_add(idx) = *s;
 						s = s.wrapping_add(1);
 						idx += width;
@@ -160,7 +162,7 @@ fn wipe_doMelt(mut width: usize, height: usize, ticks: usize) -> i32 {
 			}
 		}
 
-		done as i32
+		i32::from(done)
 	}
 }
 
@@ -223,6 +225,6 @@ pub(crate) fn wipe_ScreenWipe(
 			wipes[wipeno * 3 + 2](width, height, ticks);
 		}
 
-		(!go) as i32
+		i32::from(!go)
 	}
 }

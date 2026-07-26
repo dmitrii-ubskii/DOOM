@@ -125,14 +125,14 @@ fn P_LoadVertexes(lump: usize) {
 		// Load data into cache.
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
-		let mut ml = data as *mut mapvertex_t;
+		let mut ml = data.cast::<mapvertex_t>();
 		let mut li = vertexes;
 
 		// Copy and convert vertex coordinates,
 		// internal representation as fixed.
 		for _ in 0..numvertexes {
-			(*li).x = ((*ml).x as i32) << FRACBITS;
-			(*li).y = ((*ml).y as i32) << FRACBITS;
+			(*li).x = i32::from((*ml).x) << FRACBITS;
+			(*li).y = i32::from((*ml).y) << FRACBITS;
 			li = li.wrapping_add(1);
 			ml = ml.wrapping_add(1);
 		}
@@ -150,24 +150,30 @@ fn P_LoadSegs(lump: usize) {
 		ptr::write_bytes(segs, 0, numsegs);
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
-		let mut ml = data as *mut mapseg_t;
+		let mut ml = data.cast::<mapseg_t>();
 		let mut li = segs;
 		for _ in 0..numsegs {
-			(*li).v1 = vertexes.wrapping_add((*ml).v1 as usize);
-			(*li).v2 = vertexes.wrapping_add((*ml).v2 as usize);
+			(*li).v1 = vertexes.wrapping_add(usize::try_from((*ml).v1).unwrap());
+			(*li).v2 = vertexes.wrapping_add(usize::try_from((*ml).v2).unwrap());
 
-			(*li).angle = Wrapping((*ml).angle as usize) << 16;
-			(*li).offset = ((*ml).offset as i32) << 16;
-			let linedef = (*ml).linedef as usize;
+			(*li).angle = Wrapping(isize::try_from((*ml).angle).unwrap().cast_unsigned()) << 16;
+			(*li).offset = (i32::from((*ml).offset)) << 16;
+			let linedef = usize::try_from((*ml).linedef).unwrap();
 			let ldef = lines.wrapping_add(linedef);
 			(*li).linedef = ldef;
 			let side = (*ml).side;
-			(*li).sidedef = sides.wrapping_add((*ldef).sidenum[side as usize] as usize);
-			(*li).frontsector =
-				(*sides.wrapping_add((*ldef).sidenum[side as usize] as usize)).sector;
+			(*li).sidedef = sides.wrapping_add(
+				usize::try_from((*ldef).sidenum[usize::try_from(side).unwrap()]).unwrap(),
+			);
+			(*li).frontsector = (*sides.wrapping_add(
+				usize::try_from((*ldef).sidenum[usize::try_from(side).unwrap()]).unwrap(),
+			))
+			.sector;
 			if (*ldef).flags & ML_TWOSIDED != 0 {
-				(*li).backsector =
-					(*sides.wrapping_add((*ldef).sidenum[side as usize ^ 1] as usize)).sector;
+				(*li).backsector = (*sides.wrapping_add(
+					usize::try_from((*ldef).sidenum[usize::try_from(side).unwrap() ^ 1]).unwrap(),
+				))
+				.sector;
 			} else {
 				(*li).backsector = null_mut();
 			}
@@ -187,7 +193,7 @@ fn P_LoadSubsectors(lump: usize) {
 			Z_Malloc(numsubsectors * size_of::<subsector_t>(), PU_LEVEL, null_mut()).cast();
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
-		let mut ms = data as *mut mapsubsector_t;
+		let mut ms = data.cast::<mapsubsector_t>();
 		ptr::write_bytes(subsectors, 0, numsubsectors);
 		let mut ss = subsectors;
 
@@ -210,13 +216,13 @@ fn P_LoadSectors(lump: usize) {
 		ptr::write_bytes(sectors, 0, numsectors);
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
-		let mut ms = data as *mut mapsector_t;
+		let mut ms = data.cast::<mapsector_t>();
 		let mut ss = sectors;
 		for _ in 0..numsectors {
-			(*ss).floorheight = ((*ms).floorheight as i32) << FRACBITS;
-			(*ss).ceilingheight = ((*ms).ceilingheight as i32) << FRACBITS;
-			(*ss).floorpic = R_FlatNumForName((*ms).floorpic.as_ptr()) as i16;
-			(*ss).ceilingpic = R_FlatNumForName((*ms).ceilingpic.as_ptr()) as i16;
+			(*ss).floorheight = i32::from((*ms).floorheight) << FRACBITS;
+			(*ss).ceilingheight = i32::from((*ms).ceilingheight) << FRACBITS;
+			(*ss).floorpic = i16::try_from(R_FlatNumForName((*ms).floorpic.as_ptr())).unwrap();
+			(*ss).ceilingpic = i16::try_from(R_FlatNumForName((*ms).ceilingpic.as_ptr())).unwrap();
 			(*ss).lightlevel = (*ms).lightlevel;
 			(*ss).special = (*ms).special;
 			(*ss).tag = (*ms).tag;
@@ -236,18 +242,18 @@ fn P_LoadNodes(lump: usize) {
 		nodes = Z_Malloc(numnodes * size_of::<node_t>(), PU_LEVEL, null_mut()).cast();
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
-		let mut mn = data as *mut mapnode_t;
+		let mut mn = data.cast::<mapnode_t>();
 		let mut no = nodes;
 
 		for _ in 0..numnodes {
-			(*no).x = ((*mn).x as i32) << FRACBITS;
-			(*no).y = ((*mn).y as i32) << FRACBITS;
-			(*no).dx = ((*mn).dx as i32) << FRACBITS;
-			(*no).dy = ((*mn).dy as i32) << FRACBITS;
+			(*no).x = i32::from((*mn).x) << FRACBITS;
+			(*no).y = i32::from((*mn).y) << FRACBITS;
+			(*no).dx = i32::from((*mn).dx) << FRACBITS;
+			(*no).dy = i32::from((*mn).dy) << FRACBITS;
 			(*no).children = (*mn).children;
 			for j in 0..2 {
 				for k in 0..4 {
-					(*no).bbox[j][k] = ((*mn).bbox[j][k] as i32) << FRACBITS;
+					(*no).bbox[j][k] = i32::from((*mn).bbox[j][k]) << FRACBITS;
 				}
 			}
 			no = no.wrapping_add(1);
@@ -264,7 +270,7 @@ fn P_LoadThings(lump: usize) {
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 		let numthings = W_LumpLength(lump) / size_of::<mapthing_t>();
 
-		let mut mt = data as *mut mapthing_t;
+		let mut mt = data.cast::<mapthing_t>();
 		for _ in 0..numthings {
 			let mut spawn = true;
 
@@ -308,14 +314,14 @@ fn P_LoadLineDefs(lump: usize) {
 		ptr::write_bytes(lines, 0, numlines);
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
-		let mut mld = data as *mut maplinedef_t;
+		let mut mld = data.cast::<maplinedef_t>();
 		let mut ld = lines;
 		for _ in 0..numlines {
 			(*ld).flags = (*mld).flags;
 			(*ld).special = (*mld).special;
 			(*ld).tag = (*mld).tag;
-			(*ld).v1 = vertexes.wrapping_add((*mld).v1 as usize);
-			(*ld).v2 = vertexes.wrapping_add((*mld).v2 as usize);
+			(*ld).v1 = vertexes.wrapping_add(usize::try_from((*mld).v1).unwrap());
+			(*ld).v2 = vertexes.wrapping_add(usize::try_from((*mld).v2).unwrap());
 			let v1 = (*ld).v1;
 			let v2 = (*ld).v2;
 			(*ld).dx = (*v2).x - (*v1).x;
@@ -351,13 +357,15 @@ fn P_LoadLineDefs(lump: usize) {
 			(*ld).sidenum[1] = (*mld).sidenum[1];
 
 			if (*ld).sidenum[0] != -1 {
-				(*ld).frontsector = (*sides.wrapping_add((*ld).sidenum[0] as usize)).sector;
+				(*ld).frontsector =
+					(*sides.wrapping_add(usize::try_from((*ld).sidenum[0]).unwrap())).sector;
 			} else {
 				(*ld).frontsector = null_mut();
 			}
 
 			if (*ld).sidenum[1] != -1 {
-				(*ld).backsector = (*sides.wrapping_add((*ld).sidenum[1] as usize)).sector;
+				(*ld).backsector =
+					(*sides.wrapping_add(usize::try_from((*ld).sidenum[1]).unwrap())).sector;
 			} else {
 				(*ld).backsector = null_mut();
 			}
@@ -377,15 +385,18 @@ fn P_LoadSideDefs(lump: usize) {
 		ptr::write_bytes(sides, 0, numsides);
 		let data = W_CacheLumpNum(lump, PU_STATIC);
 
-		let mut msd = data as *mut mapsidedef_t;
+		let mut msd = data.cast::<mapsidedef_t>();
 		let mut sd = sides;
 		for _ in 0..numsides {
-			(*sd).textureoffset = ((*msd).textureoffset as i32) << FRACBITS;
-			(*sd).rowoffset = ((*msd).rowoffset as i32) << FRACBITS;
-			(*sd).toptexture = R_TextureNumForName((*msd).toptexture.as_ptr()) as i16;
-			(*sd).bottomtexture = R_TextureNumForName((*msd).bottomtexture.as_ptr()) as i16;
-			(*sd).midtexture = R_TextureNumForName((*msd).midtexture.as_ptr()) as i16;
-			(*sd).sector = sectors.wrapping_add((*msd).sector as usize);
+			(*sd).textureoffset = (i32::from((*msd).textureoffset)) << FRACBITS;
+			(*sd).rowoffset = (i32::from((*msd).rowoffset)) << FRACBITS;
+			(*sd).toptexture =
+				i16::try_from(R_TextureNumForName((*msd).toptexture.as_ptr())).unwrap();
+			(*sd).bottomtexture =
+				i16::try_from(R_TextureNumForName((*msd).bottomtexture.as_ptr())).unwrap();
+			(*sd).midtexture =
+				i16::try_from(R_TextureNumForName((*msd).midtexture.as_ptr())).unwrap();
+			(*sd).sector = sectors.wrapping_add(usize::try_from((*msd).sector).unwrap());
 			msd = msd.wrapping_add(1);
 			sd = sd.wrapping_add(1);
 		}
@@ -400,10 +411,10 @@ fn P_LoadBlockMap(lump: usize) {
 		blockmaplump = W_CacheLumpNum(lump, PU_LEVEL).cast();
 		blockmap = blockmaplump.wrapping_add(4);
 
-		bmaporgx = (*blockmaplump.wrapping_add(0) as i32) << FRACBITS;
-		bmaporgy = (*blockmaplump.wrapping_add(1) as i32) << FRACBITS;
-		bmapwidth = *blockmaplump.wrapping_add(2) as usize;
-		bmapheight = *blockmaplump.wrapping_add(3) as usize;
+		bmaporgx = i32::from(*blockmaplump.wrapping_add(0)) << FRACBITS;
+		bmaporgy = i32::from(*blockmaplump.wrapping_add(1)) << FRACBITS;
+		bmapwidth = usize::try_from(*blockmaplump.wrapping_add(2)).unwrap();
+		bmapheight = usize::try_from(*blockmaplump.wrapping_add(3)).unwrap();
 
 		// clear out mobj chains
 		let count = size_of::<*mut mobj_t>() * bmapwidth * bmapheight;
@@ -420,7 +431,7 @@ fn P_GroupLines() {
 		// look up sector number for each subsector
 		let mut ss = subsectors;
 		for _ in 0..numsubsectors {
-			let seg = segs.wrapping_add((*ss).firstline as usize);
+			let seg = segs.wrapping_add(usize::try_from((*ss).firstline).unwrap());
 			(*ss).sector = (*(*seg).sidedef).sector;
 			ss = ss.wrapping_add(1);
 		}
@@ -457,7 +468,9 @@ fn P_GroupLines() {
 				}
 				li = li.wrapping_add(1);
 			}
-			if linebuffer.offset_from((*sector).lines) != (*sector).linecount as isize {
+			if linebuffer.offset_from((*sector).lines)
+				!= isize::try_from((*sector).linecount).unwrap()
+			{
 				I_Error(c"P_GroupLines: miscounted".as_ptr());
 			}
 
@@ -467,7 +480,11 @@ fn P_GroupLines() {
 
 			// adjust bounding box to map blocks
 			let mut block = (bbox[BOXTOP] - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
-			block = if block >= bmapheight as i32 { bmapheight as i32 - 1 } else { block };
+			block = if block >= i32::try_from(bmapheight).unwrap() {
+				i32::try_from(bmapheight).unwrap() - 1
+			} else {
+				block
+			};
 			(*sector).blockbox[BOXTOP] = block;
 
 			block = (bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -475,7 +492,11 @@ fn P_GroupLines() {
 			(*sector).blockbox[BOXBOTTOM] = block;
 
 			block = (bbox[BOXRIGHT] - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-			block = if block >= bmapwidth as i32 { bmapwidth as i32 - 1 } else { block };
+			block = if block >= i32::try_from(bmapwidth).unwrap() {
+				i32::try_from(bmapwidth).unwrap() - 1
+			} else {
+				block
+			};
 			(*sector).blockbox[BOXRIGHT] = block;
 
 			block = (bbox[BOXLEFT] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -527,14 +548,14 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 				libc::sprintf(lumpname.as_mut_ptr(), c"map%i".as_ptr(), map);
 			}
 		} else {
-			lumpname[0] = b'E' as c_char;
-			lumpname[1] = b'0' as c_char + episode as c_char;
-			lumpname[2] = b'M' as c_char;
-			lumpname[3] = b'0' as c_char + map as c_char;
+			lumpname[0] = c_char::try_from(b'E').unwrap();
+			lumpname[1] = c_char::try_from(b'0').unwrap() + c_char::try_from(episode).unwrap();
+			lumpname[2] = c_char::try_from(b'M').unwrap();
+			lumpname[3] = c_char::try_from(b'0').unwrap() + c_char::try_from(map).unwrap();
 			lumpname[4] = 0;
 		}
 
-		let lumpnum = W_GetNumForName(lumpname.as_ptr()) as usize;
+		let lumpnum = usize::try_from(W_GetNumForName(lumpname.as_ptr())).unwrap();
 
 		leveltime = 0;
 

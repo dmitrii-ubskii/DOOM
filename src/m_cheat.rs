@@ -30,7 +30,7 @@ pub fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
 		if firsttime != 0 {
 			firsttime = 0;
 			for i in 0..=255 {
-				cheat_xlate_table[i as usize] = scramble(i);
+				cheat_xlate_table[usize::from(i)] = scramble(i);
 			}
 		}
 
@@ -41,7 +41,7 @@ pub fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
 		if *cht.p == 0 {
 			*cht.p = key;
 			cht.p = cht.p.add(1);
-		} else if cheat_xlate_table[key as usize] == *cht.p {
+		} else if cheat_xlate_table[usize::from(key)] == *cht.p {
 			cht.p = cht.p.add(1)
 		} else {
 			cht.p = cht.sequence;

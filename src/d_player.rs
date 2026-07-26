@@ -69,8 +69,8 @@ pub struct player_t {
 	pub armortype: i32,
 
 	// Power ups. invinc and invis are tic counters.
-	pub powers: [usize; powertype_t::NUMPOWERS as usize],
-	pub cards: [i32; card_t::NUMCARDS as usize],
+	pub powers: [usize; powertype_t::NUMPOWERS.to_usize()],
+	pub cards: [i32; card_t::NUMCARDS.to_usize()],
 	pub backpack: i32,
 
 	// Frags, kills of other players.
@@ -80,9 +80,9 @@ pub struct player_t {
 	// Is wp_nochange if not changing.
 	pub pendingweapon: weapontype_t,
 
-	pub weaponowned: [i32; weapontype_t::NUMWEAPONS as usize],
-	pub ammo: [usize; ammotype_t::NUMAMMO as usize],
-	pub maxammo: [usize; ammotype_t::NUMAMMO as usize],
+	pub weaponowned: [i32; weapontype_t::NUMWEAPONS.to_usize()],
+	pub ammo: [usize; ammotype_t::NUMAMMO.to_usize()],
+	pub maxammo: [usize; ammotype_t::NUMAMMO.to_usize()],
 
 	// True if button down last tic.
 	pub attackdown: i32,
@@ -122,7 +122,7 @@ pub struct player_t {
 	pub colormap: i32,
 
 	// Overlay view sprites (gun, etc).
-	pub psprites: [pspdef_t; psprnum_t::NUMPSPRITES as usize],
+	pub psprites: [pspdef_t; psprnum_t::NUMPSPRITES.to_usize()],
 
 	// True if secret level has been done.
 	pub didsecret: i32,

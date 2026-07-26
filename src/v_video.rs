@@ -108,8 +108,12 @@ pub static mut usegamma: usize = 0;
 pub extern "C" fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
 	#[allow(static_mut_refs)]
 	unsafe {
-		M_AddToBox(&mut dirtybox, x as fixed_t, y as fixed_t);
-		M_AddToBox(&mut dirtybox, (x + width - 1) as fixed_t, (y + height - 1) as fixed_t);
+		M_AddToBox(&mut dirtybox, fixed_t::try_from(x).unwrap(), fixed_t::try_from(y).unwrap());
+		M_AddToBox(
+			&mut dirtybox,
+			fixed_t::try_from(x + width - 1).unwrap(),
+			fixed_t::try_from(y + height - 1).unwrap(),
+		);
 	}
 }
 
@@ -160,11 +164,11 @@ pub unsafe extern "C" fn V_DrawPatch(
 	patch: *const patch_t,
 ) {
 	unsafe {
-		y = y.checked_add_signed(-(*patch).topoffset as isize).unwrap();
-		x = x.checked_add_signed(-(*patch).leftoffset as isize).unwrap();
+		y = y.checked_add_signed(isize::from(-(*patch).topoffset)).unwrap();
+		x = x.checked_add_signed(isize::from(-(*patch).leftoffset)).unwrap();
 		// #ifdef RANGECHECK
-		if x + (*patch).width as usize > SCREENWIDTH
-			|| y + (*patch).height as usize > SCREENHEIGHT
+		if x + usize::try_from((*patch).width).unwrap() > SCREENWIDTH
+			|| y + usize::try_from((*patch).height).unwrap() > SCREENHEIGHT
 			|| scrn > 4
 		{
 			eprintln!("Patch at {x},{y} exceeds LFB");
@@ -175,29 +179,35 @@ pub unsafe extern "C" fn V_DrawPatch(
 		// #endif
 
 		if scrn == 0 {
-			V_MarkRect(x, y, (*patch).width as usize, (*patch).height as usize);
+			V_MarkRect(
+				x,
+				y,
+				usize::try_from((*patch).width).unwrap(),
+				usize::try_from((*patch).height).unwrap(),
+			);
 		}
 
 		let mut col = 0;
 		let mut desttop = screens[scrn].wrapping_byte_add(y * SCREENWIDTH + x);
 
-		let w = (*patch).width as usize;
+		let w = usize::try_from((*patch).width).unwrap();
 		while col < w {
 			let count = *((*patch).columnofs.as_ptr()).wrapping_add(col);
-			let mut column = patch.wrapping_byte_add(count) as *mut column_t;
+			let mut column = patch.wrapping_byte_add(count).cast::<column_t>();
 
 			// step through the posts in a column
 			while (*column).topdelta != 0xff {
-				let mut source = (column as *mut u8).wrapping_byte_add(3);
-				let mut dest = desttop.wrapping_byte_add((*column).topdelta as usize * SCREENWIDTH);
+				let mut source = column.wrapping_byte_add(3);
+				let mut dest =
+					desttop.wrapping_byte_add(usize::from((*column).topdelta) * SCREENWIDTH);
 				let count = (*column).length;
 
 				for _ in 0..count {
-					*dest = *source;
+					*dest = *source.cast();
 					source = source.wrapping_byte_add(1);
 					dest = dest.wrapping_byte_add(SCREENWIDTH);
 				}
-				column = column.wrapping_byte_add((*column).length as usize + 4);
+				column = column.wrapping_byte_add(usize::from((*column).length) + 4);
 			}
 			col += 1;
 			desttop = desttop.wrapping_byte_add(1);
@@ -210,11 +220,11 @@ pub unsafe extern "C" fn V_DrawPatch(
 // Flips horizontally, e.g. to mirror face.
 pub unsafe fn V_DrawPatchFlipped(mut x: usize, mut y: usize, scrn: usize, patch: *mut patch_t) {
 	unsafe {
-		y = y.checked_add_signed(-(*patch).topoffset as isize).unwrap();
-		x = x.checked_add_signed(-(*patch).leftoffset as isize).unwrap();
+		y = y.checked_add_signed(isize::from(-(*patch).topoffset)).unwrap();
+		x = x.checked_add_signed(isize::from(-(*patch).leftoffset)).unwrap();
 		// #ifdef RANGECHECK
-		if x + (*patch).width as usize > SCREENWIDTH
-			|| y + (*patch).height as usize > SCREENHEIGHT
+		if x + usize::try_from((*patch).width).unwrap() > SCREENWIDTH
+			|| y + usize::try_from((*patch).height).unwrap() > SCREENHEIGHT
 			|| scrn > 4
 		{
 			eprintln!("Patch origin {x},{y} exceeds LFB",);
@@ -223,30 +233,36 @@ pub unsafe fn V_DrawPatchFlipped(mut x: usize, mut y: usize, scrn: usize, patch:
 		// #endif
 
 		if scrn == 0 {
-			V_MarkRect(x, y, (*patch).width as usize, (*patch).height as usize);
+			V_MarkRect(
+				x,
+				y,
+				usize::try_from((*patch).width).unwrap(),
+				usize::try_from((*patch).height).unwrap(),
+			);
 		}
 
 		let mut col = 0;
 		let mut desttop = screens[scrn].wrapping_byte_add(y * SCREENWIDTH + x);
 
-		let w = (*patch).width as usize;
+		let w = usize::try_from((*patch).width).unwrap();
 
 		while col < w {
 			let count = *((*patch).columnofs.as_ptr()).wrapping_add(w - 1 - col);
-			let mut column = patch.wrapping_byte_add(count) as *mut column_t;
+			let mut column = patch.wrapping_byte_add(count).cast::<column_t>();
 
 			// step through the posts in a column
 			while (*column).topdelta != 0xff {
-				let mut source = (column as *mut u8).wrapping_byte_add(3);
-				let mut dest = desttop.wrapping_byte_add((*column).topdelta as usize * SCREENWIDTH);
+				let mut source = column.wrapping_byte_add(3);
+				let mut dest =
+					desttop.wrapping_byte_add(usize::from((*column).topdelta) * SCREENWIDTH);
 				let count = (*column).length;
 
 				for _ in 0..count {
-					*dest = *source;
+					*dest = *source.cast();
 					source = source.wrapping_byte_add(1);
 					dest = dest.wrapping_byte_add(SCREENWIDTH);
 				}
-				column = column.wrapping_byte_add((*column).length as usize + 4);
+				column = column.wrapping_byte_add(usize::from((*column).length) + 4);
 			}
 			col += 1;
 			desttop = desttop.wrapping_byte_add(1);

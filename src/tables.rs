@@ -1,4 +1,5 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
+#![allow(clippy::as_conversions)]
 
 // DESCRIPTION:
 //	Lookup tables.

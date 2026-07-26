@@ -69,6 +69,8 @@ pub mod w_wad;
 pub mod wi_stuff;
 pub mod z_zone;
 
+pub mod const_conv;
+
 use std::{
 	env,
 	ffi::{CString, c_char},
@@ -87,7 +89,7 @@ fn main() {
 	let argv: Vec<_> = args.iter().map(|cstring| cstring.as_ptr()).collect();
 	unsafe {
 		myargc = args.len();
-		myargv = argv.as_ptr() as *mut *mut i8; // pinky promise not to mutate
+		myargv = argv.as_ptr().cast_mut().cast::<*mut i8>(); // pinky promise not to mutate
 		D_DoomMain();
 	}
 }

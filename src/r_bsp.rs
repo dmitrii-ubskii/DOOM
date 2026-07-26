@@ -109,7 +109,7 @@ fn R_ClipSolidWallSegment(first: u32, last: u32) {
 		let mut crunch = false;
 		while last >= (*(next.wrapping_add(1))).first.wrapping_sub(1) {
 			// There is a fragment between two posts.
-			R_StoreWallRange(((*next).last + 1) as _, ((*(next.wrapping_add(1))).first - 1) as _);
+			R_StoreWallRange((*next).last + 1, (*(next.wrapping_add(1))).first - 1);
 			next = next.wrapping_add(1);
 
 			if last <= (*next).last {
@@ -123,7 +123,7 @@ fn R_ClipSolidWallSegment(first: u32, last: u32) {
 
 		if !crunch {
 			// There is a fragment after *next.
-			R_StoreWallRange(((*next).last + 1) as _, last as _);
+			R_StoreWallRange((*next).last + 1, last);
 			// Adjust the clip size.
 			(*start).last = last;
 		}
@@ -428,24 +428,25 @@ fn R_Subsector(num: usize) {
 		let sub = subsectors.wrapping_add(num);
 		frontsector = (*sub).sector;
 		let count = (*sub).numlines;
-		let mut line = segs.wrapping_add((*sub).firstline as usize);
+		let mut line = segs.wrapping_add(usize::try_from((*sub).firstline).unwrap());
 
 		if (*frontsector).floorheight < viewz {
 			floorplane = R_FindPlane(
 				(*frontsector).floorheight,
-				(*frontsector).floorpic as usize,
-				(*frontsector).lightlevel as i32,
+				usize::try_from((*frontsector).floorpic).unwrap(),
+				i32::from((*frontsector).lightlevel),
 			);
 		} else {
 			floorplane = null_mut();
 		}
 
-		if (*frontsector).ceilingheight > viewz || (*frontsector).ceilingpic as usize == skyflatnum
+		if (*frontsector).ceilingheight > viewz
+			|| usize::try_from((*frontsector).ceilingpic).unwrap() == skyflatnum
 		{
 			ceilingplane = R_FindPlane(
 				(*frontsector).ceilingheight,
-				(*frontsector).ceilingpic as usize,
-				(*frontsector).lightlevel as i32,
+				usize::try_from((*frontsector).ceilingpic).unwrap(),
+				i32::from((*frontsector).lightlevel),
 			);
 		} else {
 			ceilingplane = null_mut();
@@ -467,26 +468,26 @@ fn R_Subsector(num: usize) {
 pub fn R_RenderBSPNode(bspnum: isize) {
 	unsafe {
 		// Found a subsector?
-		if bspnum as usize & NF_SUBSECTOR != 0 {
+		if usize::try_from(bspnum).unwrap() & NF_SUBSECTOR != 0 {
 			if bspnum == -1 {
 				R_Subsector(0);
 			} else {
-				R_Subsector(bspnum as usize & !NF_SUBSECTOR);
+				R_Subsector(usize::try_from(bspnum).unwrap() & !NF_SUBSECTOR);
 			}
 			return;
 		}
 
-		let bsp = nodes.wrapping_add(bspnum as usize);
+		let bsp = nodes.wrapping_add(usize::try_from(bspnum).unwrap());
 
 		// Decide which side the view point is on.
 		let side = R_PointOnSide(viewx, viewy, &mut *bsp);
 
 		// Recursively divide front space.
-		R_RenderBSPNode((*bsp).children[side] as isize);
+		R_RenderBSPNode(isize::try_from((*bsp).children[side]).unwrap());
 
 		// Possibly divide back space.
 		if R_CheckBBox((*bsp).bbox[side ^ 1].as_ptr()) {
-			R_RenderBSPNode((*bsp).children[side ^ 1] as isize);
+			R_RenderBSPNode(isize::try_from((*bsp).children[side ^ 1]).unwrap());
 		}
 	}
 }

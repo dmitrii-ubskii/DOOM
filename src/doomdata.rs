@@ -118,7 +118,7 @@ pub struct mapsubsector_t {
 pub struct mapseg_t {
 	pub v1: i16,
 	pub v2: i16,
-	pub angle: i16,
+	pub angle: u16,
 	pub linedef: i16,
 	pub side: i16,
 	pub offset: i16,

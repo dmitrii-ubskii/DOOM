@@ -140,11 +140,11 @@ pub static mut spanfunc: unsafe extern "C" fn() = R_DrawColumn;
 // Returns side 0 (front) or 1 (back).
 pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &mut node_t) -> usize {
 	if node.dx == 0 {
-		return if x <= node.x { node.dy > 0 } else { node.dy < 0 } as usize;
+		return usize::from(if x <= node.x { node.dy > 0 } else { node.dy < 0 });
 	}
 
 	if node.dy == 0 {
-		return if y <= node.y { node.dx < 0 } else { node.dx > 0 } as usize;
+		return usize::from(if y <= node.y { node.dx < 0 } else { node.dx > 0 });
 	}
 
 	let dx = x - node.x;
@@ -152,13 +152,13 @@ pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &mut node_t) -> usize {
 
 	// Try to quickly decide by looking at sign bits.
 	if node.dy ^ node.dx ^ dx ^ dy < 0 {
-		return (node.dy ^ dx < 0) as usize; // (left is negative)
+		return usize::from(node.dy ^ dx < 0); // (left is negative)
 	}
 
 	let left = FixedMul(node.dy >> FRACBITS, dx);
 	let right = FixedMul(dy, node.dx >> FRACBITS);
 
-	(right >= left) as usize
+	usize::from(right >= left)
 }
 
 pub fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: &mut seg_t) -> i32 {
@@ -170,11 +170,11 @@ pub fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: &mut seg_t) -> i32 {
 		let ldy = (*line.v2).y - ly;
 
 		if ldx == 0 {
-			return if x <= lx { ldy > 0 } else { ldy < 0 } as i32;
+			return i32::from(if x <= lx { ldy > 0 } else { ldy < 0 });
 		}
 
 		if ldy == 0 {
-			return if y <= ly { ldx < 0 } else { ldx > 0 } as i32;
+			return i32::from(if y <= ly { ldx < 0 } else { ldx > 0 });
 		}
 
 		let dx = x - lx;
@@ -182,13 +182,13 @@ pub fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: &mut seg_t) -> i32 {
 
 		// Try to quickly decide by looking at sign bits.
 		if ldy ^ ldx ^ dx ^ dy < 0 {
-			return (ldy ^ dx < 0) as i32; // (left is negative)
+			return i32::from(ldy ^ dx < 0); // (left is negative)
 		}
 
 		let left = FixedMul(ldy >> FRACBITS, dx);
 		let right = FixedMul(dy, ldx >> FRACBITS);
 
-		(right >= left) as i32
+		i32::from(right >= left)
 	}
 }
 
@@ -211,11 +211,11 @@ pub fn R_PointToAngle(mut x: fixed_t, mut y: fixed_t) -> angle_t {
 
 		if x >= 0 {
 			// x >=0
-			let x = x as usize;
+			let x = usize::try_from(x).unwrap();
 
 			if y >= 0 {
 				// y>= 0
-				let y = y as usize;
+				let y = usize::try_from(y).unwrap();
 
 				if x > y {
 					// octant 0
@@ -226,7 +226,7 @@ pub fn R_PointToAngle(mut x: fixed_t, mut y: fixed_t) -> angle_t {
 				}
 			} else {
 				// y<0
-				let y = -y as usize;
+				let y = usize::try_from(-y).unwrap();
 
 				if x > y {
 					// octant 8
@@ -238,11 +238,11 @@ pub fn R_PointToAngle(mut x: fixed_t, mut y: fixed_t) -> angle_t {
 			}
 		} else {
 			// x<0
-			let x = -x as usize;
+			let x = usize::try_from(-x).unwrap();
 
 			if y >= 0 {
 				// y>= 0
-				let y = y as usize;
+				let y = usize::try_from(y).unwrap();
 
 				if x > y {
 					// octant 3
@@ -253,7 +253,7 @@ pub fn R_PointToAngle(mut x: fixed_t, mut y: fixed_t) -> angle_t {
 				}
 			} else {
 				// y<0
-				let y = -y as usize;
+				let y = usize::try_from(-y).unwrap();
 
 				if x > y {
 					// octant 4
@@ -286,7 +286,8 @@ pub extern "C" fn R_PointToDist(x: fixed_t, y: fixed_t) -> fixed_t {
 			mem::swap(&mut dx, &mut dy);
 		}
 
-		let angle = (tantoangle[FixedDiv(dy, dx) as usize >> DBITS] + ANG90).0 >> ANGLETOFINESHIFT;
+		let angle = (tantoangle[usize::try_from(FixedDiv(dy, dx)).unwrap() >> DBITS] + ANG90).0
+			>> ANGLETOFINESHIFT;
 
 		// use as cosine
 		FixedDiv(dx, finesine[angle])
@@ -344,11 +345,11 @@ fn R_InitTextureMapping() {
 			if finetangent[i] > FRACUNIT * 2 {
 				t = u32::MAX;
 			} else if finetangent[i] < -FRACUNIT * 2 {
-				t = viewwidth as u32 + 1;
+				t = u32::try_from(viewwidth).unwrap() + 1;
 			} else {
 				let t_ = FixedMul(finetangent[i], focallength);
 				let t_ = (centerxfrac - t_ + FRACUNIT - 1) >> FRACBITS;
-				t = t_.clamp(-1, viewwidth as i32 + 1) as u32;
+				t = t_.clamp(-1, i32::try_from(viewwidth).unwrap() + 1).cast_unsigned();
 			}
 			viewangletox[i] = t;
 		}
@@ -359,7 +360,7 @@ fn R_InitTextureMapping() {
 		#[allow(clippy::needless_range_loop)]
 		for x in 0..=viewwidth {
 			let mut i = 0;
-			while viewangletox[i] > x as u32 {
+			while viewangletox[i] > u32::try_from(x).unwrap() {
 				i += 1;
 			}
 			xtoviewangle[x] = Wrapping(i << ANGLETOFINESHIFT) - ANG90;
@@ -370,8 +371,8 @@ fn R_InitTextureMapping() {
 		for i in 0..FINEANGLES / 2 {
 			if viewangletox[i] == u32::MAX {
 				viewangletox[i] = 0;
-			} else if viewangletox[i] == viewwidth as u32 + 1 {
-				viewangletox[i] = viewwidth as u32;
+			} else if viewangletox[i] == u32::try_from(viewwidth).unwrap() + 1 {
+				viewangletox[i] = u32::try_from(viewwidth).unwrap();
 			}
 		}
 
@@ -391,16 +392,19 @@ fn R_InitLightTables() {
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..LIGHTLEVELS {
 			let startmap = ((LIGHTLEVELS - 1 - i) * 2) * NUMCOLORMAPS / LIGHTLEVELS;
-			for j in 0..MAXLIGHTZ as i32 {
-				let mut scale = FixedDiv(SCREENWIDTH as i32 / 2 * FRACUNIT, (j + 1) << LIGHTZSHIFT);
+			for j in 0..i32::try_from(MAXLIGHTZ).unwrap() {
+				let mut scale = FixedDiv(
+					i32::try_from(SCREENWIDTH).unwrap() / 2 * FRACUNIT,
+					(j + 1) << LIGHTZSHIFT,
+				);
 				scale >>= LIGHTSCALESHIFT;
-				let mut level = startmap.saturating_sub(scale as usize / DISTMAP);
+				let mut level = startmap.saturating_sub(usize::try_from(scale).unwrap() / DISTMAP);
 
 				if level >= NUMCOLORMAPS {
 					level = NUMCOLORMAPS - 1;
 				}
 
-				zlight[i][j as usize] = colormaps.wrapping_add(level * 256);
+				zlight[i][usize::try_from(j).unwrap()] = colormaps.wrapping_add(level * 256);
 			}
 		}
 	}
@@ -447,8 +451,8 @@ pub fn R_ExecuteSetViewSize() {
 
 		centery = viewheight / 2;
 		centerx = viewwidth / 2;
-		centerxfrac = (centerx << FRACBITS) as fixed_t;
-		centeryfrac = (centery << FRACBITS) as fixed_t;
+		centerxfrac = fixed_t::try_from(centerx << FRACBITS).unwrap();
+		centeryfrac = fixed_t::try_from(centery << FRACBITS).unwrap();
 		projection = centerxfrac;
 
 		if detailshift == 0 {
@@ -470,21 +474,23 @@ pub fn R_ExecuteSetViewSize() {
 		R_InitTextureMapping();
 
 		// psprite scales
-		pspritescale = FRACUNIT * (viewwidth / SCREENWIDTH) as i32;
-		pspriteiscale = FRACUNIT * (SCREENWIDTH / viewwidth) as i32;
+		pspritescale = FRACUNIT * i32::try_from(viewwidth / SCREENWIDTH).unwrap();
+		pspriteiscale = FRACUNIT * i32::try_from(SCREENWIDTH / viewwidth).unwrap();
 
 		// thing clipping
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..viewwidth {
-			screenheightarray[i] = viewheight as i16;
+			screenheightarray[i] = i16::try_from(viewheight).unwrap();
 		}
 
 		// planes
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..viewheight {
-			let mut dy = ((i as i32 - viewheight as i32 / 2) << FRACBITS) + FRACUNIT / 2;
+			let mut dy = ((i32::try_from(i).unwrap() - i32::try_from(viewheight).unwrap() / 2)
+				<< FRACBITS) + FRACUNIT / 2;
 			dy = fixed_t::abs(dy);
-			yslope[i] = FixedDiv((viewwidth << detailshift) as fixed_t / 2 * FRACUNIT, dy);
+			yslope[i] =
+				FixedDiv(fixed_t::try_from(viewwidth << detailshift).unwrap() / 2 * FRACUNIT, dy);
 		}
 
 		#[allow(clippy::needless_range_loop)]
@@ -552,7 +558,7 @@ pub fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t {
 		while (nodenum & NF_SUBSECTOR) == 0 {
 			let node = nodes.wrapping_add(nodenum);
 			let side = R_PointOnSide(x, y, &mut *node);
-			nodenum = (*node).children[side] as usize;
+			nodenum = usize::from((*node).children[side]);
 		}
 
 		subsectors.wrapping_add(nodenum & !NF_SUBSECTOR)
@@ -566,7 +572,8 @@ fn R_SetupFrame(player: &mut player_t) {
 		viewplayer = player;
 		viewx = (*player.mo).x;
 		viewy = (*player.mo).y;
-		viewangle = (*player.mo).angle + Wrapping(viewangleoffset as usize);
+		viewangle = (*player.mo).angle
+			+ Wrapping(isize::try_from(viewangleoffset).unwrap().cast_unsigned());
 		extralight = player.extralight;
 
 		viewz = player.viewz;
@@ -613,7 +620,7 @@ pub fn R_RenderPlayerView(player: &mut player_t) {
 		NetUpdate();
 
 		// The head node is the last node output.
-		R_RenderBSPNode(numnodes as isize - 1);
+		R_RenderBSPNode(isize::try_from(numnodes).unwrap() - 1);
 
 		// Check for new console commands.
 		NetUpdate();

@@ -1,6 +1,9 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_int, ptr::null_mut};
+use std::{
+	ffi::c_int,
+	ptr::{self, null_mut},
+};
 
 use crate::{
 	d_player::{CF_GODMODE, player_t},
@@ -441,9 +444,9 @@ pub(crate) fn P_InitPicAnims() {
 //  the line number, and the side (0/1) that you want.
 pub(crate) fn getSide(currentSector: isize, line: usize, side: usize) -> *mut side_t {
 	unsafe {
-		let sector = sectors.wrapping_add(currentSector as usize);
+		let sector = sectors.wrapping_add(usize::try_from(currentSector).unwrap());
 		let line = *(*sector).lines.wrapping_add(line);
-		let side = (*line).sidenum[side] as usize;
+		let side = usize::try_from((*line).sidenum[side]).unwrap();
 		sides.wrapping_add(side)
 	}
 }
@@ -461,7 +464,7 @@ pub(crate) fn getSector(currentSector: isize, line: usize, side: usize) -> *mut 
 //  it will tell you whether the line is two-sided or not.
 pub(crate) fn twoSided(sector: isize, line: usize) -> bool {
 	unsafe {
-		let sector = sectors.wrapping_add(sector as usize);
+		let sector = sectors.wrapping_add(usize::try_from(sector).unwrap());
 		let line = *(*sector).lines.wrapping_add(line);
 		(*line).flags & ML_TWOSIDED != 0
 	}
@@ -621,9 +624,9 @@ pub(crate) fn P_FindHighestCeilingSurrounding(sec: &mut sector_t) -> fixed_t {
 // RETURN NEXT SECTOR # THAT LINE TAG REFERS TO
 pub(crate) fn P_FindSectorFromLineTag(line: &mut line_t, start: isize) -> isize {
 	unsafe {
-		for i in (start + 1) as usize..numsectors {
+		for i in usize::try_from(start + 1).unwrap()..numsectors {
 			if (*sectors.wrapping_add(i)).tag == line.tag {
-				return i as isize;
+				return isize::try_from(i).unwrap();
 			}
 		}
 	}
@@ -643,7 +646,7 @@ pub(crate) fn P_FindMinSurroundingLight(sector: &mut sector_t, max: i32) -> i32 
 				continue;
 			}
 
-			min = i32::min(min, (*check).lightlevel as i32);
+			min = i32::min(min, i32::from((*check).lightlevel));
 		}
 		min
 	}
@@ -1153,14 +1156,18 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 		match sector.special {
 			5 => {
 				// HELLSLIME DAMAGE
-				if player.powers[powertype_t::pw_ironfeet as usize] == 0 && leveltime & 0x1f == 0 {
+				if player.powers[usize::from(powertype_t::pw_ironfeet)] == 0
+					&& leveltime & 0x1f == 0
+				{
 					P_DamageMobj(&mut *player.mo, null_mut(), null_mut(), 10);
 				}
 			}
 
 			7 => {
 				// NUKAGE DAMAGE
-				if player.powers[powertype_t::pw_ironfeet as usize] == 0 && leveltime & 0x1f == 0 {
+				if player.powers[usize::from(powertype_t::pw_ironfeet)] == 0
+					&& leveltime & 0x1f == 0
+				{
 					P_DamageMobj(&mut *player.mo, null_mut(), null_mut(), 5);
 				}
 			}
@@ -1168,7 +1175,7 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 			// SUPER HELLSLIME DAMAGE
 			// STROBE HURT
 			16 | 4 => {
-				if (player.powers[powertype_t::pw_ironfeet as usize] == 0 || P_Random() < 5)
+				if (player.powers[usize::from(powertype_t::pw_ironfeet)] == 0 || P_Random() < 5)
 					&& leveltime & 0x1f == 0
 				{
 					P_DamageMobj(&mut *player.mo, null_mut(), null_mut(), 20);
@@ -1197,7 +1204,7 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 			_ => {
 				I_Error(
 					c"P_PlayerInSpecialSector: unknown special %i".as_ptr(),
-					sector.special as c_int,
+					c_int::from(sector.special),
 				);
 			}
 		};
@@ -1240,7 +1247,8 @@ pub(crate) fn P_UpdateSpecials() {
 			let line = &mut *linespeciallist[i];
 			if line.special == 48 {
 				// EFFECT FIRSTCOL SCROLL +
-				(*sides.wrapping_add(line.sidenum[0] as usize)).textureoffset += FRACUNIT;
+				(*sides.wrapping_add(usize::try_from(line.sidenum[0]).unwrap())).textureoffset +=
+					FRACUNIT;
 			}
 		}
 
@@ -1249,11 +1257,18 @@ pub(crate) fn P_UpdateSpecials() {
 			if buttonlist[i].btimer != 0 {
 				buttonlist[i].btimer -= 1;
 				if buttonlist[i].btimer == 0 {
-					let side = &mut *sides.wrapping_add((*buttonlist[i].line).sidenum[0] as usize);
+					let side = &mut *sides
+						.wrapping_add(usize::try_from((*buttonlist[i].line).sidenum[0]).unwrap());
 					match buttonlist[i].where_ {
-						bwhere_e::top => side.toptexture = buttonlist[i].btexture as i16,
-						bwhere_e::middle => side.midtexture = buttonlist[i].btexture as i16,
-						bwhere_e::bottom => side.bottomtexture = buttonlist[i].btexture as i16,
+						bwhere_e::top => {
+							side.toptexture = i16::try_from(buttonlist[i].btexture).unwrap()
+						}
+						bwhere_e::middle => {
+							side.midtexture = i16::try_from(buttonlist[i].btexture).unwrap()
+						}
+						bwhere_e::bottom => {
+							side.bottomtexture = i16::try_from(buttonlist[i].btexture).unwrap()
+						}
 					}
 					S_StartSound(buttonlist[i].soundorg.cast(), sfxenum_t::sfx_swtchn);
 					buttonlist[i] = button_t::new();
@@ -1270,7 +1285,7 @@ pub(crate) fn EV_DoDonut(line: &mut line_t) -> bool {
 		let mut rtn = false;
 		while let new_secnum @ 0.. = P_FindSectorFromLineTag(line, secnum) {
 			secnum = new_secnum;
-			let s1 = &mut *sectors.wrapping_add(secnum as usize);
+			let s1 = &mut *sectors.wrapping_add(usize::try_from(secnum).unwrap());
 
 			// ALREADY MOVING?  IF SO, KEEP GOING...
 			if !s1.specialdata.is_null() {
@@ -1289,9 +1304,9 @@ pub(crate) fn EV_DoDonut(line: &mut line_t) -> bool {
 
 				//	Spawn rising slime
 				let floor = &mut *(Z_Malloc(size_of::<floormove_t>(), PU_LEVSPEC, null_mut())
-					as *mut floormove_t);
+					.cast::<floormove_t>());
 				P_AddThinker(&raw mut floor.thinker);
-				s2.specialdata = (floor as *mut floormove_t).cast();
+				s2.specialdata = ptr::from_mut(floor).cast();
 				floor.thinker.function = think_t::T_MoveFloor;
 				floor.ty = floor_e::donutRaise;
 				floor.crush = 0;
@@ -1304,9 +1319,9 @@ pub(crate) fn EV_DoDonut(line: &mut line_t) -> bool {
 
 				//	Spawn lowering donut-hole
 				let floor = &mut *(Z_Malloc(size_of::<floormove_t>(), PU_LEVSPEC, null_mut())
-					as *mut floormove_t);
+					.cast::<floormove_t>());
 				P_AddThinker(&raw mut floor.thinker);
-				s1.specialdata = (floor as *mut floormove_t).cast();
+				s1.specialdata = ptr::from_mut(floor).cast();
 				floor.thinker.function = think_t::T_MoveFloor;
 				floor.ty = floor_e::lowerFloor;
 				floor.crush = 0;
@@ -1346,7 +1361,7 @@ pub(crate) fn P_SpawnSpecials() {
 		if i != 0 && deathmatch != 0 {
 			let time = libc::atoi(*myargv.wrapping_add(i + 1)) * 60 * 35;
 			levelTimer = true;
-			levelTimeCount = time as usize;
+			levelTimeCount = usize::try_from(time).unwrap();
 		}
 
 		//	Init special SECTORs.

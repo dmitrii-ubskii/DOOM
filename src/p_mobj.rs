@@ -281,7 +281,7 @@ pub fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> bool {
 			return false;
 		}
 
-		let st = unsafe { &mut states[state as usize] };
+		let st = unsafe { &mut states[usize::from(state)] };
 		mobj.state = st;
 		mobj.tics = st.tics;
 		mobj.sprite = st.sprite;
@@ -292,7 +292,7 @@ pub fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> bool {
 		if let Some(action) = st.action.as_ac_mobj() {
 			action(mobj);
 		} else if let Some(action) = st.action.as_acp1() {
-			action((mobj as *mut mobj_t).cast());
+			action(ptr::from_mut(mobj).cast());
 		} else {
 			match st.action {
 				think_t::null => (),
@@ -317,7 +317,7 @@ fn P_ExplodeMissile(mo: &mut mobj_t) {
 		mo.momy = 0;
 		mo.momz = 0;
 
-		P_SetMobjState(mo, mobjinfo[mo.ty as usize].deathstate);
+		P_SetMobjState(mo, mobjinfo[usize::from(mo.ty)].deathstate);
 
 		mo.tics -= P_Random() & 3;
 
@@ -328,7 +328,7 @@ fn P_ExplodeMissile(mo: &mut mobj_t) {
 		mo.flags &= !MF_MISSILE;
 
 		if (*mo.info).deathsound != sfxenum_t::sfx_None {
-			S_StartSound((mo as *mut mobj_t).cast(), (*mo.info).deathsound);
+			S_StartSound(ptr::from_mut(mo).cast(), (*mo.info).deathsound);
 		}
 	}
 }
@@ -385,7 +385,8 @@ fn P_XYMovement(mo: &mut mobj_t) {
 					// explode a missile
 					if !ceilingline.is_null()
 						&& !(*ceilingline).backsector.is_null()
-						&& (*(*ceilingline).backsector).ceilingpic == skyflatnum as i16
+						&& (*(*ceilingline).backsector).ceilingpic
+							== i16::try_from(skyflatnum).unwrap()
 					{
 						// Hack to prevent missiles exploding
 						// against the sky.
@@ -441,8 +442,8 @@ fn P_XYMovement(mo: &mut mobj_t) {
 		{
 			// if in a walking frame, stop moving
 			if !player.is_null()
-				&& (((*(*player).mo).state.offset_from(states.as_mut_ptr())) as usize)
-					< statenum_t::S_PLAY_RUN1 as usize + 4
+				&& usize::try_from((*(*player).mo).state.offset_from(states.as_mut_ptr())).unwrap()
+					< usize::from(statenum_t::S_PLAY_RUN1) + 4
 			{
 				P_SetMobjState(&mut *(*player).mo, statenum_t::S_PLAY);
 			}
@@ -503,7 +504,7 @@ fn P_ZMovement(mo: &mut mobj_t) {
 					// after hitting the ground (hard),
 					// and utter appropriate sound.
 					(*mo.player).deltaviewheight = mo.momz >> 3;
-					S_StartSound((mo as *mut mobj_t).cast(), sfxenum_t::sfx_oof);
+					S_StartSound(ptr::from_mut(mo).cast(), sfxenum_t::sfx_oof);
 				}
 				mo.momz = 0;
 			}
@@ -551,8 +552,8 @@ fn P_NightmareRespawn(mobj: &mut mobj_t) {
 		// mobj_t*		mo;
 		// mapthing_t*		mthing;
 
-		let x = (mobj.spawnpoint.x as i32) << FRACBITS;
-		let y = (mobj.spawnpoint.y as i32) << FRACBITS;
+		let x = (i32::from(mobj.spawnpoint.x)) << FRACBITS;
+		let y = (i32::from(mobj.spawnpoint.y)) << FRACBITS;
 
 		// somthing is occupying it's position?
 		if !P_CheckPosition(mobj, x, y) {
@@ -586,9 +587,9 @@ fn P_NightmareRespawn(mobj: &mut mobj_t) {
 		// inherit attributes from deceased one
 		let mo = P_SpawnMobj(x, y, z, mobj.ty);
 		(*mo).spawnpoint = mobj.spawnpoint;
-		(*mo).angle = ANG45 * Wrapping(mthing.angle as usize / 45);
+		(*mo).angle = ANG45 * Wrapping((isize::from(mthing.angle) / 45).cast_unsigned());
 
-		if mthing.options as u8 & MTF_AMBUSH != 0 {
+		if u8::try_from(mthing.options).unwrap() & MTF_AMBUSH != 0 {
 			(*mo).flags |= MF_AMBUSH;
 		}
 
@@ -663,7 +664,7 @@ pub fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut m
 	unsafe {
 		let mobj = Z_Malloc(size_of::<mobj_t>(), PU_LEVEL, null_mut()).cast::<mobj_t>();
 		ptr::write_bytes(mobj, 0, 1);
-		let info = &mut mobjinfo[ty as usize];
+		let info = &mut mobjinfo[usize::from(ty)];
 		let mobj = &mut *mobj;
 
 		mobj.ty = ty;
@@ -679,10 +680,10 @@ pub fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut m
 			mobj.reactiontime = info.reactiontime;
 		}
 
-		mobj.lastlook = P_Random() % MAXPLAYERS as i32;
+		mobj.lastlook = P_Random() % i32::try_from(MAXPLAYERS).unwrap();
 		// do not set the state with P_SetMobjState,
 		// because action routines can not be called yet
-		let st = &mut states[info.spawnstate as usize];
+		let st = &mut states[usize::from(info.spawnstate)];
 
 		mobj.state = st;
 		mobj.tics = st.tics;
@@ -740,7 +741,7 @@ pub fn P_RemoveMobj(mobj: &mut mobj_t) {
 	P_UnsetThingPosition(mobj);
 
 	// stop any playing sound
-	S_StopSound((mobj as *mut mobj_t).cast());
+	S_StopSound(ptr::from_mut(mobj).cast());
 
 	// free block
 	unsafe { P_RemoveThinker(&mut mobj.thinker) };
@@ -766,8 +767,8 @@ pub(crate) fn P_RespawnSpecials() {
 
 		let mthing = &mut itemrespawnque[iquetail];
 
-		let x = (mthing.x as i32) << FRACBITS;
-		let y = (mthing.y as i32) << FRACBITS;
+		let x = i32::from(mthing.x) << FRACBITS;
+		let y = i32::from(mthing.y) << FRACBITS;
 
 		// spawn a teleport fog at the new spot
 		let ss = R_PointInSubsector(x, y);
@@ -777,20 +778,23 @@ pub(crate) fn P_RespawnSpecials() {
 		// find which typy to spawn
 		let mut i = mobjtype_t::MT_PLAYER;
 		#[allow(clippy::needless_range_loop)]
-		for j in 0..mobjtype_t::NUMMOBJTYPES as usize {
+		for j in 0..usize::from(mobjtype_t::NUMMOBJTYPES) {
 			i = mobjtype_t::from(j);
-			if mthing.ty as i32 == mobjinfo[j].doomednum {
+			if i32::from(mthing.ty) == mobjinfo[j].doomednum {
 				break;
 			}
 		}
 
 		// spawn it
-		let z =
-			if mobjinfo[i as usize].flags & MF_SPAWNCEILING != 0 { ONCEILINGZ } else { ONFLOORZ };
+		let z = if mobjinfo[usize::from(i)].flags & MF_SPAWNCEILING != 0 {
+			ONCEILINGZ
+		} else {
+			ONFLOORZ
+		};
 
 		let mo = &mut *P_SpawnMobj(x, y, z, i);
 		mo.spawnpoint = *mthing;
-		mo.angle = ANG45 * Wrapping(mthing.angle as usize / 45);
+		mo.angle = ANG45 * Wrapping((isize::from(mthing.angle) / 45).cast_unsigned());
 
 		// pull it from the que
 		iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
@@ -804,27 +808,27 @@ pub(crate) fn P_RespawnSpecials() {
 pub(crate) fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 	unsafe {
 		// not playing?
-		if playeringame[mthing.ty as usize - 1] == 0 {
+		if playeringame[usize::try_from(mthing.ty).unwrap() - 1] == 0 {
 			return;
 		}
 
-		let p = &mut players[mthing.ty as usize - 1];
+		let p = &mut players[usize::try_from(mthing.ty).unwrap() - 1];
 
 		if p.playerstate == playerstate_t::PST_REBORN {
-			G_PlayerReborn(mthing.ty as usize - 1);
+			G_PlayerReborn(usize::try_from(mthing.ty).unwrap() - 1);
 		}
 
-		let x = (mthing.x as i32) << FRACBITS;
-		let y = (mthing.y as i32) << FRACBITS;
+		let x = i32::from(mthing.x) << FRACBITS;
+		let y = i32::from(mthing.y) << FRACBITS;
 		let z = ONFLOORZ;
 		let mobj = &mut *P_SpawnMobj(x, y, z, mobjtype_t::MT_PLAYER);
 
 		// set color translations for player sprites
 		if mthing.ty > 1 {
-			mobj.flags |= (mthing.ty as u32 - 1) << MF_TRANSSHIFT;
+			mobj.flags |= (u32::try_from(mthing.ty).unwrap() - 1) << MF_TRANSSHIFT;
 		}
 
-		mobj.angle = ANG45 * Wrapping(mthing.angle as usize / 45);
+		mobj.angle = ANG45 * Wrapping((isize::from(mthing.angle) / 45).cast_unsigned());
 		mobj.player = p;
 		mobj.health = p.health;
 
@@ -843,12 +847,12 @@ pub(crate) fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 
 		// give all cards in death match mode
 		if deathmatch != 0 {
-			for i in 0..card_t::NUMCARDS as usize {
+			for i in 0..usize::from(card_t::NUMCARDS) {
 				p.cards[i] = 1;
 			}
 		}
 
-		if mthing.ty as usize - 1 == consoleplayer {
+		if usize::try_from(mthing.ty).unwrap() - 1 == consoleplayer {
 			// wake up the status bar
 			ST_Start();
 			// wake up the heads up text
@@ -868,7 +872,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 			if deathmatch_p.offset_from(deathmatchstarts.as_ptr()) < 10 {
 				libc::memcpy(
 					deathmatch_p.cast(),
-					(mthing as *mut mapthing_t).cast(),
+					ptr::from_mut(mthing).cast(),
 					size_of::<mapthing_t>(),
 				);
 				deathmatch_p = deathmatch_p.wrapping_add(1);
@@ -879,7 +883,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		// check for players specially
 		if mthing.ty <= 4 {
 			// save spots for respawning in network games
-			playerstarts[mthing.ty as usize - 1] = *mthing;
+			playerstarts[usize::try_from(mthing.ty).unwrap() - 1] = *mthing;
 			if deathmatch == 0 {
 				P_SpawnPlayer(mthing);
 			}
@@ -897,7 +901,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		} else if gameskill == skill_t::sk_nightmare {
 			4
 		} else {
-			1 << (gameskill as usize - 1)
+			1 << (usize::from(gameskill) - 1)
 		};
 
 		if mthing.options & bit == 0 {
@@ -907,9 +911,9 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		// find which type to spawn
 		let mut i = mobjtype_t::NUMMOBJTYPES;
 		#[allow(clippy::needless_range_loop)]
-		for j in 0..mobjtype_t::NUMMOBJTYPES as usize {
+		for j in 0..usize::from(mobjtype_t::NUMMOBJTYPES) {
 			i = mobjtype_t::from(j);
-			if mthing.ty as i32 == mobjinfo[j].doomednum {
+			if i32::from(mthing.ty) == mobjinfo[j].doomednum {
 				break;
 			}
 		}
@@ -917,30 +921,33 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		if i == mobjtype_t::NUMMOBJTYPES {
 			I_Error(
 				c"P_SpawnMapThing: Unknown ty %i at (%i, %i)".as_ptr(),
-				mthing.ty as i32,
-				mthing.x as i32,
-				mthing.y as i32,
+				i32::from(mthing.ty),
+				i32::from(mthing.x),
+				i32::from(mthing.y),
 			);
 		}
 
 		// don't spawn keycards and players in deathmatch
-		if deathmatch != 0 && mobjinfo[i as usize].flags & MF_NOTDMATCH != 0 {
+		if deathmatch != 0 && mobjinfo[usize::from(i)].flags & MF_NOTDMATCH != 0 {
 			return;
 		}
 
 		// don't spawn any monsters if -nomonsters
 		if nomonsters != 0
-			&& (i == mobjtype_t::MT_SKULL || mobjinfo[i as usize].flags & MF_COUNTKILL != 0)
+			&& (i == mobjtype_t::MT_SKULL || mobjinfo[usize::from(i)].flags & MF_COUNTKILL != 0)
 		{
 			return;
 		}
 
 		// spawn it
-		let x = (mthing.x as i32) << FRACBITS;
-		let y = (mthing.y as i32) << FRACBITS;
+		let x = i32::from(mthing.x) << FRACBITS;
+		let y = i32::from(mthing.y) << FRACBITS;
 
-		let z =
-			if mobjinfo[i as usize].flags & MF_SPAWNCEILING != 0 { ONCEILINGZ } else { ONFLOORZ };
+		let z = if mobjinfo[usize::from(i)].flags & MF_SPAWNCEILING != 0 {
+			ONCEILINGZ
+		} else {
+			ONFLOORZ
+		};
 
 		let mobj = &mut *P_SpawnMobj(x, y, z, i);
 		mobj.spawnpoint = *mthing;
@@ -955,8 +962,8 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 			totalitems += 1;
 		}
 
-		mobj.angle = ANG45 * Wrapping(mthing.angle as usize / 45);
-		if mthing.options as u8 & MTF_AMBUSH != 0 {
+		mobj.angle = ANG45 * Wrapping((isize::from(mthing.angle) / 45).cast_unsigned());
+		if u8::try_from(mthing.options).unwrap() & MTF_AMBUSH != 0 {
 			mobj.flags |= MF_AMBUSH;
 		}
 	}
@@ -1030,7 +1037,7 @@ pub fn P_SpawnMissile(source: &mut mobj_t, dest: &mut mobj_t, ty: mobjtype_t) ->
 		let th = &mut *P_SpawnMobj(source.x, source.y, source.z + 4 * 8 * FRACUNIT, ty);
 
 		if (*th.info).seesound != sfxenum_t::sfx_None {
-			S_StartSound((th as *mut mobj_t).cast(), (*th.info).seesound);
+			S_StartSound(ptr::from_mut(th).cast(), (*th.info).seesound);
 		}
 
 		th.target = source; // where it came from
@@ -1038,12 +1045,13 @@ pub fn P_SpawnMissile(source: &mut mobj_t, dest: &mut mobj_t, ty: mobjtype_t) ->
 
 		// fuzzy player
 		if dest.flags & MF_SHADOW != 0 {
-			an += Wrapping(((P_Random() - P_Random()) << 20) as usize);
+			an +=
+				Wrapping(isize::try_from((P_Random() - P_Random()) << 20).unwrap().cast_unsigned());
 		}
 
 		th.angle = an;
 		an >>= ANGLETOFINESHIFT;
-		let an = an.0 as usize;
+		let an = an.0;
 		th.momx = FixedMul((*th.info).speed, finecos(an));
 		th.momy = FixedMul((*th.info).speed, finesine[an]);
 
@@ -1091,7 +1099,7 @@ pub fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
 		let th = &mut *P_SpawnMobj(x, y, z, ty);
 
 		if (*th.info).seesound != sfxenum_t::sfx_None {
-			S_StartSound((th as *mut mobj_t).cast(), (*th.info).seesound);
+			S_StartSound(ptr::from_mut(th).cast(), (*th.info).seesound);
 		}
 
 		th.target = source;

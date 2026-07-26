@@ -115,7 +115,7 @@ static mut sttminus: *mut patch_t = null_mut();
 #[unsafe(no_mangle)]
 pub extern "C" fn STlib_init() {
 	unsafe {
-		sttminus = W_CacheLumpName(c"STTMINUS".as_ptr(), PU_STATIC) as _;
+		sttminus = W_CacheLumpName(c"STTMINUS".as_ptr(), PU_STATIC).cast();
 	}
 }
 
@@ -148,8 +148,8 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: bool) {
 		let mut numdigits = n.width;
 		let mut num = *n.num;
 
-		let w = (**n.p).width as usize;
-		let h = (**n.p).height as usize;
+		let w = usize::try_from((**n.p).width).unwrap();
+		let h = usize::try_from((**n.p).height).unwrap();
 
 		n.oldnum = *n.num;
 
@@ -190,7 +190,7 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: bool) {
 		while num > 0 && numdigits > 0 {
 			numdigits -= 1;
 			x -= w;
-			V_DrawPatch(x, n.y, FG, *n.p.wrapping_add(num as usize % 10));
+			V_DrawPatch(x, n.y, FG, *n.p.wrapping_add(usize::try_from(num).unwrap() % 10));
 			num /= 10;
 		}
 
@@ -257,17 +257,23 @@ pub fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 		if *mi.on != 0 && (mi.oldinum != *mi.inum || refresh) && (*mi.inum != -1) {
 			if mi.oldinum != -1 {
 				let x =
-					mi.x.checked_add_signed(
-						-(**mi.p.wrapping_add(mi.oldinum as usize)).leftoffset as isize,
-					)
+					mi.x.checked_add_signed(isize::from(
+						-(**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).leftoffset,
+					))
 					.unwrap();
 				let y =
-					mi.y.checked_add_signed(
-						-(**mi.p.wrapping_add(mi.oldinum as usize)).topoffset as isize,
-					)
+					mi.y.checked_add_signed(isize::from(
+						-(**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).topoffset,
+					))
 					.unwrap();
-				let w = (**mi.p.wrapping_add(mi.oldinum as usize)).width as usize;
-				let h = (**mi.p.wrapping_add(mi.oldinum as usize)).height as usize;
+				let w = usize::try_from(
+					(**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).width,
+				)
+				.unwrap();
+				let h = usize::try_from(
+					(**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).height,
+				)
+				.unwrap();
 
 				if y < ST_Y {
 					I_Error(c"updateMultIcon: y - ST_Y < 0".as_ptr());
@@ -275,7 +281,7 @@ pub fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 
 				V_CopyRect(x, y - ST_Y, BG, w, h, x, y, FG);
 			}
-			V_DrawPatch(mi.x, mi.y, FG, *mi.p.wrapping_add(*mi.inum as usize));
+			V_DrawPatch(mi.x, mi.y, FG, *mi.p.wrapping_add(usize::try_from(*mi.inum).unwrap()));
 			mi.oldinum = *mi.inum;
 		}
 	}
@@ -302,10 +308,10 @@ pub fn STlib_initBinIcon(
 pub fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
 	unsafe {
 		if *bi.on != 0 && (bi.oldval != *bi.val || refresh) {
-			let x = bi.x.checked_add_signed(-((*bi.p).leftoffset) as isize).unwrap();
-			let y = bi.y.checked_add_signed(-((*bi.p).topoffset) as isize).unwrap();
-			let w = (*bi.p).width as usize;
-			let h = (*bi.p).height as usize;
+			let x = bi.x.checked_add_signed(isize::from(-((*bi.p).leftoffset))).unwrap();
+			let y = bi.y.checked_add_signed(isize::from(-((*bi.p).topoffset))).unwrap();
+			let w = usize::try_from((*bi.p).width).unwrap();
+			let h = usize::try_from((*bi.p).height).unwrap();
 
 			if y < ST_Y {
 				I_Error(c"updateBinIcon: y - ST_Y < 0".as_ptr());

@@ -1,8 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::{c_char, c_void},
-	mem,
+	ffi::c_char,
 	ptr::{null, null_mut},
 };
 
@@ -137,6 +136,7 @@ static mut skullName: [[u8; 9]; 2] = [*b"M_SKULL1\0", *b"M_SKULL2\0"];
 static mut currentMenu: *mut menu_t = null_mut();
 
 // DOOM MENU
+#[derive(Clone, Copy)]
 enum main_e {
 	_newgame = 0,
 	_options,
@@ -145,6 +145,38 @@ enum main_e {
 	readthis,
 	quitdoom,
 	main_end,
+}
+
+impl main_e {
+	const fn to_u8(self) -> u8 {
+		match self {
+			main_e::_newgame => 0,
+			main_e::_options => 1,
+			main_e::_loadgame => 2,
+			main_e::_savegame => 3,
+			main_e::readthis => 4,
+			main_e::quitdoom => 5,
+			main_e::main_end => 6,
+		}
+	}
+
+	const fn to_i16(self) -> i16 {
+		match self {
+			main_e::_newgame => 0,
+			main_e::_options => 1,
+			main_e::_loadgame => 2,
+			main_e::_savegame => 3,
+			main_e::readthis => 4,
+			main_e::quitdoom => 5,
+			main_e::main_end => 6,
+		}
+	}
+}
+
+impl From<main_e> for usize {
+	fn from(value: main_e) -> Self {
+		value.to_u8().into()
+	}
 }
 
 static mut MainMenu: [menuitem_t; 6] = [
@@ -159,7 +191,7 @@ static mut MainMenu: [menuitem_t; 6] = [
 // Another hickup with Special edition.
 #[allow(static_mut_refs)]
 static mut MainDef: menu_t = menu_t {
-	numitems: main_e::main_end as i16,
+	numitems: main_e::main_end.to_i16(),
 	prevMenu: null_mut(),
 	menuitems: unsafe { MainMenu.as_mut_ptr() },
 	routine: M_DrawMainMenu,
@@ -170,12 +202,25 @@ static mut MainDef: menu_t = menu_t {
 
 // EPISODE SELECT
 #[repr(C)]
+#[derive(Clone, Copy)]
 enum episodes_e {
 	ep1,
 	_ep2,
 	_ep3,
 	_ep4,
 	ep_end,
+}
+
+impl episodes_e {
+	const fn to_i16(self) -> i16 {
+		match self {
+			episodes_e::ep1 => 0,
+			episodes_e::_ep2 => 1,
+			episodes_e::_ep3 => 2,
+			episodes_e::_ep4 => 3,
+			episodes_e::ep_end => 4,
+		}
+	}
 }
 
 static mut EpisodeMenu: [menuitem_t; 4] = [
@@ -187,18 +232,18 @@ static mut EpisodeMenu: [menuitem_t; 4] = [
 
 #[allow(static_mut_refs)]
 static mut EpiDef: menu_t = menu_t {
-	numitems: episodes_e::ep_end as i16,            // # of menu items
-	prevMenu: &raw mut MainDef,                     // previous menu
+	numitems: episodes_e::ep_end.to_i16(), // # of menu items
+	prevMenu: &raw mut MainDef,            // previous menu
 	menuitems: unsafe { EpisodeMenu.as_mut_ptr() }, // menuitem_t ->
-	routine: M_DrawEpisode,                         // drawing routine ->
+	routine: M_DrawEpisode,                // drawing routine ->
 	x: 48,
-	y: 63,                          // x,y
-	lastOn: episodes_e::ep1 as i16, // lastOn
+	y: 63,                            // x,y
+	lastOn: episodes_e::ep1.to_i16(), // lastOn
 };
 
 // NEW GAME
 #[repr(C)]
-#[derive(PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum newgame_e {
 	_killthings,
 	_toorough,
@@ -206,6 +251,19 @@ enum newgame_e {
 	_violence,
 	nightmare,
 	newg_end,
+}
+
+impl newgame_e {
+	const fn to_i16(self) -> i16 {
+		match self {
+			newgame_e::_killthings => 0,
+			newgame_e::_toorough => 1,
+			newgame_e::hurtme => 2,
+			newgame_e::_violence => 3,
+			newgame_e::nightmare => 4,
+			newgame_e::newg_end => 5,
+		}
+	}
 }
 
 static mut NewGameMenu: [menuitem_t; 5] = [
@@ -223,17 +281,18 @@ static mut NewGameMenu: [menuitem_t; 5] = [
 
 #[allow(static_mut_refs)]
 static mut NewDef: menu_t = menu_t {
-	numitems: newgame_e::newg_end as i16, // # of menu items
-	prevMenu: &raw mut EpiDef,            // previous menu
+	numitems: newgame_e::newg_end.to_i16(), // # of menu items
+	prevMenu: &raw mut EpiDef,              // previous menu
 	menuitems: unsafe { NewGameMenu.as_mut_ptr() }, // menuitem_t ->
-	routine: M_DrawNewGame,               // drawing routine ->
+	routine: M_DrawNewGame,                 // drawing routine ->
 	x: 48,
-	y: 63,                            // x,y
-	lastOn: newgame_e::hurtme as i16, // lastOn
+	y: 63,                              // x,y
+	lastOn: newgame_e::hurtme.to_i16(), // lastOn
 };
 
 // OPTIONS MENU
 #[repr(C)]
+#[derive(Clone, Copy)]
 enum options_e {
 	_endgame,
 	messages,
@@ -244,6 +303,42 @@ enum options_e {
 	_option_empty2,
 	_soundvol,
 	opt_end,
+}
+
+impl options_e {
+	const fn to_u8(self) -> u8 {
+		match self {
+			options_e::_endgame => 0,
+			options_e::messages => 1,
+			options_e::detail => 2,
+			options_e::scrnsize => 3,
+			options_e::_option_empty1 => 4,
+			options_e::mousesens => 5,
+			options_e::_option_empty2 => 6,
+			options_e::_soundvol => 7,
+			options_e::opt_end => 8,
+		}
+	}
+
+	const fn to_i16(self) -> i16 {
+		match self {
+			options_e::_endgame => 0,
+			options_e::messages => 1,
+			options_e::detail => 2,
+			options_e::scrnsize => 3,
+			options_e::_option_empty1 => 4,
+			options_e::mousesens => 5,
+			options_e::_option_empty2 => 6,
+			options_e::_soundvol => 7,
+			options_e::opt_end => 8,
+		}
+	}
+}
+
+impl From<options_e> for usize {
+	fn from(value: options_e) -> Self {
+		value.to_u8().into()
+	}
 }
 
 static mut OptionsMenu: [menuitem_t; 8] = [
@@ -269,7 +364,7 @@ static mut OptionsMenu: [menuitem_t; 8] = [
 
 #[allow(static_mut_refs)]
 static mut OptionsDef: menu_t = menu_t {
-	numitems: options_e::opt_end as short,
+	numitems: options_e::opt_end.to_i16(),
 	prevMenu: &raw mut MainDef,
 	menuitems: unsafe { OptionsMenu.as_mut_ptr() },
 	routine: M_DrawOptions,
@@ -279,9 +374,19 @@ static mut OptionsDef: menu_t = menu_t {
 };
 
 // Read This! MENU 1 & 2
+#[derive(Clone, Copy)]
 enum read_e {
 	_rdthsempty1,
 	read1_end,
+}
+
+impl read_e {
+	const fn to_i16(self) -> i16 {
+		match self {
+			read_e::_rdthsempty1 => 0,
+			read_e::read1_end => 1,
+		}
+	}
 }
 
 static mut ReadMenu1: [menuitem_t; 1] =
@@ -289,7 +394,7 @@ static mut ReadMenu1: [menuitem_t; 1] =
 
 #[allow(static_mut_refs)]
 static mut ReadDef1: menu_t = menu_t {
-	numitems: read_e::read1_end as short,
+	numitems: read_e::read1_end.to_i16(),
 	prevMenu: &raw mut MainDef,
 	menuitems: unsafe { ReadMenu1.as_mut_ptr() },
 	routine: M_DrawReadThis1,
@@ -298,9 +403,19 @@ static mut ReadDef1: menu_t = menu_t {
 	lastOn: 0,
 };
 
+#[derive(Clone, Copy)]
 enum read_e2 {
 	_rdthsempty2,
 	read2_end,
+}
+
+impl read_e2 {
+	const fn to_i16(self) -> i16 {
+		match self {
+			read_e2::_rdthsempty2 => 0,
+			read_e2::read2_end => 1,
+		}
+	}
 }
 
 static mut ReadMenu2: [menuitem_t; 1] =
@@ -308,7 +423,7 @@ static mut ReadMenu2: [menuitem_t; 1] =
 
 #[allow(static_mut_refs)]
 static mut ReadDef2: menu_t = menu_t {
-	numitems: read_e2::read2_end as short,
+	numitems: read_e2::read2_end.to_i16(),
 	prevMenu: &raw mut ReadDef1,
 	menuitems: unsafe { ReadMenu2.as_mut_ptr() },
 	routine: M_DrawReadThis2,
@@ -318,12 +433,47 @@ static mut ReadDef2: menu_t = menu_t {
 };
 
 // SOUND VOLUME MENU
+#[derive(Clone, Copy)]
 enum sound_e {
 	sfx_vol,
 	_sfx_empty1,
 	music_vol,
 	_sfx_empty2,
 	sound_end,
+}
+
+impl sound_e {
+	const fn to_i16(self) -> i16 {
+		match self {
+			sound_e::sfx_vol => 0,
+			sound_e::_sfx_empty1 => 1,
+			sound_e::music_vol => 2,
+			sound_e::_sfx_empty2 => 3,
+			sound_e::sound_end => 4,
+		}
+	}
+
+	const fn to_usize(self) -> usize {
+		match self {
+			sound_e::sfx_vol => 0,
+			sound_e::_sfx_empty1 => 1,
+			sound_e::music_vol => 2,
+			sound_e::_sfx_empty2 => 3,
+			sound_e::sound_end => 4,
+		}
+	}
+}
+
+impl From<sound_e> for i16 {
+	fn from(value: sound_e) -> Self {
+		value.to_i16()
+	}
+}
+
+impl From<sound_e> for usize {
+	fn from(value: sound_e) -> Self {
+		value.to_usize()
+	}
 }
 
 static mut SoundMenu: [menuitem_t; 4] = [
@@ -335,7 +485,7 @@ static mut SoundMenu: [menuitem_t; 4] = [
 
 #[allow(static_mut_refs)]
 static mut SoundDef: menu_t = menu_t {
-	numitems: sound_e::sound_end as short,
+	numitems: sound_e::sound_end.to_i16(),
 	prevMenu: &raw mut OptionsDef,
 	menuitems: unsafe { SoundMenu.as_mut_ptr() },
 	routine: M_DrawSound,
@@ -345,6 +495,7 @@ static mut SoundDef: menu_t = menu_t {
 };
 
 // LOAD GAME MENU
+#[derive(Clone, Copy)]
 enum load_e {
 	_load1,
 	_load2,
@@ -353,6 +504,38 @@ enum load_e {
 	_load5,
 	_load6,
 	load_end,
+}
+
+impl load_e {
+	const fn to_u8(self) -> u8 {
+		match self {
+			load_e::_load1 => 0,
+			load_e::_load2 => 1,
+			load_e::_load3 => 2,
+			load_e::_load4 => 3,
+			load_e::_load5 => 4,
+			load_e::_load6 => 5,
+			load_e::load_end => 6,
+		}
+	}
+
+	const fn to_i16(self) -> i16 {
+		match self {
+			load_e::_load1 => 0,
+			load_e::_load2 => 1,
+			load_e::_load3 => 2,
+			load_e::_load4 => 3,
+			load_e::_load5 => 4,
+			load_e::_load6 => 5,
+			load_e::load_end => 6,
+		}
+	}
+}
+
+impl From<load_e> for usize {
+	fn from(value: load_e) -> Self {
+		value.to_u8().into()
+	}
 }
 
 static mut LoadMenu: [menuitem_t; 6] = [
@@ -366,7 +549,7 @@ static mut LoadMenu: [menuitem_t; 6] = [
 
 #[allow(static_mut_refs)]
 static mut LoadDef: menu_t = menu_t {
-	numitems: load_e::load_end as short,
+	numitems: load_e::load_end.to_i16(),
 	prevMenu: &raw mut MainDef,
 	menuitems: unsafe { LoadMenu.as_mut_ptr() },
 	routine: M_DrawLoad,
@@ -387,7 +570,7 @@ static mut SaveMenu: [menuitem_t; 6] = [
 
 #[allow(static_mut_refs)]
 static mut SaveDef: menu_t = menu_t {
-	numitems: load_e::load_end as short,
+	numitems: load_e::load_end.to_i16(),
 	prevMenu: &raw mut MainDef,
 	menuitems: unsafe { SaveMenu.as_mut_ptr() },
 	routine: M_DrawSave,
@@ -402,7 +585,7 @@ fn M_ReadSaveStrings() {
 	unsafe {
 		let mut name = [0; 256];
 
-		for i in 0..load_e::load_end as usize {
+		for i in 0..usize::from(load_e::load_end) {
 			if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
 				libc::sprintf(
 					name.as_mut_ptr(),
@@ -432,11 +615,14 @@ fn M_DrawLoad() {
 	unsafe {
 		V_DrawPatchDirect(72, 28, 0, W_CacheLumpName(c"M_LOADG".as_ptr(), PU_CACHE).cast());
 		#[allow(clippy::needless_range_loop)]
-		for i in 0..load_e::load_end as usize {
-			M_DrawSaveLoadBorder(LoadDef.x as usize, LoadDef.y as usize + LINEHEIGHT * i);
+		for i in 0..usize::from(load_e::load_end) {
+			M_DrawSaveLoadBorder(
+				usize::try_from(LoadDef.x).unwrap(),
+				usize::try_from(LoadDef.y).unwrap() + LINEHEIGHT * i,
+			);
 			M_WriteText(
-				LoadDef.x as usize,
-				LoadDef.y as usize + LINEHEIGHT * i,
+				usize::try_from(LoadDef.x).unwrap(),
+				usize::try_from(LoadDef.y).unwrap() + LINEHEIGHT * i,
 				savegamestrings[i].as_ptr(),
 			);
 		}
@@ -481,7 +667,7 @@ fn M_LoadSelect(choice: i32) {
 fn M_LoadGame(_choice: i32) {
 	unsafe {
 		if netgame != 0 {
-			M_StartMessage(LOADNET, null_mut(), false);
+			M_StartMessage(LOADNET, None, false);
 			return;
 		}
 		M_SetupNextMenu(&raw mut LoadDef);
@@ -494,11 +680,14 @@ fn M_DrawSave() {
 	unsafe {
 		V_DrawPatchDirect(72, 28, 0, W_CacheLumpName(c"M_SAVEG".as_ptr(), PU_CACHE).cast());
 		#[allow(clippy::needless_range_loop)]
-		for i in 0..load_e::load_end as usize {
-			M_DrawSaveLoadBorder(LoadDef.x as usize, LoadDef.y as usize + LINEHEIGHT * i);
+		for i in 0..usize::from(load_e::load_end) {
+			M_DrawSaveLoadBorder(
+				usize::try_from(LoadDef.x).unwrap(),
+				usize::try_from(LoadDef.y).unwrap() + LINEHEIGHT * i,
+			);
 			M_WriteText(
-				LoadDef.x as usize,
-				LoadDef.y as usize + LINEHEIGHT * i,
+				usize::try_from(LoadDef.x).unwrap(),
+				usize::try_from(LoadDef.y).unwrap() + LINEHEIGHT * i,
 				savegamestrings[i].as_ptr(),
 			);
 		}
@@ -506,8 +695,8 @@ fn M_DrawSave() {
 		if saveStringEnter != 0 {
 			let i = M_StringWidth(savegamestrings[saveSlot].as_ptr());
 			M_WriteText(
-				LoadDef.x as usize + i,
-				LoadDef.y as usize + LINEHEIGHT * saveSlot,
+				usize::try_from(LoadDef.x).unwrap() + i,
+				usize::try_from(LoadDef.y).unwrap() + LINEHEIGHT * saveSlot,
 				c"_".as_ptr(),
 			);
 		}
@@ -522,7 +711,7 @@ fn M_DoSave(slot: usize) {
 
 		// PICK QUICKSAVE SLOT YET?
 		if quickSaveSlot == -2 {
-			quickSaveSlot = slot as i32;
+			quickSaveSlot = i32::try_from(slot).unwrap();
 		}
 	}
 }
@@ -534,7 +723,7 @@ fn M_SaveSelect(choice: i32) {
 		// we are going to be intercepting all chars
 		saveStringEnter = 1;
 
-		let choice = choice as usize;
+		let choice = usize::try_from(choice).unwrap();
 		saveSlot = choice;
 		libc::strcpy(saveOldString.as_mut_ptr(), savegamestrings[choice].as_ptr());
 		if libc::strcmp(savegamestrings[choice].as_ptr(), EMPTYSTRING) == 0 {
@@ -548,7 +737,7 @@ fn M_SaveSelect(choice: i32) {
 fn M_SaveGame(_choice: i32) {
 	unsafe {
 		if usergame == 0 {
-			M_StartMessage(SAVEDEAD, null_mut(), false);
+			M_StartMessage(SAVEDEAD, None, false);
 			return;
 		}
 
@@ -563,9 +752,9 @@ fn M_SaveGame(_choice: i32) {
 //      M_QuickSave
 static mut tempstring: [c_char; 80] = [0; 80];
 
-fn M_QuickSaveResponse(ch: u8) {
-	if ch == b'y' {
-		unsafe { M_DoSave(quickSaveSlot as usize) };
+fn M_QuickSaveResponse(ch: i32) {
+	if ch == i32::from(b'y') {
+		unsafe { M_DoSave(usize::try_from(quickSaveSlot).unwrap()) };
 		S_StartSound(null_mut(), sfxenum_t::sfx_swtchx);
 	}
 }
@@ -589,14 +778,18 @@ fn M_QuickSave() {
 			quickSaveSlot = -2; // means to pick a slot now
 			return;
 		}
-		libc::sprintf(tempstring.as_mut_ptr(), QSPROMPT, savegamestrings[quickSaveSlot as usize]);
-		M_StartMessage(tempstring.as_ptr(), M_QuickSaveResponse as *mut c_void, true);
+		libc::sprintf(
+			tempstring.as_mut_ptr(),
+			QSPROMPT,
+			savegamestrings[usize::try_from(quickSaveSlot).unwrap()],
+		);
+		M_StartMessage(tempstring.as_ptr(), Some(M_QuickSaveResponse), true);
 	}
 }
 
 // M_QuickLoad
-fn M_QuickLoadResponse(ch: u8) {
-	if ch == b'y' {
+fn M_QuickLoadResponse(ch: i32) {
+	if ch == i32::from(b'y') {
 		unsafe { M_LoadSelect(quickSaveSlot) };
 		S_StartSound(null_mut(), sfxenum_t::sfx_swtchx);
 	}
@@ -606,17 +799,21 @@ fn M_QuickLoadResponse(ch: u8) {
 fn M_QuickLoad() {
 	unsafe {
 		if netgame != 0 {
-			M_StartMessage(QLOADNET, null_mut(), false);
+			M_StartMessage(QLOADNET, None, false);
 			return;
 		}
 
 		if quickSaveSlot < 0 {
-			M_StartMessage(QSAVESPOT, null_mut(), false);
+			M_StartMessage(QSAVESPOT, None, false);
 			return;
 		}
 
-		libc::sprintf(tempstring.as_mut_ptr(), QLPROMPT, savegamestrings[quickSaveSlot as usize]);
-		M_StartMessage(tempstring.as_ptr(), M_QuickLoadResponse as *mut c_void, true);
+		libc::sprintf(
+			tempstring.as_mut_ptr(),
+			QLPROMPT,
+			savegamestrings[usize::try_from(quickSaveSlot).unwrap()],
+		);
+		M_StartMessage(tempstring.as_ptr(), Some(M_QuickLoadResponse), true);
 	}
 }
 
@@ -659,17 +856,18 @@ fn M_DrawSound() {
 		V_DrawPatchDirect(60, 38, 0, W_CacheLumpName(c"M_SVOL".as_ptr(), PU_CACHE).cast());
 
 		M_DrawThermo(
-			SoundDef.x as usize,
-			SoundDef.y as usize + LINEHEIGHT * (sound_e::sfx_vol as usize + 1),
+			usize::try_from(SoundDef.x).unwrap(),
+			usize::try_from(SoundDef.y).unwrap() + LINEHEIGHT * (usize::from(sound_e::sfx_vol) + 1),
 			16,
-			snd_SfxVolume as usize,
+			usize::try_from(snd_SfxVolume).unwrap(),
 		);
 
 		M_DrawThermo(
-			SoundDef.x as usize,
-			SoundDef.y as usize + LINEHEIGHT * (sound_e::music_vol as usize + 1),
+			usize::try_from(SoundDef.x).unwrap(),
+			usize::try_from(SoundDef.y).unwrap()
+				+ LINEHEIGHT * (usize::from(sound_e::music_vol) + 1),
 			16,
-			snd_MusicVolume as usize,
+			usize::try_from(snd_MusicVolume).unwrap(),
 		);
 	}
 }
@@ -720,7 +918,7 @@ fn M_DrawNewGame() {
 fn M_NewGame(_choice: i32) {
 	unsafe {
 		if netgame != 0 && demoplayback == 0 {
-			M_StartMessage(NEWGAME, null_mut(), false);
+			M_StartMessage(NEWGAME, None, false);
 			return;
 		}
 
@@ -741,8 +939,8 @@ fn M_DrawEpisode() {
 	}
 }
 
-fn M_VerifyNightmare(ch: u8) {
-	if ch != b'y' {
+fn M_VerifyNightmare(ch: i32) {
+	if ch != i32::from(b'y') {
 		return;
 	}
 
@@ -752,12 +950,12 @@ fn M_VerifyNightmare(ch: u8) {
 
 fn M_ChooseSkill(choice: i32) {
 	unsafe {
-		if choice == newgame_e::nightmare as i32 {
-			M_StartMessage(NIGHTMARE, M_VerifyNightmare as *const c_void, true);
+		if choice == i32::from(newgame_e::nightmare.to_i16()) {
+			M_StartMessage(NIGHTMARE, Some(M_VerifyNightmare), true);
 			return;
 		}
 
-		G_DeferedInitNew(skill_t::from(choice as u8), epi + 1, 1);
+		G_DeferedInitNew(skill_t::from(u8::try_from(choice).unwrap()), epi + 1, 1);
 		M_ClearMenus();
 	}
 }
@@ -765,7 +963,7 @@ fn M_ChooseSkill(choice: i32) {
 fn M_Episode(mut choice: i32) {
 	unsafe {
 		if gamemode == GameMode_t::shareware && choice != 0 {
-			M_StartMessage(SWSTRING, null_mut(), false);
+			M_StartMessage(SWSTRING, None, false);
 			M_SetupNextMenu(&raw mut ReadDef1);
 			return;
 		}
@@ -776,7 +974,7 @@ fn M_Episode(mut choice: i32) {
 			choice = 0;
 		}
 
-		epi = choice as usize;
+		epi = usize::try_from(choice).unwrap();
 		M_SetupNextMenu(&raw mut NewDef);
 	}
 }
@@ -790,29 +988,39 @@ fn M_DrawOptions() {
 		V_DrawPatchDirect(108, 15, 0, W_CacheLumpName(c"M_OPTTTL".as_ptr(), PU_CACHE).cast());
 
 		V_DrawPatchDirect(
-			OptionsDef.x as usize + 175,
-			OptionsDef.y as usize + LINEHEIGHT * options_e::detail as usize,
+			usize::try_from(OptionsDef.x).unwrap() + 175,
+			usize::try_from(OptionsDef.y).unwrap() + LINEHEIGHT * usize::from(options_e::detail),
 			0,
-			W_CacheLumpName(detailNames[detailLevel as usize].as_ptr().cast(), PU_CACHE).cast(),
+			W_CacheLumpName(
+				detailNames[usize::try_from(detailLevel).unwrap()].as_ptr().cast(),
+				PU_CACHE,
+			)
+			.cast(),
 		);
 
 		V_DrawPatchDirect(
-			OptionsDef.x as usize + 120,
-			OptionsDef.y as usize + LINEHEIGHT * options_e::messages as usize,
+			usize::try_from(OptionsDef.x).unwrap() + 120,
+			usize::try_from(OptionsDef.y).unwrap() + LINEHEIGHT * usize::from(options_e::messages),
 			0,
-			W_CacheLumpName(msgNames[showMessages as usize].as_ptr().cast(), PU_CACHE).cast(),
+			W_CacheLumpName(
+				msgNames[usize::try_from(showMessages).unwrap()].as_ptr().cast(),
+				PU_CACHE,
+			)
+			.cast(),
 		);
 
 		M_DrawThermo(
-			OptionsDef.x as usize,
-			OptionsDef.y as usize + LINEHEIGHT * (options_e::mousesens as usize + 1),
+			usize::try_from(OptionsDef.x).unwrap(),
+			usize::try_from(OptionsDef.y).unwrap()
+				+ LINEHEIGHT * (usize::from(options_e::mousesens) + 1),
 			10,
-			mouseSensitivity as usize,
+			usize::try_from(mouseSensitivity).unwrap(),
 		);
 
 		M_DrawThermo(
-			OptionsDef.x as usize,
-			OptionsDef.y as usize + LINEHEIGHT * (options_e::scrnsize as usize + 1),
+			usize::try_from(OptionsDef.x).unwrap(),
+			usize::try_from(OptionsDef.y).unwrap()
+				+ LINEHEIGHT * (usize::from(options_e::scrnsize) + 1),
 			9,
 			screenSize,
 		);
@@ -839,8 +1047,8 @@ fn M_ChangeMessages(_choice: i32) {
 }
 
 // M_EndGame
-fn M_EndGameResponse(ch: u8) {
-	if ch != b'y' {
+fn M_EndGameResponse(ch: i32) {
+	if ch != i32::from(b'y') {
 		return;
 	}
 	unsafe { (*currentMenu).lastOn = itemOn };
@@ -856,11 +1064,11 @@ fn M_EndGame(_choice: i32) {
 		}
 
 		if netgame != 0 {
-			M_StartMessage(NETEND, null_mut(), false);
+			M_StartMessage(NETEND, None, false);
 			return;
 		}
 
-		M_StartMessage(ENDGAME, M_EndGameResponse as *mut c_void, true);
+		M_StartMessage(ENDGAME, Some(M_EndGameResponse), true);
 	}
 }
 
@@ -900,16 +1108,16 @@ static quitsounds2: [sfxenum_t; 8] = [
 	sfxenum_t::sfx_sgtatk,
 ];
 
-fn M_QuitResponse(ch: u8) {
+fn M_QuitResponse(ch: i32) {
 	unsafe {
-		if ch != b'y' {
+		if ch != i32::from(b'y') {
 			return;
 		}
 		if netgame == 0 {
 			if gamemode == GameMode_t::commercial {
-				S_StartSound(null_mut(), quitsounds2[(gametic as usize >> 2) & 7]);
+				S_StartSound(null_mut(), quitsounds2[(usize::try_from(gametic).unwrap() >> 2) & 7]);
 			} else {
-				S_StartSound(null_mut(), quitsounds[(gametic as usize >> 2) & 7]);
+				S_StartSound(null_mut(), quitsounds[(usize::try_from(gametic).unwrap() >> 2) & 7]);
 			}
 			I_WaitVBL(105);
 		}
@@ -928,12 +1136,12 @@ fn M_QuitDOOM(_choice: i32) {
 			libc::sprintf(
 				endstring.as_mut_ptr(),
 				c"%s\n\n%s".as_ptr(),
-				endmsg[(gametic as usize % (NUM_QUITMESSAGES - 2)) + 1],
+				endmsg[(usize::try_from(gametic).unwrap() % (NUM_QUITMESSAGES - 2)) + 1],
 				DOSY!(),
 			);
 		}
 
-		M_StartMessage(endstring.as_ptr(), M_QuitResponse as *const c_void, true);
+		M_StartMessage(endstring.as_ptr(), Some(M_QuitResponse), true);
 	}
 }
 
@@ -995,12 +1203,12 @@ fn M_DrawThermo(x: usize, y: usize, thermWidth: usize, thermDot: usize) {
 	}
 }
 
-fn M_StartMessage(string: *const c_char, routine: *const c_void, input: bool) {
+fn M_StartMessage(string: *const c_char, routine: Option<fn(i32)>, input: bool) {
 	unsafe {
 		messageLastMenuActive = menuactive;
 		messageToPrint = 1;
 		messageString = string;
-		messageRoutine = mem::transmute::<*const c_void, Option<fn(i32)>>(routine);
+		messageRoutine = routine;
 		messageNeedsInput = input;
 		menuactive = true;
 	}
@@ -1012,11 +1220,11 @@ fn M_StringWidth(string: *const c_char) -> usize {
 		let mut w = 0;
 
 		for i in 0..libc::strlen(string) {
-			let c = libc::toupper(*string.wrapping_add(i) as i32) - HU_FONTSTART as i32;
-			if c < 0 || c >= HU_FONTSIZE as i32 {
+			let c = libc::toupper(i32::from(*string.wrapping_add(i))) - i32::from(HU_FONTSTART);
+			if c < 0 || c >= i32::from(HU_FONTSIZE) {
 				w += 4;
 			} else {
-				w += (*hu_font[c as usize]).width as usize;
+				w += usize::try_from((*hu_font[usize::try_from(c).unwrap()]).width).unwrap();
 			}
 		}
 
@@ -1027,11 +1235,11 @@ fn M_StringWidth(string: *const c_char) -> usize {
 //      Find string height from hu_font chars
 fn M_StringHeight(string: *const c_char) -> usize {
 	unsafe {
-		let height = (*hu_font[0]).height as usize;
+		let height = usize::try_from((*hu_font[0]).height).unwrap();
 
 		let mut h = height;
 		for i in 0..libc::strlen(string) {
-			if *string.wrapping_add(i) == b'\n' as c_char {
+			if *string.wrapping_add(i) == c_char::try_from(b'\n').unwrap() {
 				h += height;
 			}
 		}
@@ -1053,23 +1261,23 @@ fn M_WriteText(x: usize, y: usize, string: *const c_char) {
 			if c == 0 {
 				break;
 			}
-			if c == b'\n' as c_char {
+			if c == c_char::try_from(b'\n').unwrap() {
 				cx = x;
 				cy += 12;
 				continue;
 			}
 
-			let c = libc::toupper(c as i32) - HU_FONTSTART as i32;
-			if c < 0 || c >= HU_FONTSIZE as i32 {
+			let c = libc::toupper(i32::from(c)) - i32::from(HU_FONTSTART);
+			if c < 0 || c >= i32::from(HU_FONTSIZE) {
 				cx += 4;
 				continue;
 			}
 
-			let w = (*hu_font[c as usize]).width as usize;
+			let w = usize::try_from((*hu_font[usize::try_from(c).unwrap()]).width).unwrap();
 			if cx + w > SCREENWIDTH {
 				break;
 			}
-			V_DrawPatchDirect(cx, cy, 0, hu_font[c as usize]);
+			V_DrawPatchDirect(cx, cy, 0, hu_font[usize::try_from(c).unwrap()]);
 			cx += w;
 		}
 	}
@@ -1092,38 +1300,38 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 
 		if ev.ty == evtype_t::ev_joystick && joywait < I_GetTime() {
 			if ev.data3 == -1 {
-				ch = KEY_UPARROW as i32;
+				ch = i32::from(KEY_UPARROW);
 				joywait = I_GetTime() + 5;
 			} else if ev.data3 == 1 {
-				ch = KEY_DOWNARROW as i32;
+				ch = i32::from(KEY_DOWNARROW);
 				joywait = I_GetTime() + 5;
 			}
 
 			if ev.data2 == -1 {
-				ch = KEY_LEFTARROW as i32;
+				ch = i32::from(KEY_LEFTARROW);
 				joywait = I_GetTime() + 2;
 			} else if ev.data2 == 1 {
-				ch = KEY_RIGHTARROW as i32;
+				ch = i32::from(KEY_RIGHTARROW);
 				joywait = I_GetTime() + 2;
 			}
 
 			if ev.data1 & 1 != 0 {
-				ch = KEY_ENTER as i32;
+				ch = i32::from(KEY_ENTER);
 				joywait = I_GetTime() + 5;
 			}
 			if ev.data1 & 2 != 0 {
-				ch = KEY_BACKSPACE as i32;
+				ch = i32::from(KEY_BACKSPACE);
 				joywait = I_GetTime() + 5;
 			}
 		} else if ev.ty == evtype_t::ev_mouse && mousewait < I_GetTime() {
 			mousey += ev.data3;
 			if mousey < lasty - 30 {
-				ch = KEY_DOWNARROW as i32;
+				ch = i32::from(KEY_DOWNARROW);
 				mousewait = I_GetTime() + 5;
 				lasty -= 30;
 				mousey = lasty;
 			} else if mousey > lasty + 30 {
-				ch = KEY_UPARROW as i32;
+				ch = i32::from(KEY_UPARROW);
 				mousewait = I_GetTime() + 5;
 				lasty += 30;
 				mousey = lasty;
@@ -1131,24 +1339,24 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 
 			mousex += ev.data2;
 			if mousex < lastx - 30 {
-				ch = KEY_LEFTARROW as i32;
+				ch = i32::from(KEY_LEFTARROW);
 				mousewait = I_GetTime() + 5;
 				lastx -= 30;
 				mousex = lastx;
 			} else if mousex > lastx + 30 {
-				ch = KEY_RIGHTARROW as i32;
+				ch = i32::from(KEY_RIGHTARROW);
 				mousewait = I_GetTime() + 5;
 				lastx += 30;
 				mousex = lastx;
 			}
 
 			if ev.data1 & 1 != 0 {
-				ch = KEY_ENTER as i32;
+				ch = i32::from(KEY_ENTER);
 				mousewait = I_GetTime() + 15;
 			}
 
 			if ev.data1 & 2 != 0 {
-				ch = KEY_BACKSPACE as i32;
+				ch = i32::from(KEY_BACKSPACE);
 				mousewait = I_GetTime() + 15;
 			}
 		} else if ev.ty == evtype_t::ev_keydown {
@@ -1162,19 +1370,19 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 		// Save Game string input
 		if saveStringEnter != 0 {
 			match ch {
-				_ if ch == KEY_BACKSPACE as i32 => {
+				_ if ch == i32::from(KEY_BACKSPACE) => {
 					if saveCharIndex > 0 {
 						saveCharIndex -= 1;
 						savegamestrings[saveSlot][saveCharIndex] = 0;
 					}
 				}
 
-				_ if ch == KEY_ESCAPE as i32 => {
+				_ if ch == i32::from(KEY_ESCAPE) => {
 					saveStringEnter = 0;
 					libc::strcpy(savegamestrings[saveSlot].as_mut_ptr(), saveOldString.as_ptr());
 				}
 
-				_ if ch == KEY_ENTER as i32 => {
+				_ if ch == i32::from(KEY_ENTER) => {
 					saveStringEnter = 0;
 					if savegamestrings[saveSlot][0] != 0 {
 						M_DoSave(saveSlot);
@@ -1183,14 +1391,14 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 
 				_ => {
 					ch = libc::toupper(ch);
-					if ch >= HU_FONTSTART as i32
-						&& ch < (HU_FONTSTART + HU_FONTSIZE) as i32
+					if ch >= i32::from(HU_FONTSTART)
+						&& ch < i32::from(HU_FONTSTART + HU_FONTSIZE)
 						&& (32..=127).contains(&ch)
 						&& saveCharIndex < SAVESTRINGSIZE - 1
 						&& M_StringWidth(savegamestrings[saveSlot].as_ptr())
 							< (SAVESTRINGSIZE - 2) * 8
 					{
-						savegamestrings[saveSlot][saveCharIndex] = ch as c_char;
+						savegamestrings[saveSlot][saveCharIndex] = c_char::try_from(ch).unwrap();
 						saveCharIndex += 1;
 						savegamestrings[saveSlot][saveCharIndex] = 0;
 					}
@@ -1202,10 +1410,10 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 		// Take care of any messages that need input
 		if messageToPrint != 0 {
 			if messageNeedsInput
-				&& !(ch == b' ' as i32
-					|| ch == b'n' as i32
-					|| ch == b'y' as i32
-					|| ch == KEY_ESCAPE as i32)
+				&& !(ch == i32::from(b' ')
+					|| ch == i32::from(b'n')
+					|| ch == i32::from(b'y')
+					|| ch == i32::from(KEY_ESCAPE))
 			{
 				return false;
 			}
@@ -1221,7 +1429,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 			return true;
 		}
 
-		if devparm != 0 && ch == KEY_F1 as i32 {
+		if devparm != 0 && ch == i32::from(KEY_F1) {
 			G_ScreenShot();
 			return true;
 		}
@@ -1229,7 +1437,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 		// F-Keys
 		if !menuactive {
 			match ch {
-				_ if ch == KEY_MINUS as i32 => {
+				_ if ch == i32::from(KEY_MINUS) => {
 					// Screen size down
 					if automapactive || chat_on != 0 {
 						return false;
@@ -1239,7 +1447,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 					return true;
 				}
 
-				_ if ch == KEY_EQUALS as i32 => {
+				_ if ch == i32::from(KEY_EQUALS) => {
 					// Screen size up
 					if automapactive || chat_on != 0 {
 						return false;
@@ -1249,7 +1457,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 					return true;
 				}
 
-				_ if ch == KEY_F1 as i32 => {
+				_ if ch == i32::from(KEY_F1) => {
 					// Help key
 					M_StartControlPanel();
 
@@ -1264,7 +1472,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 					return true;
 				}
 
-				_ if ch == KEY_F2 as i32 => {
+				_ if ch == i32::from(KEY_F2) => {
 					// Save
 					M_StartControlPanel();
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
@@ -1272,7 +1480,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 					return true;
 				}
 
-				_ if ch == KEY_F3 as i32 => {
+				_ if ch == i32::from(KEY_F3) => {
 					// Load
 					M_StartControlPanel();
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
@@ -1280,58 +1488,58 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 					return true;
 				}
 
-				_ if ch == KEY_F4 as i32 => {
+				_ if ch == i32::from(KEY_F4) => {
 					// Sound Volume
 					M_StartControlPanel();
 					currentMenu = &raw mut SoundDef;
-					itemOn = sound_e::sfx_vol as short;
+					itemOn = short::from(sound_e::sfx_vol);
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
 					return true;
 				}
 
-				_ if ch == KEY_F5 as i32 => {
+				_ if ch == i32::from(KEY_F5) => {
 					// Detail toggle
 					M_ChangeDetail(0);
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
 					return true;
 				}
 
-				_ if ch == KEY_F6 as i32 => {
+				_ if ch == i32::from(KEY_F6) => {
 					// Quicksave
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
 					M_QuickSave();
 					return true;
 				}
 
-				_ if ch == KEY_F7 as i32 => {
+				_ if ch == i32::from(KEY_F7) => {
 					// End game
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
 					M_EndGame(0);
 					return true;
 				}
 
-				_ if ch == KEY_F8 as i32 => {
+				_ if ch == i32::from(KEY_F8) => {
 					// Toggle messages
 					M_ChangeMessages(0);
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
 					return true;
 				}
 
-				_ if ch == KEY_F9 as i32 => {
+				_ if ch == i32::from(KEY_F9) => {
 					// Quickload
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
 					M_QuickLoad();
 					return true;
 				}
 
-				_ if ch == KEY_F10 as i32 => {
+				_ if ch == i32::from(KEY_F10) => {
 					// Quit DOOM
 					S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
 					M_QuitDOOM(0);
 					return true;
 				}
 
-				_ if ch == KEY_F11 as i32 => {
+				_ if ch == i32::from(KEY_F11) => {
 					// gamma toggle
 					usegamma += 1;
 					if usegamma > 4 {
@@ -1348,7 +1556,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 
 		// Pop-up menu?
 		if !menuactive {
-			if ch == KEY_ESCAPE as i32 {
+			if ch == i32::from(KEY_ESCAPE) {
 				M_StartControlPanel();
 				S_StartSound(null_mut(), sfxenum_t::sfx_swtchn);
 				return true;
@@ -1358,7 +1566,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 
 		// Keys usable within menu
 		match ch {
-			_ if ch == KEY_DOWNARROW as i32 => {
+			_ if ch == i32::from(KEY_DOWNARROW) => {
 				loop {
 					if itemOn + 1 > (*currentMenu).numitems - 1 {
 						itemOn = 0;
@@ -1366,14 +1574,16 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 						itemOn += 1;
 					}
 					S_StartSound(null_mut(), sfxenum_t::sfx_pstop);
-					if (*(*currentMenu).menuitems.wrapping_add(itemOn as usize)).status != -1 {
+					if (*(*currentMenu).menuitems.wrapping_add(usize::try_from(itemOn).unwrap()))
+						.status != -1
+					{
 						break;
 					}
 				}
 				return true;
 			}
 
-			_ if ch == KEY_UPARROW as i32 => {
+			_ if ch == i32::from(KEY_UPARROW) => {
 				loop {
 					if itemOn == 0 {
 						itemOn = (*currentMenu).numitems - 1;
@@ -1381,18 +1591,23 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 						itemOn -= 1;
 					}
 					S_StartSound(null_mut(), sfxenum_t::sfx_pstop);
-					if (*(*currentMenu).menuitems.wrapping_add(itemOn as usize)).status != -1 {
+					if (*(*currentMenu).menuitems.wrapping_add(usize::try_from(itemOn).unwrap()))
+						.status != -1
+					{
 						break;
 					}
 				}
 				return true;
 			}
 
-			_ if ch == KEY_LEFTARROW as i32 => {
+			_ if ch == i32::from(KEY_LEFTARROW) => {
 				if let Some(routine) =
-					(*(*currentMenu).menuitems.wrapping_add(itemOn as usize)).routine
+					(*(*currentMenu).menuitems.wrapping_add(usize::try_from(itemOn).unwrap()))
+						.routine
 				{
-					if (*(*currentMenu).menuitems.wrapping_add(itemOn as usize)).status == 2 {
+					if (*(*currentMenu).menuitems.wrapping_add(usize::try_from(itemOn).unwrap()))
+						.status == 2
+					{
 						S_StartSound(null_mut(), sfxenum_t::sfx_stnmov);
 						routine(0);
 					}
@@ -1400,11 +1615,14 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 				return true;
 			}
 
-			_ if ch == KEY_RIGHTARROW as i32 => {
+			_ if ch == i32::from(KEY_RIGHTARROW) => {
 				if let Some(routine) =
-					(*(*currentMenu).menuitems.wrapping_add(itemOn as usize)).routine
+					(*(*currentMenu).menuitems.wrapping_add(usize::try_from(itemOn).unwrap()))
+						.routine
 				{
-					if (*(*currentMenu).menuitems.wrapping_add(itemOn as usize)).status == 2 {
+					if (*(*currentMenu).menuitems.wrapping_add(usize::try_from(itemOn).unwrap()))
+						.status == 2
+					{
 						S_StartSound(null_mut(), sfxenum_t::sfx_stnmov);
 						routine(1);
 					}
@@ -1412,19 +1630,21 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 				return true;
 			}
 
-			_ if ch == KEY_ENTER as i32 => {
+			_ if ch == i32::from(KEY_ENTER) => {
 				if let Some(routine) =
-					(*(*currentMenu).menuitems.wrapping_add(itemOn as usize)).routine
+					(*(*currentMenu).menuitems.wrapping_add(usize::try_from(itemOn).unwrap()))
+						.routine
 				{
 					if let status @ 1.. =
-						(*(*currentMenu).menuitems.wrapping_add(itemOn as usize)).status
+						(*(*currentMenu).menuitems.wrapping_add(usize::try_from(itemOn).unwrap()))
+							.status
 					{
 						(*currentMenu).lastOn = itemOn;
 						if status == 2 {
 							routine(1); // right arrow
 							S_StartSound(null_mut(), sfxenum_t::sfx_stnmov);
 						} else {
-							routine(itemOn as i32);
+							routine(i32::from(itemOn));
 							S_StartSound(null_mut(), sfxenum_t::sfx_pistol);
 						}
 					}
@@ -1432,14 +1652,14 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 				return true;
 			}
 
-			_ if ch == KEY_ESCAPE as i32 => {
+			_ if ch == i32::from(KEY_ESCAPE) => {
 				(*currentMenu).lastOn = itemOn;
 				M_ClearMenus();
 				S_StartSound(null_mut(), sfxenum_t::sfx_swtchx);
 				return true;
 			}
 
-			_ if ch == KEY_BACKSPACE as i32 => {
+			_ if ch == i32::from(KEY_BACKSPACE) => {
 				(*currentMenu).lastOn = itemOn;
 				if !(*currentMenu).prevMenu.is_null() {
 					currentMenu = (*currentMenu).prevMenu;
@@ -1450,16 +1670,18 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 			}
 
 			_ => {
-				for i in itemOn as usize + 1..(*currentMenu).numitems as usize {
-					if (*(*currentMenu).menuitems.wrapping_add(i)).alphaKey as i32 == ch {
-						itemOn = i as short;
+				for i in usize::try_from(itemOn).unwrap() + 1
+					..usize::try_from((*currentMenu).numitems).unwrap()
+				{
+					if i32::from((*(*currentMenu).menuitems.wrapping_add(i)).alphaKey) == ch {
+						itemOn = short::try_from(i).unwrap();
 						S_StartSound(null_mut(), sfxenum_t::sfx_pstop);
 						return true;
 					}
 				}
-				for i in 0..itemOn as usize {
-					if (*(*currentMenu).menuitems.wrapping_add(i)).alphaKey as i32 == ch {
-						itemOn = i as short;
+				for i in 0..usize::try_from(itemOn).unwrap() {
+					if i32::from((*(*currentMenu).menuitems.wrapping_add(i)).alphaKey) == ch {
+						itemOn = short::try_from(i).unwrap();
 						S_StartSound(null_mut(), sfxenum_t::sfx_pstop);
 						return true;
 					}
@@ -1499,11 +1721,12 @@ pub(crate) fn M_Drawer() {
 		// Horiz. & Vertically center string and print it.
 		if messageToPrint != 0 {
 			let mut start = 0;
-			y = 100 - (M_StringHeight(messageString) / 2) as i16;
+			y = 100 - i16::try_from(M_StringHeight(messageString) / 2).unwrap();
 			while *messageString.wrapping_add(start) != 0 {
 				let mut i = 0;
 				for _ in 0..libc::strlen(messageString.wrapping_add(start)) {
-					if *(messageString.wrapping_add(start + i)) == b'\n' as c_char {
+					if *(messageString.wrapping_add(start + i)) == c_char::try_from(b'\n').unwrap()
+					{
 						string = [0; 40];
 						libc::strncpy(string.as_mut_ptr(), messageString.wrapping_add(start), i);
 						start += i + 1;
@@ -1516,8 +1739,12 @@ pub(crate) fn M_Drawer() {
 					start += i;
 				}
 
-				x = 160 - (M_StringWidth(string.as_ptr()) / 2) as i16;
-				M_WriteText(i16::max(x, 0) as usize, i16::max(y, 0) as usize, string.as_ptr());
+				x = 160 - i16::try_from(M_StringWidth(string.as_ptr()) / 2).unwrap();
+				M_WriteText(
+					usize::try_from(i16::max(x, 0)).unwrap(),
+					usize::try_from(i16::max(y, 0)).unwrap(),
+					string.as_ptr(),
+				);
 				y += (*hu_font[0]).height;
 			}
 			return;
@@ -1534,11 +1761,11 @@ pub(crate) fn M_Drawer() {
 		y = (*currentMenu).y;
 		let max = (*currentMenu).numitems;
 
-		for i in 0..max as usize {
+		for i in 0..usize::try_from(max).unwrap() {
 			if (*(*currentMenu).menuitems.wrapping_add(i)).name[0] != 0 {
 				V_DrawPatchDirect(
-					x as usize,
-					y as usize,
+					usize::try_from(x).unwrap(),
+					usize::try_from(y).unwrap(),
 					0,
 					W_CacheLumpName(
 						(*(*currentMenu).menuitems.wrapping_add(i)).name.as_ptr().cast(),
@@ -1547,15 +1774,20 @@ pub(crate) fn M_Drawer() {
 					.cast(),
 				);
 			}
-			y += LINEHEIGHT as i16;
+			y += i16::try_from(LINEHEIGHT).unwrap();
 		}
 
 		// DRAW SKULL
 		V_DrawPatchDirect(
-			(x as usize).wrapping_add_signed(SKULLXOFF),
-			(*currentMenu).y as usize - 5 + itemOn as usize * LINEHEIGHT,
+			usize::try_from(x).unwrap().wrapping_add_signed(SKULLXOFF),
+			usize::try_from((*currentMenu).y).unwrap() - 5
+				+ usize::try_from(itemOn).unwrap() * LINEHEIGHT,
 			0,
-			W_CacheLumpName(skullName[whichSkull as usize].as_ptr().cast(), PU_CACHE).cast(),
+			W_CacheLumpName(
+				skullName[usize::try_from(whichSkull).unwrap()].as_ptr().cast(),
+				PU_CACHE,
+			)
+			.cast(),
 		);
 	}
 }
@@ -1610,7 +1842,7 @@ pub(crate) fn M_Init() {
 			// This is used because DOOM 2 had only one HELP
 			//  page. I use CREDIT as second page now, but
 			//  kept this hack for educational purposes.
-			MainMenu[main_e::readthis as usize] = MainMenu[main_e::quitdoom as usize];
+			MainMenu[usize::from(main_e::readthis)] = MainMenu[usize::from(main_e::quitdoom)];
 			MainDef.numitems-=1;
 			MainDef.y += 8;
 			NewDef.prevMenu = &raw mut MainDef;

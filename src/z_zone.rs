@@ -1,6 +1,9 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, ptr::null_mut};
+use std::{
+	ffi::c_void,
+	ptr::{self, null_mut},
+};
 
 use crate::i_system::{I_Error, I_ZoneBase};
 
@@ -31,8 +34,9 @@ pub struct memblock_t {
 // prior to really call the function in question.
 macro_rules! Z_ChangeTag {
 	($p:expr, $t: expr) => {
-		let block = $p.wrapping_byte_sub(size_of::<$crate::z_zone::memblock_t>())
-			as *mut $crate::z_zone::memblock_t;
+		let block = $p
+			.wrapping_byte_sub(size_of::<$crate::z_zone::memblock_t>())
+			.cast::<$crate::z_zone::memblock_t>();
 		if (*block).id != 0x1d4a11 {
 			crate::i_system::I_Error(
 				concat!("Z_CT at ", file!(), ":%i", line!(), "\0").as_ptr().cast(),
@@ -77,7 +81,7 @@ fn Z_ClearZone(zone: *mut memzone_t) {
 		zone.blocklist.next = block;
 		zone.blocklist.prev = block;
 
-		zone.blocklist.user = zone as *mut memzone_t as *mut *mut c_void;
+		zone.blocklist.user = ptr::from_mut(zone).cast();
 		zone.blocklist.tag = PU_STATIC;
 		zone.rover = block;
 
@@ -109,13 +113,13 @@ pub(crate) fn Z_Init() {
 #[unsafe(no_mangle)]
 pub extern "C" fn Z_Free(ptr: *mut c_void) {
 	unsafe {
-		let mut block = &mut *(ptr.wrapping_byte_sub(size_of::<memblock_t>()) as *mut memblock_t);
+		let mut block = &mut *(ptr.wrapping_byte_sub(size_of::<memblock_t>()).cast::<memblock_t>());
 
 		if block.id != ZONEID {
 			I_Error(c"Z_Free: freed a pointer without ZONEID".as_ptr());
 		}
 
-		if block.user as usize > 0x100 {
+		if block.user.addr() > 0x100 {
 			// smaller values are not pointers
 			// Note: OS-dependend?
 
@@ -208,7 +212,7 @@ pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c
 
 					// the rover can be the base block
 					base = (*base).prev;
-					Z_Free((rover as *mut c_void).wrapping_byte_add(size_of::<memblock_t>()));
+					Z_Free(rover.wrapping_byte_add(size_of::<memblock_t>()).cast());
 					base = (*base).next;
 					rover = (*base).next;
 				}
@@ -241,9 +245,8 @@ pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c
 
 		if !user.is_null() {
 			// mark as an in use block
-			(*base).user = user as *mut *mut c_void;
-			*(user as *mut *mut c_void) =
-				(base.wrapping_byte_add(size_of::<memblock_t>())) as *mut c_void;
+			(*base).user = user.cast();
+			*user.cast::<*mut c_void>() = (base.wrapping_byte_add(size_of::<memblock_t>())).cast();
 		} else {
 			if tag >= PU_PURGELEVEL {
 				I_Error(c"Z_Malloc: an owner is required for purgable blocks".as_ptr());
@@ -252,7 +255,7 @@ pub extern "C" fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c
 			// mark as in use, but unowned
 			#[allow(clippy::manual_dangling_ptr)]
 			{
-				(*base).user = 2 as *mut *mut c_void;
+				(*base).user = ptr::without_provenance_mut(2);
 			}
 		}
 		(*base).tag = tag;
@@ -314,13 +317,13 @@ pub(crate) fn Z_CheckHeap() {
 #[unsafe(no_mangle)]
 pub extern "C" fn Z_ChangeTag2(ptr: *mut c_void, tag: usize) {
 	unsafe {
-		let block = ptr.wrapping_byte_sub(size_of::<memblock_t>()) as *mut memblock_t;
+		let block = ptr.wrapping_byte_sub(size_of::<memblock_t>()).cast::<memblock_t>();
 
 		if (*block).id != ZONEID {
 			I_Error(c"Z_ChangeTag: freed a pointer without ZONEID".as_ptr());
 		}
 
-		if tag >= PU_PURGELEVEL && ((*block).user as usize) < 0x100 {
+		if tag >= PU_PURGELEVEL && (*block).user.addr() < 0x100 {
 			I_Error(c"Z_ChangeTag: an owner is required for purgable blocks".as_ptr());
 		}
 

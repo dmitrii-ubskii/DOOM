@@ -63,7 +63,9 @@ const SP_TIMEY: usize = SCREENHEIGHT - 32;
 // NET GAME STUFF
 const NG_STATSY: usize = 50;
 fn NG_STATSX() -> usize {
-	unsafe { 32 + (*star).width as usize / 2 + 32 * if dofrags == 0 { 1 } else { 0 } }
+	unsafe {
+		32 + usize::try_from((*star).width).unwrap() / 2 + 32 * if dofrags == 0 { 1 } else { 0 }
+	}
 }
 
 const NG_SPACINGX: usize = 64;
@@ -657,12 +659,17 @@ fn WI_drawLF() {
 		let lname = *lnames.wrapping_add((*wbs).last);
 
 		// draw <LevelName>
-		V_DrawPatch((SCREENWIDTH - (*lname).width as usize) / 2, y, FB, lname);
+		V_DrawPatch((SCREENWIDTH - usize::try_from((*lname).width).unwrap()) / 2, y, FB, lname);
 
 		// draw "Finished!"
-		y += (5 * (*lname).height as usize) / 4;
+		y += (5 * usize::try_from((*lname).height).unwrap()) / 4;
 
-		V_DrawPatch((SCREENWIDTH - (*finished).width as usize) / 2, y, FB, finished);
+		V_DrawPatch(
+			(SCREENWIDTH - usize::try_from((*finished).width).unwrap()) / 2,
+			y,
+			FB,
+			finished,
+		);
 	}
 }
 
@@ -672,14 +679,19 @@ fn WI_drawEL() {
 		let mut y = WI_TITLEY;
 
 		// draw "Entering"
-		V_DrawPatch((SCREENWIDTH - (*entering).width as usize) / 2, y, FB, entering);
+		V_DrawPatch(
+			(SCREENWIDTH - usize::try_from((*entering).width).unwrap()) / 2,
+			y,
+			FB,
+			entering,
+		);
 
 		let lname = *lnames.wrapping_add((*wbs).next);
 
 		// draw level
-		y += (5 * (*lname).height as usize) / 4;
+		y += (5 * usize::try_from((*lname).height).unwrap()) / 4;
 
-		V_DrawPatch((SCREENWIDTH - (*lname).width as usize) / 2, y, FB, lname);
+		V_DrawPatch((SCREENWIDTH - usize::try_from((*lname).width).unwrap()) / 2, y, FB, lname);
 	}
 }
 
@@ -691,10 +703,12 @@ fn WI_drawOnLnode(n: usize, c: *mut *mut patch_t) {
 
 		let mut i = 0;
 		loop {
-			let left = lnodes[(*wbs).epsd][n].x.wrapping_sub(c(i).leftoffset as usize);
-			let top = lnodes[(*wbs).epsd][n].y.wrapping_sub(c(i).topoffset as usize);
-			let right = left + (c(i).width as usize);
-			let bottom = top + (c(i).height as usize);
+			let left =
+				lnodes[(*wbs).epsd][n].x.wrapping_sub(usize::try_from(c(i).leftoffset).unwrap());
+			let top =
+				lnodes[(*wbs).epsd][n].y.wrapping_sub(usize::try_from(c(i).topoffset).unwrap());
+			let right = left + usize::try_from(c(i).width).unwrap();
+			let bottom = top + usize::try_from(c(i).height).unwrap();
 
 			if
 			/*left >= 0 &&*/
@@ -736,9 +750,12 @@ fn WI_initAnimatedBack() {
 
 			// specify the next time to draw it
 			match a.ty {
-				animenum_t::ANIM_ALWAYS => a.nexttic = bcnt + 1 + (M_Random() as usize % a.period),
+				animenum_t::ANIM_ALWAYS => {
+					a.nexttic = bcnt + 1 + (usize::try_from(M_Random()).unwrap() % a.period)
+				}
 				animenum_t::ANIM_RANDOM => {
-					a.nexttic = bcnt + 1 + a.data2 + (M_Random() as usize % a.data1)
+					a.nexttic =
+						bcnt + 1 + a.data2 + (usize::try_from(M_Random()).unwrap() % a.data1)
 				}
 				animenum_t::ANIM_LEVEL => a.nexttic = bcnt + 1,
 			}
@@ -763,7 +780,7 @@ fn WI_updateAnimatedBack() {
 				match a.ty {
 					animenum_t::ANIM_ALWAYS => {
 						a.ctr += 1;
-						if a.ctr >= a.nanims as i32 {
+						if a.ctr >= i32::try_from(a.nanims).unwrap() {
 							a.ctr = 0;
 						}
 						a.nexttic = bcnt + a.period;
@@ -771,9 +788,10 @@ fn WI_updateAnimatedBack() {
 
 					animenum_t::ANIM_RANDOM => {
 						a.ctr += 1;
-						if a.ctr == a.nanims as i32 {
+						if a.ctr == i32::try_from(a.nanims).unwrap() {
 							a.ctr = -1;
-							a.nexttic = bcnt + a.data2 + (M_Random() as usize % a.data1);
+							a.nexttic =
+								bcnt + a.data2 + (usize::try_from(M_Random()).unwrap() % a.data1);
 						} else {
 							a.nexttic = bcnt + a.period;
 						}
@@ -782,7 +800,7 @@ fn WI_updateAnimatedBack() {
 						// gawd-awful hack for level anims
 						if !(state == stateenum_t::StatCount && i == 7) && (*wbs).next == a.data1 {
 							a.ctr += 1;
-							if a.ctr == a.nanims as i32 {
+							if a.ctr == i32::try_from(a.nanims).unwrap() {
 								a.ctr -= 1;
 							}
 							a.nexttic = bcnt + a.period;
@@ -808,7 +826,7 @@ fn WI_drawAnimatedBack() {
 			let a = &mut *anims[(*wbs).epsd].wrapping_add(i);
 
 			if a.ctr >= 0 {
-				V_DrawPatch(a.loc.x, a.loc.y, FB, a.p[a.ctr as usize]);
+				V_DrawPatch(a.loc.x, a.loc.y, FB, a.p[usize::try_from(a.ctr).unwrap()]);
 			}
 		}
 	}
@@ -851,8 +869,8 @@ fn WI_drawNum(mut x: usize, y: usize, mut n: i32, mut digits: i32) -> usize {
 		// draw the new number
 		while digits > 0 {
 			digits -= 1;
-			x -= fontwidth as usize;
-			V_DrawPatch(x, y, FB, num[n as usize % 10]);
+			x -= usize::try_from(fontwidth).unwrap();
+			V_DrawPatch(x, y, FB, num[usize::try_from(n).unwrap() % 10]);
 			n /= 10;
 		}
 
@@ -888,7 +906,7 @@ fn WI_drawTime(mut x: usize, y: usize, t: i32) {
 
 			loop {
 				let n = (t / div) % 60;
-				x = WI_drawNum(x, y, n, 2) - (*colon).width as usize;
+				x = WI_drawNum(x, y, n, 2) - usize::try_from((*colon).width).unwrap();
 				div *= 60;
 
 				// draw
@@ -902,7 +920,7 @@ fn WI_drawTime(mut x: usize, y: usize, t: i32) {
 			}
 		} else {
 			// "sucks"
-			V_DrawPatch(x - (*sucks).width as usize, y, FB, sucks);
+			V_DrawPatch(x - usize::try_from((*sucks).width).unwrap(), y, FB, sucks);
 		}
 	}
 }
@@ -1137,7 +1155,7 @@ fn WI_drawDeathmatchStats() {
 
 		// draw stat titles (top line)
 		V_DrawPatch(
-			DM_TOTALSX - (*total).width as usize / 2,
+			DM_TOTALSX - usize::try_from((*total).width).unwrap() / 2,
 			DM_MATRIXY - WI_SPACINGY + 10,
 			FB,
 			total,
@@ -1152,19 +1170,29 @@ fn WI_drawDeathmatchStats() {
 
 		for i in 0..MAXPLAYERS {
 			if playeringame[i] != 0 {
-				V_DrawPatch(x - (*p[i]).width as usize / 2, DM_MATRIXY - WI_SPACINGY, FB, p[i]);
+				V_DrawPatch(
+					x - usize::try_from((*p[i]).width).unwrap() / 2,
+					DM_MATRIXY - WI_SPACINGY,
+					FB,
+					p[i],
+				);
 
-				V_DrawPatch(DM_MATRIXX - (*p[i]).width as usize / 2, y, FB, p[i]);
+				V_DrawPatch(DM_MATRIXX - usize::try_from((*p[i]).width).unwrap() / 2, y, FB, p[i]);
 
 				if i == me {
 					V_DrawPatch(
-						x - (*p[i]).width as usize / 2,
+						x - usize::try_from((*p[i]).width).unwrap() / 2,
 						DM_MATRIXY - WI_SPACINGY,
 						FB,
 						bstar,
 					);
 
-					V_DrawPatch(DM_MATRIXX - (*p[i]).width as usize / 2, y, FB, star);
+					V_DrawPatch(
+						DM_MATRIXX - usize::try_from((*p[i]).width).unwrap() / 2,
+						y,
+						FB,
+						star,
+					);
 				}
 			} else {
 				// V_DrawPatch(x-(bp[i].width)/2,
@@ -1178,7 +1206,7 @@ fn WI_drawDeathmatchStats() {
 
 		// draw stats
 		y = DM_MATRIXY + 10;
-		let w = (*num[0]).width as usize;
+		let w = usize::try_from((*num[0]).width).unwrap();
 
 		for i in 0..MAXPLAYERS {
 			x = DM_MATRIXX + DM_SPACINGX;
@@ -1377,7 +1405,7 @@ fn WI_updateNetgameStats() {
 
 fn WI_drawNetgameStats() {
 	unsafe {
-		let pwidth = (*percent).width as usize;
+		let pwidth = usize::try_from((*percent).width).unwrap();
 
 		WI_slamBackground();
 
@@ -1387,10 +1415,20 @@ fn WI_drawNetgameStats() {
 		WI_drawLF();
 
 		// draw stat titles (top line)
-		V_DrawPatch(NG_STATSX() + NG_SPACINGX - (*kills).width as usize, NG_STATSY, FB, kills);
-		V_DrawPatch(NG_STATSX() + 2 * NG_SPACINGX - (*items).width as usize, NG_STATSY, FB, items);
 		V_DrawPatch(
-			NG_STATSX() + 3 * NG_SPACINGX - (*secret).width as usize,
+			NG_STATSX() + NG_SPACINGX - usize::try_from((*kills).width).unwrap(),
+			NG_STATSY,
+			FB,
+			kills,
+		);
+		V_DrawPatch(
+			NG_STATSX() + 2 * NG_SPACINGX - usize::try_from((*items).width).unwrap(),
+			NG_STATSY,
+			FB,
+			items,
+		);
+		V_DrawPatch(
+			NG_STATSX() + 3 * NG_SPACINGX - usize::try_from((*secret).width).unwrap(),
 			NG_STATSY,
 			FB,
 			secret,
@@ -1398,7 +1436,7 @@ fn WI_drawNetgameStats() {
 
 		if dofrags != 0 {
 			V_DrawPatch(
-				NG_STATSX() + 4 * NG_SPACINGX - (*frags).width as usize,
+				NG_STATSX() + 4 * NG_SPACINGX - usize::try_from((*frags).width).unwrap(),
 				NG_STATSY,
 				FB,
 				frags,
@@ -1406,7 +1444,7 @@ fn WI_drawNetgameStats() {
 		}
 
 		// draw stats
-		let mut y = NG_STATSY + (*kills).height as usize;
+		let mut y = NG_STATSY + usize::try_from((*kills).height).unwrap();
 
 		for i in 0..MAXPLAYERS {
 			if playeringame[i] == 0 {
@@ -1414,10 +1452,10 @@ fn WI_drawNetgameStats() {
 			}
 
 			let mut x = NG_STATSX();
-			V_DrawPatch(x - (*p[i]).width as usize, y, FB, p[i]);
+			V_DrawPatch(x - usize::try_from((*p[i]).width).unwrap(), y, FB, p[i]);
 
 			if i == me {
-				V_DrawPatch(x - (*p[i]).width as usize, y, FB, star);
+				V_DrawPatch(x - usize::try_from((*p[i]).width).unwrap(), y, FB, star);
 			}
 
 			x += NG_SPACINGX;
@@ -1464,8 +1502,8 @@ fn WI_updateStats() {
 			cnt_kills[0] = (*plrs.wrapping_add(me)).skills * 100 / (*wbs).maxkills;
 			cnt_items[0] = (*plrs.wrapping_add(me)).sitems * 100 / (*wbs).maxitems;
 			cnt_secret[0] = (*plrs.wrapping_add(me)).ssecret * 100 / (*wbs).maxsecret;
-			cnt_time = ((*plrs.wrapping_add(me)).stime / TICRATE) as i32;
-			cnt_par = ((*wbs).partime / TICRATE) as i32;
+			cnt_time = i32::try_from((*plrs.wrapping_add(me)).stime / TICRATE).unwrap();
+			cnt_par = i32::try_from((*wbs).partime / TICRATE).unwrap();
 			S_StartSound(null_mut(), sfxenum_t::sfx_barexp);
 			sp_state = 10;
 		}
@@ -1513,16 +1551,16 @@ fn WI_updateStats() {
 
 			cnt_time += 3;
 
-			if cnt_time >= ((*plrs.wrapping_add(me)).stime / TICRATE) as i32 {
-				cnt_time = ((*plrs.wrapping_add(me)).stime / TICRATE) as i32;
+			if cnt_time >= i32::try_from((*plrs.wrapping_add(me)).stime / TICRATE).unwrap() {
+				cnt_time = i32::try_from((*plrs.wrapping_add(me)).stime / TICRATE).unwrap();
 			}
 
 			cnt_par += 3;
 
-			if cnt_par >= ((*wbs).partime / TICRATE) as i32 {
-				cnt_par = ((*wbs).partime / TICRATE) as i32;
+			if cnt_par >= i32::try_from((*wbs).partime / TICRATE).unwrap() {
+				cnt_par = i32::try_from((*wbs).partime / TICRATE).unwrap();
 
-				if cnt_time >= ((*plrs.wrapping_add(me)).stime / TICRATE) as i32 {
+				if cnt_time >= i32::try_from((*plrs.wrapping_add(me)).stime / TICRATE).unwrap() {
 					S_StartSound(null_mut(), sfxenum_t::sfx_barexp);
 					sp_state += 1;
 				}
@@ -1550,7 +1588,7 @@ fn WI_updateStats() {
 fn WI_drawStats() {
 	unsafe {
 		// line height
-		let lh = 3 * (*num[0]).height as usize / 2;
+		let lh = 3 * usize::try_from((*num[0]).height).unwrap() / 2;
 
 		WI_slamBackground();
 

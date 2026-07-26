@@ -1,7 +1,8 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
+use std::ptr;
+
 use crate::{
-	d_think::thinker_t,
 	info::mobjtype_t,
 	p_local::thinkercap,
 	p_map::P_TeleportMove,
@@ -39,7 +40,7 @@ pub unsafe fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) ->
 						continue;
 					}
 
-					let m = &mut *(thinker as *mut thinker_t as *mut mobj_t);
+					let m = &mut *(ptr::from_mut(thinker).cast::<mobj_t>());
 
 					// not a teleportman
 					if m.ty != mobjtype_t::MT_TELEPORTMAN {
@@ -49,7 +50,7 @@ pub unsafe fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) ->
 
 					let sector = (*m.subsector).sector;
 					// wrong sectori32
-					if sector.offset_from(sectors) != i as isize {
+					if sector.offset_from(sectors) != isize::try_from(i).unwrap() {
 						thinker = &mut *thinker.next;
 						continue;
 					}
@@ -70,7 +71,7 @@ pub unsafe fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) ->
 
 					// spawn teleport fog at source and destination
 					let mut fog = P_SpawnMobj(oldx, oldy, oldz, mobjtype_t::MT_TFOG);
-					S_StartSound(fog as _, sfxenum_t::sfx_telept);
+					S_StartSound(fog.cast(), sfxenum_t::sfx_telept);
 					let an = m.angle >> ANGLETOFINESHIFT;
 					fog = P_SpawnMobj(
 						m.x + 20 * finecos(an.0),
@@ -80,7 +81,7 @@ pub unsafe fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) ->
 					);
 
 					// emit sound, where?
-					S_StartSound(fog as _, sfxenum_t::sfx_telept);
+					S_StartSound(fog.cast(), sfxenum_t::sfx_telept);
 
 					// don't move for a bit
 					if !thing.player.is_null() {

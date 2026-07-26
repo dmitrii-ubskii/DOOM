@@ -10,6 +10,7 @@ use std::{
 use libc::{O_WRONLY, c_char, ioctl};
 
 use crate::{
+	const_conv::*,
 	doomdef::TICRATE,
 	g_game::gametic,
 	i_system::I_Error,
@@ -42,7 +43,7 @@ const SAMPLERATE: usize = 11025; // Hz
 const SAMPLESIZE: usize = 2; // 16bit
 
 // The actual lengths of all sound effects.
-static mut lengths: [usize; sfxenum_t::NUMSFX as usize] = [0; sfxenum_t::NUMSFX as usize];
+static mut lengths: [usize; sfxenum_t::NUMSFX.to_usize()] = [0; sfxenum_t::NUMSFX.to_usize()];
 
 // The actual output device.
 static mut audio_fd: i32 = 0;
@@ -120,9 +121,9 @@ fn getsfx(sfxname: *const c_char, len: *mut usize) -> *mut c_void {
 		//  variable. Instead, we will use a
 		//  default sound for replacement.
 		let sfxlump = if W_CheckNumForName(name.as_ptr()) == -1 {
-			W_GetNumForName(c"dspistol".as_ptr()) as usize
+			usize::try_from(W_GetNumForName(c"dspistol".as_ptr())).unwrap()
 		} else {
-			W_GetNumForName(name.as_ptr()) as usize
+			usize::try_from(W_GetNumForName(name.as_ptr())).unwrap()
 		};
 
 		let size = W_LumpLength(sfxlump);
@@ -214,9 +215,9 @@ fn addsfx(sfxid: sfxenum_t, volume: u32, step: u32, mut seperation: i32) -> i32 
 		// Okay, in the less recent channel,
 		//  we will handle the new SFX.
 		// Set pointer to raw data.
-		channels[slot] = S_sfx[sfxid as usize].data.cast();
+		channels[slot] = S_sfx[usize::from(sfxid)].data.cast();
 		// Set pointer to end of raw data.
-		channelsend[slot] = channels[slot].wrapping_add(lengths[sfxid as usize]);
+		channelsend[slot] = channels[slot].wrapping_add(lengths[usize::from(sfxid)]);
 
 		// Reset current handle number, limited to 0..100.
 		if handlenums == 0 {
@@ -259,15 +260,16 @@ fn addsfx(sfxid: sfxenum_t, volume: u32, step: u32, mut seperation: i32) -> i32 
 
 		// Get the proper lookup table piece
 		//  for this volume level???
-		channelleftvol_lookup[slot] = &raw mut vol_lookup[leftvol as usize * 256];
-		channelrightvol_lookup[slot] = &raw mut vol_lookup[rightvol as usize * 256];
+		channelleftvol_lookup[slot] = &raw mut vol_lookup[usize::try_from(leftvol).unwrap() * 256];
+		channelrightvol_lookup[slot] =
+			&raw mut vol_lookup[usize::try_from(rightvol).unwrap() * 256];
 
 		// Preserve sound SFX id,
 		//  e.g. for avoiding duplicates of chainsaw.
 		channelids[slot] = sfxid;
 
 		// You tell me.
-		rc as i32
+		i32::from(rc)
 	}
 }
 
@@ -288,6 +290,7 @@ pub fn I_SetChannels() {
 
 		// This table provides step widths for pitch parameters.
 		// I fail to see that this is currently used.
+		#[allow(clippy::as_conversions)]
 		for i in -128..128 {
 			*steptablemid.offset(i) = (f32::powf(2.0, i as f32 / 64.0) * 65536.0) as u32;
 		}
@@ -297,7 +300,7 @@ pub fn I_SetChannels() {
 		//  into signed samples.
 		for i in 0..128 {
 			for j in 0..256 {
-				vol_lookup[(i * 256 + j) as usize] = (i * (j - 128) * 256) / 127;
+				vol_lookup[usize::try_from(i * 256 + j).unwrap()] = (i * (j - 128) * 256) / 127;
 			}
 		}
 	}
@@ -332,7 +335,7 @@ pub unsafe fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> isize {
 // Pitching (that is, increased speed of playback)
 //  is set, but currently not used by mixing.
 pub fn I_StartSound(id: sfxenum_t, vol: u32, sep: i32, pitch: i32, _priority: i32) -> i32 {
-	unsafe { addsfx(id, vol, steptable[pitch as usize], sep) }
+	unsafe { addsfx(id, vol, steptable[usize::try_from(pitch).unwrap()], sep) }
 }
 
 pub fn I_StopSound(_handle: i32) {
@@ -389,7 +392,7 @@ pub fn I_UpdateSound() {
 				// Check channel, if active.
 				if !channels[chan].is_null() {
 					// Get the raw data from the channel.
-					let sample = *channels[chan] as usize;
+					let sample = usize::from(*channels[chan]);
 					// Add left and right part
 					//  for this channel (sound)
 					//  to the current data.
@@ -399,8 +402,8 @@ pub fn I_UpdateSound() {
 					// Increment index ???
 					channelstepremainder[chan] += channelstep[chan];
 					// MSB is next sample???
-					channels[chan] =
-						channels[chan].wrapping_add(channelstepremainder[chan] as usize >> 16);
+					channels[chan] = channels[chan]
+						.wrapping_add(usize::try_from(channelstepremainder[chan]).unwrap() >> 16);
 					// Limit to LSB???
 					channelstepremainder[chan] &= 65536 - 1;
 
@@ -422,7 +425,7 @@ pub fn I_UpdateSound() {
 			} else if dl < -0x8000 {
 				*leftout = -0x8000;
 			} else {
-				*leftout = dl as i16;
+				*leftout = i16::try_from(dl).unwrap();
 			}
 
 			// Same for right hardware channel.
@@ -431,7 +434,7 @@ pub fn I_UpdateSound() {
 			} else if dr < -0x8000 {
 				*rightout = -0x8000;
 			} else {
-				*rightout = dr as i16;
+				*rightout = i16::try_from(dr).unwrap();
 			}
 
 			// Increment current pointers in mixbuffer.
@@ -504,17 +507,23 @@ pub fn I_InitSound() {
 		const SIOC_INOUT: u32 = SIOC_IN | SIOC_OUT;
 		macro_rules! _SIO {
 			($x:literal, $y:literal) => {
-				SIOC_VOID | ($x as u32) << 8 | $y as u32
+				SIOC_VOID | u32_from_u8($x) << 8 | u32_from_u8($y)
 			};
 		}
 		macro_rules! _SIOR {
 			($x:literal, $y:literal, $t:ty) => {
-				SIOC_OUT | ((size_of::<$t>() as u32) << 16) | ($x as u32) << 8 | $y as u32
+				SIOC_OUT
+					| u32_from_usize(size_of::<$t>()) << 16
+					| u32_from_u8($x) << 8
+					| u32_from_u8($y)
 			};
 		}
 		macro_rules! _SIOWR {
 			($x:literal, $y:literal, $t:ty) => {
-				SIOC_INOUT | ((size_of::<$t>() as u32) << 16) | ($x as u32) << 8 | $y as u32
+				SIOC_INOUT
+					| u32_from_usize(size_of::<$t>()) << 16
+					| u32_from_u8($x) << 8
+					| u32_from_u8($y)
 			};
 		}
 		const SNDCTL_DSP_SETFRAGMENT: u32 = _SIOWR!(b'P', 10, c_int);
@@ -542,7 +551,7 @@ pub fn I_InitSound() {
 		myioctl(audio_fd, SNDCTL_DSP_SETFRAGMENT, &raw mut i);
 		myioctl(audio_fd, SNDCTL_DSP_RESET, null_mut());
 
-		let mut i = SAMPLERATE as i32;
+		let mut i = i32::try_from(SAMPLERATE).unwrap();
 
 		myioctl(audio_fd, SNDCTL_DSP_SPEED, &raw mut i);
 
@@ -563,7 +572,7 @@ pub fn I_InitSound() {
 		// Initialize external data (all sounds) at start, keep static.
 		eprint!("I_InitSound: ");
 
-		for i in 1..sfxenum_t::NUMSFX as usize {
+		for i in 1..usize::from(sfxenum_t::NUMSFX) {
 			// Alias? Example is the chaingun sound linked to pistol.
 			if S_sfx[i].link.is_null() {
 				// Load data from WAD file.
@@ -571,8 +580,8 @@ pub fn I_InitSound() {
 			} else {
 				// Previously loaded already?
 				S_sfx[i].data = (*S_sfx[i].link).data;
-				lengths[i] = lengths
-					[(S_sfx[i].link.offset_from(S_sfx.as_ptr())) as usize / size_of::<sfxinfo_t>()];
+				lengths[i] = lengths[usize::try_from(S_sfx[i].link.offset_from(S_sfx.as_ptr()))
+					.unwrap() / size_of::<sfxinfo_t>()];
 			}
 		}
 
@@ -595,7 +604,7 @@ static mut looping: bool = false;
 static mut musicdies: i32 = -1;
 
 pub fn I_PlaySong(_handle: i32, _loops: bool) {
-	unsafe { musicdies = gametic + TICRATE as i32 * 30 }
+	unsafe { musicdies = gametic + i32::try_from(TICRATE).unwrap() * 30 }
 }
 
 pub fn I_PauseSong(_handle: i32) {}
@@ -649,7 +658,7 @@ fn I_HandleSoundTimer(_: i32) {
 fn I_SoundSetTimer(duration_of_tick: i32) -> i32 {
 	std::thread::spawn(move || {
 		loop {
-			std::thread::sleep(Duration::from_micros(duration_of_tick as u64));
+			std::thread::sleep(Duration::from_micros(u64::try_from(duration_of_tick).unwrap()));
 			I_HandleSoundTimer(0);
 		}
 	});

@@ -187,7 +187,8 @@ pub fn F_Ticker() {
 		}
 
 		if finalestage == 0
-			&& finalecount as usize > libc::strlen(finaletext) * TEXTSPEED + TEXTWAIT
+			&& usize::try_from(finalecount).unwrap()
+				> libc::strlen(finaletext) * TEXTSPEED + TEXTWAIT
 		{
 			finalecount = 0;
 			finalestage = 1;
@@ -224,12 +225,12 @@ fn F_TextWrite() {
 		let mut cy = 10;
 		let mut ch = finaletext;
 
-		let mut count = (finalecount - 10) / TEXTSPEED as i32;
+		let mut count = (finalecount - 10) / i32::try_from(TEXTSPEED).unwrap();
 		if count < 0 {
 			count = 0;
 		}
 		while count != 0 {
-			let c = *ch as u8;
+			let c = u8::try_from(*ch).unwrap();
 			ch = ch.wrapping_add(1);
 			if c == 0 {
 				break;
@@ -248,11 +249,11 @@ fn F_TextWrite() {
 				continue;
 			}
 
-			let w = (*hu_font[c as usize]).width;
-			if cx + w > SCREENWIDTH as i16 {
+			let w = (*hu_font[usize::from(c)]).width;
+			if cx + w > i16::try_from(SCREENWIDTH).unwrap() {
 				break;
 			}
-			V_DrawPatch(cx as usize, cy, 0, hu_font[c as usize]);
+			V_DrawPatch(usize::try_from(cx).unwrap(), cy, 0, hu_font[usize::from(c)]);
 			cx += w;
 			count -= 1;
 		}
@@ -301,7 +302,8 @@ fn F_StartCast() {
 	unsafe {
 		wipegamestate = gamestate_t::None; // force a screen wipe
 		castnum = 0;
-		caststate = &raw mut states[mobjinfo[castorder[castnum].ty as usize].seestate as usize];
+		caststate =
+			&raw mut states[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].seestate)];
 		casttics = (*caststate).tics;
 		castdeath = false;
 		finalestage = 2;
@@ -327,19 +329,20 @@ fn F_CastTicker() {
 			if castorder[castnum].name.is_null() {
 				castnum = 0;
 			}
-			if mobjinfo[castorder[castnum].ty as usize].seesound == sfxenum_t::sfx_None {
-				S_StartSound(null_mut(), mobjinfo[castorder[castnum].ty as usize].seesound);
+			if mobjinfo[usize::from(castorder[castnum].ty)].seesound == sfxenum_t::sfx_None {
+				S_StartSound(null_mut(), mobjinfo[usize::from(castorder[castnum].ty)].seesound);
 			}
-			caststate = &raw mut states[mobjinfo[castorder[castnum].ty as usize].seestate as usize];
+			caststate =
+				&raw mut states[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].seestate)];
 			castframes = 0;
 		} else {
 			// just advance to next state in animation
-			if caststate == &raw mut states[statenum_t::S_PLAY_ATK1 as usize] {
+			if caststate == &raw mut states[usize::from(statenum_t::S_PLAY_ATK1)] {
 				// Oh, gross hack!
 				castattacking = false;
 				castframes = 0;
-				caststate =
-					&raw mut states[mobjinfo[castorder[castnum].ty as usize].seestate as usize];
+				caststate = &raw mut states
+					[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].seestate)];
 				casttics = (*caststate).tics;
 				if casttics == -1 {
 					casttics = 15;
@@ -347,7 +350,7 @@ fn F_CastTicker() {
 				return;
 			}
 			let st = (*caststate).nextstate;
-			caststate = &raw mut states[st as usize];
+			caststate = &raw mut states[usize::from(st)];
 			castframes += 1;
 
 			// sound hacks....
@@ -389,20 +392,20 @@ fn F_CastTicker() {
 			// go into attack frame
 			castattacking = true;
 			if castonmelee {
-				caststate =
-					&raw mut states[mobjinfo[castorder[castnum].ty as usize].meleestate as usize];
+				caststate = &raw mut states
+					[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].meleestate)];
 			} else {
-				caststate =
-					&raw mut states[mobjinfo[castorder[castnum].ty as usize].missilestate as usize];
+				caststate = &raw mut states
+					[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].missilestate)];
 			}
 			castonmelee = !castonmelee;
-			if caststate == &raw mut states[statenum_t::S_NULL as usize] {
+			if caststate == &raw mut states[usize::from(statenum_t::S_NULL)] {
 				if castonmelee {
 					caststate = &raw mut states
-						[mobjinfo[castorder[castnum].ty as usize].meleestate as usize];
+						[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].meleestate)];
 				} else {
 					caststate = &raw mut states
-						[mobjinfo[castorder[castnum].ty as usize].missilestate as usize];
+						[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].missilestate)];
 				}
 			}
 		}
@@ -410,12 +413,13 @@ fn F_CastTicker() {
 		if castattacking {
 			if castframes == 24
 				|| caststate
-					== &raw mut states[mobjinfo[castorder[castnum].ty as usize].seestate as usize]
+					== &raw mut states
+						[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].seestate)]
 			{
 				castattacking = false;
 				castframes = 0;
-				caststate =
-					&raw mut states[mobjinfo[castorder[castnum].ty as usize].seestate as usize];
+				caststate = &raw mut states
+					[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].seestate)];
 			}
 		}
 
@@ -439,12 +443,13 @@ fn F_CastResponder(ev: *mut event_t) -> bool {
 
 		// go into death frame
 		castdeath = true;
-		caststate = &raw mut states[mobjinfo[castorder[castnum].ty as usize].deathstate as usize];
+		caststate =
+			&raw mut states[usize::from(mobjinfo[usize::from(castorder[castnum].ty)].deathstate)];
 		casttics = (*caststate).tics;
 		castframes = 0;
 		castattacking = false;
-		if mobjinfo[castorder[castnum].ty as usize].deathsound != sfxenum_t::sfx_None {
-			S_StartSound(null_mut(), mobjinfo[castorder[castnum].ty as usize].deathsound);
+		if mobjinfo[usize::from(castorder[castnum].ty)].deathsound != sfxenum_t::sfx_None {
+			S_StartSound(null_mut(), mobjinfo[usize::from(castorder[castnum].ty)].deathsound);
 		}
 
 		true
@@ -458,7 +463,7 @@ fn F_CastPrint(text: *const c_char) {
 		let mut width = 0;
 
 		while !ch.is_null() {
-			let mut c = *ch as u8;
+			let mut c = u8::try_from(*ch).unwrap();
 			ch = ch.wrapping_add(1);
 			if c == 0 {
 				break;
@@ -469,7 +474,7 @@ fn F_CastPrint(text: *const c_char) {
 				continue;
 			}
 
-			let w = (*hu_font[c as usize]).width;
+			let w = (*hu_font[usize::from(c)]).width;
 			width += w;
 		}
 
@@ -477,7 +482,7 @@ fn F_CastPrint(text: *const c_char) {
 		let mut ch = text;
 		let mut cx = 160 - width / 2;
 		while !ch.is_null() {
-			let mut c = *ch as u8;
+			let mut c = u8::try_from(*ch).unwrap();
 			ch = ch.wrapping_add(1);
 			if c == 0 {
 				break;
@@ -488,8 +493,8 @@ fn F_CastPrint(text: *const c_char) {
 				continue;
 			}
 
-			let w = (*hu_font[c as usize]).width;
-			V_DrawPatch(cx as usize, 180, 0, hu_font[c as usize]);
+			let w = (*hu_font[usize::from(c)]).width;
+			V_DrawPatch(usize::try_from(cx).unwrap(), 180, 0, hu_font[usize::from(c)]);
 			cx += w;
 		}
 	}
@@ -504,12 +509,13 @@ fn F_CastDrawer() {
 		F_CastPrint(castorder[castnum].name);
 
 		// draw the current frame in the middle of the screen
-		let sprdef = sprites.wrapping_add((*caststate).sprite as usize);
+		let sprdef = sprites.wrapping_add(usize::from((*caststate).sprite));
 		let sprframe = (*sprdef).spriteframes.wrapping_add((*caststate).frame & FF_FRAMEMASK);
 		let lump = (*sprframe).lump[0];
 		let flip = (*sprframe).flip[0] != 0;
 
-		let patch = W_CacheLumpNum(lump as usize + firstspritelump, PU_CACHE).cast();
+		let patch =
+			W_CacheLumpNum(usize::try_from(lump).unwrap() + firstspritelump, PU_CACHE).cast();
 		if flip {
 			V_DrawPatchFlipped(160, 170, 0, patch);
 		} else {
@@ -525,7 +531,7 @@ fn F_DrawPatchCol(x: usize, patch: *mut patch_t, col: usize) {
 		let desttop = screens[0].wrapping_add(x);
 		while (*column).topdelta != 0xff {
 			let mut source = column.cast::<u8>().wrapping_add(3);
-			let mut dest = desttop.wrapping_add((*column).topdelta as usize * SCREENWIDTH);
+			let mut dest = desttop.wrapping_add(usize::from((*column).topdelta) * SCREENWIDTH);
 			let mut count = (*column).length;
 			while count != 0 {
 				*dest = *source;
@@ -533,7 +539,7 @@ fn F_DrawPatchCol(x: usize, patch: *mut patch_t, col: usize) {
 				dest = dest.wrapping_add(SCREENWIDTH);
 				count -= 1;
 			}
-			column = column.wrapping_byte_add((*column).length as usize + 4);
+			column = column.wrapping_byte_add(usize::from((*column).length) + 4);
 		}
 	}
 }
@@ -548,7 +554,7 @@ fn F_BunnyScroll() {
 
 		V_MarkRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
-		let scrolled = (320 - (finalecount - 230) / 2).clamp(0, 320) as usize;
+		let scrolled = usize::try_from((320 - (finalecount - 230) / 2).clamp(0, 320)).unwrap();
 
 		for x in 0..SCREENWIDTH {
 			if x + scrolled < 320 {

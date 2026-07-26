@@ -11,6 +11,17 @@ pub enum evtype_t {
 	ev_joystick,
 }
 
+impl evtype_t {
+	pub const fn as_i32(self) -> i32 {
+		match self {
+			Self::ev_keydown => 0,
+			Self::ev_keyup => 1,
+			Self::ev_mouse => 2,
+			Self::ev_joystick => 3,
+		}
+	}
+}
+
 // Event structure.
 #[repr(C)]
 #[derive(Clone, Copy)]

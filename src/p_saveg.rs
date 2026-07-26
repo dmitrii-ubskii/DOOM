@@ -14,7 +14,7 @@ use crate::{
 	doomdef::MAXPLAYERS,
 	g_game::{playeringame, players},
 	i_system::I_Error,
-	info::{mobjinfo, state_t, states},
+	info::{mobjinfo, states},
 	m_fixed::FRACBITS,
 	p_ceiling::{P_AddActiveCeiling, activeceilings},
 	p_local::thinkercap,
@@ -27,7 +27,6 @@ use crate::{
 		MAXCEILINGS, ceiling_t, floormove_t, glow_t, lightflash_t, plat_t, strobe_t, vldoor_t,
 	},
 	p_tick::{P_AddThinker, P_InitThinkers},
-	r_defs::sector_t,
 	z_zone::{PU_LEVEL, Z_Free, Z_Malloc},
 };
 
@@ -52,14 +51,16 @@ pub(crate) fn P_ArchivePlayers() {
 
 			PADSAVEP();
 
-			let dest = save_p as *mut player_t;
+			let dest = save_p.cast::<player_t>();
 			libc::memcpy(dest.cast(), (&raw const players[i]).cast(), size_of::<player_t>());
 			let dest = &mut *dest;
 			save_p = save_p.wrapping_add(size_of::<player_t>());
-			for j in 0..psprnum_t::NUMPSPRITES as usize {
+			for j in 0..usize::from(psprnum_t::NUMPSPRITES) {
 				if !dest.psprites[j].state.is_null() {
-					dest.psprites[j].state =
-						dest.psprites[j].state.offset_from(states.as_ptr()) as *mut state_t;
+					dest.psprites[j].state = ptr::without_provenance_mut(
+						usize::try_from(dest.psprites[j].state.offset_from(states.as_ptr()))
+							.unwrap(),
+					);
 				}
 			}
 		}
@@ -84,10 +85,10 @@ pub(crate) fn P_UnArchivePlayers() {
 			players[i].message = null_mut();
 			players[i].attacker = null_mut();
 
-			for j in 0..psprnum_t::NUMPSPRITES as usize {
+			for j in 0..usize::from(psprnum_t::NUMPSPRITES) {
 				if !players[i].psprites[j].state.is_null() {
 					players[i].psprites[j].state =
-						&raw mut states[players[i].psprites[j].state as usize];
+						&raw mut states[players[i].psprites[j].state.addr()];
 				}
 			}
 		}
@@ -97,14 +98,14 @@ pub(crate) fn P_UnArchivePlayers() {
 // P_ArchiveWorld
 pub(crate) fn P_ArchiveWorld() {
 	unsafe {
-		let mut put = save_p as *mut i16;
+		let mut put = save_p.cast::<i16>();
 
 		// do sectors
 		let mut sec = sectors;
 		for _ in 0..numsectors {
-			*put = ((*sec).floorheight >> FRACBITS) as i16;
+			*put = i16::try_from((*sec).floorheight >> FRACBITS).unwrap();
 			put = put.wrapping_add(1);
-			*put = ((*sec).ceilingheight >> FRACBITS) as i16;
+			*put = i16::try_from((*sec).ceilingheight >> FRACBITS).unwrap();
 			put = put.wrapping_add(1);
 			*put = (*sec).floorpic;
 			put = put.wrapping_add(1);
@@ -134,11 +135,11 @@ pub(crate) fn P_ArchiveWorld() {
 					continue;
 				}
 
-				let si = sides.wrapping_add((*li).sidenum[j] as usize);
+				let si = sides.wrapping_add(usize::try_from((*li).sidenum[j]).unwrap());
 
-				*put = ((*si).textureoffset >> FRACBITS) as i16;
+				*put = i16::try_from((*si).textureoffset >> FRACBITS).unwrap();
 				put = put.wrapping_add(1);
-				*put = ((*si).rowoffset >> FRACBITS) as i16;
+				*put = i16::try_from((*si).rowoffset >> FRACBITS).unwrap();
 				put = put.wrapping_add(1);
 				*put = (*si).toptexture;
 				put = put.wrapping_add(1);
@@ -157,14 +158,14 @@ pub(crate) fn P_ArchiveWorld() {
 // P_UnArchiveWorld
 pub(crate) fn P_UnArchiveWorld() {
 	unsafe {
-		let mut get = save_p as *mut i16;
+		let mut get = save_p.cast::<i16>();
 
 		// do sectors
 		let mut sec = sectors;
 		for _ in 0..numsectors {
-			(*sec).floorheight = (*get as i32) << FRACBITS;
+			(*sec).floorheight = (i32::from(*get)) << FRACBITS;
 			get = get.wrapping_add(1);
-			(*sec).ceilingheight = (*get as i32) << FRACBITS;
+			(*sec).ceilingheight = (i32::from(*get)) << FRACBITS;
 			get = get.wrapping_add(1);
 			(*sec).floorpic = *get;
 			get = get.wrapping_add(1);
@@ -195,10 +196,10 @@ pub(crate) fn P_UnArchiveWorld() {
 				if (*li).sidenum[j] == -1 {
 					continue;
 				}
-				let si = sides.wrapping_add((*li).sidenum[j] as usize);
-				(*si).textureoffset = (*get as i32) << FRACBITS;
+				let si = sides.wrapping_add(usize::try_from((*li).sidenum[j]).unwrap());
+				(*si).textureoffset = (i32::from(*get)) << FRACBITS;
 				get = get.wrapping_add(1);
-				(*si).rowoffset = (*get as i32) << FRACBITS;
+				(*si).rowoffset = (i32::from(*get)) << FRACBITS;
 				get = get.wrapping_add(1);
 				(*si).toptexture = *get;
 				get = get.wrapping_add(1);
@@ -221,6 +222,15 @@ enum thinkerclass_t {
 	tc_mobj,
 }
 
+impl From<thinkerclass_t> for u8 {
+	fn from(value: thinkerclass_t) -> Self {
+		match value {
+			thinkerclass_t::tc_end => 0,
+			thinkerclass_t::tc_mobj => 1,
+		}
+	}
+}
+
 // P_ArchiveThinkers
 #[allow(static_mut_refs)]
 pub(crate) fn P_ArchiveThinkers() {
@@ -229,17 +239,20 @@ pub(crate) fn P_ArchiveThinkers() {
 		let mut th = thinkercap.next;
 		while !ptr::eq(th, &raw const thinkercap) {
 			if (*th).function.is_mobj() {
-				*save_p = thinkerclass_t::tc_mobj as u8;
+				*save_p = u8::from(thinkerclass_t::tc_mobj);
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
-				let mobj = save_p as *mut mobj_t;
+				let mobj = save_p.cast::<mobj_t>();
 				libc::memcpy(mobj.cast(), th.cast(), size_of::<mobj_t>());
 				save_p = save_p.wrapping_add(size_of::<mobj_t>());
-				(*mobj).state = ((*mobj).state.offset_from(states.as_ptr())) as *mut state_t;
+				(*mobj).state = ptr::without_provenance_mut(
+					((*mobj).state.offset_from(states.as_ptr())).try_into().unwrap(),
+				);
 
 				if !(*mobj).player.is_null() {
-					(*mobj).player =
-						(((*mobj).player.offset_from(players.as_ptr())) + 1) as *mut player_t;
+					(*mobj).player = ptr::without_provenance_mut(
+						(((*mobj).player.offset_from(players.as_ptr())) + 1).try_into().unwrap(),
+					);
 				}
 				{
 					th = (*th).next;
@@ -252,7 +265,7 @@ pub(crate) fn P_ArchiveThinkers() {
 		}
 
 		// add a terminating marker
-		*save_p = thinkerclass_t::tc_end as u8;
+		*save_p = u8::from(thinkerclass_t::tc_end);
 		save_p = save_p.wrapping_add(1);
 	}
 }
@@ -284,24 +297,24 @@ pub(crate) fn P_UnArchiveThinkers() {
 
 				1 => {
 					PADSAVEP();
-					let mobj = Z_Malloc(size_of::<mobj_t>(), PU_LEVEL, null_mut()) as *mut mobj_t;
+					let mobj = Z_Malloc(size_of::<mobj_t>(), PU_LEVEL, null_mut()).cast::<mobj_t>();
 					libc::memcpy(mobj.cast(), save_p.cast(), size_of::<mobj_t>());
 					save_p = save_p.wrapping_add(size_of::<mobj_t>());
-					(*mobj).state = &raw mut states[(*mobj).state as usize];
+					(*mobj).state = &raw mut states[(*mobj).state.addr()];
 					(*mobj).target = null_mut();
 					if !(*mobj).player.is_null() {
-						(*mobj).player = &raw mut players[(*mobj).player as usize - 1];
+						(*mobj).player = &raw mut players[(*mobj).player.addr() - 1];
 						(*(*mobj).player).mo = mobj;
 					}
 					P_SetThingPosition(&mut *mobj);
-					(*mobj).info = &raw mut mobjinfo[(*mobj).ty as usize];
+					(*mobj).info = &raw mut mobjinfo[usize::from((*mobj).ty)];
 					(*mobj).floorz = (*(*(*mobj).subsector).sector).floorheight;
 					(*mobj).ceilingz = (*(*(*mobj).subsector).sector).ceilingheight;
 					(*mobj).thinker.function = think_t::mobj;
 					P_AddThinker(&mut (*mobj).thinker);
 				}
 
-				_ => I_Error(c"Unknown tclass %i in savegame".as_ptr(), tclass as c_int),
+				_ => I_Error(c"Unknown tclass %i in savegame".as_ptr(), c_int::from(tclass)),
 			}
 		}
 	}
@@ -335,6 +348,21 @@ impl From<u8> for specials_e {
 	}
 }
 
+impl From<specials_e> for u8 {
+	fn from(value: specials_e) -> Self {
+		match value {
+			specials_e::tc_ceiling => 0,
+			specials_e::tc_door => 1,
+			specials_e::tc_floor => 2,
+			specials_e::tc_plat => 3,
+			specials_e::tc_flash => 4,
+			specials_e::tc_strobe => 5,
+			specials_e::tc_glow => 6,
+			specials_e::tc_endspecials => 7,
+		}
+	}
+}
+
 // Things to handle:
 //
 // T_MoveCeiling, (ceiling_t: sector_t * swizzle), - active list
@@ -360,98 +388,114 @@ pub(crate) fn P_ArchiveSpecials() {
 				}
 
 				if i < MAXCEILINGS {
-					*save_p = specials_e::tc_ceiling as u8;
+					*save_p = u8::from(specials_e::tc_ceiling);
 					save_p = save_p.wrapping_add(1);
 					PADSAVEP();
 					let ceiling = save_p.cast::<ceiling_t>();
 					libc::memcpy(ceiling.cast(), th.cast(), size_of::<ceiling_t>());
 					save_p = save_p.wrapping_add(size_of::<ceiling_t>());
-					(*ceiling).sector = ((*ceiling).sector.offset_from(sectors)) as *mut sector_t;
+					(*ceiling).sector = ptr::without_provenance_mut(
+						(*ceiling).sector.offset_from(sectors).try_into().unwrap(),
+					);
 				}
 				th = (*th).next;
 				continue;
 			}
 
 			if (*th).function == think_t::T_MoveCeiling {
-				*save_p = specials_e::tc_ceiling as u8;
+				*save_p = u8::from(specials_e::tc_ceiling);
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
-				let ceiling = save_p as *mut ceiling_t;
+				let ceiling = save_p.cast::<ceiling_t>();
 				libc::memcpy(ceiling.cast(), th.cast(), size_of::<ceiling_t>());
 				save_p = save_p.wrapping_add(size_of::<ceiling_t>());
-				(*ceiling).sector = ((*ceiling).sector.offset_from(sectors)) as *mut sector_t;
+				(*ceiling).sector = ptr::without_provenance_mut(
+					(*ceiling).sector.offset_from(sectors).try_into().unwrap(),
+				);
 				th = (*th).next;
 				continue;
 			}
 
 			if (*th).function == think_t::T_VerticalDoor {
-				*save_p = specials_e::tc_door as u8;
+				*save_p = u8::from(specials_e::tc_door);
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
-				let door = save_p as *mut vldoor_t;
+				let door = save_p.cast::<vldoor_t>();
 				libc::memcpy(door.cast(), th.cast(), size_of::<vldoor_t>());
 				save_p = save_p.wrapping_add(size_of::<vldoor_t>());
-				(*door).sector = ((*door).sector.offset_from(sectors)) as *mut sector_t;
+				(*door).sector = ptr::without_provenance_mut(
+					(*door).sector.offset_from(sectors).try_into().unwrap(),
+				);
 				th = (*th).next;
 				continue;
 			}
 
 			if (*th).function == think_t::T_MoveFloor {
-				*save_p = specials_e::tc_floor as u8;
+				*save_p = u8::from(specials_e::tc_floor);
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
-				let floor = save_p as *mut floormove_t;
+				let floor = save_p.cast::<floormove_t>();
 				libc::memcpy(floor.cast(), th.cast(), size_of::<floormove_t>());
 				save_p = save_p.wrapping_add(size_of::<floormove_t>());
-				(*floor).sector = ((*floor).sector.offset_from(sectors)) as *mut sector_t;
+				(*floor).sector = ptr::without_provenance_mut(
+					(*floor).sector.offset_from(sectors).try_into().unwrap(),
+				);
 				th = (*th).next;
 				continue;
 			}
 
 			if (*th).function == think_t::T_PlatRaise {
-				*save_p = specials_e::tc_plat as u8;
+				*save_p = u8::from(specials_e::tc_plat);
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
-				let plat = save_p as *mut plat_t;
+				let plat = save_p.cast::<plat_t>();
 				libc::memcpy(plat.cast(), th.cast(), size_of::<plat_t>());
 				save_p = save_p.wrapping_add(size_of::<plat_t>());
-				(*plat).sector = ((*plat).sector.offset_from(sectors)) as *mut sector_t;
+				(*plat).sector = ptr::without_provenance_mut(
+					(*plat).sector.offset_from(sectors).try_into().unwrap(),
+				);
 				th = (*th).next;
 				continue;
 			}
 
 			if (*th).function == think_t::T_LightFlash {
-				*save_p = specials_e::tc_flash as u8;
+				*save_p = u8::from(specials_e::tc_flash);
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
-				let flash = save_p as *mut lightflash_t;
+				let flash = save_p.cast::<lightflash_t>();
 				libc::memcpy(flash.cast(), th.cast(), size_of::<lightflash_t>());
 				save_p = save_p.wrapping_add(size_of::<lightflash_t>());
-				(*flash).sector = ((*flash).sector.offset_from(sectors)) as *mut sector_t;
+				(*flash).sector = ptr::without_provenance_mut(
+					(*flash).sector.offset_from(sectors).try_into().unwrap(),
+				);
 				th = (*th).next;
 				continue;
 			}
 
 			if (*th).function == think_t::T_StrobeFlash {
-				*save_p = specials_e::tc_strobe as u8;
+				*save_p = u8::from(specials_e::tc_strobe);
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
-				let strobe = save_p as *mut strobe_t;
+				let strobe = save_p.cast::<strobe_t>();
 				libc::memcpy(strobe.cast(), th.cast(), size_of::<strobe_t>());
 				save_p = save_p.wrapping_add(size_of::<strobe_t>());
-				(*strobe).sector = ((*strobe).sector.offset_from(sectors)) as *mut sector_t;
+				(*strobe).sector = ptr::without_provenance_mut(
+					(*strobe).sector.offset_from(sectors).try_into().unwrap(),
+				);
 				th = (*th).next;
 				continue;
 			}
 
 			if (*th).function == think_t::T_Glow {
-				*save_p = specials_e::tc_glow as u8;
+				*save_p = u8::from(specials_e::tc_glow);
 				save_p = save_p.wrapping_add(1);
 				PADSAVEP();
-				let glow = save_p as *mut glow_t;
+				let glow = save_p.cast::<glow_t>();
 				libc::memcpy(glow.cast(), th.cast(), size_of::<glow_t>());
 				save_p = save_p.wrapping_add(size_of::<glow_t>());
-				(*glow).sector = ((*glow).sector.offset_from(sectors)) as *mut sector_t;
+				(*glow).sector = ptr::without_provenance_mut(
+					(*glow).sector.offset_from(sectors).try_into().unwrap(),
+				);
 				th = (*th).next;
 				continue;
 			}
@@ -460,7 +504,7 @@ pub(crate) fn P_ArchiveSpecials() {
 		}
 
 		// add a terminating marker
-		*save_p = specials_e::tc_endspecials as u8;
+		*save_p = u8::from(specials_e::tc_endspecials);
 		save_p = save_p.wrapping_add(1);
 	}
 }
@@ -478,10 +522,10 @@ pub(crate) fn P_UnArchiveSpecials() {
 				specials_e::tc_ceiling => {
 					PADSAVEP();
 					let ceiling =
-						Z_Malloc(size_of::<ceiling_t>(), PU_LEVEL, null_mut()) as *mut ceiling_t;
+						Z_Malloc(size_of::<ceiling_t>(), PU_LEVEL, null_mut()).cast::<ceiling_t>();
 					libc::memcpy(ceiling.cast(), save_p.cast(), size_of::<ceiling_t>());
 					save_p = save_p.wrapping_add(size_of::<ceiling_t>());
-					(*ceiling).sector = sectors.wrapping_add((*ceiling).sector as usize);
+					(*ceiling).sector = sectors.wrapping_add((*ceiling).sector.addr());
 					(*(*ceiling).sector).specialdata = ceiling.cast();
 
 					if (*ceiling).thinker.function.as_acp1().is_some() {
@@ -495,10 +539,10 @@ pub(crate) fn P_UnArchiveSpecials() {
 				specials_e::tc_door => {
 					PADSAVEP();
 					let door =
-						Z_Malloc(size_of::<vldoor_t>(), PU_LEVEL, null_mut()) as *mut vldoor_t;
+						Z_Malloc(size_of::<vldoor_t>(), PU_LEVEL, null_mut()).cast::<vldoor_t>();
 					libc::memcpy(door.cast(), save_p.cast(), size_of::<vldoor_t>());
 					save_p = save_p.wrapping_add(size_of::<vldoor_t>());
-					(*door).sector = sectors.wrapping_add((*door).sector as usize);
+					(*door).sector = sectors.wrapping_add((*door).sector.addr());
 					(*(*door).sector).specialdata = door.cast();
 					(*door).thinker.function = think_t::T_VerticalDoor;
 					P_AddThinker(&mut (*door).thinker);
@@ -507,10 +551,10 @@ pub(crate) fn P_UnArchiveSpecials() {
 				specials_e::tc_floor => {
 					PADSAVEP();
 					let floor = Z_Malloc(size_of::<floormove_t>(), PU_LEVEL, null_mut())
-						as *mut floormove_t;
+						.cast::<floormove_t>();
 					libc::memcpy(floor.cast(), save_p.cast(), size_of::<floormove_t>());
 					save_p = save_p.wrapping_add(size_of::<floormove_t>());
-					(*floor).sector = sectors.wrapping_add((*floor).sector as usize);
+					(*floor).sector = sectors.wrapping_add((*floor).sector.addr());
 					(*(*floor).sector).specialdata = floor.cast();
 					(*floor).thinker.function = think_t::T_MoveFloor;
 					P_AddThinker(&mut (*floor).thinker);
@@ -518,10 +562,10 @@ pub(crate) fn P_UnArchiveSpecials() {
 
 				specials_e::tc_plat => {
 					PADSAVEP();
-					let plat = Z_Malloc(size_of::<plat_t>(), PU_LEVEL, null_mut()) as *mut plat_t;
+					let plat = Z_Malloc(size_of::<plat_t>(), PU_LEVEL, null_mut()).cast::<plat_t>();
 					libc::memcpy(plat.cast(), save_p.cast(), size_of::<plat_t>());
 					save_p = save_p.wrapping_add(size_of::<plat_t>());
-					(*plat).sector = sectors.wrapping_add((*plat).sector as usize);
+					(*plat).sector = sectors.wrapping_add((*plat).sector.addr());
 					(*(*plat).sector).specialdata = plat.cast();
 
 					if (*plat).thinker.function.as_acp1().is_some() {
@@ -535,10 +579,10 @@ pub(crate) fn P_UnArchiveSpecials() {
 				specials_e::tc_flash => {
 					PADSAVEP();
 					let flash = Z_Malloc(size_of::<lightflash_t>(), PU_LEVEL, null_mut())
-						as *mut lightflash_t;
+						.cast::<lightflash_t>();
 					libc::memcpy(flash.cast(), save_p.cast(), size_of::<lightflash_t>());
 					save_p = save_p.wrapping_add(size_of::<lightflash_t>());
-					(*flash).sector = sectors.wrapping_add((*flash).sector as usize);
+					(*flash).sector = sectors.wrapping_add((*flash).sector.addr());
 					(*flash).thinker.function = think_t::T_LightFlash;
 					P_AddThinker(&mut (*flash).thinker);
 				}
@@ -546,20 +590,20 @@ pub(crate) fn P_UnArchiveSpecials() {
 				specials_e::tc_strobe => {
 					PADSAVEP();
 					let strobe =
-						Z_Malloc(size_of::<strobe_t>(), PU_LEVEL, null_mut()) as *mut strobe_t;
+						Z_Malloc(size_of::<strobe_t>(), PU_LEVEL, null_mut()).cast::<strobe_t>();
 					libc::memcpy(strobe.cast(), save_p.cast(), size_of::<strobe_t>());
 					save_p = save_p.wrapping_add(size_of::<strobe_t>());
-					(*strobe).sector = sectors.wrapping_add((*strobe).sector as usize);
+					(*strobe).sector = sectors.wrapping_add((*strobe).sector.addr());
 					(*strobe).thinker.function = think_t::T_StrobeFlash;
 					P_AddThinker(&mut (*strobe).thinker);
 				}
 
 				specials_e::tc_glow => {
 					PADSAVEP();
-					let glow = Z_Malloc(size_of::<glow_t>(), PU_LEVEL, null_mut()) as *mut glow_t;
+					let glow = Z_Malloc(size_of::<glow_t>(), PU_LEVEL, null_mut()).cast::<glow_t>();
 					libc::memcpy(glow.cast(), save_p.cast(), size_of::<glow_t>());
 					save_p = save_p.wrapping_add(size_of::<glow_t>());
-					(*glow).sector = sectors.wrapping_add((*glow).sector as usize);
+					(*glow).sector = sectors.wrapping_add((*glow).sector.addr());
 					(*glow).thinker.function = think_t::T_Glow;
 					P_AddThinker(&mut (*glow).thinker);
 				}

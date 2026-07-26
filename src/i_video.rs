@@ -37,6 +37,7 @@ use x11::{
 };
 
 use crate::{
+	const_conv::{u8_from_u32, u32_from_u8},
 	d_event::{event_t, evtype_t},
 	d_main::{D_PostEvent, devparm},
 	doomdef::{
@@ -86,10 +87,10 @@ static mut multiply: usize = 1;
 //  Translates the key currently in X_event
 #[allow(static_mut_refs)]
 fn xlatekey() -> u8 {
-	const A: u32 = b'A' as u32;
-	const Z: u32 = b'Z' as u32;
+	const A: u32 = u32_from_u8(b'A');
+	const Z: u32 = u32_from_u8(b'Z');
 	unsafe {
-		match XKeycodeToKeysym(X_display, X_event.assume_init_ref().key.keycode as u8, 0) {
+		match XKeycodeToKeysym(X_display, u8_from_u32(X_event.assume_init_ref().key.keycode), 0) {
 			XK_Left => KEY_LEFTARROW,
 			XK_Right => KEY_RIGHTARROW,
 			XK_Down => KEY_DOWNARROW,
@@ -116,8 +117,8 @@ fn xlatekey() -> u8 {
 			XK_Shift_L | XK_Shift_R => KEY_RSHIFT,
 			XK_Control_L | XK_Control_R => KEY_RCTRL,
 			XK_Alt_L | XK_Meta_L | XK_Alt_R | XK_Meta_R => KEY_RALT,
-			rc @ A..=Z => rc as u8 - b'A' + b'a',
-			rc => rc as u8,
+			rc @ A..=Z => u8_from_u32(rc) - b'A' + b'a',
+			rc => u8_from_u32(rc),
 		}
 	}
 }
@@ -161,12 +162,12 @@ fn I_GetEvent() {
 		match xev.type_ {
 			KeyPress => {
 				event.ty = evtype_t::ev_keydown;
-				event.data1 = xlatekey() as i32;
+				event.data1 = i32::from(xlatekey());
 				D_PostEvent(&mut event);
 			}
 			KeyRelease => {
 				event.ty = evtype_t::ev_keyup;
-				event.data1 = xlatekey() as i32;
+				event.data1 = i32::from(xlatekey());
 				D_PostEvent(&mut event);
 			}
 			ButtonPress => {
@@ -206,7 +207,8 @@ fn I_GetEvent() {
 				if event.data2 != 0 || event.data3 != 0 {
 					lastmousex = xev.motion.x;
 					lastmousey = xev.motion.y;
-					if xev.motion.x != (X_width / 2) as i32 && xev.motion.y != (X_height / 2) as i32
+					if xev.motion.x != i32::try_from(X_width / 2).unwrap()
+						&& xev.motion.y != i32::try_from(X_height / 2).unwrap()
 					{
 						D_PostEvent(&mut event);
 						mousemoved = false;
@@ -278,8 +280,8 @@ pub extern "C" fn I_StartTic() {
 					0,
 					0,
 					0,
-					(X_width / 2) as i32,
-					(X_height / 2) as i32,
+					i32::try_from(X_width / 2).unwrap(),
+					i32::try_from(X_height / 2).unwrap(),
 				);
 				doPointerWarp = POINTER_WARP_COUNTDOWN;
 			}
@@ -418,8 +420,8 @@ pub fn I_FinishUpdate() {
 				0,
 				0,
 				0,
-				X_width as u32,
-				X_height as u32,
+				u32::try_from(X_width).unwrap(),
+				u32::try_from(X_height).unwrap(),
 				True,
 			) == 0
 			{
@@ -445,8 +447,8 @@ pub fn I_FinishUpdate() {
 				0,
 				0,
 				0,
-				X_width as u32,
-				X_height as u32,
+				u32::try_from(X_width).unwrap(),
+				u32::try_from(X_height).unwrap(),
 			);
 
 			// sync up with server
@@ -478,7 +480,7 @@ fn UploadNewPalette(cmap: Colormap, mut palette: *mut u8) {
 				firstcall = false;
 				#[allow(clippy::needless_range_loop)]
 				for i in 0..256 {
-					colors[i].pixel = i as u32;
+					colors[i].pixel = u32::try_from(i).unwrap();
 					colors[i].flags = DoRed | DoGreen | DoBlue;
 				}
 			}
@@ -486,13 +488,13 @@ fn UploadNewPalette(cmap: Colormap, mut palette: *mut u8) {
 			// set the X colormap entries
 			#[allow(clippy::needless_range_loop)]
 			for i in 0..256 {
-				let c = gammatable[usegamma][*palette as usize] as u16;
+				let c = u16::from(gammatable[usegamma][usize::from(*palette)]);
 				palette = palette.wrapping_add(1);
 				colors[i].red = (c << 8) + c;
-				let c = gammatable[usegamma][*palette as usize] as u16;
+				let c = u16::from(gammatable[usegamma][usize::from(*palette)]);
 				palette = palette.wrapping_add(1);
 				colors[i].green = (c << 8) + c;
-				let c = gammatable[usegamma][*palette as usize] as u16;
+				let c = u16::from(gammatable[usegamma][usize::from(*palette)]);
 				palette = palette.wrapping_add(1);
 				colors[i].blue = (c << 8) + c;
 			}
@@ -517,7 +519,7 @@ pub fn I_SetPalette(palette: *mut u8) {
 //  handles accumulating.
 #[allow(static_mut_refs)]
 fn grabsharedmemory(size: i32) {
-	let size = size as usize;
+	let size = usize::try_from(size).unwrap();
 	unsafe {
 		let mut key = i32::from_be_bytes(*b"doom");
 		// struct shmid_ds	shminfo;
@@ -600,6 +602,7 @@ fn grabsharedmemory(size: i32) {
 }
 
 #[allow(static_mut_refs)]
+#[allow(clippy::as_conversions)]
 pub fn I_InitGraphics() {
 	unsafe {
 		static mut firsttime: bool = true;

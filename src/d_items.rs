@@ -27,7 +27,7 @@ pub struct weaponinfo_t {
 // atkstate, i.e. attack/fire/hit frame
 // flashstate, muzzle flash
 #[unsafe(no_mangle)]
-pub static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS as usize] = [
+pub static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()] = [
 	weaponinfo_t {
 		// fist
 		ammo: ammotype_t::am_noammo,

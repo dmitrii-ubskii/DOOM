@@ -1,4 +1,5 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
+#![allow(clippy::as_conversions)]
 
 use std::{
 	ffi::{CStr, c_char, c_void},
@@ -49,7 +50,7 @@ pub(crate) fn M_WriteFile(name: *const c_char, source: *mut c_void, length: usiz
 		let count = libc::write(handle, source, length);
 		libc::close(handle);
 
-		count >= length as isize
+		count >= isize::try_from(length).unwrap()
 	}
 }
 
@@ -64,12 +65,12 @@ pub(crate) fn M_ReadFile(name: *const c_char, buffer: *mut *mut u8) -> usize {
 		if libc::fstat(handle, fileinfo.as_mut_ptr()) == -1 {
 			I_Error(c"Couldn't read file %s".as_ptr(), name);
 		}
-		let length = fileinfo.assume_init().st_size as usize;
+		let length = usize::try_from(fileinfo.assume_init().st_size).unwrap();
 		let buf = Z_Malloc(length, PU_STATIC, null_mut());
 		let count = libc::read(handle, buf, length);
 		libc::close(handle);
 
-		if count < length as isize {
+		if count < isize::try_from(length).unwrap() {
 			I_Error(c"Couldn't read file %s".as_ptr(), name);
 		}
 

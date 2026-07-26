@@ -34,9 +34,9 @@ fn P_DivlineSide(x: fixed_t, y: fixed_t, node: &mut divline_t) -> i32 {
 		if x == node.x {
 			return 2;
 		} else if x < node.x {
-			return (node.dy > 0) as i32;
+			return i32::from(node.dy > 0);
 		} else {
-			return (node.dy < 0) as i32;
+			return i32::from(node.dy < 0);
 		}
 	}
 
@@ -45,9 +45,9 @@ fn P_DivlineSide(x: fixed_t, y: fixed_t, node: &mut divline_t) -> i32 {
 		if x == node.y {
 			return 2;
 		} else if y < node.y {
-			return (node.dx < 0) as i32;
+			return i32::from(node.dx < 0);
 		} else {
-			return (node.dx > 0) as i32;
+			return i32::from(node.dx > 0);
 		}
 	}
 
@@ -89,11 +89,11 @@ fn P_CrossSubsector(num: i32) -> bool {
 			I_Error(c"P_CrossSubsector: ss %i with numss = %i".as_ptr(), num, numsubsectors);
 		}
 
-		let sub = &mut *subsectors.wrapping_add(num as usize);
+		let sub = &mut *subsectors.wrapping_add(usize::try_from(num).unwrap());
 
 		// check lines
-		let count = sub.numlines as usize;
-		let segp = segs.wrapping_add(sub.firstline as usize);
+		let count = usize::try_from(sub.numlines).unwrap();
+		let segp = segs.wrapping_add(usize::try_from(sub.firstline).unwrap());
 
 		for i in 0..count {
 			let seg = &mut *segp.wrapping_add(i);
@@ -201,7 +201,7 @@ fn P_CrossBSPNode(bspnum: usize) -> bool {
 			if bspnum == usize::MAX {
 				return P_CrossSubsector(0);
 			} else {
-				return P_CrossSubsector((bspnum & !NF_SUBSECTOR) as i32);
+				return P_CrossSubsector(i32::try_from(bspnum & !NF_SUBSECTOR).unwrap());
 			}
 		}
 
@@ -214,7 +214,7 @@ fn P_CrossBSPNode(bspnum: usize) -> bool {
 		}
 
 		// cross the starting side
-		if !P_CrossBSPNode((*bsp).children[side as usize] as usize) {
+		if !P_CrossBSPNode(usize::from((*bsp).children[usize::try_from(side).unwrap()])) {
 			return false;
 		}
 
@@ -225,7 +225,7 @@ fn P_CrossBSPNode(bspnum: usize) -> bool {
 		}
 
 		// cross the ending side
-		P_CrossBSPNode((*bsp).children[side as usize ^ 1] as usize)
+		P_CrossBSPNode(usize::from((*bsp).children[usize::try_from(side).unwrap() ^ 1]))
 	}
 }
 
@@ -240,8 +240,8 @@ pub fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> bool {
 		// Determine subsector entries in REJECT table.
 		let s1 = (*t1.subsector).sector.offset_from(sectors);
 		let s2 = (*t2.subsector).sector.offset_from(sectors);
-		let pnum = s1 * numsectors as isize + s2;
-		let bytenum = (pnum >> 3) as usize;
+		let pnum = s1 * isize::try_from(numsectors).unwrap() + s2;
+		let bytenum = usize::try_from(pnum >> 3).unwrap();
 		let bitnum = 1 << (pnum & 7);
 
 		// Check in REJECT table.
@@ -270,6 +270,6 @@ pub fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> bool {
 		strace.dy = t2.y - t1.y;
 
 		// the head node is the last node output
-		P_CrossBSPNode(numnodes as usize - 1)
+		P_CrossBSPNode(usize::try_from(numnodes).unwrap() - 1)
 	}
 }

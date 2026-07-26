@@ -251,7 +251,8 @@ fn R_RenderSegLoop() {
 
 				dc_colormap = *walllights.wrapping_add(index);
 				dc_x = rw_x.try_into().unwrap();
-				dc_iscale = (0xffffffff / u32::try_from(rw_scale).unwrap()) as fixed_t;
+				dc_iscale =
+					fixed_t::try_from(0xffffffff / u32::try_from(rw_scale).unwrap()).unwrap();
 			}
 
 			// draw the wall tiers

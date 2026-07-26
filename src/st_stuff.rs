@@ -238,8 +238,8 @@ static mut tallpercent: *mut patch_t = null_mut();
 static mut shortnum: [*mut patch_t; 10] = [null_mut(); 10];
 
 // 3 key-cards, 3 skulls
-static mut keys: [*mut patch_t; card_t::NUMCARDS as usize] =
-	[null_mut(); card_t::NUMCARDS as usize];
+static mut keys: [*mut patch_t; card_t::NUMCARDS.to_usize()] =
+	[null_mut(); card_t::NUMCARDS.to_usize()];
 
 // face status patches
 static mut faces: [*mut patch_t; ST_NUMFACES] = [null_mut(); ST_NUMFACES];
@@ -312,8 +312,8 @@ static mut st_fragscount: int = 0;
 static mut st_oldhealth: int = -1;
 
 // used for evil grin
-static mut oldweaponsowned: [boolean; weapontype_t::NUMWEAPONS as usize] =
-	[0; weapontype_t::NUMWEAPONS as usize];
+static mut oldweaponsowned: [boolean; weapontype_t::NUMWEAPONS.to_usize()] =
+	[0; weapontype_t::NUMWEAPONS.to_usize()];
 
 // count until face changes
 static mut st_facecount: usize = 0;
@@ -431,8 +431,10 @@ fn ST_refreshBackground() {
 pub fn ST_Responder(ev: &mut event_t) -> bool {
 	unsafe {
 		// Filter automap on/off.
-		if ev.ty == evtype_t::ev_keyup && (ev.data1 as usize & 0xffff0000) == AM_MSGHEADER {
-			match ev.data1 as usize {
+		if ev.ty == evtype_t::ev_keyup
+			&& (usize::try_from(ev.data1).unwrap() & 0xffff0000) == AM_MSGHEADER
+		{
+			match usize::try_from(ev.data1).unwrap() {
 				AM_MSGENTERED => {
 					st_gamestate = st_stateenum_t::AutomapState;
 					st_firsttime = true;
@@ -453,7 +455,7 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 				// if (gameskill != sk_nightmare) {
 
 				// 'dqd' cheat for toggleable god mode
-				if cht_CheckCheat(&mut cheat_god, ev.data1 as u8) {
+				if cht_CheckCheat(&mut cheat_god, u8::try_from(ev.data1).unwrap()) {
 					(*plyr).cheats ^= CF_GODMODE;
 					if (*plyr).cheats & CF_GODMODE != 0 {
 						if !(*plyr).mo.is_null() {
@@ -467,48 +469,48 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 					}
 				}
 				// 'fa' cheat for killer fucking arsenal
-				else if cht_CheckCheat(&mut cheat_ammonokey, ev.data1 as u8) {
+				else if cht_CheckCheat(&mut cheat_ammonokey, u8::try_from(ev.data1).unwrap()) {
 					(*plyr).armorpoints = 200;
 					(*plyr).armortype = 2;
 
-					for i in 0..weapontype_t::NUMWEAPONS as usize {
+					for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
 						(*plyr).weaponowned[i] = 1;
 					}
 
-					for i in 0..ammotype_t::NUMAMMO as usize {
+					for i in 0..usize::from(ammotype_t::NUMAMMO) {
 						(*plyr).ammo[i] = (*plyr).maxammo[i];
 					}
 
 					(*plyr).message = STSTR_FAADDED;
 				}
 				// 'kfa' cheat for key full ammo
-				else if cht_CheckCheat(&mut cheat_ammo, ev.data1 as u8) {
+				else if cht_CheckCheat(&mut cheat_ammo, u8::try_from(ev.data1).unwrap()) {
 					(*plyr).armorpoints = 200;
 					(*plyr).armortype = 2;
 
-					for i in 0..weapontype_t::NUMWEAPONS as usize {
+					for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
 						(*plyr).weaponowned[i] = 1;
 					}
 
-					for i in 0..ammotype_t::NUMAMMO as usize {
+					for i in 0..usize::from(ammotype_t::NUMAMMO) {
 						(*plyr).ammo[i] = (*plyr).maxammo[i];
 					}
 
-					for i in 0..card_t::NUMCARDS as usize {
+					for i in 0..usize::from(card_t::NUMCARDS) {
 						(*plyr).cards[i] = 1;
 					}
 
 					(*plyr).message = STSTR_KFAADDED;
 				}
 				// 'mus' cheat for changing music
-				else if cht_CheckCheat(&mut cheat_mus, ev.data1 as u8) {
+				else if cht_CheckCheat(&mut cheat_mus, u8::try_from(ev.data1).unwrap()) {
 					(*plyr).message = STSTR_MUS;
 					let mut buf = [0; 3];
 					cht_GetParam(&mut cheat_mus, buf.as_mut_ptr());
 
 					if gamemode == GameMode_t::commercial {
 						let offset = (buf[0] - b'0') * 10 + buf[1] - b'0';
-						let musnum = (musicenum_t::mus_runnin as isize) + (offset - 1) as isize;
+						let musnum = isize::from(musicenum_t::mus_runnin) + isize::from(offset - 1);
 
 						if offset > 35 {
 							(*plyr).message = STSTR_NOMUS;
@@ -517,7 +519,7 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 						}
 					} else {
 						let offset = (buf[0] - b'1') * 9 + (buf[1] - b'1');
-						let musnum = (musicenum_t::mus_e1m1 as isize) + offset as isize;
+						let musnum = (isize::from(musicenum_t::mus_e1m1)) + isize::from(offset);
 
 						if offset > 31 {
 							(*plyr).message = STSTR_NOMUS;
@@ -528,8 +530,8 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 				}
 				// Simplified, accepting both "noclip" and "idspispopd".
 				// no clipping mode cheat
-				else if cht_CheckCheat(&mut cheat_noclip, ev.data1 as u8)
-					|| cht_CheckCheat(&mut cheat_commercial_noclip, ev.data1 as u8)
+				else if cht_CheckCheat(&mut cheat_noclip, u8::try_from(ev.data1).unwrap())
+					|| cht_CheckCheat(&mut cheat_commercial_noclip, u8::try_from(ev.data1).unwrap())
 				{
 					(*plyr).cheats ^= CF_NOCLIP;
 
@@ -542,7 +544,7 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 				// 'behold?' power-up cheats
 				#[allow(clippy::needless_range_loop)]
 				for i in 0..6 {
-					if cht_CheckCheat(&mut cheat_powerup[i], ev.data1 as u8) {
+					if cht_CheckCheat(&mut cheat_powerup[i], u8::try_from(ev.data1).unwrap()) {
 						if (*plyr).powers[i] == 0 {
 							P_GivePower(&mut *plyr, i.into());
 						} else if powertype_t::from(i) != powertype_t::pw_strength {
@@ -556,17 +558,17 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 				}
 
 				// 'behold' power-up menu
-				if cht_CheckCheat(&mut cheat_powerup[6], ev.data1 as u8) {
+				if cht_CheckCheat(&mut cheat_powerup[6], u8::try_from(ev.data1).unwrap()) {
 					(*plyr).message = STSTR_BEHOLD;
 				}
 				// 'choppers' invulnerability & chainsaw
-				else if cht_CheckCheat(&mut cheat_choppers, ev.data1 as u8) {
-					(*plyr).weaponowned[weapontype_t::wp_chainsaw as usize] = 1;
-					(*plyr).powers[powertype_t::pw_invulnerability as usize] = 1;
+				else if cht_CheckCheat(&mut cheat_choppers, u8::try_from(ev.data1).unwrap()) {
+					(*plyr).weaponowned[usize::from(weapontype_t::wp_chainsaw)] = 1;
+					(*plyr).powers[usize::from(powertype_t::pw_invulnerability)] = 1;
 					(*plyr).message = STSTR_CHOPPERS;
 				}
 				// 'mypos' for player position
-				else if cht_CheckCheat(&mut cheat_mypos, ev.data1 as u8) {
+				else if cht_CheckCheat(&mut cheat_mypos, u8::try_from(ev.data1).unwrap()) {
 					static mut buf: [i8; ST_MSGWIDTH] = [0; ST_MSGWIDTH];
 					libc::sprintf(
 						buf.as_mut_ptr(),
@@ -580,7 +582,7 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 			}
 
 			// 'clev' change-level cheat
-			if cht_CheckCheat(&mut cheat_clev, ev.data1 as u8) {
+			if cht_CheckCheat(&mut cheat_clev, u8::try_from(ev.data1).unwrap()) {
 				let epsd;
 				let map;
 
@@ -623,7 +625,7 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 
 				// So be it.
 				(*plyr).message = STSTR_CLEV;
-				G_DeferedInitNew(gameskill, epsd as usize, map as usize);
+				G_DeferedInitNew(gameskill, usize::from(epsd), usize::from(map));
 			}
 		}
 		false
@@ -638,7 +640,8 @@ fn ST_calcPainOffset() -> usize {
 		let health = i32::min((*plyr).health, 100);
 
 		if health != oldhealth {
-			lastcalc = ST_FACESTRIDE * (((100 - health) as usize * ST_NUMPAINFACES) / 101);
+			lastcalc =
+				ST_FACESTRIDE * ((usize::try_from(100 - health).unwrap() * ST_NUMPAINFACES) / 101);
 			oldhealth = health;
 		}
 		lastcalc
@@ -669,7 +672,7 @@ fn ST_updateFaceWidget() {
 				let mut doevilgrin = false;
 
 				#[allow(clippy::needless_range_loop)]
-				for i in 0..weapontype_t::NUMWEAPONS as usize {
+				for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
 					if oldweaponsowned[i] != (*plyr).weaponowned[i] {
 						doevilgrin = true;
 						oldweaponsowned[i] = (*plyr).weaponowned[i];
@@ -752,7 +755,7 @@ fn ST_updateFaceWidget() {
 			// rapid firing
 			if (*plyr).attackdown != 0 {
 				if lastattackdown == -1 {
-					lastattackdown = ST_RAMPAGEDELAY as i32;
+					lastattackdown = i32::try_from(ST_RAMPAGEDELAY).unwrap();
 				} else {
 					lastattackdown -= 1;
 					if lastattackdown == 0 {
@@ -770,7 +773,7 @@ fn ST_updateFaceWidget() {
 		if priority < 5 {
 			// invulnerability
 			if (*plyr).cheats & CF_GODMODE != 0
-				|| (*plyr).powers[powertype_t::pw_invulnerability as usize] != 0
+				|| (*plyr).powers[usize::from(powertype_t::pw_invulnerability)] != 0
 			{
 				priority = 4;
 
@@ -781,7 +784,7 @@ fn ST_updateFaceWidget() {
 
 		// look left or look right if the facecount has timed out
 		if st_facecount == 0 {
-			st_faceindex = ST_calcPainOffset() + st_randomnumber as usize % 3;
+			st_faceindex = ST_calcPainOffset() + usize::try_from(st_randomnumber).unwrap() % 3;
 			st_facecount = ST_STRAIGHTFACECOUNT;
 			priority = 0;
 		}
@@ -795,22 +798,22 @@ fn ST_updateWidgets() {
 		static mut largeammo: i32 = 1994; // means "n/a"
 
 		// must redirect the pointer if the ready weapon has changed.
-		if weaponinfo[(*plyr).readyweapon as usize].ammo == ammotype_t::am_noammo {
+		if weaponinfo[usize::from((*plyr).readyweapon)].ammo == ammotype_t::am_noammo {
 			w_ready.num = &raw mut largeammo;
 		} else {
 			w_ready.num = (&raw mut (*plyr).ammo
-				[weaponinfo[(*plyr).readyweapon as usize].ammo as usize])
+				[usize::from(weaponinfo[usize::from((*plyr).readyweapon)].ammo)])
 				.cast();
 		}
-		w_ready.data = (*plyr).readyweapon as i32;
+		w_ready.data = i32::from((*plyr).readyweapon);
 
 		// update keycard multiple widgets
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..3 {
-			keyboxes[i] = if (*plyr).cards[i] != 0 { i as i32 } else { -1 };
+			keyboxes[i] = if (*plyr).cards[i] != 0 { i32::try_from(i).unwrap() } else { -1 };
 
 			if (*plyr).cards[i + 3] != 0 {
-				keyboxes[i] = i as i32 + 3;
+				keyboxes[i] = i32::try_from(i).unwrap() + 3;
 			}
 		}
 
@@ -821,10 +824,10 @@ fn ST_updateWidgets() {
 		st_notdeathmatch = !deathmatch;
 
 		// used by w_arms[] widgets
-		st_armson = (st_statusbaron != 0 && (deathmatch == 0)) as boolean;
+		st_armson = boolean::from(st_statusbaron != 0 && (deathmatch == 0));
 
 		// used by w_frags widget
-		st_fragson = (st_statusbaron != 0 && (deathmatch != 0)) as boolean;
+		st_fragson = boolean::from(st_statusbaron != 0 && (deathmatch != 0));
 		st_fragscount = 0;
 
 		for i in 0..MAXPLAYERS {
@@ -856,12 +859,12 @@ static mut st_palette: isize = 0;
 
 fn ST_doPaletteStuff() {
 	unsafe {
-		let mut cnt = (*plyr).damagecount as usize;
+		let mut cnt = usize::try_from((*plyr).damagecount).unwrap();
 
-		if (*plyr).powers[powertype_t::pw_strength as usize] != 0 {
+		if (*plyr).powers[usize::from(powertype_t::pw_strength)] != 0 {
 			// slowly fade the berzerk out
 			let bzc =
-				12usize.saturating_sub((*plyr).powers[powertype_t::pw_strength as usize] >> 6);
+				12usize.saturating_sub((*plyr).powers[usize::from(powertype_t::pw_strength)] >> 6);
 
 			if bzc > cnt {
 				cnt = bzc;
@@ -885,16 +888,16 @@ fn ST_doPaletteStuff() {
 			}
 
 			palette += STARTBONUSPALS;
-		} else if (*plyr).powers[powertype_t::pw_ironfeet as usize] > 4 * 32
-			|| (*plyr).powers[powertype_t::pw_ironfeet as usize] & 8 != 0
+		} else if (*plyr).powers[usize::from(powertype_t::pw_ironfeet)] > 4 * 32
+			|| (*plyr).powers[usize::from(powertype_t::pw_ironfeet)] & 8 != 0
 		{
 			palette = RADIATIONPAL;
 		} else {
 			palette = 0;
 		}
 
-		if palette as isize != st_palette {
-			st_palette = palette as isize;
+		if isize::try_from(palette).unwrap() != st_palette {
+			st_palette = isize::try_from(palette).unwrap();
 			let pal = W_CacheLumpNum(lu_palette, PU_CACHE).wrapping_byte_add(palette * 768);
 			I_SetPalette(pal.cast());
 		}
@@ -904,10 +907,10 @@ fn ST_doPaletteStuff() {
 fn ST_drawWidgets(refresh: bool) {
 	unsafe {
 		// used by w_arms[] widgets
-		st_armson = (st_statusbaron != 0 && deathmatch == 0) as boolean;
+		st_armson = boolean::from(st_statusbaron != 0 && deathmatch == 0);
 
 		// used by w_frags widget
-		st_fragson = (deathmatch != 0 && st_statusbaron != 0) as boolean;
+		st_fragson = boolean::from(deathmatch != 0 && st_statusbaron != 0);
 
 		STlib_updateNum(&mut w_ready, refresh);
 
@@ -954,7 +957,7 @@ fn ST_diffDraw() {
 
 pub fn ST_Drawer(fullscreen: bool, refresh: bool) {
 	unsafe {
-		st_statusbaron = (!fullscreen || automapactive) as boolean;
+		st_statusbaron = boolean::from(!fullscreen || automapactive);
 		st_firsttime = st_firsttime || refresh;
 
 		// Do red-/gold-shifts from damage/items
@@ -994,7 +997,7 @@ fn ST_loadGraphics() {
 
 		// key cards
 		#[allow(clippy::needless_range_loop)]
-		for i in 0..card_t::NUMCARDS as usize {
+		for i in 0..usize::from(card_t::NUMCARDS) {
 			libc::sprintf(namebuf.as_mut_ptr(), c"STKEYS%d".as_ptr(), i);
 			keys[i] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
 		}
@@ -1052,7 +1055,7 @@ fn ST_loadGraphics() {
 
 fn ST_loadData() {
 	unsafe {
-		lu_palette = W_GetNumForName(c"PLAYPAL".as_ptr()) as usize;
+		lu_palette = usize::try_from(W_GetNumForName(c"PLAYPAL".as_ptr())).unwrap();
 		ST_loadGraphics();
 	}
 }
@@ -1077,7 +1080,7 @@ fn ST_initData() {
 		st_oldhealth = -1;
 
 		#[allow(clippy::needless_range_loop)]
-		for i in 0..weapontype_t::NUMWEAPONS as usize {
+		for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
 			oldweaponsowned[i] = (*plyr).weaponowned[i];
 		}
 
@@ -1098,13 +1101,14 @@ fn ST_createWidgets() {
 			ST_AMMOX,
 			ST_AMMOY,
 			tallnum.as_mut_ptr(),
-			(&raw mut (*plyr).ammo[weaponinfo[(*plyr).readyweapon as usize].ammo as usize]).cast(),
+			(&raw mut (*plyr).ammo[usize::from(weaponinfo[usize::from((*plyr).readyweapon)].ammo)])
+				.cast(),
 			&raw mut st_statusbaron,
 			ST_AMMOWIDTH,
 		);
 
 		// the last weapon type
-		w_ready.data = (*plyr).readyweapon as i32;
+		w_ready.data = i32::from((*plyr).readyweapon);
 
 		// health percentage
 		STlib_initPercent(

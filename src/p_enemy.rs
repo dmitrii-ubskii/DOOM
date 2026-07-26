@@ -8,7 +8,6 @@ use std::{
 use crate::{
 	d_main::fastparm,
 	d_player::player_t,
-	d_think::thinker_t,
 	doomdata::{ML_SOUNDBLOCK, ML_TWOSIDED},
 	doomdef::{GameMode_t, MAXPLAYERS, skill_t},
 	doomstat::gamemode,
@@ -62,6 +61,23 @@ pub enum dirtype_t {
 	DI_SOUTHEAST,
 	DI_NODIR,
 	NUMDIRS,
+}
+
+impl From<dirtype_t> for usize {
+	fn from(value: dirtype_t) -> Self {
+		match value {
+			dirtype_t::DI_EAST => 0,
+			dirtype_t::DI_NORTHEAST => 1,
+			dirtype_t::DI_NORTH => 2,
+			dirtype_t::DI_NORTHWEST => 3,
+			dirtype_t::DI_WEST => 4,
+			dirtype_t::DI_SOUTHWEST => 5,
+			dirtype_t::DI_SOUTH => 6,
+			dirtype_t::DI_SOUTHEAST => 7,
+			dirtype_t::DI_NODIR => 8,
+			dirtype_t::NUMDIRS => 9,
+		}
+	}
 }
 
 const DIRS: [dirtype_t; 8] = [
@@ -130,13 +146,15 @@ fn P_RecursiveSound(sec: &mut sector_t, soundblocks: i32) {
 				continue; // closed door
 			}
 
-			let other = if (*sides.wrapping_add(check.sidenum[0] as usize)).sector == sec {
-				&mut *(*sides.wrapping_add(check.sidenum[1] as usize)).sector
+			let other = if (*sides.wrapping_add(usize::try_from(check.sidenum[0]).unwrap())).sector
+				== sec
+			{
+				&mut *(*sides.wrapping_add(usize::try_from(check.sidenum[1]).unwrap())).sector
 			} else {
-				&mut *(*sides.wrapping_add(check.sidenum[0] as usize)).sector
+				&mut *(*sides.wrapping_add(usize::try_from(check.sidenum[0]).unwrap())).sector
 			};
 
-			if check.flags as usize & ML_SOUNDBLOCK != 0 {
+			if usize::try_from(check.flags).unwrap() & ML_SOUNDBLOCK != 0 {
 				if soundblocks == 0 {
 					P_RecursiveSound(other, 1);
 				}
@@ -247,8 +265,8 @@ fn P_Move(actor: &mut mobj_t) -> bool {
 			I_Error(c"Weird actor.movedir!".as_ptr());
 		}
 
-		let tryx = actor.x + (*actor.info).speed * xspeed[actor.movedir as usize];
-		let tryy = actor.y + (*actor.info).speed * yspeed[actor.movedir as usize];
+		let tryx = actor.x + (*actor.info).speed * xspeed[usize::from(actor.movedir)];
+		let tryy = actor.y + (*actor.info).speed * yspeed[usize::from(actor.movedir)];
 
 		let try_ok = P_TryMove(actor, tryx, tryy);
 
@@ -318,7 +336,7 @@ fn P_NewChaseDir(actor: &mut mobj_t) {
 		}
 
 		let olddir = actor.movedir;
-		let turnaround = opposite[olddir as usize];
+		let turnaround = opposite[usize::from(olddir)];
 
 		let deltax = (*actor.target).x - actor.x;
 		let deltay = (*actor.target).y - actor.y;
@@ -343,7 +361,7 @@ fn P_NewChaseDir(actor: &mut mobj_t) {
 
 		// try direct route
 		if d[1] != dirtype_t::DI_NODIR && d[2] != dirtype_t::DI_NODIR {
-			actor.movedir = diags[(((deltay < 0) as usize) << 1) + ((deltax > 0) as usize)];
+			actor.movedir = diags[(usize::from(deltay < 0) << 1) + (usize::from(deltax > 0))];
 			if actor.movedir != turnaround && P_TryWalk(actor) {
 				return;
 			}
@@ -433,7 +451,7 @@ fn P_LookForPlayers(actor: &mut mobj_t, allaround: bool) -> bool {
 		loop {
 			actor.lastlook = (actor.lastlook + 1) & 3;
 
-			if playeringame[actor.lastlook as usize] == 0 {
+			if playeringame[usize::try_from(actor.lastlook).unwrap()] == 0 {
 				continue;
 			}
 
@@ -443,7 +461,7 @@ fn P_LookForPlayers(actor: &mut mobj_t, allaround: bool) -> bool {
 			}
 			c += 1;
 
-			let player = &mut players[actor.lastlook as usize];
+			let player = &mut players[usize::try_from(actor.lastlook).unwrap()];
 
 			if player.health <= 0 {
 				continue; // dead
@@ -488,7 +506,7 @@ pub(crate) fn A_KeenDie(mo: &mut mobj_t) {
 				continue;
 			}
 
-			let mo2 = &*(th as *const thinker_t as *const mobj_t);
+			let mo2 = &*ptr::from_ref(th).cast::<mobj_t>();
 			if !ptr::eq(mo2, mo) && mo2.ty == mo.ty && mo2.health > 0 {
 				// other Keen not dead
 				return;
@@ -563,7 +581,7 @@ pub(crate) fn A_Look(actor: &mut mobj_t) {
 				// full volume
 				S_StartSound(null_mut(), sound);
 			} else {
-				S_StartSound((actor as *mut mobj_t).cast(), sound);
+				S_StartSound(ptr::from_mut(actor).cast(), sound);
 			}
 		}
 
@@ -592,7 +610,8 @@ pub(crate) fn A_Chase(actor: &mut mobj_t) {
 		// turn towards movement direction if not there yet
 		if actor.movedir != dirtype_t::DI_NODIR {
 			actor.angle &= 7 << 29;
-			let delta = (actor.angle - Wrapping((actor.movedir as usize) << 29)).0 as isize;
+			let delta =
+				((actor.angle - Wrapping((usize::from(actor.movedir)) << 29)).0).cast_signed();
 
 			if delta > 0 {
 				actor.angle -= ANG90 / Wrapping(2);
@@ -623,7 +642,7 @@ pub(crate) fn A_Chase(actor: &mut mobj_t) {
 		// check for melee attack
 		if (*actor.info).meleestate != statenum_t::S_NULL && P_CheckMeleeRange(actor) {
 			if (*actor.info).attacksound != sfxenum_t::sfx_None {
-				S_StartSound((actor as *mut mobj_t).cast(), (*actor.info).attacksound);
+				S_StartSound(ptr::from_mut(actor).cast(), (*actor.info).attacksound);
 			}
 
 			P_SetMobjState(actor, (*actor.info).meleestate);
@@ -657,7 +676,7 @@ pub(crate) fn A_Chase(actor: &mut mobj_t) {
 
 		// make active sound
 		if (*actor.info).activesound != sfxenum_t::sfx_None && P_Random() < 3 {
-			S_StartSound((actor as *mut mobj_t).cast(), (*actor.info).activesound);
+			S_StartSound(ptr::from_mut(actor).cast(), (*actor.info).activesound);
 		}
 	}
 }
@@ -674,7 +693,8 @@ pub(crate) fn A_FaceTarget(actor: &mut mobj_t) {
 		unsafe { R_PointToAngle2(actor.x, actor.y, (*actor.target).x, (*actor.target).y) };
 
 	if unsafe { (*actor.target).flags & MF_SHADOW != 0 } {
-		actor.angle += Wrapping(((P_Random() - P_Random()) << 21) as usize);
+		actor.angle +=
+			Wrapping(isize::try_from((P_Random() - P_Random()) << 21).unwrap().cast_unsigned());
 	}
 }
 
@@ -688,8 +708,8 @@ pub(crate) fn A_PosAttack(actor: &mut mobj_t) {
 	let mut angle = actor.angle;
 	let slope = P_AimLineAttack(actor, angle, MISSILERANGE);
 
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_pistol);
-	angle += Wrapping(((P_Random() - P_Random()) << 20) as usize);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_pistol);
+	angle += Wrapping(isize::try_from((P_Random() - P_Random()) << 20).unwrap().cast_unsigned());
 	let damage = ((P_Random() % 5) + 1) * 3;
 	P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
@@ -699,13 +719,14 @@ pub(crate) fn A_SPosAttack(actor: &mut mobj_t) {
 		return;
 	}
 
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_shotgn);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_shotgn);
 	A_FaceTarget(actor);
 	let bangle = actor.angle;
 	let slope = P_AimLineAttack(actor, bangle, MISSILERANGE);
 
 	for _ in 0..3 {
-		let angle = bangle + Wrapping(((P_Random() - P_Random()) << 20) as usize);
+		let angle = bangle
+			+ Wrapping(isize::try_from((P_Random() - P_Random()) << 20).unwrap().cast_unsigned());
 		let damage = ((P_Random() % 5) + 1) * 3;
 		P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 	}
@@ -716,12 +737,13 @@ pub(crate) fn A_CPosAttack(actor: &mut mobj_t) {
 		return;
 	}
 
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_shotgn);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_shotgn);
 	A_FaceTarget(actor);
 	let bangle = actor.angle;
 	let slope = P_AimLineAttack(actor, bangle, MISSILERANGE);
 
-	let angle = bangle + Wrapping(((P_Random() - P_Random()) << 20) as usize);
+	let angle = bangle
+		+ Wrapping(isize::try_from((P_Random() - P_Random()) << 20).unwrap().cast_unsigned());
 	let damage = ((P_Random() % 5) + 1) * 3;
 	P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
@@ -784,7 +806,7 @@ pub(crate) fn A_TroopAttack(actor: &mut mobj_t) {
 
 	A_FaceTarget(actor);
 	if P_CheckMeleeRange(actor) {
-		S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_claw);
+		S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_claw);
 		let damage = (P_Random() % 8 + 1) * 3;
 		unsafe { P_DamageMobj(&mut *actor.target, actor, actor, damage) };
 		return;
@@ -846,7 +868,7 @@ pub(crate) fn A_BruisAttack(actor: &mut mobj_t) {
 	}
 
 	if P_CheckMeleeRange(actor) {
-		S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_claw);
+		S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_claw);
 		let damage = (P_Random() % 8 + 1) * 10;
 		unsafe { P_DamageMobj(&mut *actor.target, actor, actor, damage) };
 		return;
@@ -955,7 +977,7 @@ pub(crate) fn A_SkelWhoosh(actor: &mut mobj_t) {
 		return;
 	}
 	A_FaceTarget(actor);
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_skeswg);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_skeswg);
 }
 
 pub(crate) fn A_SkelFist(actor: &mut mobj_t) {
@@ -968,7 +990,7 @@ pub(crate) fn A_SkelFist(actor: &mut mobj_t) {
 	if P_CheckMeleeRange(actor) {
 		unsafe {
 			let damage = ((P_Random() % 10) + 1) * 6;
-			S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_skepch);
+			S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_skepch);
 			P_DamageMobj(&mut *actor.target, actor, actor, damage);
 		}
 	}
@@ -995,7 +1017,7 @@ fn PIT_VileCheck(thing: &mut mobj_t) -> bool {
 			return true; // monster doesn't have a raise state
 		}
 
-		let maxdist = (*thing.info).radius + mobjinfo[mobjtype_t::MT_VILE as usize].radius;
+		let maxdist = (*thing.info).radius + mobjinfo[usize::from(mobjtype_t::MT_VILE)].radius;
 
 		if fixed_t::abs(thing.x - viletryx) > maxdist || fixed_t::abs(thing.y - viletryy) > maxdist
 		{
@@ -1021,8 +1043,8 @@ pub(crate) fn A_VileChase(actor: &mut mobj_t) {
 	unsafe {
 		if actor.movedir != dirtype_t::DI_NODIR {
 			// check for corpses to raise
-			viletryx = actor.x + (*actor.info).speed * xspeed[actor.movedir as usize];
-			viletryy = actor.y + (*actor.info).speed * yspeed[actor.movedir as usize];
+			viletryx = actor.x + (*actor.info).speed * xspeed[usize::from(actor.movedir)];
+			viletryy = actor.y + (*actor.info).speed * yspeed[usize::from(actor.movedir)];
 
 			let xl = (viletryx - bmaporgx - MAXRADIUS * 2) >> MAPBLOCKSHIFT;
 			let xh = (viletryx - bmaporgx + MAXRADIUS * 2) >> MAPBLOCKSHIFT;
@@ -1065,19 +1087,19 @@ pub(crate) fn A_VileChase(actor: &mut mobj_t) {
 
 // A_VileStart
 pub(crate) fn A_VileStart(actor: &mut mobj_t) {
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_vilatk);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_vilatk);
 }
 
 // A_Fire
 // Keep fire in front of player unless out of sight
 
 pub(crate) fn A_StartFire(actor: &mut mobj_t) {
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_flamst);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_flamst);
 	A_Fire(actor);
 }
 
 pub(crate) fn A_FireCrackle(actor: &mut mobj_t) {
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_flame);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_flame);
 	A_Fire(actor);
 }
 
@@ -1141,7 +1163,7 @@ pub(crate) fn A_VileAttack(actor: &mut mobj_t) {
 			return;
 		}
 
-		S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_barexp);
+		S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_barexp);
 		P_DamageMobj(&mut *actor.target, actor, actor, 20);
 		(*actor.target).momz = 1000 * FRACUNIT / (*(*actor.target).info).mass;
 
@@ -1164,7 +1186,7 @@ const FATSPREAD: angle_t = Wrapping(ANG90.0 / 8);
 
 pub(crate) fn A_FatRaise(actor: &mut mobj_t) {
 	A_FaceTarget(actor);
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_manatk);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_manatk);
 }
 
 pub(crate) fn A_FatAttack1(actor: &mut mobj_t) {
@@ -1232,7 +1254,7 @@ pub(crate) fn A_SkullAttack(actor: &mut mobj_t) {
 		let dest = actor.target;
 		actor.flags |= MF_SKULLFLY;
 
-		S_StartSound((actor as *mut mobj_t).cast(), (*actor.info).attacksound);
+		S_StartSound(ptr::from_mut(actor).cast(), (*actor.info).attacksound);
 		A_FaceTarget(actor);
 		let an = (actor.angle >> ANGLETOFINESHIFT).0;
 		actor.momx = FixedMul(SKULLSPEED, finecos(an));
@@ -1257,7 +1279,7 @@ fn A_PainShootSkull(actor: &mut mobj_t, angle: angle_t) {
 		let mut currentthinker = thinkercap.next;
 		while !std::ptr::eq(currentthinker, &raw const thinkercap) {
 			if (*currentthinker).function.is_mobj()
-				&& (*(currentthinker as *mut mobj_t)).ty == mobjtype_t::MT_SKULL
+				&& (*(currentthinker.cast::<mobj_t>())).ty == mobjtype_t::MT_SKULL
 			{
 				count += 1;
 			}
@@ -1274,7 +1296,7 @@ fn A_PainShootSkull(actor: &mut mobj_t, angle: angle_t) {
 		let an = (angle >> ANGLETOFINESHIFT).0;
 
 		let prestep = 4 * FRACUNIT
-			+ 3 * ((*actor.info).radius + mobjinfo[mobjtype_t::MT_SKULL as usize].radius) / 2;
+			+ 3 * ((*actor.info).radius + mobjinfo[usize::from(mobjtype_t::MT_SKULL)].radius) / 2;
 
 		let x = actor.x + FixedMul(prestep, finecos(an));
 		let y = actor.y + FixedMul(prestep, finesine[an]);
@@ -1318,11 +1340,11 @@ pub(crate) fn A_Scream(actor: &mut mobj_t) {
 
 		sfxenum_t::sfx_podth1 | sfxenum_t::sfx_podth2 | sfxenum_t::sfx_podth3 => {
 			[sfxenum_t::sfx_podth1, sfxenum_t::sfx_podth2, sfxenum_t::sfx_podth3]
-				[(P_Random() % 3) as usize]
+				[usize::try_from(P_Random() % 3).unwrap()]
 		}
 
 		sfxenum_t::sfx_bgdth1 | sfxenum_t::sfx_bgdth2 => {
-			[sfxenum_t::sfx_bgdth1, sfxenum_t::sfx_podth2][(P_Random() % 2) as usize]
+			[sfxenum_t::sfx_bgdth1, sfxenum_t::sfx_podth2][usize::try_from(P_Random() % 2).unwrap()]
 		}
 
 		deathsound => deathsound,
@@ -1333,18 +1355,18 @@ pub(crate) fn A_Scream(actor: &mut mobj_t) {
 		// full volume
 		S_StartSound(null_mut(), sound);
 	} else {
-		S_StartSound((actor as *mut mobj_t).cast(), sound);
+		S_StartSound(ptr::from_mut(actor).cast(), sound);
 	}
 }
 
 pub(crate) fn A_XScream(actor: &mut mobj_t) {
-	S_StartSound((actor as *mut mobj_t).cast(), sfxenum_t::sfx_slop);
+	S_StartSound(ptr::from_mut(actor).cast(), sfxenum_t::sfx_slop);
 }
 
 pub(crate) fn A_Pain(actor: &mut mobj_t) {
 	unsafe {
 		if (*actor.info).painsound != sfxenum_t::sfx_None {
-			S_StartSound((actor as *mut mobj_t).cast(), (*actor.info).painsound);
+			S_StartSound(ptr::from_mut(actor).cast(), (*actor.info).painsound);
 		}
 	}
 }
@@ -1435,7 +1457,7 @@ pub(crate) fn A_BossDeath(mo: &mut mobj_t) {
 				continue;
 			}
 
-			let mo2 = &*(th as *mut mobj_t);
+			let mo2 = &*(th.cast::<mobj_t>());
 			if !std::ptr::eq(mo2, mo) && mo2.ty == mo.ty && mo2.health > 0 {
 				// other boss not dead
 				return;
@@ -1492,17 +1514,17 @@ pub(crate) fn A_BossDeath(mo: &mut mobj_t) {
 }
 
 pub(crate) fn A_Hoof(mo: &mut mobj_t) {
-	S_StartSound((mo as *mut mobj_t).cast(), sfxenum_t::sfx_hoof);
+	S_StartSound(ptr::from_mut(mo).cast(), sfxenum_t::sfx_hoof);
 	A_Chase(mo);
 }
 
 pub(crate) fn A_Metal(mo: &mut mobj_t) {
-	S_StartSound((mo as *mut mobj_t).cast(), sfxenum_t::sfx_metal);
+	S_StartSound(ptr::from_mut(mo).cast(), sfxenum_t::sfx_metal);
 	A_Chase(mo);
 }
 
 pub(crate) fn A_BabyMetal(mo: &mut mobj_t) {
-	S_StartSound((mo as *mut mobj_t).cast(), sfxenum_t::sfx_bspwlk);
+	S_StartSound(ptr::from_mut(mo).cast(), sfxenum_t::sfx_bspwlk);
 	A_Chase(mo);
 }
 
@@ -1554,7 +1576,9 @@ pub(crate) fn A_BrainPain(_mo: &mut mobj_t) {
 }
 
 pub(crate) fn A_BrainScream(mo: &mut mobj_t) {
-	for x in ((mo.x - 196 * FRACUNIT)..(mo.x + 320 * FRACUNIT)).step_by(FRACUNIT as usize * 8) {
+	for x in ((mo.x - 196 * FRACUNIT)..(mo.x + 320 * FRACUNIT))
+		.step_by(usize::try_from(FRACUNIT).unwrap() * 8)
+	{
 		let y = mo.y - 320 * FRACUNIT;
 		let z = 128 + P_Random() * 2 * FRACUNIT;
 		let th = unsafe { &mut *P_SpawnMobj(x, y, z, mobjtype_t::MT_ROCKET) };
@@ -1614,7 +1638,7 @@ pub(crate) fn A_BrainSpit(mo: &mut mobj_t) {
 
 // travelling cube sound
 pub(crate) fn A_SpawnSound(mo: &mut mobj_t) {
-	S_StartSound((mo as *mut mobj_t).cast(), sfxenum_t::sfx_boscub);
+	S_StartSound(ptr::from_mut(mo).cast(), sfxenum_t::sfx_boscub);
 	A_SpawnFly(mo);
 }
 
@@ -1632,7 +1656,7 @@ pub(crate) fn A_SpawnFly(mo: &mut mobj_t) {
 		S_StartSound(fog.cast(), sfxenum_t::sfx_telept);
 
 		// Randomly select monster to spawn.
-		let r = P_Random() as u8;
+		let r = u8::try_from(P_Random()).unwrap();
 
 		// Probability distribution (kind of :),
 		// decreasing likelihood.
@@ -1675,5 +1699,5 @@ pub(crate) fn A_PlayerScream(mo: &mut mobj_t) {
 		}
 	}
 
-	S_StartSound((mo as *mut mobj_t).cast(), sound);
+	S_StartSound(ptr::from_mut(mo).cast(), sound);
 }

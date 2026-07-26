@@ -7,6 +7,7 @@ use std::{
 
 use crate::{
 	am_map::automapactive,
+	const_conv::usize_from_u8,
 	d_englsh::{
 		HUSTR_1, HUSTR_2, HUSTR_3, HUSTR_4, HUSTR_5, HUSTR_6, HUSTR_7, HUSTR_8, HUSTR_9, HUSTR_10,
 		HUSTR_11, HUSTR_12, HUSTR_13, HUSTR_14, HUSTR_15, HUSTR_16, HUSTR_17, HUSTR_18, HUSTR_19,
@@ -79,13 +80,13 @@ fn HU_TITLE2() -> *const c_char {
 // }
 const HU_TITLEX: usize = 0;
 fn HU_TITLEY() -> usize {
-	unsafe { 167 - (*hu_font[0]).height as usize }
+	unsafe { 167 - usize::try_from((*hu_font[0]).height).unwrap() }
 }
 
 const HU_INPUTTOGGLE: u8 = b't';
 const HU_INPUTX: usize = HU_MSGX;
 fn HU_INPUTY() -> usize {
-	unsafe { HU_MSGY + HU_MSGHEIGHT * ((*hu_font[0]).height as usize + 1) }
+	unsafe { HU_MSGY + HU_MSGHEIGHT * (usize::try_from((*hu_font[0]).height).unwrap() + 1) }
 }
 
 pub(crate) static mut chat_macros: [Smuggle<c_char>; 10] = [
@@ -106,8 +107,8 @@ pub(crate) const player_names: [*const c_char; 4] =
 
 static mut plr: *mut player_t = null_mut();
 #[unsafe(no_mangle)]
-pub(crate) static mut hu_font: [*mut patch_t; HU_FONTSIZE as usize] =
-	[null_mut(); HU_FONTSIZE as usize];
+pub(crate) static mut hu_font: [*mut patch_t; usize_from_u8(HU_FONTSIZE)] =
+	[null_mut(); usize_from_u8(HU_FONTSIZE)];
 static mut w_title: hu_textline_t = hu_textline_t {
 	x: 0,
 	y: 0,
@@ -364,8 +365,8 @@ pub(crate) fn HU_Init() {
 		let mut j = HU_FONTSTART;
 		#[allow(clippy::needless_range_loop)]
 		#[allow(clippy::explicit_counter_loop)]
-		for i in 0..HU_FONTSIZE as usize {
-			libc::sprintf(buffer.as_mut_ptr(), c"STCFN%.3d".as_ptr(), j as c_int);
+		for i in 0..usize::from(HU_FONTSIZE) {
+			libc::sprintf(buffer.as_mut_ptr(), c"STCFN%.3d".as_ptr(), c_int::from(j));
 			j += 1;
 			hu_font[i] = W_CacheLumpName(buffer.as_mut_ptr(), PU_STATIC).cast();
 		}
@@ -399,7 +400,7 @@ pub extern "C" fn HU_Start() {
 			HU_MSGY,
 			HU_MSGHEIGHT,
 			hu_font.as_mut_ptr(),
-			HU_FONTSTART as i32,
+			i32::from(HU_FONTSTART),
 			&raw mut message_on,
 		);
 
@@ -409,7 +410,7 @@ pub extern "C" fn HU_Start() {
 			HU_TITLEX,
 			HU_TITLEY(),
 			hu_font.as_mut_ptr(),
-			HU_FONTSTART as i32,
+			i32::from(HU_FONTSTART),
 		);
 
 		let mut s = match gamemode {
@@ -438,7 +439,7 @@ pub extern "C" fn HU_Start() {
 			HU_INPUTX,
 			HU_INPUTY(),
 			hu_font.as_mut_ptr(),
-			HU_FONTSTART as i32,
+			i32::from(HU_FONTSTART),
 			&raw mut chat_on,
 		);
 
@@ -505,16 +506,16 @@ pub(crate) fn HU_Ticker() {
 				let mut c = players[i].cmd.chatchar;
 				if i != consoleplayer && c != 0 {
 					if c <= HU_BROADCAST {
-						chat_dest[i] = c as c_char;
+						chat_dest[i] = c_char::try_from(c).unwrap();
 					} else {
 						if c.is_ascii_lowercase() {
-							c = *shiftxform.wrapping_add(c as usize);
+							c = *shiftxform.wrapping_add(usize::from(c));
 						}
 						let rc = HUlib_keyInIText(&mut w_inputbuffer[i], c);
 						if rc != 0 && c == KEY_ENTER {
 							if w_inputbuffer[i].l.len != 0
-								&& (chat_dest[i] == consoleplayer as c_char + 1
-									|| chat_dest[i] == HU_BROADCAST as i8)
+								&& (chat_dest[i] == c_char::try_from(consoleplayer).unwrap() + 1
+									|| chat_dest[i] == i8::try_from(HU_BROADCAST).unwrap())
 							{
 								HUlib_addMessageToSText(
 									&mut w_message,
@@ -588,10 +589,10 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 			numplayers += playeringame[i];
 		}
 
-		if ev.data1 == KEY_RSHIFT as i32 {
+		if ev.data1 == i32::from(KEY_RSHIFT) {
 			shiftdown = ev.ty == evtype_t::ev_keydown;
 			return 0;
-		} else if ev.data1 == KEY_RALT as i32 || ev.data1 == KEY_LALT as i32 {
+		} else if ev.data1 == i32::from(KEY_RALT) || ev.data1 == i32::from(KEY_LALT) {
 			altdown = ev.ty == evtype_t::ev_keydown;
 			return 0;
 		}
@@ -602,23 +603,23 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 
 		let mut eatkey = 0;
 		if chat_on == 0 {
-			if ev.data1 == HU_MSGREFRESH as i32 {
+			if ev.data1 == i32::from(HU_MSGREFRESH) {
 				message_on = 1;
 				message_counter = HU_MSGTIMEOUT;
 				eatkey = 1;
-			} else if netgame != 0 && ev.data1 == HU_INPUTTOGGLE as i32 {
+			} else if netgame != 0 && ev.data1 == i32::from(HU_INPUTTOGGLE) {
 				eatkey = 1;
 				chat_on = 1;
 				HUlib_resetIText(&mut w_chat);
-				HU_queueChatChar(HU_BROADCAST as c_char);
+				HU_queueChatChar(c_char::try_from(HU_BROADCAST).unwrap());
 			} else if netgame != 0 && numplayers > 2 {
 				for i in 0..MAXPLAYERS {
-					if ev.data1 == destination_keys[i] as i32 {
+					if ev.data1 == i32::from(destination_keys[i]) {
 						if playeringame[i] != 0 && i != consoleplayer {
 							eatkey = 1;
 							chat_on = 1;
 							HUlib_resetIText(&mut w_chat);
-							HU_queueChatChar(i as c_char + 1);
+							HU_queueChatChar(c_char::try_from(i).unwrap() + 1);
 							break;
 						} else if i == consoleplayer {
 							num_nobrainers += 1;
@@ -638,7 +639,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 				}
 			}
 		} else {
-			let mut c = ev.data1 as u8;
+			let mut c = u8::try_from(ev.data1).unwrap();
 			// send a macro
 			if altdown {
 				c -= b'0';
@@ -646,21 +647,21 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 					return 0;
 				}
 				// fprintf(stderr, "got here\n");
-				let Smuggle(mut macromessage) = chat_macros[c as usize];
+				let Smuggle(mut macromessage) = chat_macros[usize::from(c)];
 
 				// kill last message with a '\n'
-				HU_queueChatChar(KEY_ENTER as c_char); // DEBUG!!!
+				HU_queueChatChar(c_char::try_from(KEY_ENTER).unwrap()); // DEBUG!!!
 
 				// send the macro message
 				while *macromessage != 0 {
 					HU_queueChatChar(*macromessage);
 					macromessage = macromessage.wrapping_add(1);
 				}
-				HU_queueChatChar(KEY_ENTER as c_char);
+				HU_queueChatChar(c_char::try_from(KEY_ENTER).unwrap());
 
 				// leave chat mode and notify that it was sent
 				chat_on = 0;
-				libc::strcpy(lastmessage.as_mut_ptr(), chat_macros[c as usize].u());
+				libc::strcpy(lastmessage.as_mut_ptr(), chat_macros[usize::from(c)].u());
 				(*plr).message = lastmessage.as_mut_ptr();
 				eatkey = 1;
 			} else {
@@ -668,12 +669,12 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 				// 	c = ForeignTranslation(c);
 				// }
 				if shiftdown || c.is_ascii_lowercase() {
-					c = *shiftxform.wrapping_add(c as usize);
+					c = *shiftxform.wrapping_add(usize::from(c));
 				}
 				eatkey = HUlib_keyInIText(&mut w_chat, c);
 				if eatkey != 0 {
 					// static unsigned char buf[20]; // DEBUG
-					HU_queueChatChar(c as c_char);
+					HU_queueChatChar(c_char::try_from(c).unwrap());
 
 					// sprintf(buf, "KEY: %d => %d", ev.data1, c);
 					//      plr.message = buf;

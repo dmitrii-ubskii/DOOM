@@ -1,6 +1,9 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{num::Wrapping, ptr::null_mut};
+use std::{
+	num::Wrapping,
+	ptr::{self, null_mut},
+};
 
 use crate::{
 	d_event::BT_ATTACK,
@@ -32,10 +35,21 @@ pub const FF_FRAMEMASK: usize = 0x7fff;
 // drawn directly on the view screen,
 // coordinates are given for a 320*200 view screen.
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub enum psprnum_t {
 	ps_weapon,
 	ps_flash,
 	NUMPSPRITES,
+}
+
+impl psprnum_t {
+	pub(crate) const fn to_usize(self) -> usize {
+		match self {
+			psprnum_t::ps_weapon => 0,
+			psprnum_t::ps_flash => 1,
+			psprnum_t::NUMPSPRITES => 2,
+		}
+	}
 }
 
 impl From<usize> for psprnum_t {
@@ -45,6 +59,12 @@ impl From<usize> for psprnum_t {
 			1 => Self::ps_flash,
 			_ => unreachable!("{value} out of bounds for psprnum_t"),
 		}
+	}
+}
+
+impl From<psprnum_t> for usize {
+	fn from(value: psprnum_t) -> Self {
+		value.to_usize()
 	}
 }
 
@@ -69,8 +89,8 @@ pub const BFGCELLS: usize = 40;
 // P_SetPsprite
 fn P_SetPsprite(player: &mut player_t, position: psprnum_t, mut stnum: statenum_t) {
 	unsafe {
-		let player_p = player as *mut player_t;
-		let psp = &mut player.psprites[position as usize];
+		let player_p = ptr::from_mut(player);
+		let psp = &mut player.psprites[usize::from(position)];
 
 		loop {
 			if stnum == statenum_t::S_NULL {
@@ -79,7 +99,7 @@ fn P_SetPsprite(player: &mut player_t, position: psprnum_t, mut stnum: statenum_
 				break;
 			}
 
-			let state = &raw mut states[stnum as usize];
+			let state = &raw mut states[usize::from(stnum)];
 			psp.state = state;
 			psp.tics = (*state).tics; // could be 0
 
@@ -121,10 +141,10 @@ fn P_BringUpWeapon(player: &mut player_t) {
 		S_StartSound(player.mo.cast(), sfxenum_t::sfx_sawup);
 	}
 
-	let newstate = weaponinfo[player.pendingweapon as usize].upstate;
+	let newstate = weaponinfo[usize::from(player.pendingweapon)].upstate;
 
 	player.pendingweapon = weapontype_t::wp_nochange;
-	player.psprites[psprnum_t::ps_weapon as usize].sy = WEAPONBOTTOM;
+	player.psprites[usize::from(psprnum_t::ps_weapon)].sy = WEAPONBOTTOM;
 
 	P_SetPsprite(player, psprnum_t::ps_weapon, newstate);
 }
@@ -134,7 +154,7 @@ fn P_BringUpWeapon(player: &mut player_t) {
 // If not, selects the next weapon to use.
 fn P_CheckAmmo(player: &mut player_t) -> bool {
 	unsafe {
-		let ammo = weaponinfo[player.readyweapon as usize].ammo;
+		let ammo = weaponinfo[usize::from(player.readyweapon)].ammo;
 
 		// Minimal amount for one shot varies.
 		let count = match player.readyweapon {
@@ -145,41 +165,41 @@ fn P_CheckAmmo(player: &mut player_t) -> bool {
 
 		// Some do not need ammunition anyway.
 		// Return if current ammunition sufficient.
-		if ammo == ammotype_t::am_noammo || player.ammo[ammo as usize] >= count {
+		if ammo == ammotype_t::am_noammo || player.ammo[usize::from(ammo)] >= count {
 			return true;
 		}
 
 		// Out of ammo, pick a weapon to change to.
 		// Preferences are set here.
 		loop {
-			if player.weaponowned[weapontype_t::wp_plasma as usize] != 0
-				&& player.ammo[ammotype_t::am_cell as usize] != 0
+			if player.weaponowned[usize::from(weapontype_t::wp_plasma)] != 0
+				&& player.ammo[usize::from(ammotype_t::am_cell)] != 0
 				&& gamemode != GameMode_t::shareware
 			{
 				player.pendingweapon = weapontype_t::wp_plasma;
-			} else if player.weaponowned[weapontype_t::wp_supershotgun as usize] != 0
-				&& player.ammo[ammotype_t::am_shell as usize] > 2
+			} else if player.weaponowned[usize::from(weapontype_t::wp_supershotgun)] != 0
+				&& player.ammo[usize::from(ammotype_t::am_shell)] > 2
 				&& gamemode == GameMode_t::commercial
 			{
 				player.pendingweapon = weapontype_t::wp_supershotgun;
-			} else if player.weaponowned[weapontype_t::wp_chaingun as usize] != 0
-				&& player.ammo[ammotype_t::am_clip as usize] != 0
+			} else if player.weaponowned[usize::from(weapontype_t::wp_chaingun)] != 0
+				&& player.ammo[usize::from(ammotype_t::am_clip)] != 0
 			{
 				player.pendingweapon = weapontype_t::wp_chaingun;
-			} else if player.weaponowned[weapontype_t::wp_shotgun as usize] != 0
-				&& player.ammo[ammotype_t::am_shell as usize] != 0
+			} else if player.weaponowned[usize::from(weapontype_t::wp_shotgun)] != 0
+				&& player.ammo[usize::from(ammotype_t::am_shell)] != 0
 			{
 				player.pendingweapon = weapontype_t::wp_shotgun;
-			} else if player.ammo[ammotype_t::am_clip as usize] != 0 {
+			} else if player.ammo[usize::from(ammotype_t::am_clip)] != 0 {
 				player.pendingweapon = weapontype_t::wp_pistol;
-			} else if player.weaponowned[weapontype_t::wp_chainsaw as usize] != 0 {
+			} else if player.weaponowned[usize::from(weapontype_t::wp_chainsaw)] != 0 {
 				player.pendingweapon = weapontype_t::wp_chainsaw;
-			} else if player.weaponowned[weapontype_t::wp_missile as usize] != 0
-				&& player.ammo[ammotype_t::am_misl as usize] != 0
+			} else if player.weaponowned[usize::from(weapontype_t::wp_missile)] != 0
+				&& player.ammo[usize::from(ammotype_t::am_misl)] != 0
 			{
 				player.pendingweapon = weapontype_t::wp_missile;
-			} else if player.weaponowned[weapontype_t::wp_bfg as usize] != 0
-				&& player.ammo[ammotype_t::am_cell as usize] > BFGCELLS
+			} else if player.weaponowned[usize::from(weapontype_t::wp_bfg)] != 0
+				&& player.ammo[usize::from(ammotype_t::am_cell)] > BFGCELLS
 				&& gamemode != GameMode_t::shareware
 			{
 				player.pendingweapon = weapontype_t::wp_bfg;
@@ -197,7 +217,7 @@ fn P_CheckAmmo(player: &mut player_t) -> bool {
 		P_SetPsprite(
 			player,
 			psprnum_t::ps_weapon,
-			weaponinfo[player.readyweapon as usize].downstate,
+			weaponinfo[usize::from(player.readyweapon)].downstate,
 		);
 
 		false
@@ -211,7 +231,7 @@ fn P_FireWeapon(player: &mut player_t) {
 	}
 
 	unsafe { P_SetMobjState(&mut *player.mo, statenum_t::S_PLAY_ATK1) };
-	let newstate = weaponinfo[player.readyweapon as usize].atkstate;
+	let newstate = weaponinfo[usize::from(player.readyweapon)].atkstate;
 	P_SetPsprite(player, psprnum_t::ps_weapon, newstate);
 	unsafe { P_NoiseAlert(player.mo, &mut *player.mo) };
 }
@@ -219,7 +239,11 @@ fn P_FireWeapon(player: &mut player_t) {
 // P_DropWeapon
 // Player died, so put the weapon away.
 pub fn P_DropWeapon(player: &mut player_t) {
-	P_SetPsprite(player, psprnum_t::ps_weapon, weaponinfo[player.readyweapon as usize].downstate);
+	P_SetPsprite(
+		player,
+		psprnum_t::ps_weapon,
+		weaponinfo[usize::from(player.readyweapon)].downstate,
+	);
 }
 
 // A_WeaponReady
@@ -230,14 +254,14 @@ pub fn P_DropWeapon(player: &mut player_t) {
 pub(crate) fn A_WeaponReady(player: &mut player_t, psp: &mut pspdef_t) {
 	unsafe {
 		// get out of attack state
-		if (*player.mo).state == &raw mut states[statenum_t::S_PLAY_ATK1 as usize]
-			|| (*player.mo).state == &raw mut states[statenum_t::S_PLAY_ATK2 as usize]
+		if (*player.mo).state == &raw mut states[usize::from(statenum_t::S_PLAY_ATK1)]
+			|| (*player.mo).state == &raw mut states[usize::from(statenum_t::S_PLAY_ATK2)]
 		{
 			P_SetMobjState(&mut *player.mo, statenum_t::S_PLAY);
 		}
 
 		if player.readyweapon == weapontype_t::wp_chainsaw
-			&& std::ptr::eq(psp.state, &raw const states[statenum_t::S_SAW as usize])
+			&& std::ptr::eq(psp.state, &raw const states[usize::from(statenum_t::S_SAW)])
 		{
 			S_StartSound(player.mo.cast(), sfxenum_t::sfx_sawidl);
 		}
@@ -247,7 +271,7 @@ pub(crate) fn A_WeaponReady(player: &mut player_t, psp: &mut pspdef_t) {
 		if player.pendingweapon != weapontype_t::wp_nochange || player.health == 0 {
 			// change weapon
 			//  (pending weapon should allready be validated)
-			let newstate = weaponinfo[player.readyweapon as usize].downstate;
+			let newstate = weaponinfo[usize::from(player.readyweapon)].downstate;
 			P_SetPsprite(player, psprnum_t::ps_weapon, newstate);
 			return;
 		}
@@ -341,7 +365,7 @@ pub(crate) fn A_Raise(player: &mut player_t, psp: &mut pspdef_t) {
 
 	// The weapon has been raised all the way,
 	//  so change to the ready state.
-	let newstate = weaponinfo[player.readyweapon as usize].readystate;
+	let newstate = weaponinfo[usize::from(player.readyweapon)].readystate;
 
 	P_SetPsprite(player, psprnum_t::ps_weapon, newstate);
 }
@@ -353,7 +377,7 @@ pub(crate) fn A_GunFlash(player: &mut player_t, _psp: &mut pspdef_t) {
 		P_SetPsprite(
 			player,
 			psprnum_t::ps_flash,
-			weaponinfo[player.readyweapon as usize].flashstate,
+			weaponinfo[usize::from(player.readyweapon)].flashstate,
 		);
 	}
 }
@@ -365,12 +389,12 @@ pub(crate) fn A_Punch(player: &mut player_t, _psp: &mut pspdef_t) {
 	unsafe {
 		let mut damage = (P_Random() % 10 + 1) << 1;
 
-		if player.powers[powertype_t::pw_strength as usize] != 0 {
+		if player.powers[usize::from(powertype_t::pw_strength)] != 0 {
 			damage *= 10;
 		}
 
 		let mut angle = (*player.mo).angle;
-		angle += ((P_Random() - P_Random()) << 18) as usize;
+		angle += isize::try_from((P_Random() - P_Random()) << 18).unwrap().cast_unsigned();
 		let slope = P_AimLineAttack(&mut *player.mo, angle, MELEERANGE);
 		P_LineAttack(&mut *player.mo, angle, MELEERANGE, slope, damage);
 
@@ -388,7 +412,7 @@ pub(crate) fn A_Saw(player: &mut player_t, _psp: &mut pspdef_t) {
 	unsafe {
 		let damage = 2 * (P_Random() % 10 + 1);
 		let mut angle = (*player.mo).angle;
-		angle += ((P_Random() - P_Random()) << 18) as usize;
+		angle += isize::try_from((P_Random() - P_Random()) << 18).unwrap().cast_unsigned();
 
 		// use meleerange + 1 se the puff doesn't skip the flash
 		let slope = P_AimLineAttack(&mut *player.mo, angle, MELEERANGE + 1);
@@ -419,25 +443,26 @@ pub(crate) fn A_Saw(player: &mut player_t, _psp: &mut pspdef_t) {
 
 // A_FireMissile
 pub(crate) fn A_FireMissile(player: &mut player_t, _psp: &mut pspdef_t) {
-	player.ammo[weaponinfo[player.readyweapon as usize].ammo as usize] -= 1;
+	player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
 	unsafe { P_SpawnPlayerMissile(&mut *player.mo, mobjtype_t::MT_ROCKET) };
 }
 
 // A_FireBFG
 pub(crate) fn A_FireBFG(player: &mut player_t, _psp: &mut pspdef_t) {
-	player.ammo[weaponinfo[player.readyweapon as usize].ammo as usize] -= BFGCELLS;
+	player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= BFGCELLS;
 	unsafe { P_SpawnPlayerMissile(&mut *player.mo, mobjtype_t::MT_BFG) };
 }
 
 // A_FirePlasma
 pub(crate) fn A_FirePlasma(player: &mut player_t, _psp: &mut pspdef_t) {
-	player.ammo[weaponinfo[player.readyweapon as usize].ammo as usize] -= 1;
+	player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
 
 	P_SetPsprite(
 		player,
 		psprnum_t::ps_flash,
 		statenum_t::from(
-			weaponinfo[player.readyweapon as usize].flashstate as usize + (P_Random() & 1) as usize,
+			usize::from(weaponinfo[usize::from(player.readyweapon)].flashstate)
+				+ usize::try_from(P_Random() & 1).unwrap(),
 		),
 	);
 
@@ -472,7 +497,7 @@ fn P_GunShot(mo: &mut mobj_t, accurate: bool) {
 	let mut angle = mo.angle;
 
 	if !accurate {
-		angle += ((P_Random() - P_Random()) << 18) as usize;
+		angle += isize::try_from((P_Random() - P_Random()) << 18).unwrap().cast_unsigned();
 	}
 
 	unsafe { P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage) };
@@ -484,12 +509,12 @@ pub(crate) fn A_FirePistol(player: &mut player_t, _psp: &mut pspdef_t) {
 		S_StartSound(player.mo.cast(), sfxenum_t::sfx_pistol);
 
 		P_SetMobjState(&mut *player.mo, statenum_t::S_PLAY_ATK2);
-		player.ammo[weaponinfo[player.readyweapon as usize].ammo as usize] -= 1;
+		player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
 
 		P_SetPsprite(
 			player,
 			psprnum_t::ps_flash,
-			weaponinfo[player.readyweapon as usize].flashstate,
+			weaponinfo[usize::from(player.readyweapon)].flashstate,
 		);
 
 		P_BulletSlope(&mut *player.mo);
@@ -503,12 +528,12 @@ pub(crate) fn A_FireShotgun(player: &mut player_t, _psp: &mut pspdef_t) {
 		S_StartSound(player.mo.cast(), sfxenum_t::sfx_shotgn);
 		P_SetMobjState(&mut *player.mo, statenum_t::S_PLAY_ATK2);
 
-		player.ammo[weaponinfo[player.readyweapon as usize].ammo as usize] -= 1;
+		player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
 
 		P_SetPsprite(
 			player,
 			psprnum_t::ps_flash,
-			weaponinfo[player.readyweapon as usize].flashstate,
+			weaponinfo[usize::from(player.readyweapon)].flashstate,
 		);
 
 		P_BulletSlope(&mut *player.mo);
@@ -525,12 +550,12 @@ pub(crate) fn A_FireShotgun2(player: &mut player_t, _psp: &mut pspdef_t) {
 		S_StartSound(player.mo.cast(), sfxenum_t::sfx_dshtgn);
 		P_SetMobjState(&mut *player.mo, statenum_t::S_PLAY_ATK2);
 
-		player.ammo[weaponinfo[player.readyweapon as usize].ammo as usize] -= 2;
+		player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 2;
 
 		P_SetPsprite(
 			player,
 			psprnum_t::ps_flash,
-			weaponinfo[player.readyweapon as usize].flashstate,
+			weaponinfo[usize::from(player.readyweapon)].flashstate,
 		);
 
 		P_BulletSlope(&mut *player.mo);
@@ -538,7 +563,7 @@ pub(crate) fn A_FireShotgun2(player: &mut player_t, _psp: &mut pspdef_t) {
 		for _ in 0..20 {
 			let damage = 5 * (P_Random() % 3 + 1);
 			let mut angle = (*player.mo).angle;
-			angle += ((P_Random() - P_Random()) << 19) as usize;
+			angle += isize::try_from((P_Random() - P_Random()) << 19).unwrap().cast_unsigned();
 			P_LineAttack(
 				&mut *player.mo,
 				angle,
@@ -555,20 +580,22 @@ pub(crate) fn A_FireCGun(player: &mut player_t, psp: &mut pspdef_t) {
 	unsafe {
 		S_StartSound(player.mo.cast(), sfxenum_t::sfx_pistol);
 
-		if player.ammo[weaponinfo[player.readyweapon as usize].ammo as usize] == 0 {
+		if player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] == 0 {
 			return;
 		}
 
 		P_SetMobjState(&mut *player.mo, statenum_t::S_PLAY_ATK2);
-		player.ammo[weaponinfo[player.readyweapon as usize].ammo as usize] -= 1;
+		player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
 
 		P_SetPsprite(
 			player,
 			psprnum_t::ps_flash,
 			statenum_t::from(
-				weaponinfo[player.readyweapon as usize].flashstate as usize
-					+ psp.state.offset_from(&raw const states[statenum_t::S_CHAIN1 as usize])
-						as usize,
+				usize::from(weaponinfo[usize::from(player.readyweapon)].flashstate)
+					+ usize::try_from(
+						psp.state.offset_from(&raw const states[usize::from(statenum_t::S_CHAIN1)]),
+					)
+					.unwrap(),
 			),
 		);
 
@@ -633,7 +660,7 @@ pub(crate) fn A_BFGsound(player: &mut player_t, _psp: &mut pspdef_t) {
 // Called at start of level for each player.
 pub(crate) fn P_SetupPsprites(player: &mut player_t) {
 	// remove all psprites
-	for i in 0..psprnum_t::NUMPSPRITES as usize {
+	for i in 0..usize::from(psprnum_t::NUMPSPRITES) {
 		player.psprites[i].state = null_mut();
 	}
 
@@ -645,7 +672,7 @@ pub(crate) fn P_SetupPsprites(player: &mut player_t) {
 // P_MovePsprites
 // Called every tic by player thinking routine.
 pub(crate) fn P_MovePsprites(player: &mut player_t) {
-	for i in 0..psprnum_t::NUMPSPRITES as usize {
+	for i in 0..usize::from(psprnum_t::NUMPSPRITES) {
 		let psp = &mut player.psprites[i];
 		// a null state means not active
 		let state = psp.state;
@@ -663,8 +690,8 @@ pub(crate) fn P_MovePsprites(player: &mut player_t) {
 		}
 	}
 
-	player.psprites[psprnum_t::ps_flash as usize].sx =
-		player.psprites[psprnum_t::ps_weapon as usize].sx;
-	player.psprites[psprnum_t::ps_flash as usize].sy =
-		player.psprites[psprnum_t::ps_weapon as usize].sy;
+	player.psprites[usize::from(psprnum_t::ps_flash)].sx =
+		player.psprites[usize::from(psprnum_t::ps_weapon)].sx;
+	player.psprites[usize::from(psprnum_t::ps_flash)].sy =
+		player.psprites[usize::from(psprnum_t::ps_weapon)].sy;
 }

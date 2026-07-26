@@ -9,7 +9,7 @@ pub const FRACUNIT: i32 = 1 << FRACBITS;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn FixedMul(a: fixed_t, b: fixed_t) -> fixed_t {
-	((a as i64 * b as i64) >> FRACBITS) as fixed_t
+	fixed_t::try_from((i64::from(a) * i64::from(b)) >> FRACBITS).unwrap()
 }
 
 /// FixedDiv, C version.
@@ -21,6 +21,7 @@ pub extern "C" fn FixedDiv(a: fixed_t, b: fixed_t) -> fixed_t {
 	fixed_div_2(a, b)
 }
 
+#[allow(clippy::as_conversions)]
 fn fixed_div_2(a: fixed_t, b: fixed_t) -> fixed_t {
 	let c = (a as f64) / (b as f64) * FRACUNIT as f64;
 

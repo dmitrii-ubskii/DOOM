@@ -1,4 +1,5 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
+#![allow(clippy::as_conversions)]
 
 use std::ffi::c_char;
 
@@ -13,7 +14,7 @@ use crate::{
 	sounds::sfxenum_t,
 };
 
-#[repr(C)]
+#[repr(usize)]
 #[rustfmt::skip]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum spritenum_t {
@@ -36,7 +37,13 @@ pub enum spritenum_t {
 	NUMSPRITES,
 }
 
-#[repr(C)]
+impl From<spritenum_t> for usize {
+	fn from(value: spritenum_t) -> Self {
+		unsafe { std::mem::transmute(value) }
+	}
+}
+
+#[repr(usize)]
 #[rustfmt::skip]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum statenum_t {
@@ -290,6 +297,12 @@ impl From<usize> for statenum_t {
 	}
 }
 
+impl From<statenum_t> for usize {
+	fn from(value: statenum_t) -> Self {
+		unsafe { std::mem::transmute(value) }
+	}
+}
+
 #[repr(C)]
 pub struct state_t {
 	pub sprite: spritenum_t,
@@ -301,7 +314,7 @@ pub struct state_t {
 	pub misc2: i32,
 }
 
-#[repr(C)]
+#[repr(usize)]
 #[rustfmt::skip]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum mobjtype_t {
@@ -331,9 +344,15 @@ pub enum mobjtype_t {
 
 impl From<usize> for mobjtype_t {
 	fn from(value: usize) -> Self {
-		if value > Self::NUMMOBJTYPES as usize {
+		if value > usize::from(Self::NUMMOBJTYPES) {
 			panic!("mobjtype_t out of bounds");
 		}
+		unsafe { std::mem::transmute(value) }
+	}
+}
+
+impl From<mobjtype_t> for usize {
+	fn from(value: mobjtype_t) -> Self {
 		unsafe { std::mem::transmute(value) }
 	}
 }

@@ -8,7 +8,7 @@
 
 use std::{
 	ffi::c_char,
-	ptr::{null_mut, read_unaligned},
+	ptr::{self, null_mut, read_unaligned},
 };
 
 use crate::{
@@ -152,9 +152,9 @@ pub static mut colormaps: *mut lighttable_t = null_mut();
 fn R_DrawColumnInCache(mut patch: &mut column_t, cache: &mut u8, originy: i32, cacheheight: isize) {
 	unsafe {
 		while patch.topdelta != 0xff {
-			let source = (patch as *mut column_t as *mut u8).wrapping_add(3);
-			let mut count = patch.length as isize;
-			let mut position = originy as isize + patch.topdelta as isize;
+			let source = ptr::from_mut(patch).wrapping_byte_add(3);
+			let mut count = isize::from(patch.length);
+			let mut position = isize::try_from(originy).unwrap() + isize::from(patch.topdelta);
 
 			if position < 0 {
 				count += position;
@@ -167,13 +167,15 @@ fn R_DrawColumnInCache(mut patch: &mut column_t, cache: &mut u8, originy: i32, c
 
 			if count > 0 {
 				libc::memcpy(
-					(cache as *mut u8).wrapping_add(position as usize).cast(),
+					ptr::from_mut(cache)
+						.wrapping_byte_add(usize::try_from(position).unwrap())
+						.cast(),
 					source.cast(),
-					count as usize,
+					usize::try_from(count).unwrap(),
 				);
 			}
 
-			patch = &mut *(patch as *mut column_t).wrapping_byte_add(patch.length as usize + 4);
+			patch = &mut *ptr::from_mut(patch).wrapping_byte_add(usize::from(patch.length) + 4);
 		}
 	}
 }
@@ -197,33 +199,43 @@ fn R_GenerateComposite(texnum: usize) {
 
 		// Composite the columns together.
 		let patch = texture.patches.as_ptr();
-		for i in 0..texture.patchcount as usize {
+		for i in 0..usize::try_from(texture.patchcount).unwrap() {
 			let patch = &*patch.wrapping_add(i);
-			let realpatch = &mut *(W_CacheLumpNum(patch.patch as usize, PU_CACHE) as *mut patch_t);
+			let realpatch: &mut patch_t =
+				&mut *W_CacheLumpNum(usize::try_from(patch.patch).unwrap(), PU_CACHE).cast();
 			let x1 = patch.originx;
-			let mut x2 = x1 + realpatch.width as i32;
+			let mut x2 = x1 + i32::from(realpatch.width);
 
 			let mut x = if x1 < 0 { 0 } else { x1 };
 
-			if x2 > texture.width as i32 {
-				x2 = texture.width as i32;
+			if x2 > i32::from(texture.width) {
+				x2 = i32::from(texture.width);
 			}
 
 			while x < x2 {
 				// Column does not have multiple patches?
-				if *collump.wrapping_add(x as usize) >= 0 {
+				if *collump.wrapping_add(usize::try_from(x).unwrap()) >= 0 {
 					x += 1;
 					continue;
 				}
 
-				let patchcol = (realpatch as *mut patch_t as *mut u8)
-					.wrapping_add(*realpatch.columnofs.as_ptr().wrapping_add((x - x1) as usize))
-					as *mut column_t;
+				let patchcol = ptr::from_mut(realpatch)
+					.wrapping_byte_add(
+						*realpatch
+							.columnofs
+							.as_ptr()
+							.wrapping_add(usize::try_from(x - x1).unwrap()),
+					)
+					.cast::<column_t>();
 				R_DrawColumnInCache(
 					&mut *patchcol,
-					&mut *block.wrapping_add(*colofs.wrapping_add(x as usize) as usize).cast(),
+					&mut *block
+						.wrapping_add(usize::from(
+							*colofs.wrapping_add(usize::try_from(x).unwrap()),
+						))
+						.cast(),
 					patch.originy,
-					texture.height as isize,
+					isize::from(texture.height),
 				);
 				x += 1;
 			}
@@ -251,32 +263,36 @@ fn R_GenerateLookup(texnum: usize) {
 		//  that are covered by more than one patch.
 		// Fill in the lump / offset, so columns
 		//  with only a single patch are all done.
-		let mut patchcount = vec![0; texture.width as usize];
+		let mut patchcount = vec![0; usize::try_from(texture.width).unwrap()];
 
 		let patch = texture.patches.as_ptr();
-		for i in 0..texture.patchcount as usize {
+		for i in 0..usize::try_from(texture.patchcount).unwrap() {
 			let patch = &*patch.wrapping_add(i);
-			let realpatch = &mut *(W_CacheLumpNum(patch.patch as usize, PU_CACHE) as *mut patch_t);
+			let realpatch = &mut *(W_CacheLumpNum(usize::try_from(patch.patch).unwrap(), PU_CACHE)
+				.cast::<patch_t>());
 			let x1 = patch.originx;
-			let mut x2 = x1 + realpatch.width as i32;
+			let mut x2 = x1 + i32::from(realpatch.width);
 
 			let mut x = if x1 < 0 { 0 } else { x1 };
 
-			if x2 > texture.width as i32 {
-				x2 = texture.width as i32;
+			if x2 > i32::from(texture.width) {
+				x2 = i32::from(texture.width);
 			}
 
 			while x < x2 {
-				patchcount[x as usize] += 1;
-				*collump.wrapping_add(x as usize) = patch.patch as i16;
-				*colofs.wrapping_add(x as usize) =
-					(*realpatch.columnofs.as_ptr().wrapping_add((x - x1) as usize)) as u16 + 3;
+				patchcount[usize::try_from(x).unwrap()] += 1;
+				*collump.wrapping_add(usize::try_from(x).unwrap()) =
+					i16::try_from(patch.patch).unwrap();
+				*colofs.wrapping_add(usize::try_from(x).unwrap()) = u16::try_from(
+					*realpatch.columnofs.as_ptr().wrapping_add(usize::try_from(x - x1).unwrap()),
+				)
+				.unwrap() + 3;
 				x += 1;
 			}
 		}
 
 		#[allow(clippy::needless_range_loop)]
-		for x in 0..texture.width as usize {
+		for x in 0..usize::try_from(texture.width).unwrap() {
 			if patchcount[x] == 0 {
 				println!(
 					"R_GenerateLookup: column without a patch ({})",
@@ -287,13 +303,17 @@ fn R_GenerateLookup(texnum: usize) {
 			if patchcount[x] > 1 {
 				// Use the cached block.
 				*collump.wrapping_add(x) = -1;
-				*colofs.wrapping_add(x) = (*texturecompositesize.wrapping_add(texnum)) as u16;
+				*colofs.wrapping_add(x) =
+					u16::try_from(*texturecompositesize.wrapping_add(texnum)).unwrap();
 
-				if *texturecompositesize.wrapping_add(texnum) > 0x10000 - texture.height as usize {
+				if *texturecompositesize.wrapping_add(texnum)
+					> 0x10000 - usize::try_from(texture.height).unwrap()
+				{
 					I_Error(c"R_GenerateLookup: texture %i is >64k".as_ptr(), texnum);
 				}
 
-				*texturecompositesize.wrapping_add(texnum) += texture.height as usize;
+				*texturecompositesize.wrapping_add(texnum) +=
+					usize::try_from(texture.height).unwrap();
 			}
 		}
 	}
@@ -305,10 +325,12 @@ pub extern "C" fn R_GetColumn(tex: usize, mut col: usize) -> *mut u8 {
 	unsafe {
 		col &= *texturewidthmask.wrapping_add(tex);
 		let lump = *(*texturecolumnlump.wrapping_add(tex)).wrapping_add(col);
-		let ofs = *(*texturecolumnofs.wrapping_add(tex)).wrapping_add(col) as usize;
+		let ofs = usize::from(*(*texturecolumnofs.wrapping_add(tex)).wrapping_add(col));
 
 		if lump > 0 {
-			return W_CacheLumpNum(lump as usize, PU_CACHE).wrapping_byte_add(ofs).cast();
+			return W_CacheLumpNum(usize::try_from(lump).unwrap(), PU_CACHE)
+				.wrapping_byte_add(ofs)
+				.cast();
 		}
 
 		if (*texturecomposite.wrapping_add(tex)).is_null() {
@@ -326,8 +348,8 @@ fn R_InitTextures() {
 	unsafe {
 		// Load the patch names from pnames.lmp.
 		let mut name = [0; 9];
-		let names = W_CacheLumpName(c"PNAMES".as_ptr(), PU_STATIC) as *mut c_char;
-		let nummappatches = *(names as *const usize);
+		let names = W_CacheLumpName(c"PNAMES".as_ptr(), PU_STATIC).cast::<c_char>();
+		let nummappatches = *names.cast::<usize>();
 		let name_p = names.wrapping_add(4);
 		let mut patchlookup = vec![0isize; nummappatches];
 
@@ -341,19 +363,20 @@ fn R_InitTextures() {
 		// Load the map texture definitions from textures.lmp.
 		// The data is contained in one or two lumps,
 		//  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
-		let mut maptex = W_CacheLumpName(c"TEXTURE1".as_ptr(), PU_STATIC) as *mut usize;
+		let mut maptex = W_CacheLumpName(c"TEXTURE1".as_ptr(), PU_STATIC).cast::<usize>();
 		let maptex1 = maptex;
 		let numtextures1 = *maptex;
-		let mut maxoff = W_LumpLength(W_GetNumForName(c"TEXTURE1".as_ptr()) as usize);
+		let mut maxoff =
+			W_LumpLength(usize::try_from(W_GetNumForName(c"TEXTURE1".as_ptr())).unwrap());
 		let mut directory = maptex.wrapping_add(1);
 
 		let maptex2;
 		let numtextures2;
 		let maxoff2;
 		if W_CheckNumForName(c"TEXTURE2".as_ptr()) != -1 {
-			maptex2 = W_CacheLumpName(c"TEXTURE2".as_ptr(), PU_STATIC) as *mut usize;
+			maptex2 = W_CacheLumpName(c"TEXTURE2".as_ptr(), PU_STATIC).cast::<usize>();
 			numtextures2 = *maptex2;
-			maxoff2 = W_LumpLength(W_GetNumForName(c"TEXTURE2".as_ptr()) as usize);
+			maxoff2 = W_LumpLength(usize::try_from(W_GetNumForName(c"TEXTURE2".as_ptr())).unwrap());
 		} else {
 			maptex2 = null_mut();
 			numtextures2 = 0;
@@ -372,7 +395,7 @@ fn R_InitTextures() {
 		//	Really complex printing shit...
 		let temp1 = W_GetNumForName(c"S_START".as_ptr()); // P_???????
 		let temp2 = W_GetNumForName(c"S_END".as_ptr()) - 1;
-		let temp3 = ((temp2 - temp1 + 63) as usize / 64) + numtextures.div_ceil(64);
+		let temp3 = (usize::try_from(temp2 - temp1 + 63).unwrap() / 64) + numtextures.div_ceil(64);
 		print!("[");
 		for _ in 0..temp3 {
 			print!(" ");
@@ -406,7 +429,8 @@ fn R_InitTextures() {
 			let texture = Z_Malloc(
 				size_of::<texture_t>()
 					+ size_of::<texpatch_t>()
-						* (read_unaligned(&raw const (*mtexture).patchcount) - 1) as usize,
+						* usize::try_from(read_unaligned(&raw const (*mtexture).patchcount) - 1)
+							.unwrap(),
 				PU_STATIC,
 				null_mut(),
 			)
@@ -422,12 +446,12 @@ fn R_InitTextures() {
 			let mpatch: *const mappatch_t = (&raw const (*mtexture).patches).cast();
 			let patch = texture.patches.as_mut_ptr();
 
-			for j in 0..texture.patchcount as usize {
+			for j in 0..usize::try_from(texture.patchcount).unwrap() {
 				let mpatch = &*mpatch.wrapping_add(j);
 				let patch = &mut *patch.wrapping_add(j);
-				patch.originx = mpatch.originx as i32;
-				patch.originy = mpatch.originy as i32;
-				patch.patch = patchlookup[mpatch.patch as usize];
+				patch.originx = i32::from(mpatch.originx);
+				patch.originy = i32::from(mpatch.originy);
+				patch.patch = patchlookup[usize::try_from(mpatch.patch).unwrap()];
 				if patch.patch == -1 {
 					I_Error(
 						c"R_InitTextures: Missing patch in texture %s".as_ptr(),
@@ -437,17 +461,17 @@ fn R_InitTextures() {
 			}
 
 			*texturecolumnlump.wrapping_add(i) =
-				Z_Malloc(texture.width as usize * 2, PU_STATIC, null_mut()).cast();
+				Z_Malloc(usize::try_from(texture.width).unwrap() * 2, PU_STATIC, null_mut()).cast();
 			*texturecolumnofs.wrapping_add(i) =
-				Z_Malloc(texture.width as usize * 2, PU_STATIC, null_mut()).cast();
+				Z_Malloc(usize::try_from(texture.width).unwrap() * 2, PU_STATIC, null_mut()).cast();
 
 			let mut j = 1;
-			while j * 2 <= texture.width as usize {
+			while j * 2 <= usize::try_from(texture.width).unwrap() {
 				j <<= 1;
 			}
 
 			*texturewidthmask.wrapping_add(i) = j - 1;
-			*textureheight.wrapping_add(i) = (texture.height as fixed_t) << FRACBITS;
+			*textureheight.wrapping_add(i) = fixed_t::from(texture.height) << FRACBITS;
 
 			directory = directory.wrapping_add(1);
 		}
@@ -474,8 +498,8 @@ fn R_InitTextures() {
 // R_InitFlats
 fn R_InitFlats() {
 	unsafe {
-		firstflat = W_GetNumForName(c"F_START".as_ptr()) as usize + 1;
-		lastflat = W_GetNumForName(c"F_END".as_ptr()) as usize - 1;
+		firstflat = usize::try_from(W_GetNumForName(c"F_START".as_ptr())).unwrap() + 1;
+		lastflat = usize::try_from(W_GetNumForName(c"F_END".as_ptr())).unwrap() - 1;
 		numflats = lastflat - firstflat + 1;
 
 		// Create translation table for global animation.
@@ -493,8 +517,8 @@ fn R_InitFlats() {
 //  just for having the header info ready during rendering.
 fn R_InitSpriteLumps() {
 	unsafe {
-		firstspritelump = W_GetNumForName(c"S_START".as_ptr()) as usize + 1;
-		lastspritelump = W_GetNumForName(c"S_END".as_ptr()) as usize - 1;
+		firstspritelump = usize::try_from(W_GetNumForName(c"S_START".as_ptr())).unwrap() + 1;
+		lastspritelump = usize::try_from(W_GetNumForName(c"S_END".as_ptr())).unwrap() - 1;
 
 		numspritelumps = lastspritelump - firstspritelump + 1;
 		spritewidth = Z_Malloc(numspritelumps * 4, PU_STATIC, null_mut()).cast();
@@ -506,10 +530,10 @@ fn R_InitSpriteLumps() {
 				print!(".");
 			}
 
-			let patch = &*(W_CacheLumpNum(firstspritelump + i, PU_CACHE) as *mut patch_t);
-			*spritewidth.wrapping_add(i) = (patch.width as fixed_t) << FRACBITS;
-			*spriteoffset.wrapping_add(i) = (patch.leftoffset as fixed_t) << FRACBITS;
-			*spritetopoffset.wrapping_add(i) = (patch.topoffset as fixed_t) << FRACBITS;
+			let patch = &*(W_CacheLumpNum(firstspritelump + i, PU_CACHE).cast::<patch_t>());
+			*spritewidth.wrapping_add(i) = fixed_t::from(patch.width) << FRACBITS;
+			*spriteoffset.wrapping_add(i) = fixed_t::from(patch.leftoffset) << FRACBITS;
+			*spritetopoffset.wrapping_add(i) = fixed_t::from(patch.topoffset) << FRACBITS;
 		}
 	}
 }
@@ -519,7 +543,7 @@ fn R_InitColormaps() {
 	unsafe {
 		// Load in the light tables,
 		//  256 byte align tables.
-		let lump = W_GetNumForName(c"COLORMAP".as_ptr()) as usize;
+		let lump = usize::try_from(W_GetNumForName(c"COLORMAP".as_ptr())).unwrap();
 		let length = W_LumpLength(lump) + 255;
 		let p = Z_Malloc(length, PU_STATIC, null_mut());
 		colormaps = p.wrapping_byte_add(p.align_offset(0x100)).cast();
@@ -553,7 +577,7 @@ pub(crate) fn R_FlatNumForName(name: *const c_char) -> usize {
 			libc::memcpy(namet.as_mut_ptr().cast(), name.cast(), 8);
 			I_Error(c"R_FlatNumForName: %s not found".as_ptr(), namet.as_ptr());
 		}
-		i as usize - firstflat
+		usize::try_from(i).unwrap() - firstflat
 	}
 }
 
@@ -563,13 +587,13 @@ pub(crate) fn R_FlatNumForName(name: *const c_char) -> usize {
 pub(crate) fn R_CheckTextureNumForName(name: *const c_char) -> i32 {
 	unsafe {
 		// "NoTexture" marker.
-		if *name == b'-' as c_char {
+		if *name == c_char::try_from(b'-').unwrap() {
 			return 0;
 		}
 
 		for i in 0..numtextures {
 			if libc::strncasecmp((**textures.wrapping_add(i)).name.as_ptr().cast(), name, 8) == 0 {
-				return i as i32;
+				return i32::try_from(i).unwrap();
 			}
 		}
 
@@ -585,7 +609,7 @@ pub(crate) fn R_TextureNumForName(name: *const c_char) -> usize {
 	if i == -1 {
 		unsafe { I_Error(c"R_TextureNumForName: %s not found".as_ptr(), name) };
 	}
-	i as usize
+	usize::try_from(i).unwrap()
 }
 
 // R_PrecacheLevel
@@ -609,8 +633,8 @@ pub(crate) fn R_PrecacheLevel() {
 		let mut flatpresent = vec![0u8; numflats];
 
 		for i in 0..numsectors {
-			flatpresent[(*sectors.wrapping_add(i)).floorpic as usize] = 1;
-			flatpresent[(*sectors.wrapping_add(i)).ceilingpic as usize] = 1;
+			flatpresent[usize::try_from((*sectors.wrapping_add(i)).floorpic).unwrap()] = 1;
+			flatpresent[usize::try_from((*sectors.wrapping_add(i)).ceilingpic).unwrap()] = 1;
 		}
 
 		flatmemory = 0;
@@ -628,9 +652,9 @@ pub(crate) fn R_PrecacheLevel() {
 		let mut texturepresent = vec![0u8; numtextures];
 
 		for i in 0..numsides {
-			texturepresent[(*sides.wrapping_add(i)).toptexture as usize] = 1;
-			texturepresent[(*sides.wrapping_add(i)).midtexture as usize] = 1;
-			texturepresent[(*sides.wrapping_add(i)).bottomtexture as usize] = 1;
+			texturepresent[usize::try_from((*sides.wrapping_add(i)).toptexture).unwrap()] = 1;
+			texturepresent[usize::try_from((*sides.wrapping_add(i)).midtexture).unwrap()] = 1;
+			texturepresent[usize::try_from((*sides.wrapping_add(i)).bottomtexture).unwrap()] = 1;
 		}
 
 		// Sky texture is always present.
@@ -650,8 +674,9 @@ pub(crate) fn R_PrecacheLevel() {
 
 			let texture = &mut **textures.wrapping_add(i);
 
-			for j in 0..texture.patchcount as usize {
-				let lump = (*texture.patches.as_ptr().wrapping_add(j)).patch as usize;
+			for j in 0..usize::try_from(texture.patchcount).unwrap() {
+				let lump =
+					usize::try_from((*texture.patches.as_ptr().wrapping_add(j)).patch).unwrap();
 				texturememory += (*lumpinfo.wrapping_add(lump)).size;
 				W_CacheLumpNum(lump, PU_CACHE);
 			}
@@ -663,7 +688,7 @@ pub(crate) fn R_PrecacheLevel() {
 		let mut th = thinkercap.next;
 		while !std::ptr::eq(th, &raw const thinkercap) {
 			if (*th).function.is_mobj() {
-				spritepresent[(*(th as *const mobj_t)).sprite as usize] = 1;
+				spritepresent[usize::from((*(th.cast::<mobj_t>())).sprite)] = 1;
 			}
 			th = (*th).next;
 		}
@@ -676,10 +701,10 @@ pub(crate) fn R_PrecacheLevel() {
 			}
 
 			let s = sprites.wrapping_add(i);
-			for j in 0..(*s).numframes as usize {
+			for j in 0..usize::try_from((*s).numframes).unwrap() {
 				let sf = (*s).spriteframes.wrapping_add(j);
 				for k in 0..8 {
-					let lump = firstspritelump + (*sf).lump[k] as usize;
+					let lump = firstspritelump + usize::try_from((*sf).lump[k]).unwrap();
 					spritememory += (*lumpinfo.wrapping_add(lump)).size;
 					W_CacheLumpNum(lump, PU_CACHE);
 				}

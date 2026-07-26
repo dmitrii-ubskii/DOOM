@@ -108,7 +108,7 @@ pub(crate) fn S_Init(sfxVolume: u32, musicVolume: u32) {
 
 		// Note that sounds have not been cached (yet).
 		#[allow(clippy::needless_range_loop)]
-		for i in 1..sfxenum_t::NUMSFX as usize {
+		for i in 1..usize::from(sfxenum_t::NUMSFX) {
 			S_sfx[i].lumpnum = -1;
 			S_sfx[i].usefulness = -1;
 		}
@@ -133,7 +133,7 @@ pub(crate) fn S_Start() {
 
 		let mnum;
 		if gamemode == GameMode_t::commercial {
-			mnum = (musicenum_t::mus_runnin as usize + gamemap - 1).into();
+			mnum = (usize::from(musicenum_t::mus_runnin) + gamemap - 1).into();
 		} else {
 			const spmus: [musicenum_t; 9] = [
 				// Song - Who? - Where?
@@ -149,8 +149,8 @@ pub(crate) fn S_Start() {
 			];
 
 			if gameepisode < 4 {
-				mnum =
-					(musicenum_t::mus_e1m1 as usize + (gameepisode - 1) * 9 + gamemap - 1).into();
+				mnum = (usize::from(musicenum_t::mus_e1m1) + (gameepisode - 1) * 9 + gamemap - 1)
+					.into();
 			} else {
 				mnum = spmus[gamemap - 1];
 			}
@@ -168,7 +168,7 @@ pub(crate) fn S_Start() {
 
 fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u32) {
 	unsafe {
-		let origin = origin_p as *mut mobj_t;
+		let origin = origin_p.cast::<mobj_t>();
 
 		// Debug.
 		/*fprintf( stderr,
@@ -176,11 +176,11 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u3
 		sfx_id, S_sfx[sfx_id].name );*/
 
 		// check for bogus sound #
-		if (sfx_id as usize) < 1 || sfx_id as usize > sfxenum_t::NUMSFX as usize {
+		if (usize::from(sfx_id)) < 1 || usize::from(sfx_id) > usize::from(sfxenum_t::NUMSFX) {
 			I_Error(c"Bad sfx #: %d".as_ptr(), sfx_id);
 		}
 
-		let sfx = &mut S_sfx[sfx_id as usize];
+		let sfx = &mut S_sfx[usize::from(sfx_id)];
 
 		// Initialize sound parameters
 		let mut pitch;
@@ -227,13 +227,13 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u3
 		}
 
 		// hacks to vary the sfx pitches
-		if sfx_id as usize >= sfxenum_t::sfx_sawup as usize
-			&& sfx_id as usize <= sfxenum_t::sfx_sawhit as usize
+		if usize::from(sfx_id) >= usize::from(sfxenum_t::sfx_sawup)
+			&& usize::from(sfx_id) <= usize::from(sfxenum_t::sfx_sawhit)
 		{
 			pitch += 8 - (M_Random() & 15);
 			pitch = pitch.clamp(0, 255);
-		} else if sfx_id as usize != sfxenum_t::sfx_itemup as usize
-			&& sfx_id as usize != sfxenum_t::sfx_tink as usize
+		} else if usize::from(sfx_id) != usize::from(sfxenum_t::sfx_itemup)
+			&& usize::from(sfx_id) != usize::from(sfxenum_t::sfx_tink)
 		{
 			pitch += 16 - (M_Random() & 31);
 			pitch = pitch.clamp(0, 255);
@@ -396,12 +396,12 @@ pub fn S_StartMusic(m_id: musicenum_t) {
 //  and set whether looping
 pub fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 	unsafe {
-		let music = if (musicnum as usize) <= musicenum_t::mus_None as usize
-			|| musicnum as usize >= musicenum_t::NUMMUSIC as usize
+		let music = if (usize::from(musicnum)) <= usize::from(musicenum_t::mus_None)
+			|| usize::from(musicnum) >= usize::from(musicenum_t::NUMMUSIC)
 		{
 			I_Error(c"Bad music number %d".as_ptr(), musicnum);
 		} else {
-			&mut S_music[musicnum as usize]
+			&mut S_music[usize::from(musicnum)]
 		};
 
 		if mus_playing == music {
@@ -415,7 +415,7 @@ pub fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 		if music.lumpnum == 0 {
 			let mut namebuf = [0; 9];
 			libc::sprintf(namebuf.as_mut_ptr(), c"d_%s".as_ptr(), music.name);
-			music.lumpnum = W_GetNumForName(namebuf.as_ptr()) as usize;
+			music.lumpnum = usize::try_from(W_GetNumForName(namebuf.as_ptr())).unwrap();
 		}
 
 		// load & register it
@@ -486,8 +486,8 @@ fn S_AdjustSoundParams(
 	unsafe {
 		// calculate the distance to sound origin
 		//  and clip it if necessary
-		let adx = i32::abs(listener.x - source.x) as u32;
-		let ady = i32::abs(listener.y - source.y) as u32;
+		let adx = i32::abs_diff(listener.x, source.x);
+		let ady = i32::abs_diff(listener.y, source.y);
 
 		// From _GG1_ p.428. Appox. eucledian distance fast.
 		let mut approx_dist = adx + ady - (u32::min(adx, ady) >> 1);
@@ -508,7 +508,7 @@ fn S_AdjustSoundParams(
 		angle >>= ANGLETOFINESHIFT;
 
 		// stereo separation
-		*sep = 128 - (FixedMul(S_STEREO_SWING, finesine[angle.0 as usize]) >> FRACBITS);
+		*sep = 128 - (FixedMul(S_STEREO_SWING, finesine[angle.0]) >> FRACBITS);
 
 		// volume calculation
 		if approx_dist < S_CLOSE_DIST {
@@ -526,7 +526,7 @@ fn S_AdjustSoundParams(
 			*vol = (snd_SfxVolume * ((S_CLIPPING_DIST - approx_dist) >> FRACBITS)) / S_ATTENUATOR;
 		}
 
-		(*vol > 0) as i32
+		i32::from(*vol > 0)
 	}
 }
 
@@ -570,6 +570,6 @@ fn S_getChannel(origin: *mut c_void, sfxinfo: *mut sfxinfo_t) -> isize {
 		c.sfxinfo = sfxinfo;
 		c.origin = origin;
 
-		cnum as isize
+		isize::try_from(cnum).unwrap()
 	}
 }

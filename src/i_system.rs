@@ -27,7 +27,7 @@ pub(crate) fn I_BaseTiccmd() -> *const ticcmd_t {
 pub(crate) fn I_ZoneBase(size: &mut usize) -> *mut u8 {
 	unsafe {
 		*size = mb_used * 1024 * 1024;
-		malloc(*size) as _
+		malloc(*size).cast()
 	}
 }
 
@@ -44,7 +44,8 @@ pub extern "C" fn I_GetTime() -> usize {
 			basetime = tp.tv_sec;
 		}
 
-		(tp.tv_sec - basetime) as usize * TICRATE + tp.tv_usec as usize * TICRATE / 1_000_000
+		usize::try_from(tp.tv_sec - basetime).unwrap() * TICRATE
+			+ usize::try_from(tp.tv_usec).unwrap() * TICRATE / 1_000_000
 	}
 }
 

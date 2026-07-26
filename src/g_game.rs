@@ -246,7 +246,7 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		let strafe = gamekeydown[key_strafe]
 			| *mousebuttons.wrapping_offset(mousebstrafe)
 			| *joybuttons.wrapping_offset(joybstrafe);
-		let speed = (gamekeydown[key_speed] || *joybuttons.wrapping_offset(joybspeed)) as usize;
+		let speed = usize::from(gamekeydown[key_speed] || *joybuttons.wrapping_offset(joybspeed));
 
 		let mut forward = 0;
 		let mut side = 0;
@@ -284,16 +284,20 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		} else {
 			let cmd_angleturn = &mut (*cmd).angleturn;
 			if gamekeydown[key_right] {
-				*cmd_angleturn = (*cmd_angleturn).wrapping_sub(angleturn[tspeed] as i16);
+				*cmd_angleturn =
+					(*cmd_angleturn).wrapping_sub(i16::try_from(angleturn[tspeed]).unwrap());
 			}
 			if gamekeydown[key_left] {
-				*cmd_angleturn = (*cmd_angleturn).wrapping_add(angleturn[tspeed] as i16);
+				*cmd_angleturn =
+					(*cmd_angleturn).wrapping_add(i16::try_from(angleturn[tspeed]).unwrap());
 			}
 			if joyxmove > 0 {
-				*cmd_angleturn = (*cmd_angleturn).wrapping_sub(angleturn[tspeed] as i16);
+				*cmd_angleturn =
+					(*cmd_angleturn).wrapping_sub(i16::try_from(angleturn[tspeed]).unwrap());
 			}
 			if joyxmove < 0 {
-				*cmd_angleturn = (*cmd_angleturn).wrapping_add(angleturn[tspeed] as i16);
+				*cmd_angleturn =
+					(*cmd_angleturn).wrapping_add(i16::try_from(angleturn[tspeed]).unwrap());
 			}
 		}
 
@@ -319,7 +323,7 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		// buttons
-		(*cmd).chatchar = HU_dequeueChatChar() as u8;
+		(*cmd).chatchar = u8::try_from(HU_dequeueChatChar()).unwrap();
 
 		if gamekeydown[key_fire]
 			|| *mousebuttons.wrapping_offset(mousebfire)
@@ -335,10 +339,10 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		// chainsaw overrides
-		for i in 0..weapontype_t::NUMWEAPONS as usize - 1 {
-			if gamekeydown[b'1' as usize + i] {
+		for i in 0..usize::from(weapontype_t::NUMWEAPONS) - 1 {
+			if gamekeydown[usize::from(b'1') + i] {
 				(*cmd).buttons |= BT_CHANGE;
-				(*cmd).buttons |= (i << BT_WEAPONSHIFT) as u8;
+				(*cmd).buttons |= u8::try_from(i << BT_WEAPONSHIFT).unwrap();
 				break;
 			}
 		}
@@ -369,8 +373,9 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		// strafe double click
-		let bstrafe = (*mousebuttons.wrapping_offset(mousebstrafe)
-			|| *joybuttons.wrapping_offset(joybstrafe)) as i32;
+		let bstrafe = i32::from(
+			*mousebuttons.wrapping_offset(mousebstrafe) || *joybuttons.wrapping_offset(joybstrafe),
+		);
 		if bstrafe != dclickstate2 && dclicktime2 > 1 {
 			dclickstate2 = bstrafe;
 			if dclickstate2 != 0 {
@@ -394,7 +399,7 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		if strafe {
 			side += mousex * 2;
 		} else {
-			(*cmd).angleturn = (*cmd).angleturn.wrapping_sub((mousex * 0x8) as i16);
+			(*cmd).angleturn = (*cmd).angleturn.wrapping_sub(i16::try_from(mousex * 0x8).unwrap());
 		}
 
 		mousex = 0;
@@ -403,8 +408,8 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		forward = forward.clamp(-MAXPLMOVE, MAXPLMOVE);
 		side = side.clamp(-MAXPLMOVE, MAXPLMOVE);
 
-		(*cmd).forwardmove += forward as i8;
-		(*cmd).sidemove += side as i8;
+		(*cmd).forwardmove += i8::try_from(forward).unwrap();
+		(*cmd).sidemove += i8::try_from(side).unwrap();
 
 		// special buttons
 		if sendpause {
@@ -414,7 +419,9 @@ pub unsafe extern "C" fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 
 		if sendsave {
 			sendsave = false;
-			(*cmd).buttons = BT_SPECIAL | BTS_SAVEGAME | ((savegameslot as u8) << BTS_SAVESHIFT);
+			(*cmd).buttons = BT_SPECIAL
+				| BTS_SAVEGAME
+				| ((u8::try_from(savegameslot).unwrap()) << BTS_SAVESHIFT);
 		}
 	}
 }
@@ -485,7 +492,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 		// allow spy mode changes even during the demo
 		if gamestate == gamestate_t::GS_LEVEL
 			&& ev.ty == evtype_t::ev_keydown
-			&& ev.data1 == KEY_F12 as i32
+			&& ev.data1 == i32::from(KEY_F12)
 			&& (singledemo || deathmatch == 0)
 		{
 			// spy mode
@@ -534,18 +541,18 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 
 		match ev.ty {
 			evtype_t::ev_keydown => {
-				if ev.data1 == KEY_PAUSE as i32 {
+				if ev.data1 == i32::from(KEY_PAUSE) {
 					sendpause = true;
 					return 1;
 				}
-				if ev.data1 < NUMKEYS as i32 {
-					gamekeydown[ev.data1 as usize] = true;
+				if ev.data1 < i32::try_from(NUMKEYS).unwrap() {
+					gamekeydown[usize::try_from(ev.data1).unwrap()] = true;
 				}
 				1 // eat key down events
 			}
 			evtype_t::ev_keyup => {
-				if ev.data1 < NUMKEYS as i32 {
-					gamekeydown[ev.data1 as usize] = false;
+				if ev.data1 < i32::try_from(NUMKEYS).unwrap() {
+					gamekeydown[usize::try_from(ev.data1).unwrap()] = false;
 				}
 				0 // always let key up events filter down
 			}
@@ -608,7 +615,7 @@ pub extern "C" fn G_Ticker() {
 
 		// get commands, check consistancy,
 		// and build new consistancy check
-		let buf = (gametic as usize / ticdup) % BACKUPTICS;
+		let buf = (usize::try_from(gametic).unwrap() / ticdup) % BACKUPTICS;
 
 		for i in 0..MAXPLAYERS {
 			if playeringame[i] != 0 {
@@ -628,9 +635,9 @@ pub extern "C" fn G_Ticker() {
 				}
 
 				// check for turbo cheats
-				if (*cmd).forwardmove > TURBOTHRESHOLD as i8
+				if (*cmd).forwardmove > i8::try_from(TURBOTHRESHOLD).unwrap()
 					&& gametic & 31 == 0
-					&& ((gametic >> 5) & 3) == i as i32
+					&& ((gametic >> 5) & 3) == i32::try_from(i).unwrap()
 				{
 					static mut turbomessage: [c_char; 80] = [0; 80];
 					libc::sprintf(
@@ -641,18 +648,20 @@ pub extern "C" fn G_Ticker() {
 					players[consoleplayer].message = turbomessage.as_mut_ptr();
 				}
 
-				if netgame != 0 && !netdemo && gametic % ticdup as i32 == 0 {
-					if gametic > BACKUPTICS as i32 && consistancy[i][buf] != (*cmd).consistancy {
+				if netgame != 0 && !netdemo && gametic % i32::try_from(ticdup).unwrap() == 0 {
+					if gametic > i32::try_from(BACKUPTICS).unwrap()
+						&& consistancy[i][buf] != (*cmd).consistancy
+					{
 						I_Error(
 							c"consistency failure (%i should be %i)".as_ptr(),
-							(*cmd).consistancy as c_int,
-							consistancy[i][buf] as c_int,
+							c_int::from((*cmd).consistancy),
+							c_int::from(consistancy[i][buf]),
 						);
 					}
 					if !players[i].mo.is_null() {
-						consistancy[i][buf] = (*players[i].mo).x as i16;
+						consistancy[i][buf] = i16::try_from((*players[i].mo).x).unwrap();
 					} else {
-						consistancy[i][buf] = rndindex as i16;
+						consistancy[i][buf] = i16::try_from(rndindex).unwrap();
 					}
 				}
 			}
@@ -676,7 +685,7 @@ pub extern "C" fn G_Ticker() {
 							libc::strcpy(savedescription.as_mut_ptr(), c"NET GAME".as_ptr());
 						}
 						savegameslot =
-							((players[i].cmd.buttons & BTS_SAVEMASK) >> BTS_SAVESHIFT) as usize;
+							usize::from((players[i].cmd.buttons & BTS_SAVEMASK) >> BTS_SAVESHIFT);
 						gameaction = gameaction_t::ga_savegame;
 					}
 
@@ -746,9 +755,9 @@ pub(crate) fn G_PlayerReborn(player: usize) {
 		(*p).health = MAXHEALTH;
 		(*p).readyweapon = weapontype_t::wp_pistol;
 		(*p).pendingweapon = weapontype_t::wp_pistol;
-		(*p).weaponowned[weapontype_t::wp_fist as usize] = 1;
-		(*p).weaponowned[weapontype_t::wp_pistol as usize] = 1;
-		(*p).ammo[ammotype_t::am_clip as usize] = 50;
+		(*p).weaponowned[usize::from(weapontype_t::wp_fist)] = 1;
+		(*p).weaponowned[usize::from(weapontype_t::wp_pistol)] = 1;
+		(*p).ammo[usize::from(ammotype_t::am_clip)] = 50;
 
 		(*p).maxammo = maxammo;
 	}
@@ -764,8 +773,8 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 		if players[playernum].mo.is_null() {
 			// first spawn of level, before corpses
 			for p in &players[..playernum] {
-				if (*p.mo).x == ((*mthing).x as i32) << FRACBITS
-					&& (*p.mo).y == ((*mthing).y as i32) << FRACBITS
+				if (*p.mo).x == (i32::from((*mthing).x)) << FRACBITS
+					&& (*p.mo).y == (i32::from((*mthing).y)) << FRACBITS
 				{
 					return 0;
 				}
@@ -773,8 +782,8 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 			return 1;
 		}
 
-		let x = ((*mthing).x as i32) << FRACBITS;
-		let y = ((*mthing).y as i32) << FRACBITS;
+		let x = (i32::from((*mthing).x)) << FRACBITS;
+		let y = (i32::from((*mthing).y)) << FRACBITS;
 
 		if P_CheckPosition(&mut *players[playernum].mo, x, y) {
 			return 0;
@@ -789,7 +798,8 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 
 		// spawn a teleport fog
 		let ss = R_PointInSubsector(x, y);
-		let an = (ANG45 * Wrapping((*mthing).angle as usize / 45)) >> ANGLETOFINESHIFT;
+		let an = (ANG45 * Wrapping((isize::from((*mthing).angle) / 45).cast_unsigned()))
+			>> ANGLETOFINESHIFT;
 
 		let mo = P_SpawnMobj(
 			x + 20 * finecos(an.0),
@@ -818,9 +828,9 @@ pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 		}
 
 		for _ in 0..20 {
-			let i = (P_Random() % selections as i32) as usize;
+			let i = usize::try_from(P_Random() % i32::try_from(selections).unwrap()).unwrap();
 			if G_CheckSpot(playernum, &raw mut deathmatchstarts[i]) != 0 {
-				deathmatchstarts[i].ty = playernum as i16 + 1;
+				deathmatchstarts[i].ty = i16::try_from(playernum).unwrap() + 1;
 				P_SpawnPlayer(&mut deathmatchstarts[i]);
 				return;
 			}
@@ -858,9 +868,9 @@ fn G_DoReborn(playernum: usize) {
 			#[allow(clippy::needless_range_loop)]
 			for i in 0..MAXPLAYERS {
 				if G_CheckSpot(playernum, &raw mut playerstarts[i]) != 0 {
-					playerstarts[i].ty = playernum as i16 + 1; // fake as other player
+					playerstarts[i].ty = i16::try_from(playernum).unwrap() + 1; // fake as other player
 					P_SpawnPlayer(&mut playerstarts[i]);
-					playerstarts[i].ty = i as i16 + 1; // restore
+					playerstarts[i].ty = i16::try_from(i).unwrap() + 1; // restore
 					return;
 				}
 				// he's going to be inside something.  Too bad.
@@ -1075,14 +1085,14 @@ fn G_DoLoadGame() {
 
 		gameskill = (*save_p).into();
 		save_p = save_p.wrapping_add(1);
-		gameepisode = *save_p as usize;
+		gameepisode = usize::from(*save_p);
 		save_p = save_p.wrapping_add(1);
-		gamemap = *save_p as usize;
+		gamemap = usize::from(*save_p);
 		save_p = save_p.wrapping_add(1);
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			playeringame[i] = *save_p as boolean;
+			playeringame[i] = boolean::from(*save_p);
 			save_p = save_p.wrapping_add(1);
 		}
 
@@ -1090,11 +1100,11 @@ fn G_DoLoadGame() {
 		G_InitNew(gameskill, gameepisode, gamemap);
 
 		// get the times
-		let a = *save_p as usize;
+		let a = usize::from(*save_p);
 		save_p = save_p.wrapping_add(1);
-		let b = *save_p as usize;
+		let b = usize::from(*save_p);
 		save_p = save_p.wrapping_add(1);
-		let c = *save_p as usize;
+		let c = usize::from(*save_p);
 		save_p = save_p.wrapping_add(1);
 		leveltime = (a << 16) + (b << 8) + c;
 
@@ -1160,24 +1170,24 @@ fn G_DoSaveGame() {
 		libc::memcpy(save_p.cast(), (name2.as_ptr()).cast(), VERSIONSIZE);
 		save_p = save_p.wrapping_add(VERSIONSIZE);
 
-		*save_p = gameskill as u8;
+		*save_p = u8::from(gameskill);
 		save_p = save_p.wrapping_add(1);
-		*save_p = gameepisode as u8;
+		*save_p = u8::try_from(gameepisode).unwrap();
 		save_p = save_p.wrapping_add(1);
-		*save_p = gamemap as u8;
+		*save_p = u8::try_from(gamemap).unwrap();
 		save_p = save_p.wrapping_add(1);
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			*save_p = playeringame[i] as u8;
+			*save_p = u8::try_from(playeringame[i]).unwrap();
 			save_p = save_p.wrapping_add(1);
 		}
 
-		*save_p = (leveltime >> 16) as u8;
+		*save_p = u8::try_from(leveltime >> 16).unwrap();
 		save_p = save_p.wrapping_add(1);
-		*save_p = (leveltime >> 8) as u8;
+		*save_p = u8::try_from(leveltime >> 8).unwrap();
 		save_p = save_p.wrapping_add(1);
-		*save_p = leveltime as u8;
+		*save_p = u8::try_from(leveltime).unwrap();
 		save_p = save_p.wrapping_add(1);
 
 		P_ArchivePlayers();
@@ -1189,11 +1199,11 @@ fn G_DoSaveGame() {
 		save_p = save_p.wrapping_add(1);
 
 		let length = save_p.offset_from(savebuffer);
-		if length as usize > SAVEGAMESIZE {
+		if usize::try_from(length).unwrap() > SAVEGAMESIZE {
 			I_Error(c"Savegame buffer overrun".as_ptr());
 		}
 
-		M_WriteFile(name.as_ptr(), savebuffer.cast(), length as usize);
+		M_WriteFile(name.as_ptr(), savebuffer.cast(), usize::try_from(length).unwrap());
 		gameaction = gameaction_t::ga_nothing;
 		savedescription[0] = 0;
 
@@ -1276,20 +1286,20 @@ pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 
 		if fastparm != 0 || (skill == skill_t::sk_nightmare && gameskill != skill_t::sk_nightmare) {
 			#[allow(clippy::needless_range_loop)]
-			for i in statenum_t::S_SARG_RUN1 as usize..statenum_t::S_SARG_PAIN2 as usize {
+			for i in usize::from(statenum_t::S_SARG_RUN1)..usize::from(statenum_t::S_SARG_PAIN2) {
 				states[i].tics >>= 1;
 			}
-			mobjinfo[mobjtype_t::MT_BRUISERSHOT as usize].speed = 20 * FRACUNIT;
-			mobjinfo[mobjtype_t::MT_HEADSHOT as usize].speed = 20 * FRACUNIT;
-			mobjinfo[mobjtype_t::MT_TROOPSHOT as usize].speed = 20 * FRACUNIT;
+			mobjinfo[usize::from(mobjtype_t::MT_BRUISERSHOT)].speed = 20 * FRACUNIT;
+			mobjinfo[usize::from(mobjtype_t::MT_HEADSHOT)].speed = 20 * FRACUNIT;
+			mobjinfo[usize::from(mobjtype_t::MT_TROOPSHOT)].speed = 20 * FRACUNIT;
 		} else if skill != skill_t::sk_nightmare && gameskill == skill_t::sk_nightmare {
 			#[allow(clippy::needless_range_loop)]
-			for i in statenum_t::S_SARG_RUN1 as usize..statenum_t::S_SARG_PAIN2 as usize {
+			for i in usize::from(statenum_t::S_SARG_RUN1)..usize::from(statenum_t::S_SARG_PAIN2) {
 				states[i].tics <<= 1;
 			}
-			mobjinfo[mobjtype_t::MT_BRUISERSHOT as usize].speed = 15 * FRACUNIT;
-			mobjinfo[mobjtype_t::MT_HEADSHOT as usize].speed = 10 * FRACUNIT;
-			mobjinfo[mobjtype_t::MT_TROOPSHOT as usize].speed = 10 * FRACUNIT;
+			mobjinfo[usize::from(mobjtype_t::MT_BRUISERSHOT)].speed = 15 * FRACUNIT;
+			mobjinfo[usize::from(mobjtype_t::MT_HEADSHOT)].speed = 10 * FRACUNIT;
+			mobjinfo[usize::from(mobjtype_t::MT_TROOPSHOT)].speed = 10 * FRACUNIT;
 		}
 
 		// force players to be initialized upon first level load
@@ -1342,11 +1352,11 @@ fn G_ReadDemoTiccmd(cmd: *mut ticcmd_t) {
 			G_CheckDemoStatus();
 			return;
 		}
-		(*cmd).forwardmove = *demo_p as i8;
+		(*cmd).forwardmove = (*demo_p).cast_signed();
 		demo_p = demo_p.wrapping_add(1);
-		(*cmd).sidemove = *demo_p as i8;
+		(*cmd).sidemove = (*demo_p).cast_signed();
 		demo_p = demo_p.wrapping_add(1);
-		(*cmd).angleturn = (*demo_p as i16) << 8;
+		(*cmd).angleturn = i16::from(*demo_p) << 8;
 		demo_p = demo_p.wrapping_add(1);
 		(*cmd).buttons = *demo_p;
 		demo_p = demo_p.wrapping_add(1);
@@ -1355,15 +1365,15 @@ fn G_ReadDemoTiccmd(cmd: *mut ticcmd_t) {
 
 fn G_WriteDemoTiccmd(cmd: *mut ticcmd_t) {
 	unsafe {
-		if gamekeydown['q' as usize] {
+		if gamekeydown[usize::from(b'q')] {
 			// press q to end demo recording
 			G_CheckDemoStatus();
 		}
-		*demo_p = (*cmd).forwardmove as u8;
+		*demo_p = u8::try_from((*cmd).forwardmove).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = (*cmd).sidemove as u8;
+		*demo_p = u8::try_from((*cmd).sidemove).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = (((*cmd).angleturn + 128) >> 8) as u8;
+		*demo_p = u8::try_from(((*cmd).angleturn + 128) >> 8).unwrap();
 		demo_p = demo_p.wrapping_add(1);
 		*demo_p = (*cmd).buttons;
 		demo_p = demo_p.wrapping_add(1);
@@ -1390,7 +1400,7 @@ pub(crate) fn G_RecordDemo(name: *const c_char) {
 		let mut maxsize = 0x20000;
 		let i = M_CheckParm(c"-maxdemo".as_ptr());
 		if i != 0 && i < myargc - 1 {
-			maxsize = libc::atoi(*myargv.wrapping_add(i + 1)) as usize * 1024;
+			maxsize = usize::try_from(libc::atoi(*myargv.wrapping_add(i + 1))).unwrap() * 1024;
 		}
 		demobuffer = Z_Malloc(maxsize, PU_STATIC, null_mut()).cast();
 		demoend = demobuffer.wrapping_add(maxsize);
@@ -1403,28 +1413,28 @@ pub(crate) fn G_BeginRecording() {
 	unsafe {
 		demo_p = demobuffer;
 
-		*demo_p = VERSION as u8;
+		*demo_p = u8::try_from(VERSION).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = gameskill as u8;
+		*demo_p = u8::from(gameskill);
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = gameepisode as u8;
+		*demo_p = u8::try_from(gameepisode).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = gamemap as u8;
+		*demo_p = u8::try_from(gamemap).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = deathmatch as u8;
+		*demo_p = u8::try_from(deathmatch).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = respawnparm as u8;
+		*demo_p = u8::try_from(respawnparm).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = fastparm as u8;
+		*demo_p = u8::try_from(fastparm).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = nomonsters as u8;
+		*demo_p = u8::try_from(nomonsters).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = consoleplayer as u8;
+		*demo_p = u8::try_from(consoleplayer).unwrap();
 		demo_p = demo_p.wrapping_add(1);
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			*demo_p = playeringame[i] as u8;
+			*demo_p = u8::try_from(playeringame[i]).unwrap();
 			demo_p = demo_p.wrapping_add(1);
 		}
 	}
@@ -1446,7 +1456,7 @@ fn G_DoPlayDemo() {
 		gameaction = gameaction_t::ga_nothing;
 		demo_p = W_CacheLumpName(defdemoname, PU_STATIC).cast();
 		demobuffer = demo_p;
-		if *demo_p != VERSION as u8 {
+		if *demo_p != u8::try_from(VERSION).unwrap() {
 			eprintln!(
 				"Demo is from a different game version! (version = {}, demo version = {})",
 				VERSION, *demo_p
@@ -1458,25 +1468,25 @@ fn G_DoPlayDemo() {
 
 		let skill = skill_t::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
-		let episode = *demo_p as usize;
+		let episode = usize::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
-		let map = *demo_p as usize;
+		let map = usize::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
 
-		deathmatch = *demo_p as boolean;
+		deathmatch = boolean::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
-		respawnparm = *demo_p as boolean;
+		respawnparm = boolean::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
-		fastparm = *demo_p as boolean;
+		fastparm = boolean::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
-		nomonsters = *demo_p as boolean;
+		nomonsters = boolean::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
-		consoleplayer = *demo_p as usize;
+		consoleplayer = usize::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			playeringame[i] = *demo_p as i32;
+			playeringame[i] = i32::from(*demo_p);
 			demo_p = demo_p.wrapping_add(1);
 		}
 		if playeringame[1] != 0 {
@@ -1553,7 +1563,7 @@ pub extern "C" fn G_CheckDemoStatus() -> boolean {
 			M_WriteFile(
 				demoname.as_mut_ptr(),
 				demobuffer.cast(),
-				demo_p.offset_from(demobuffer) as usize,
+				usize::try_from(demo_p.offset_from(demobuffer)).unwrap(),
 			);
 			Z_Free(demobuffer.cast());
 			demorecording = 0;
