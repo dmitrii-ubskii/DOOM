@@ -6,6 +6,7 @@ use crate::{
 	am_map::automapactive,
 	doomdef::{KEY_BACKSPACE, KEY_ENTER, SCREENWIDTH},
 	r_defs::patch_t,
+	r_draw::{R_VideoErase, viewheight, viewwidth, viewwindowx, viewwindowy},
 	v_video::V_DrawPatchDirect,
 };
 
@@ -142,15 +143,6 @@ pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, drawcursor: boolean) {
 			V_DrawPatchDirect(x, l.y, FG, *l.f.wrapping_add(underscore));
 		}
 	}
-}
-
-unsafe extern "C" {
-	static mut viewwindowx: usize;
-	static mut viewwindowy: usize;
-	static mut viewwidth: usize;
-	static mut viewheight: usize;
-
-	fn R_VideoErase(ofs: usize, count: usize);
 }
 
 // sorta called by HU_Erase and just better darn get things straight

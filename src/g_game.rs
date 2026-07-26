@@ -47,6 +47,7 @@ use crate::{
 	p_setup::{P_SetupLevel, deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_Ticker, leveltime},
 	r_data::{R_FlatNumForName, R_TextureNumForName},
+	r_draw::R_FillBackScreen,
 	r_main::{R_ExecuteSetViewSize, R_PointInSubsector, setsizeneeded},
 	r_sky::{SKYFLATNAME, skyflatnum, skytexture},
 	s_sound::{S_PauseSound, S_ResumeSound, S_StartSound},
@@ -1062,10 +1063,6 @@ pub(crate) unsafe fn G_LoadGame(name: *const c_char) {
 }
 
 pub const VERSIONSIZE: usize = 16;
-
-unsafe extern "C" {
-	fn R_FillBackScreen();
-}
 
 #[allow(static_mut_refs)]
 fn G_DoLoadGame() {

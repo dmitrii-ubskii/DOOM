@@ -22,11 +22,15 @@ use crate::{
 		SIL_BOTH, SIL_BOTTOM, SIL_TOP, column_t, lighttable_t, patch_t, sector_t, spritedef_t,
 		spriteframe_t, vissprite_t,
 	},
+	r_draw::{
+		R_DrawTranslatedColumn, dc_colormap, dc_iscale, dc_source, dc_texturemid, dc_translation,
+		dc_x, dc_yh, dc_yl, translationtables, viewheight, viewwidth,
+	},
 	r_main::{
 		LIGHTLEVELS, LIGHTSCALESHIFT, LIGHTSEGSHIFT, MAXLIGHTSCALE, R_PointOnSegSide,
-		R_PointToAngle, basecolfunc, centerxfrac, centeryfrac, colfunc, extralight, fixedcolormap,
-		fuzzcolfunc, projection, scalelight, validcount, viewangleoffset, viewcos, viewplayer,
-		viewsin, viewx, viewy, viewz,
+		R_PointToAngle, basecolfunc, centerxfrac, centeryfrac, colfunc, detailshift, extralight,
+		fixedcolormap, fuzzcolfunc, projection, scalelight, validcount, viewangleoffset, viewcos,
+		viewplayer, viewsin, viewx, viewy, viewz,
 	},
 	r_segs::R_RenderMaskedSegRange,
 	tables::ANG45,
@@ -316,17 +320,6 @@ pub static mut spryscale: fixed_t = 0;
 #[unsafe(no_mangle)]
 pub static mut sprtopscreen: fixed_t = 0;
 
-unsafe extern "C" {
-	static mut dc_colormap: *mut lighttable_t;
-	static mut dc_x: i32;
-	static mut dc_yl: i32;
-	static mut dc_yh: i32;
-	static mut dc_iscale: fixed_t;
-	static mut dc_texturemid: fixed_t;
-
-	static mut dc_source: *mut u8;
-}
-
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn R_DrawMaskedColumn(mut column: *mut column_t) {
 	unsafe {
@@ -361,13 +354,6 @@ pub unsafe extern "C" fn R_DrawMaskedColumn(mut column: *mut column_t) {
 
 		dc_texturemid = basetexturemid;
 	}
-}
-
-unsafe extern "C" {
-	static mut dc_translation: *mut u8;
-	static mut translationtables: *mut u8;
-
-	fn R_DrawTranslatedColumn();
 }
 
 // R_DrawVisSprite
@@ -464,7 +450,7 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 		let x1 = (centerxfrac + FixedMul(tx, xscale)) >> FRACBITS;
 
 		// off the right side?
-		if x1 > viewwidth {
+		if x1 > i32::try_from(viewwidth).unwrap() {
 			return;
 		}
 
@@ -486,7 +472,11 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 		(*vis).gzt = thing.z + *spritetopoffset.wrapping_add(lump);
 		(*vis).texturemid = (*vis).gzt - viewz;
 		(*vis).x1 = usize::try_from(i32::max(x1, 0)).unwrap();
-		(*vis).x2 = usize::try_from(if x2 >= viewwidth { viewwidth - 1 } else { x2 }).unwrap();
+		(*vis).x2 = if usize::try_from(x2).unwrap() >= viewwidth {
+			viewwidth - 1
+		} else {
+			usize::try_from(x2).unwrap()
+		};
 		let iscale = FixedDiv(FRACUNIT, xscale);
 
 		if flip {
@@ -527,8 +517,7 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 
 // R_AddSprites
 // During BSP traversal, this adds sprites by sector.
-#[unsafe(no_mangle)]
-pub extern "C" fn R_AddSprites(sec: &mut sector_t) {
+pub fn R_AddSprites(sec: &mut sector_t) {
 	unsafe {
 		// BSP is traversed by subsector.
 		// A sector might have been split into several
@@ -560,12 +549,6 @@ pub extern "C" fn R_AddSprites(sec: &mut sector_t) {
 	}
 }
 
-unsafe extern "C" {
-	static mut viewwidth: i32;
-
-	static mut detailshift: i32;
-}
-
 // R_DrawPSprite
 fn R_DrawPSprite(psp: &pspdef_t) {
 	unsafe {
@@ -583,7 +566,7 @@ fn R_DrawPSprite(psp: &pspdef_t) {
 		let x1 = (centerxfrac + FixedMul(tx, pspritescale)) >> FRACBITS;
 
 		// off the right side
-		if x1 > viewwidth {
+		if x1 > i32::try_from(viewwidth).unwrap() {
 			return;
 		}
 
@@ -600,7 +583,11 @@ fn R_DrawPSprite(psp: &pspdef_t) {
 			prev: null_mut(),
 			next: null_mut(),
 			x1: usize::try_from(i32::max(x1, 0)).unwrap(),
-			x2: usize::try_from(if x2 >= viewwidth { viewwidth - 1 } else { x2 }).unwrap(),
+			x2: if x2 >= i32::try_from(viewwidth).unwrap() {
+				viewwidth - 1
+			} else {
+				usize::try_from(x2).unwrap()
+			},
 			gx: 0,
 			gy: 0,
 			gz: 0,
@@ -731,11 +718,6 @@ fn R_SortVisSprites() {
 			vsprsortedhead.prev = best;
 		}
 	}
-}
-
-unsafe extern "C" {
-	static mut viewheight: i32;
-
 }
 
 // R_DrawSprite

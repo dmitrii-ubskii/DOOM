@@ -4,7 +4,6 @@ fn main() {
 			"linuxdoom-1.10/i_system.c",
 			"linuxdoom-1.10/i_net.c",
 			"linuxdoom-1.10/d_net.c",
-			"linuxdoom-1.10/r_draw.c",
 		])
 		.no_default_flags(true)
 		.compiler("gcc")

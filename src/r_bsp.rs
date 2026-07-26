@@ -12,6 +12,7 @@ use crate::{
 	m_bbox::{BOXBOTTOM, BOXLEFT, BOXRIGHT, BOXTOP},
 	m_fixed::fixed_t,
 	r_defs::{MAXDRAWSEGS, drawseg_t, line_t, sector_t, seg_t, side_t},
+	r_draw::viewwidth,
 	r_main::{
 		R_PointOnSide, R_PointToAngle, clipangle, sscount, viewangle, viewangletox, viewx, viewy,
 		viewz,
@@ -194,16 +195,12 @@ fn R_ClipPassWallSegment(first: u32, last: u32) {
 	}
 }
 
-unsafe extern "C" {
-	static mut viewwidth: u32;
-}
-
 // R_ClearClipSegs
 pub fn R_ClearClipSegs() {
 	unsafe {
 		solidsegs[0].first = 0x80000001;
 		solidsegs[0].last = u32::MAX;
-		solidsegs[1].first = viewwidth;
+		solidsegs[1].first = u32::try_from(viewwidth).unwrap();
 		solidsegs[1].last = 0x7fffffff;
 		newend = &raw mut solidsegs[2];
 	}

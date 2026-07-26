@@ -12,6 +12,11 @@ use crate::{
 	r_bsp::{R_ClearClipSegs, R_ClearDrawSegs, R_RenderBSPNode},
 	r_data::{R_InitData, colormaps},
 	r_defs::{lighttable_t, node_t, seg_t, subsector_t},
+	r_draw::{
+		R_DrawColumn, R_DrawColumnLow, R_DrawFuzzColumn, R_DrawSpan, R_DrawSpanLow,
+		R_DrawTranslatedColumn, R_InitBuffer, R_InitTranslationTables, scaledviewwidth, viewheight,
+		viewwidth,
+	},
 	r_plane::{R_ClearPlanes, R_DrawPlanes, R_InitPlanes, distscale, yslope},
 	r_segs::{rw_distance, rw_normalangle, walllights},
 	r_sky::R_InitSkyMap,
@@ -51,7 +56,6 @@ pub static mut fixedcolormap: *mut lighttable_t = null_mut();
 
 #[unsafe(no_mangle)]
 pub static mut centerx: usize = 0;
-#[unsafe(no_mangle)]
 pub static mut centery: usize = 0;
 
 #[unsafe(no_mangle)]
@@ -117,22 +121,13 @@ pub static mut zlight: [[*mut lighttable_t; MAXLIGHTZ]; LIGHTLEVELS] =
 #[unsafe(no_mangle)]
 pub static mut extralight: i32 = 0;
 
-unsafe extern "C" {
-	fn R_DrawColumn();
-	fn R_DrawFuzzColumn();
-	fn R_DrawTranslatedColumn();
-	fn R_DrawSpan();
-	fn R_DrawColumnLow();
-	fn R_DrawSpanLow();
-}
-
 #[unsafe(no_mangle)]
-pub static mut colfunc: unsafe extern "C" fn() = R_DrawColumn;
-pub static mut basecolfunc: unsafe extern "C" fn() = R_DrawColumn;
-pub static mut fuzzcolfunc: unsafe extern "C" fn() = R_DrawColumn;
-pub static mut transcolfunc: unsafe extern "C" fn() = R_DrawColumn;
+pub static mut colfunc: unsafe fn() = R_DrawColumn;
+pub static mut basecolfunc: unsafe fn() = R_DrawColumn;
+pub static mut fuzzcolfunc: unsafe fn() = R_DrawColumn;
+pub static mut transcolfunc: unsafe fn() = R_DrawColumn;
 #[unsafe(no_mangle)]
-pub static mut spanfunc: unsafe extern "C" fn() = R_DrawColumn;
+pub static mut spanfunc: unsafe fn() = R_DrawColumn;
 
 // R_PointOnSide
 // Traverse BSP (sub) tree,
@@ -325,10 +320,6 @@ fn R_InitTables() {
 	// UNUSED: now getting from tables.c
 }
 
-unsafe extern "C" {
-	static mut viewwidth: usize;
-}
-
 // R_InitTextureMapping
 fn R_InitTextureMapping() {
 	unsafe {
@@ -426,28 +417,21 @@ pub fn R_SetViewSize(blocks: usize, detail: i32) {
 	}
 }
 
-unsafe extern "C" {
-	static mut scaledviewwidth: usize;
-	static mut viewheight: usize;
-
-	fn R_InitBuffer(width: usize, height: usize);
-}
-
 // R_ExecuteSetViewSize
 pub fn R_ExecuteSetViewSize() {
 	unsafe {
 		setsizeneeded = false;
 
 		if setblocks == 11 {
-			scaledviewwidth = SCREENWIDTH;
+			scaledviewwidth = i32::try_from(SCREENWIDTH).unwrap();
 			viewheight = SCREENHEIGHT;
 		} else {
-			scaledviewwidth = setblocks * 32;
+			scaledviewwidth = i32::try_from(setblocks).unwrap() * 32;
 			viewheight = (setblocks * 168 / 10) & !7;
 		}
 
 		detailshift = setdetail;
-		viewwidth = scaledviewwidth >> detailshift;
+		viewwidth = usize::try_from(scaledviewwidth).unwrap() >> detailshift;
 
 		centery = viewheight / 2;
 		centerx = viewwidth / 2;
@@ -469,7 +453,7 @@ pub fn R_ExecuteSetViewSize() {
 			spanfunc = R_DrawSpanLow;
 		}
 
-		R_InitBuffer(scaledviewwidth, viewheight);
+		R_InitBuffer(usize::try_from(scaledviewwidth).unwrap(), viewheight);
 
 		R_InitTextureMapping();
 
@@ -514,10 +498,6 @@ pub fn R_ExecuteSetViewSize() {
 			}
 		}
 	}
-}
-
-unsafe extern "C" {
-	fn R_InitTranslationTables();
 }
 
 // R_Init

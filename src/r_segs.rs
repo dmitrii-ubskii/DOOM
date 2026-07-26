@@ -11,6 +11,7 @@ use crate::{
 	r_bsp::{backsector, curline, drawsegs, ds_p, frontsector, linedef, sidedef},
 	r_data::{R_GetColumn, textureheight, texturetranslation},
 	r_defs::{MAXDRAWSEGS, SIL_BOTH, SIL_BOTTOM, SIL_TOP, drawseg_t, lighttable_t},
+	r_draw::{dc_colormap, dc_iscale, dc_source, dc_texturemid, dc_x, dc_yh, dc_yl, viewheight},
 	r_main::{
 		LIGHTLEVELS, LIGHTSCALESHIFT, LIGHTSEGSHIFT, MAXLIGHTSCALE, R_PointToDist,
 		R_ScaleFromGlobalAngle, centeryfrac, colfunc, extralight, fixedcolormap, scalelight,
@@ -76,17 +77,6 @@ pub static mut walllights: *mut *mut lighttable_t = null_mut();
 
 #[unsafe(no_mangle)]
 pub static mut maskedtexturecol: *mut i16 = null_mut();
-
-unsafe extern "C" {
-	static mut dc_colormap: *mut lighttable_t;
-	static mut dc_x: i32;
-	static mut dc_yl: i32;
-	static mut dc_yh: i32;
-	static mut dc_iscale: fixed_t;
-	static mut dc_texturemid: fixed_t;
-
-	static mut dc_source: *mut u8;
-}
 
 // R_RenderMaskedSegRange
 #[allow(static_mut_refs)]
@@ -182,10 +172,6 @@ pub unsafe fn R_RenderMaskedSegRange(ds: *mut drawseg_t, x1: i32, x2: i32) {
 // CALLED: CORE LOOPING ROUTINE.
 const HEIGHTBITS: usize = 12;
 const HEIGHTUNIT: i32 = 1 << 12;
-
-unsafe extern "C" {
-	static mut viewheight: usize;
-}
 
 #[allow(static_mut_refs)]
 fn R_RenderSegLoop() {

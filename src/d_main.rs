@@ -44,6 +44,9 @@ use crate::{
 	m_misc::M_LoadDefaults,
 	myargc, myargv,
 	p_setup::P_Init,
+	r_draw::{
+		R_DrawViewBorder, R_FillBackScreen, scaledviewwidth, viewheight, viewwindowx, viewwindowy,
+	},
 	r_main::{R_ExecuteSetViewSize, R_Init, R_RenderPlayerView, setsizeneeded},
 	s_sound::{S_Init, S_StartMusic, S_UpdateSounds, snd_MusicVolume, snd_SfxVolume},
 	sounds::musicenum_t,
@@ -138,14 +141,7 @@ pub extern "C" fn D_ProcessEvents() {
 pub static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
 
 unsafe extern "C" {
-	static mut scaledviewwidth: i32;
-	static mut viewheight: i32;
-	static mut viewwindowx: usize;
-	static mut viewwindowy: usize;
-
 	fn NetUpdate();
-	fn R_DrawViewBorder();
-	fn R_FillBackScreen();
 }
 
 fn D_Display() {
@@ -1103,11 +1099,7 @@ pub extern "C" fn D_DoomMain() {
 			if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
 				sprintf(file.as_mut_ptr(), cdrom_savegamename!("%c.dsg"), c_int::from(*argvp1));
 			} else {
-				sprintf(
-					file.as_mut_ptr(),
-					savegamename!("%c.dsg"),
-					c_int::from(*argvp1),
-				);
+				sprintf(file.as_mut_ptr(), savegamename!("%c.dsg"), c_int::from(*argvp1));
 			}
 			G_LoadGame(file.as_mut_ptr());
 		}

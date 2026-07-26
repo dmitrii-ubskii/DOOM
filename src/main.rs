@@ -53,6 +53,7 @@ pub mod p_user;
 pub mod r_bsp;
 pub mod r_data;
 pub mod r_defs;
+pub mod r_draw;
 pub mod r_main;
 pub mod r_plane;
 pub mod r_segs;

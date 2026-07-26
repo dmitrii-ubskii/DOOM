@@ -11,6 +11,11 @@ use crate::{
 	m_fixed::{FixedDiv, FixedMul, fixed_t},
 	r_data::{R_GetColumn, colormaps, firstflat, flattranslation},
 	r_defs::{lighttable_t, visplane_t},
+	r_draw::{
+		dc_colormap, dc_iscale, dc_source, dc_texturemid, dc_x, dc_yh, dc_yl, ds_colormap,
+		ds_source, ds_x1, ds_x2, ds_xfrac, ds_xstep, ds_y, ds_yfrac, ds_ystep, viewheight,
+		viewwidth,
+	},
 	r_main::{
 		LIGHTLEVELS, LIGHTSEGSHIFT, LIGHTZSHIFT, MAXLIGHTZ, centerxfrac, colfunc, detailshift,
 		extralight, fixedcolormap, spanfunc, viewangle, viewx, viewy, viewz, xtoviewangle, zlight,
@@ -71,20 +76,6 @@ pub fn R_InitPlanes() {
 	// Doh!
 }
 
-unsafe extern "C" {
-	static mut ds_xstep: fixed_t;
-	static mut ds_ystep: fixed_t;
-
-	static mut ds_xfrac: fixed_t;
-	static mut ds_yfrac: fixed_t;
-
-	static mut ds_y: usize;
-	static mut ds_x1: usize;
-	static mut ds_x2: usize;
-
-	static mut ds_colormap: *mut lighttable_t;
-}
-
 // R_MapPlane
 //
 // Uses global vars:
@@ -139,11 +130,6 @@ fn R_MapPlane(y: usize, x1: usize, x2: usize) {
 		// high or low detail
 		spanfunc();
 	}
-}
-
-unsafe extern "C" {
-	static mut viewwidth: usize;
-	static mut viewheight: usize;
 }
 
 // R_ClearPlanes
@@ -297,18 +283,6 @@ fn R_MakeSpans(x: usize, mut t1: u8, mut b1: u8, mut t2: u8, mut b2: u8) {
 			b2 -= 1;
 		}
 	}
-}
-
-unsafe extern "C" {
-	static mut dc_colormap: *mut lighttable_t;
-	static mut dc_x: i32;
-	static mut dc_yl: i32;
-	static mut dc_yh: i32;
-	static mut dc_iscale: fixed_t;
-	static mut dc_texturemid: fixed_t;
-
-	static mut dc_source: *mut u8;
-	static mut ds_source: *mut u8;
 }
 
 // R_DrawPlanes
