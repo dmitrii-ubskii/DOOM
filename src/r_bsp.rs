@@ -17,10 +17,11 @@ use crate::{
 		viewz,
 	},
 	r_plane::{R_FindPlane, ceilingplane, floorplane},
+	r_segs::{R_StoreWallRange, rw_angle1},
 	r_sky::skyflatnum,
 	r_state::{nodes, segs, subsectors},
 	r_things::R_AddSprites,
-	tables::{ANG90, ANG180, ANGLETOFINESHIFT, angle_t},
+	tables::{ANG90, ANG180, ANGLETOFINESHIFT},
 };
 
 #[unsafe(no_mangle)]
@@ -62,10 +63,6 @@ const MAXSEGS: usize = 32;
 static mut newend: *mut cliprange_t = null_mut();
 static mut solidsegs: [cliprange_t; MAXSEGS] = [cliprange_t { first: 0, last: 0 }; MAXSEGS];
 
-unsafe extern "C" {
-	fn R_StoreWallRange(start: u32, stop: u32);
-}
-
 // R_ClipSolidWallSegment
 // Does handle solid walls,
 //  e.g. single sided LineDefs (middle texture)
@@ -81,7 +78,7 @@ fn R_ClipSolidWallSegment(first: u32, last: u32) {
 		}
 
 		if first < (*start).first {
-			if last < (*start).first - 1 {
+			if last < (*start).first.wrapping_sub(1) {
 				// Post is entirely visible (above start),
 				//  so insert a new clippost.
 				R_StoreWallRange(first, last);
@@ -98,7 +95,7 @@ fn R_ClipSolidWallSegment(first: u32, last: u32) {
 			}
 
 			// There is a fragment above *start.
-			R_StoreWallRange(first, (*start).first - 1);
+			R_StoreWallRange(first, (*start).first.wrapping_sub(1));
 			// Now adjust the clip size.
 			(*start).first = first;
 		}
@@ -112,7 +109,7 @@ fn R_ClipSolidWallSegment(first: u32, last: u32) {
 		let mut crunch = false;
 		while last >= (*(next.wrapping_add(1))).first.wrapping_sub(1) {
 			// There is a fragment between two posts.
-			R_StoreWallRange((*next).last + 1, (*(next.wrapping_add(1))).first - 1);
+			R_StoreWallRange(((*next).last + 1) as _, ((*(next.wrapping_add(1))).first - 1) as _);
 			next = next.wrapping_add(1);
 
 			if last <= (*next).last {
@@ -126,7 +123,7 @@ fn R_ClipSolidWallSegment(first: u32, last: u32) {
 
 		if !crunch {
 			// There is a fragment after *next.
-			R_StoreWallRange((*next).last + 1, last);
+			R_StoreWallRange(((*next).last + 1) as _, last as _);
 			// Adjust the clip size.
 			(*start).last = last;
 		}
@@ -198,7 +195,7 @@ fn R_ClipPassWallSegment(first: u32, last: u32) {
 }
 
 unsafe extern "C" {
-	static mut viewwidth: usize;
+	static mut viewwidth: u32;
 }
 
 // R_ClearClipSegs
@@ -206,14 +203,10 @@ pub fn R_ClearClipSegs() {
 	unsafe {
 		solidsegs[0].first = 0x80000001;
 		solidsegs[0].last = u32::MAX;
-		solidsegs[1].first = viewwidth as u32;
+		solidsegs[1].first = viewwidth;
 		solidsegs[1].last = 0x7fffffff;
 		newend = &raw mut solidsegs[2];
 	}
-}
-
-unsafe extern "C" {
-	static mut rw_angle1: angle_t;
 }
 
 // R_AddLine

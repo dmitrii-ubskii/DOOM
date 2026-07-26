@@ -75,10 +75,10 @@ pub const ML_TWOSIDED: i16 = 4;
 // top and bottom textures (use next to windows).
 
 // upper texture unpegged
-pub const ML_DONTPEGTOP: usize = 8;
+pub const ML_DONTPEGTOP: i16 = 8;
 
 // lower texture unpegged
-pub const ML_DONTPEGBOTTOM: usize = 16;
+pub const ML_DONTPEGBOTTOM: i16 = 16;
 
 // In AutoMap: don't map as two sided: IT'S A SECRET!
 pub const ML_SECRET: usize = 32;

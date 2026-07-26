@@ -19,8 +19,8 @@ use crate::{
 		colormaps, firstspritelump, lastspritelump, spriteoffset, spritetopoffset, spritewidth,
 	},
 	r_defs::{
-		SIL_BOTH, SIL_BOTTOM, SIL_TOP, column_t, drawseg_t, lighttable_t, patch_t, sector_t,
-		spritedef_t, spriteframe_t, vissprite_t,
+		SIL_BOTH, SIL_BOTTOM, SIL_TOP, column_t, lighttable_t, patch_t, sector_t, spritedef_t,
+		spriteframe_t, vissprite_t,
 	},
 	r_main::{
 		LIGHTLEVELS, LIGHTSCALESHIFT, LIGHTSEGSHIFT, MAXLIGHTSCALE, R_PointOnSegSide,
@@ -28,6 +28,7 @@ use crate::{
 		fuzzcolfunc, projection, scalelight, validcount, viewangleoffset, viewcos, viewplayer,
 		viewsin, viewx, viewy, viewz,
 	},
+	r_segs::R_RenderMaskedSegRange,
 	tables::ANG45,
 	w_wad::{W_CacheLumpNum, W_GetNumForName, lumpinfo},
 	z_zone::{PU_CACHE, PU_STATIC, Z_Malloc},
@@ -766,7 +767,7 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 			{
 				// masked mid texture?
 				if !ds.maskedtexturecol.is_null() {
-					R_RenderMaskedSegRange(ds, r1, r2);
+					R_RenderMaskedSegRange(ds, r1 as i32, r2 as i32);
 				}
 				// seg is behind sprite
 				continue;
@@ -828,10 +829,6 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 	}
 }
 
-unsafe extern "C" {
-	fn R_RenderMaskedSegRange(ds: *mut drawseg_t, x1: usize, x2: usize);
-}
-
 // R_DrawMasked
 #[allow(static_mut_refs)]
 pub fn R_DrawMasked() {
@@ -851,7 +848,7 @@ pub fn R_DrawMasked() {
 		let mut ds = ds_p.wrapping_offset(-1);
 		while ds.addr() >= drawsegs.as_ptr().addr() {
 			if !(*ds).maskedtexturecol.is_null() {
-				R_RenderMaskedSegRange(ds, (*ds).x1, (*ds).x2);
+				R_RenderMaskedSegRange(ds, (*ds).x1 as i32, (*ds).x2 as i32);
 			}
 			ds = ds.wrapping_offset(-1);
 		}

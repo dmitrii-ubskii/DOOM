@@ -13,6 +13,7 @@ use crate::{
 	r_data::{R_InitData, colormaps},
 	r_defs::{lighttable_t, node_t, seg_t, subsector_t},
 	r_plane::{R_ClearPlanes, R_DrawPlanes, R_InitPlanes, distscale, yslope},
+	r_segs::{rw_distance, rw_normalangle, walllights},
 	r_sky::R_InitSkyMap,
 	r_things::{R_ClearSprites, R_DrawMasked, pspriteiscale, pspritescale, screenheightarray},
 	tables::{
@@ -297,11 +298,6 @@ fn R_InitPointToAngle() {
 	// UNUSED - now getting from tables.c
 }
 
-unsafe extern "C" {
-	static mut rw_distance: fixed_t;
-	static mut rw_normalangle: angle_t;
-}
-
 // R_ScaleFromGlobalAngle
 // Returns the texture mapping scale
 //  for the current line (horizontal span)
@@ -561,10 +557,6 @@ pub fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t {
 
 		subsectors.wrapping_add(nodenum & !NF_SUBSECTOR)
 	}
-}
-
-unsafe extern "C" {
-	static mut walllights: *mut *mut lighttable_t;
 }
 
 // R_SetupFrame
