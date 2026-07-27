@@ -497,9 +497,9 @@ pub(crate) fn HU_Ticker() {
 		} // else message_on = false;
 
 		// check for incoming chat characters
-		if netgame != 0 {
+		if netgame {
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] == 0 {
+				if !playeringame[i] {
 					continue;
 				}
 				let mut c = players[i].cmd.chatchar;
@@ -585,7 +585,9 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 		let mut numplayers = 0;
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			numplayers += playeringame[i];
+			if playeringame[i] {
+				numplayers += 1;
+			}
 		}
 
 		if ev.data1 == i32::from(KEY_RSHIFT) {
@@ -606,15 +608,15 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 				message_on = 1;
 				message_counter = HU_MSGTIMEOUT;
 				eatkey = 1;
-			} else if netgame != 0 && ev.data1 == i32::from(HU_INPUTTOGGLE) {
+			} else if netgame && ev.data1 == i32::from(HU_INPUTTOGGLE) {
 				eatkey = 1;
 				chat_on = 1;
 				HUlib_resetIText(&mut w_chat);
 				HU_queueChatChar(c_char::try_from(HU_BROADCAST).unwrap());
-			} else if netgame != 0 && numplayers > 2 {
+			} else if netgame && numplayers > 2 {
 				for i in 0..MAXPLAYERS {
 					if ev.data1 == i32::from(destination_keys[i]) {
-						if playeringame[i] != 0 && i != consoleplayer {
+						if playeringame[i] && i != consoleplayer {
 							eatkey = 1;
 							chat_on = 1;
 							HUlib_resetIText(&mut w_chat);

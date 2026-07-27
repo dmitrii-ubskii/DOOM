@@ -50,7 +50,7 @@ struct channel_t {
 	pub origin: *mut c_void,
 
 	// handle of the sound being played
-	pub handle: i32,
+	pub handle: usize,
 }
 
 // the set of channels available

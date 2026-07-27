@@ -132,7 +132,7 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 // The weapon name may have a MF_DROPPED flag ored in.
 fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: boolean) -> boolean {
 	unsafe {
-		if netgame != 0 && deathmatch != 2 && dropped == 0 {
+		if netgame && deathmatch != 2 && dropped == 0 {
 			// leave placed weapons forever on net games
 			if (*player).weaponowned[usize::from(weapon)] != 0 {
 				return 0;
@@ -350,7 +350,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 				player.message = GOTBLUECARD;
 			}
 			P_GiveCard(player, card_t::it_bluecard);
-			if netgame != 0 {
+			if netgame {
 				return;
 			}
 		},
@@ -360,7 +360,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 				player.message = GOTYELWCARD;
 			}
 			P_GiveCard(player, card_t::it_yellowcard);
-			if netgame != 0 {
+			if netgame {
 				return;
 			}
 		},
@@ -370,7 +370,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 				player.message = GOTREDCARD;
 			}
 			P_GiveCard(player, card_t::it_redcard);
-			if netgame != 0 {
+			if netgame {
 				return;
 			}
 		},
@@ -380,7 +380,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 				player.message = GOTBLUESKUL;
 			}
 			P_GiveCard(player, card_t::it_blueskull);
-			if netgame != 0 {
+			if netgame {
 				return;
 			}
 		},
@@ -390,7 +390,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 				player.message = GOTYELWSKUL;
 			}
 			P_GiveCard(player, card_t::it_yellowskull);
-			if netgame != 0 {
+			if netgame {
 				return;
 			}
 		},
@@ -400,7 +400,7 @@ pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 				player.message = GOTREDSKULL;
 			}
 			P_GiveCard(player, card_t::it_redskull);
-			if netgame != 0 {
+			if netgame {
 				return;
 			}
 		},
@@ -659,7 +659,7 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 				(*(*source).player).frags
 					[usize::try_from(target.player.offset_from(players.as_ptr())).unwrap()] += 1;
 			}
-		} else if netgame == 0 && (target.flags & MF_COUNTKILL != 0) {
+		} else if !netgame && (target.flags & MF_COUNTKILL != 0) {
 			// count all monster deaths,
 			// even those caused by other monsters
 			players[0].killcount += 1;

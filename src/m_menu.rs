@@ -666,7 +666,7 @@ fn M_LoadSelect(choice: i32) {
 // Selected from DOOM menu
 fn M_LoadGame(_choice: i32) {
 	unsafe {
-		if netgame != 0 {
+		if netgame {
 			M_StartMessage(LOADNET, None, false);
 			return;
 		}
@@ -798,7 +798,7 @@ fn M_QuickLoadResponse(ch: i32) {
 #[allow(static_mut_refs)]
 fn M_QuickLoad() {
 	unsafe {
-		if netgame != 0 {
+		if netgame {
 			M_StartMessage(QLOADNET, None, false);
 			return;
 		}
@@ -917,7 +917,7 @@ fn M_DrawNewGame() {
 
 fn M_NewGame(_choice: i32) {
 	unsafe {
-		if netgame != 0 && demoplayback == 0 {
+		if netgame && !demoplayback {
 			M_StartMessage(NEWGAME, None, false);
 			return;
 		}
@@ -1063,7 +1063,7 @@ fn M_EndGame(_choice: i32) {
 			return;
 		}
 
-		if netgame != 0 {
+		if netgame {
 			M_StartMessage(NETEND, None, false);
 			return;
 		}
@@ -1113,11 +1113,11 @@ fn M_QuitResponse(ch: i32) {
 		if ch != i32::from(b'y') {
 			return;
 		}
-		if netgame == 0 {
+		if !netgame {
 			if gamemode == GameMode_t::commercial {
-				S_StartSound(null_mut(), quitsounds2[(usize::try_from(gametic).unwrap() >> 2) & 7]);
+				S_StartSound(null_mut(), quitsounds2[(gametic >> 2) & 7]);
 			} else {
-				S_StartSound(null_mut(), quitsounds[(usize::try_from(gametic).unwrap() >> 2) & 7]);
+				S_StartSound(null_mut(), quitsounds[(gametic >> 2) & 7]);
 			}
 			I_WaitVBL(105);
 		}
@@ -1136,7 +1136,7 @@ fn M_QuitDOOM(_choice: i32) {
 			libc::sprintf(
 				endstring.as_mut_ptr(),
 				c"%s\n\n%s".as_ptr(),
-				endmsg[(usize::try_from(gametic).unwrap() % (NUM_QUITMESSAGES - 2)) + 1],
+				endmsg[(gametic % (NUM_QUITMESSAGES - 2)) + 1],
 				DOSY!(),
 			);
 		}

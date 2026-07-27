@@ -73,7 +73,7 @@ pub static mut nomonsters: boolean = 0; // checkparm of -nomonsters
 pub static mut respawnparm: boolean = 0; // checkparm of -respawn
 pub static mut fastparm: boolean = 0; // checkparm of -fast
 
-pub static mut singletics: boolean = 0; // debug flag to cancel adaptiveness
+pub static mut singletics: bool = false; // debug flag to cancel adaptiveness
 
 pub static mut startskill: skill_t = skill_t::sk_baby;
 pub static mut startepisode: usize = 0;
@@ -82,7 +82,7 @@ pub static mut autostart: boolean = 0;
 
 pub static mut debugfile: *const libc::FILE = null();
 
-pub static mut advancedemo: boolean = 0;
+pub static mut advancedemo: bool = false;
 
 pub(crate) static mut basedefault: [c_char; 1024] = [0; 1024]; // default file
 
@@ -267,7 +267,7 @@ fn D_Display() {
 
 pub(crate) fn D_DoomLoop() {
 	unsafe {
-		if demorecording != 0 {
+		if demorecording {
 			G_BeginRecording();
 		}
 
@@ -285,11 +285,11 @@ pub(crate) fn D_DoomLoop() {
 			I_StartFrame();
 
 			// process one or more tics
-			if singletics != 0 {
+			if singletics {
 				I_StartTic();
 				D_ProcessEvents();
 				G_BuildTiccmd(&raw mut netcmds[consoleplayer][maketic % BACKUPTICS]);
-				if advancedemo != 0 {
+				if advancedemo {
 					D_DoAdvanceDemo();
 				}
 				M_Ticker();
@@ -345,7 +345,7 @@ fn D_PageDrawer() {
 // Called after each demo or intro demosequence finishes
 pub(crate) fn D_AdvanceDemo() {
 	unsafe {
-		advancedemo = 1;
+		advancedemo = true;
 	}
 }
 
@@ -354,7 +354,7 @@ pub(crate) fn D_AdvanceDemo() {
 pub fn D_DoAdvanceDemo() {
 	unsafe {
 		players[consoleplayer].playerstate = playerstate_t::PST_LIVE; // not reborn
-		advancedemo = 0;
+		advancedemo = false;
 		usergame = 0; // no save / end game here
 		paused = false;
 		gameaction = gameaction_t::ga_nothing;
@@ -1068,7 +1068,7 @@ pub fn D_DoomMain() {
 		}
 
 		if gameaction != gameaction_t::ga_loadgame {
-			if autostart != 0 || netgame != 0 {
+			if autostart != 0 || netgame {
 				G_InitNew(startskill, startepisode, startmap);
 			} else {
 				D_StartTitle(); // start up intro loop

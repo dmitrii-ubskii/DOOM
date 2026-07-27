@@ -451,7 +451,7 @@ fn P_LookForPlayers(actor: &mut mobj_t, allaround: bool) -> bool {
 		loop {
 			actor.lastlook = (actor.lastlook + 1) & 3;
 
-			if playeringame[usize::try_from(actor.lastlook).unwrap()] == 0 {
+			if !playeringame[usize::try_from(actor.lastlook).unwrap()] {
 				continue;
 			}
 
@@ -660,7 +660,7 @@ pub(crate) fn A_Chase(actor: &mut mobj_t) {
 		}
 
 		// possibly choose another target
-		if netgame != 0
+		if netgame
 			&& actor.threshold == 0
 			&& !P_CheckSight(actor, &*actor.target)
 			&& P_LookForPlayers(actor, true)
@@ -1444,7 +1444,7 @@ pub(crate) fn A_BossDeath(mo: &mut mobj_t) {
 		}
 
 		// make sure there is a player alive for victory
-		if !(0..MAXPLAYERS).any(|i| playeringame[i] != 0 && players[i].health > 0) {
+		if !(0..MAXPLAYERS).any(|i| playeringame[i] && players[i].health > 0) {
 			return; // no one left alive, so do not end game
 		}
 

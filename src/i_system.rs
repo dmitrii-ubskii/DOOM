@@ -92,7 +92,7 @@ macro_rules! I_Error {
 		libc::fflush(stderr);
 
 		// Shutdown. Here might be other errors.
-		if crate::g_game::demorecording != 0 {
+		if crate::g_game::demorecording {
 			crate::g_game::G_CheckDemoStatus();
 		}
 

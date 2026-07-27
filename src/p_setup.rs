@@ -562,7 +562,7 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 		// if deathmatch, randomly spawn the active players
 		if deathmatch != 0 {
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] != 0 {
+				if playeringame[i] {
 					players[i].mo = null_mut();
 					G_DeathMatchSpawnPlayer(i);
 				}

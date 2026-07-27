@@ -2,6 +2,8 @@
 
 #![allow(non_camel_case_types, non_upper_case_globals)]
 
+use std::fmt;
+
 // DOOM version
 pub const VERSION: i32 = 109;
 
@@ -132,6 +134,12 @@ impl From<skill_t> for usize {
 			skill_t::sk_hard => 3,
 			skill_t::sk_nightmare => 4,
 		}
+	}
+}
+
+impl fmt::Display for skill_t {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt::Debug::fmt(self, f)
 	}
 }
 

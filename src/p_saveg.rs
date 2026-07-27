@@ -45,7 +45,7 @@ fn PADSAVEP() {
 pub(crate) fn P_ArchivePlayers() {
 	unsafe {
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] == 0 {
+			if !playeringame[i] {
 				continue;
 			}
 
@@ -71,7 +71,7 @@ pub(crate) fn P_ArchivePlayers() {
 pub(crate) fn P_UnArchivePlayers() {
 	unsafe {
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] == 0 {
+			if !playeringame[i] {
 				continue;
 			}
 

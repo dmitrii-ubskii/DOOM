@@ -68,7 +68,7 @@ static mut channelsend: [*mut u8; NUM_CHANNELS] = [null_mut(); NUM_CHANNELS];
 //  has lowest priority.
 // In case number of active sounds exceeds
 //  available channels.
-static mut channelstart: [i32; NUM_CHANNELS] = [0; NUM_CHANNELS];
+static mut channelstart: [usize; NUM_CHANNELS] = [0; NUM_CHANNELS];
 
 // The sound in channel handles,
 //  determined on registration,
@@ -168,7 +168,7 @@ fn getsfx(sfxname: *const c_char, len: *mut usize) -> *mut c_void {
 //  which is maintained as a given number
 //  (eight, usually) of internal channels.
 // Returns a handle.
-fn addsfx(sfxid: sfxenum_t, volume: u32, step: u32, mut seperation: i32) -> i32 {
+fn addsfx(sfxid: sfxenum_t, volume: u32, step: u32, mut seperation: i32) -> usize {
 	unsafe {
 		static mut handlenums: u16 = 0;
 
@@ -269,7 +269,7 @@ fn addsfx(sfxid: sfxenum_t, volume: u32, step: u32, mut seperation: i32) -> i32 
 		channelids[slot] = sfxid;
 
 		// You tell me.
-		i32::from(rc)
+		rc.into()
 	}
 }
 
@@ -334,18 +334,18 @@ pub unsafe fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> isize {
 //  priority, it is ignored.
 // Pitching (that is, increased speed of playback)
 //  is set, but currently not used by mixing.
-pub fn I_StartSound(id: sfxenum_t, vol: u32, sep: i32, pitch: i32, _priority: i32) -> i32 {
+pub fn I_StartSound(id: sfxenum_t, vol: u32, sep: i32, pitch: i32, _priority: i32) -> usize {
 	unsafe { addsfx(id, vol, steptable[usize::try_from(pitch).unwrap()], sep) }
 }
 
-pub fn I_StopSound(_handle: i32) {
+pub fn I_StopSound(_handle: usize) {
 	// You need the handle returned by StartSound.
 	// Would be looping all channels,
 	//  tracking down the handle,
 	//  an setting the channel to zero.
 }
 
-pub fn I_SoundIsPlaying(handle: i32) -> bool {
+pub fn I_SoundIsPlaying(handle: usize) -> bool {
 	// Ouch.
 	unsafe { gametic < handle }
 }
@@ -470,7 +470,7 @@ pub fn I_SubmitSound() {
 	unsafe { libc::write(audio_fd, mixbuffer.as_ptr().cast(), SAMPLECOUNT * BUFMUL) };
 }
 
-pub fn I_UpdateSoundParams(_handle: i32, _vol: u32, _sep: i32, _pitch: i32) {
+pub fn I_UpdateSoundParams(_handle: usize, _vol: u32, _sep: i32, _pitch: i32) {
 	// I fail too see that this is used.
 	// Would be using the handle to identify
 	//  on which channel the sound might be active,
@@ -601,10 +601,10 @@ pub fn I_InitSound() {
 pub fn I_ShutdownMusic() {}
 
 static mut looping: bool = false;
-static mut musicdies: i32 = -1;
+static mut musicdies: usize = usize::MAX;
 
 pub fn I_PlaySong(_handle: i32, _loops: bool) {
-	unsafe { musicdies = gametic + i32::try_from(TICRATE).unwrap() * 30 }
+	unsafe { musicdies = gametic + TICRATE * 30 }
 }
 
 pub fn I_PauseSong(_handle: i32) {}

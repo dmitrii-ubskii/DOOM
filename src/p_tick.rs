@@ -89,12 +89,12 @@ pub(crate) fn P_Ticker() {
 		}
 
 		// pause if in menu and at least one tic has been run
-		if netgame == 0 && menuactive && demoplayback == 0 && players[consoleplayer].viewz != 1 {
+		if !netgame && menuactive && !demoplayback && players[consoleplayer].viewz != 1 {
 			return;
 		}
 
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 {
+			if playeringame[i] {
 				P_PlayerThink(&mut players[i]);
 			}
 		}

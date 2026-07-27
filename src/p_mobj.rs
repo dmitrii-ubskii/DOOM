@@ -808,7 +808,7 @@ pub(crate) fn P_RespawnSpecials() {
 pub(crate) fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 	unsafe {
 		// not playing?
-		if playeringame[usize::try_from(mthing.ty).unwrap() - 1] == 0 {
+		if !playeringame[usize::try_from(mthing.ty).unwrap() - 1] {
 			return;
 		}
 
@@ -892,7 +892,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		}
 
 		// check for apropriate skill level
-		if netgame == 0 && mthing.options & 16 != 0 {
+		if !netgame && mthing.options & 16 != 0 {
 			return;
 		}
 

@@ -88,14 +88,14 @@ static mut starttime: usize = 0; // for comparative timing purposes
 pub static mut viewactive: bool = false;
 
 pub static mut deathmatch: boolean = 0; // only if started as net death 
-pub static mut netgame: boolean = 0; // only true if packets are broadcast 
-pub static mut playeringame: [boolean; MAXPLAYERS] = [0; MAXPLAYERS];
+pub static mut netgame: bool = false; // only true if packets are broadcast 
+pub static mut playeringame: [bool; MAXPLAYERS] = [false; MAXPLAYERS];
 pub static mut players: [player_t; MAXPLAYERS] = [player_t::new(); MAXPLAYERS];
 
 pub static mut consoleplayer: usize = 0; // player taking events and displaying 
 pub static mut displayplayer: usize = 0; // view being displayed 
-pub static mut gametic: int = 0;
-static mut levelstarttic: int = 0; // gametic at level start 
+pub static mut gametic: usize = 0;
+static mut levelstarttic: usize = 0; // gametic at level start 
 
 // for intermission
 pub(crate) static mut totalkills: int = 0;
@@ -103,8 +103,8 @@ pub(crate) static mut totalitems: int = 0;
 pub static mut totalsecret: int = 0;
 
 static mut demoname: [c_char; 32] = [0; 32];
-pub static mut demorecording: boolean = 0;
-pub static mut demoplayback: boolean = 0;
+pub static mut demorecording: bool = false;
+pub static mut demoplayback: bool = false;
 static mut netdemo: bool = false;
 static mut demobuffer: *mut byte = null_mut();
 static mut demo_p: *mut byte = null_mut();
@@ -433,7 +433,7 @@ fn G_DoLoadLevel() {
 		gamestate = gamestate_t::GS_LEVEL;
 
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 && players[i].playerstate == playerstate_t::PST_DEAD {
+			if playeringame[i] && players[i].playerstate == playerstate_t::PST_DEAD {
 				players[i].playerstate = playerstate_t::PST_REBORN;
 			}
 			players[i].frags = [0; MAXPLAYERS];
@@ -475,7 +475,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 				if displayplayer == MAXPLAYERS {
 					displayplayer = 0;
 				}
-				if playeringame[displayplayer] != 0 || displayplayer == consoleplayer {
+				if playeringame[displayplayer] || displayplayer == consoleplayer {
 					break;
 				}
 			}
@@ -485,7 +485,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 		// any other key pops up menu if in demos
 		if gameaction == gameaction_t::ga_nothing
 			&& !singledemo
-			&& (demoplayback != 0 || gamestate == gamestate_t::GS_DEMOSCREEN)
+			&& (demoplayback || gamestate == gamestate_t::GS_DEMOSCREEN)
 		{
 			if ev.ty == evtype_t::ev_keydown
 				|| (ev.ty == evtype_t::ev_mouse && ev.data1 != 0)
@@ -558,7 +558,7 @@ pub fn G_Ticker() {
 	unsafe {
 		// do player reborns if needed
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 && players[i].playerstate == playerstate_t::PST_REBORN {
+			if playeringame[i] && players[i].playerstate == playerstate_t::PST_REBORN {
 				G_DoReborn(i);
 			}
 		}
@@ -584,10 +584,10 @@ pub fn G_Ticker() {
 
 		// get commands, check consistancy,
 		// and build new consistancy check
-		let buf = (usize::try_from(gametic).unwrap() / ticdup) % BACKUPTICS;
+		let buf = (gametic / ticdup) % BACKUPTICS;
 
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 {
+			if playeringame[i] {
 				let cmd = &raw mut players[i].cmd;
 
 				libc::memcpy(
@@ -596,17 +596,17 @@ pub fn G_Ticker() {
 					size_of::<ticcmd_t>(),
 				);
 
-				if demoplayback != 0 {
+				if demoplayback {
 					G_ReadDemoTiccmd(cmd);
 				}
-				if demorecording != 0 {
+				if demorecording {
 					G_WriteDemoTiccmd(cmd);
 				}
 
 				// check for turbo cheats
 				if (*cmd).forwardmove > i8::try_from(TURBOTHRESHOLD).unwrap()
 					&& gametic & 31 == 0
-					&& ((gametic >> 5) & 3) == i32::try_from(i).unwrap()
+					&& ((gametic >> 5) & 3) == i
 				{
 					static mut turbomessage: [c_char; 80] = [0; 80];
 					libc::sprintf(
@@ -617,10 +617,8 @@ pub fn G_Ticker() {
 					players[consoleplayer].message = turbomessage.as_mut_ptr();
 				}
 
-				if netgame != 0 && !netdemo && gametic % i32::try_from(ticdup).unwrap() == 0 {
-					if gametic > i32::try_from(BACKUPTICS).unwrap()
-						&& consistancy[i][buf] != (*cmd).consistancy
-					{
+				if netgame && !netdemo && gametic.is_multiple_of(ticdup) {
+					if gametic > BACKUPTICS && consistancy[i][buf] != (*cmd).consistancy {
 						I_Error!(
 							c"consistency failure (%i should be %i)".as_ptr(),
 							c_int::from((*cmd).consistancy),
@@ -638,7 +636,7 @@ pub fn G_Ticker() {
 
 		// check for special buttons
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 && players[i].cmd.buttons & BT_SPECIAL != 0 {
+			if playeringame[i] && players[i].cmd.buttons & BT_SPECIAL != 0 {
 				match players[i].cmd.buttons & BT_SPECIALMASK {
 					BTS_PAUSE => {
 						paused = !paused;
@@ -813,7 +811,7 @@ pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 // G_DoReborn
 fn G_DoReborn(playernum: usize) {
 	unsafe {
-		if netgame == 0 {
+		if !netgame {
 			// reload the level from scratch
 			gameaction = gameaction_t::ga_loadlevel;
 		} else {
@@ -898,7 +896,7 @@ fn G_DoCompleted() {
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 {
+			if playeringame[i] {
 				G_PlayerFinishLevel(i); // take away cards and stuff
 			}
 		}
@@ -969,7 +967,7 @@ fn G_DoCompleted() {
 		wminfo.pnum = consoleplayer;
 
 		for i in 0..MAXPLAYERS {
-			wminfo.plyr[i].in_ = playeringame[i];
+			wminfo.plyr[i].in_ = i32::from(playeringame[i]);
 			wminfo.plyr[i].skills = players[i].killcount;
 			wminfo.plyr[i].sitems = players[i].itemcount;
 			wminfo.plyr[i].ssecret = players[i].secretcount;
@@ -1057,7 +1055,7 @@ fn G_DoLoadGame() {
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			playeringame[i] = boolean::from(*save_p);
+			playeringame[i] = *save_p != 0;
 			save_p = save_p.wrapping_add(1);
 		}
 
@@ -1143,7 +1141,7 @@ fn G_DoSaveGame() {
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			*save_p = u8::try_from(playeringame[i]).unwrap();
+			*save_p = u8::from(playeringame[i]);
 			save_p = save_p.wrapping_add(1);
 		}
 
@@ -1196,13 +1194,13 @@ pub fn G_DeferedInitNew(skill: skill_t, episode: usize, map: usize) {
 
 fn G_DoNewGame() {
 	unsafe {
-		demoplayback = 0;
+		demoplayback = false;
 		netdemo = false;
-		netgame = 0;
+		netgame = false;
 		deathmatch = 0;
-		playeringame[1] = 0;
-		playeringame[2] = 0;
-		playeringame[3] = 0;
+		playeringame[1] = false;
+		playeringame[2] = false;
+		playeringame[3] = false;
 		respawnparm = 0;
 		fastparm = 0;
 		nomonsters = 0;
@@ -1274,7 +1272,7 @@ pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 
 		usergame = 1; // will be set false if a demo
 		paused = false;
-		demoplayback = 0;
+		demoplayback = false;
 		automapactive = false;
 		viewactive = true;
 		gameepisode = episode;
@@ -1369,7 +1367,7 @@ pub(crate) fn G_RecordDemo(name: *const c_char) {
 		demobuffer = Z_Malloc(maxsize, PU_STATIC, null_mut()).cast();
 		demoend = demobuffer.wrapping_add(maxsize);
 
-		demorecording = 1;
+		demorecording = true;
 	}
 }
 
@@ -1398,7 +1396,7 @@ pub(crate) fn G_BeginRecording() {
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			*demo_p = u8::try_from(playeringame[i]).unwrap();
+			*demo_p = u8::from(playeringame[i]);
 			demo_p = demo_p.wrapping_add(1);
 		}
 	}
@@ -1450,11 +1448,11 @@ fn G_DoPlayDemo() {
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			playeringame[i] = i32::from(*demo_p);
+			playeringame[i] = *demo_p != 0;
 			demo_p = demo_p.wrapping_add(1);
 		}
-		if playeringame[1] != 0 {
-			netgame = 1;
+		if playeringame[1] {
+			netgame = true;
 			netdemo = true;
 		}
 
@@ -1464,7 +1462,7 @@ fn G_DoPlayDemo() {
 		precache = true;
 
 		usergame = 0;
-		demoplayback = 1;
+		demoplayback = true;
 	}
 }
 
@@ -1474,7 +1472,7 @@ pub(crate) fn G_TimeDemo(name: *const c_char) {
 		nodrawers = M_CheckParm(c"-nodraw".as_ptr()) != 0;
 		noblit = M_CheckParm(c"-noblit".as_ptr()) != 0;
 		timingdemo = true;
-		singletics = 1;
+		singletics = true;
 
 		defdemoname = name;
 		gameaction = gameaction_t::ga_playdemo;
@@ -1499,19 +1497,19 @@ pub fn G_CheckDemoStatus() -> boolean {
 			I_Error!(c"timed %i gametics in %i realtics".as_ptr(), gametic, endtime - starttime);
 		}
 
-		if demoplayback != 0 {
+		if demoplayback {
 			if singledemo {
 				I_Quit();
 			}
 
 			Z_ChangeTag!(demobuffer, PU_CACHE);
-			demoplayback = 0;
+			demoplayback = false;
 			netdemo = false;
-			netgame = 0;
+			netgame = false;
 			deathmatch = 0;
-			playeringame[1] = 0;
-			playeringame[2] = 0;
-			playeringame[3] = 0;
+			playeringame[1] = false;
+			playeringame[2] = false;
+			playeringame[3] = false;
 			respawnparm = 0;
 			fastparm = 0;
 			nomonsters = 0;
@@ -1520,7 +1518,7 @@ pub fn G_CheckDemoStatus() -> boolean {
 			return 1;
 		}
 
-		if demorecording != 0 {
+		if demorecording {
 			*demo_p = DEMOMARKER;
 			demo_p = demo_p.wrapping_add(1);
 			M_WriteFile(
@@ -1529,7 +1527,7 @@ pub fn G_CheckDemoStatus() -> boolean {
 				usize::try_from(demo_p.offset_from(demobuffer)).unwrap(),
 			);
 			Z_Free(demobuffer.cast());
-			demorecording = 0;
+			demorecording = false;
 			I_Error!(c"Demo %s recorded".as_ptr(), demoname);
 		}
 

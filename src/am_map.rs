@@ -464,10 +464,10 @@ fn AM_initVariables() {
 
 		// find player to center on initially
 		let mut pnum = consoleplayer;
-		if playeringame[pnum] == 0 {
+		if !playeringame[pnum] {
 			for i in 0..MAXPLAYERS {
 				pnum = i;
-				if playeringame[pnum] != 0 {
+				if playeringame[pnum] {
 					break;
 				}
 			}
@@ -1169,7 +1169,7 @@ fn AM_drawPlayers() {
 		static their_colors: [i32; 4] = [GREENS, GRAYS, BROWNS, REDS];
 		let mut their_color = -1;
 
-		if netgame == 0 {
+		if !netgame {
 			if cheating != 0 {
 				AM_drawLineCharacter(
 					cheat_player_arrow.as_ptr(),
@@ -1202,7 +1202,7 @@ fn AM_drawPlayers() {
 				continue;
 			}
 
-			if playeringame[i] == 0 {
+			if !playeringame[i] {
 				continue;
 			}
 

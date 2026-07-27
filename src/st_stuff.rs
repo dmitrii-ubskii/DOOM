@@ -416,7 +416,7 @@ fn ST_refreshBackground() {
 		if st_statusbaron != 0 {
 			V_DrawPatch(ST_X, 0, BG, sbar);
 
-			if netgame != 0 {
+			if netgame {
 				V_DrawPatch(ST_FX, 0, BG, faceback);
 			}
 
@@ -450,7 +450,7 @@ pub fn ST_Responder(ev: &mut event_t) -> bool {
 		}
 		// if a user keypress...
 		else if ev.ty == evtype_t::ev_keydown {
-			if netgame == 0 {
+			if !netgame {
 				// b. - enabled for more debug fun.
 				// if (gameskill != sk_nightmare) {
 

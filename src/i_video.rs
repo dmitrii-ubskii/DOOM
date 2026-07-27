@@ -118,7 +118,7 @@ fn xlatekey() -> u8 {
 			XK_Control_L | XK_Control_R => KEY_RCTRL,
 			XK_Alt_L | XK_Meta_L | XK_Alt_R | XK_Meta_R => KEY_RALT,
 			rc @ A..=Z => u8_from_u32(rc) - b'A' + b'a',
-			rc => u8_from_u32(rc),
+			rc => u8_from_u32(rc & 0xff),
 		}
 	}
 }

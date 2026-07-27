@@ -608,7 +608,7 @@ static mut spritememory: usize = 0;
 
 pub(crate) fn R_PrecacheLevel() {
 	unsafe {
-		if demoplayback != 0 {
+		if demoplayback {
 			return;
 		}
 

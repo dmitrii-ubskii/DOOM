@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use crate::{d_net::*, i_system::I_Error};
+use crate::{d_net::*, g_game::*, i_system::*, m_argv::*, *};
 
 /*
 // For some odd reason...
@@ -19,14 +19,13 @@ use crate::{d_net::*, i_system::I_Error};
 
 void	NetSend (void);
 boolean NetListen (void);
+*/
 
-
-//
 // NETWORKING
-//
+const IPPORT_USERRESERVED: u16 = 5000;
+static mut DOOMPORT: u16 = IPPORT_USERRESERVED + 0x1d;
 
-int	DOOMPORT =	(IPPORT_USERRESERVED +0x1d );
-
+/*
 int			sendsocket;
 int			insocket;
 
@@ -184,99 +183,100 @@ int GetLocalAddress (void)
 
 	return *(int *)hostentry->h_addr_list[0];
 }
-
+*/
 
 // I_InitNetwork
-void I_InitNetwork (void)
-{
-	boolean		trueval = true;
-	int			i;
-	int			p;
-	struct hostent*	hostentry;	// host information entry
+#[allow(static_mut_refs)]
+pub fn I_InitNetwork() {
+	unsafe {
+		/*
+		boolean		trueval = true;
+		int			p;
+		struct hostent*	hostentry;	// host information entry
+		*/
 
-	doomcom = malloc (sizeof (*doomcom) );
-	memset (doomcom, 0, sizeof(*doomcom) );
+		doomcom = libc::malloc(size_of::<doomcom_t>()).cast();
+		libc::memset(doomcom.cast(), 0, size_of::<doomcom_t>());
 
-	// set up for network
-	i = M_CheckParm ("-dup");
-	if (i && i< myargc-1)
-	{
-	doomcom->ticdup = myargv[i+1][0]-'0';
-	if (doomcom->ticdup < 1)
-		doomcom->ticdup = 1;
-	if (doomcom->ticdup > 9)
-		doomcom->ticdup = 9;
-	}
-	else
-	doomcom-> ticdup = 1;
+		// set up for network
+		let i = M_CheckParm(c"-dup".as_ptr());
+		if i != 0 && i < myargc - 1 {
+			(*doomcom).ticdup =
+				u16::try_from(**myargv.wrapping_add(i + 1)).unwrap() - u16::from(b'0');
+			(*doomcom).ticdup = (*doomcom).ticdup.clamp(1, 9);
+		} else {
+			(*doomcom).ticdup = 1;
+		}
 
-	if (M_CheckParm ("-extratic"))
-	doomcom-> extratics = 1;
-	else
-	doomcom-> extratics = 0;
+		if M_CheckParm(c"-extratic".as_ptr()) != 0 {
+			(*doomcom).extratics = 1;
+		} else {
+			(*doomcom).extratics = 0;
+		}
 
-	p = M_CheckParm ("-port");
-	if (p && p<myargc-1)
-	{
-	DOOMPORT = atoi (myargv[p+1]);
-	printf ("using alternate port %i\n",DOOMPORT);
-	}
+		let p = M_CheckParm(c"-port".as_ptr());
+		if p != 0 && p < myargc - 1 {
+			DOOMPORT = u16::try_from(libc::atoi(*myargv.wrapping_add(p + 1))).unwrap();
+			println!("using alternate port {}", DOOMPORT);
+		}
 
-	// parse network game options,
-	//  -net <consoleplayer> <host> <host> ...
-	i = M_CheckParm ("-net");
-	if (!i)
-	{
-	// single player game
-	netgame = false;
-	doomcom->id = DOOMCOM_ID;
-	doomcom->numplayers = doomcom->numnodes = 1;
-	doomcom->deathmatch = false;
-	doomcom->consoleplayer = 0;
-	return;
-	}
+		// parse network game options,
+		//  -net <consoleplayer> <host> <host> ...
+		let i = M_CheckParm(c"-net".as_ptr());
+		if i == 0 {
+			// single player game
+			netgame = false;
+			(*doomcom).id = DOOMCOM_ID;
+			(*doomcom).numplayers = 1;
+			(*doomcom).numnodes = 1;
+			(*doomcom).deathmatch = 0;
+			(*doomcom).consoleplayer = 0;
+			return;
+		}
 
-	netsend = PacketSend;
-	netget = PacketGet;
-	netgame = true;
+		netsend = PacketSend;
+		netget = PacketGet;
+		netgame = true;
 
-	// parse player number and host list
-	doomcom->consoleplayer = myargv[i+1][0]-'1';
+		/*
+		// parse player number and host list
+		doomcom->consoleplayer = myargv[i+1][0]-'1';
 
-	doomcom->numnodes = 1;	// this node for sure
+		doomcom->numnodes = 1;	// this node for sure
 
-	i++;
-	while (++i < myargc && myargv[i][0] != '-')
-	{
-	sendaddress[doomcom->numnodes].sin_family = AF_INET;
-	sendaddress[doomcom->numnodes].sin_port = htons(DOOMPORT);
-	if (myargv[i][0] == '.')
-	{
+		i++;
+		while (++i < myargc && myargv[i][0] != '-')
+		{
+		sendaddress[doomcom->numnodes].sin_family = AF_INET;
+		sendaddress[doomcom->numnodes].sin_port = htons(DOOMPORT);
+		if (myargv[i][0] == '.')
+		{
 		sendaddress[doomcom->numnodes].sin_addr.s_addr
 		= inet_addr (myargv[i]+1);
-	}
-	else
-	{
+		}
+		else
+		{
 		hostentry = gethostbyname (myargv[i]);
 		if (!hostentry)
 		I_Error ("gethostbyname: couldn't find %s", myargv[i]);
 		sendaddress[doomcom->numnodes].sin_addr.s_addr
 		= *(int *)hostentry->h_addr_list[0];
+		}
+		doomcom->numnodes++;
+		}
+
+		doomcom->id = DOOMCOM_ID;
+		doomcom->numplayers = doomcom->numnodes;
+
+		// build message to receive
+		insocket = UDPsocket ();
+		BindToLocalPort (insocket,htons(DOOMPORT));
+		ioctl (insocket, FIONBIO, &trueval);
+
+		sendsocket = UDPsocket ();
+		*/
 	}
-	doomcom->numnodes++;
-	}
-
-	doomcom->id = DOOMCOM_ID;
-	doomcom->numplayers = doomcom->numnodes;
-
-	// build message to receive
-	insocket = UDPsocket ();
-	BindToLocalPort (insocket,htons(DOOMPORT));
-	ioctl (insocket, FIONBIO, &trueval);
-
-	sendsocket = UDPsocket ();
 }
-*/
 
 pub fn I_NetCmd() {
 	unsafe {

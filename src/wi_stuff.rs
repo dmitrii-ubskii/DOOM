@@ -1025,7 +1025,7 @@ fn WI_fragSum(playernum: usize) -> i32 {
 		let mut fragsum = 0;
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 && i != playernum {
+			if playeringame[i] && i != playernum {
 				fragsum += (*plrs.wrapping_add(playernum)).frags[i];
 			}
 		}
@@ -1052,10 +1052,10 @@ fn WI_initDeathmatchStats() {
 		cnt_pause = TICRATE;
 
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 {
+			if playeringame[i] {
 				#[allow(clippy::needless_range_loop)]
 				for j in 0..MAXPLAYERS {
-					if playeringame[j] != 0 {
+					if playeringame[j] {
 						dm_frags[i][j] = 0;
 					}
 				}
@@ -1076,10 +1076,10 @@ fn WI_updateDeathmatchStats() {
 			acceleratestage = 0;
 
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] != 0 {
+				if playeringame[i] {
 					#[allow(clippy::needless_range_loop)]
 					for j in 0..MAXPLAYERS {
-						if playeringame[j] != 0 {
+						if playeringame[j] {
 							dm_frags[i][j] = (*plrs.wrapping_add(i)).frags[j];
 						}
 					}
@@ -1101,12 +1101,10 @@ fn WI_updateDeathmatchStats() {
 
 			#[allow(clippy::needless_range_loop)]
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] != 0 {
+				if playeringame[i] {
 					#[allow(clippy::needless_range_loop)]
 					for j in 0..MAXPLAYERS {
-						if playeringame[j] != 0
-							&& dm_frags[i][j] != (*plrs.wrapping_add(i)).frags[j]
-						{
+						if playeringame[j] && dm_frags[i][j] != (*plrs.wrapping_add(i)).frags[j] {
 							if (*plrs.wrapping_add(i)).frags[j] < 0 {
 								dm_frags[i][j] -= 1;
 							} else {
@@ -1169,7 +1167,7 @@ fn WI_drawDeathmatchStats() {
 		let mut y = DM_MATRIXY;
 
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 {
+			if playeringame[i] {
 				V_DrawPatch(
 					x - usize::try_from((*p[i]).width).unwrap() / 2,
 					DM_MATRIXY - WI_SPACINGY,
@@ -1211,10 +1209,10 @@ fn WI_drawDeathmatchStats() {
 		for i in 0..MAXPLAYERS {
 			x = DM_MATRIXX + DM_SPACINGX;
 
-			if playeringame[i] != 0 {
+			if playeringame[i] {
 				#[allow(clippy::needless_range_loop)]
 				for j in 0..MAXPLAYERS {
-					if playeringame[j] != 0 {
+					if playeringame[j] {
 						WI_drawNum(x + w, y, dm_frags[i][j], 2);
 					}
 
@@ -1240,7 +1238,7 @@ fn WI_initNetgameStats() {
 		cnt_pause = TICRATE;
 
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] == 0 {
+			if !playeringame[i] {
 				continue;
 			}
 
@@ -1270,7 +1268,7 @@ fn WI_updateNetgameStats() {
 			acceleratestage = 0;
 
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] == 0 {
+				if !playeringame[i] {
 					continue;
 				}
 
@@ -1294,7 +1292,7 @@ fn WI_updateNetgameStats() {
 			stillticking = false;
 
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] == 0 {
+				if !playeringame[i] {
 					continue;
 				}
 
@@ -1319,7 +1317,7 @@ fn WI_updateNetgameStats() {
 			stillticking = false;
 
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] == 0 {
+				if !playeringame[i] {
 					continue;
 				}
 
@@ -1342,7 +1340,7 @@ fn WI_updateNetgameStats() {
 			stillticking = false;
 
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] == 0 {
+				if !playeringame[i] {
 					continue;
 				}
 
@@ -1367,7 +1365,7 @@ fn WI_updateNetgameStats() {
 			stillticking = false;
 
 			for i in 0..MAXPLAYERS {
-				if playeringame[i] == 0 {
+				if !playeringame[i] {
 					continue;
 				}
 
@@ -1447,7 +1445,7 @@ fn WI_drawNetgameStats() {
 		let mut y = NG_STATSY + usize::try_from((*kills).height).unwrap();
 
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] == 0 {
+			if !playeringame[i] {
 				continue;
 			}
 
@@ -1621,7 +1619,7 @@ fn WI_checkForAccelerate() {
 		// check for button presses to skip delays
 		// for (i=0, player = players ; i<MAXPLAYERS ; i++, player++)
 		for i in 0..MAXPLAYERS {
-			if playeringame[i] != 0 {
+			if playeringame[i] {
 				if players[i].cmd.buttons & BT_ATTACK != 0 {
 					if players[i].attackdown == 0 {
 						acceleratestage = 1;
@@ -1662,7 +1660,7 @@ pub(crate) fn WI_Ticker() {
 
 		match state {
 			stateenum_t::StatCount if deathmatch != 0 => WI_updateDeathmatchStats(),
-			stateenum_t::StatCount if netgame != 0 => WI_updateNetgameStats(),
+			stateenum_t::StatCount if netgame => WI_updateNetgameStats(),
 			stateenum_t::StatCount => WI_updateStats(),
 			stateenum_t::ShowNextLoc => WI_updateShowNextLoc(),
 			stateenum_t::NoState => WI_updateNoState(),
@@ -1899,7 +1897,7 @@ pub(crate) fn WI_Drawer() {
 	unsafe {
 		match state {
 			stateenum_t::StatCount if deathmatch != 0 => WI_drawDeathmatchStats(),
-			stateenum_t::StatCount if netgame != 0 => WI_drawNetgameStats(),
+			stateenum_t::StatCount if netgame => WI_drawNetgameStats(),
 			stateenum_t::StatCount => WI_drawStats(),
 			stateenum_t::ShowNextLoc => WI_drawShowNextLoc(),
 			stateenum_t::NoState => WI_drawNoState(),
@@ -1943,7 +1941,7 @@ pub(crate) fn WI_Start(wbstartstruct: &mut wbstartstruct_t) {
 
 		if deathmatch != 0 {
 			WI_initDeathmatchStats();
-		} else if netgame != 0 {
+		} else if netgame {
 			WI_initNetgameStats();
 		} else {
 			WI_initStats();
