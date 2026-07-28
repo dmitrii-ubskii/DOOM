@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{mem, num::Wrapping, ptr::null_mut};
+use std::{mem, num::Wrapping, ops::Index, ptr::null_mut};
 
 use crate::{
 	d_net::*,
@@ -111,17 +111,51 @@ pub static mut fuzzcolfunc: unsafe fn() = R_DrawColumn;
 pub static mut transcolfunc: unsafe fn() = R_DrawColumn;
 pub static mut spanfunc: unsafe fn() = R_DrawColumn;
 
+#[derive(Debug, Clone, Copy)]
+pub enum Side {
+	Front,
+	Back,
+}
+
+impl Side {
+	pub fn flip(self) -> Self {
+		match self {
+			Self::Front => Self::Back,
+			Self::Back => Self::Front,
+		}
+	}
+}
+
+impl<T> Index<Side> for [T; 2] {
+	type Output = T;
+
+	fn index(&self, index: Side) -> &Self::Output {
+		match index {
+			Side::Front => &self[0],
+			Side::Back => &self[1],
+		}
+	}
+}
+
 // R_PointOnSide
 // Traverse BSP (sub) tree,
 //  check point against partition plane.
 // Returns side 0 (front) or 1 (back).
-pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &mut node_t) -> usize {
+pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &node_t) -> Side {
 	if node.dx == 0 {
-		return usize::from(if x <= node.x { node.dy > 0 } else { node.dy < 0 });
+		if x <= node.x && node.dy > 0 || x > node.x && node.dy < 0 {
+			return Side::Back;
+		} else {
+			return Side::Front;
+		};
 	}
 
 	if node.dy == 0 {
-		return usize::from(if y <= node.y { node.dx < 0 } else { node.dx > 0 });
+		if y <= node.y && node.dx < 0 || y > node.y && node.dx > 0 {
+			return Side::Back;
+		} else {
+			return Side::Front;
+		}
 	}
 
 	let dx = x - node.x;
@@ -129,13 +163,18 @@ pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &mut node_t) -> usize {
 
 	// Try to quickly decide by looking at sign bits.
 	if node.dy ^ node.dx ^ dx ^ dy < 0 {
-		return usize::from(node.dy ^ dx < 0); // (left is negative)
+		// (left is negative)
+		if node.dy ^ dx < 0 {
+			return Side::Back;
+		} else {
+			return Side::Front;
+		}
 	}
 
 	let left = FixedMul(node.dy >> FRACBITS, dx);
 	let right = FixedMul(dy, node.dx >> FRACBITS);
 
-	usize::from(right >= left)
+	if right >= left { Side::Back } else { Side::Front }
 }
 
 pub fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: &mut seg_t) -> i32 {
@@ -516,8 +555,8 @@ pub fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t {
 
 		while (nodenum & NF_SUBSECTOR) == 0 {
 			let node = nodes.wrapping_add(nodenum);
-			let side = R_PointOnSide(x, y, &mut *node);
-			nodenum = usize::from((*node).children[side]);
+			let side = R_PointOnSide(x, y, &*node);
+			nodenum = usize::from((&(*node)).children[side]);
 		}
 
 		subsectors.wrapping_add(nodenum & !NF_SUBSECTOR)

@@ -477,14 +477,14 @@ pub fn R_RenderBSPNode(bspnum: isize) {
 		let bsp = nodes.wrapping_add(usize::try_from(bspnum).unwrap());
 
 		// Decide which side the view point is on.
-		let side = R_PointOnSide(viewx, viewy, &mut *bsp);
+		let side = R_PointOnSide(viewx, viewy, &*bsp);
 
 		// Recursively divide front space.
-		R_RenderBSPNode(isize::try_from((*bsp).children[side]).unwrap());
+		R_RenderBSPNode(isize::try_from((&(*bsp).children)[side]).unwrap());
 
 		// Possibly divide back space.
-		if R_CheckBBox((*bsp).bbox[side ^ 1].as_ptr()) {
-			R_RenderBSPNode(isize::try_from((*bsp).children[side ^ 1]).unwrap());
+		if R_CheckBBox((&(*bsp).bbox)[side.flip()].as_ptr()) {
+			R_RenderBSPNode(isize::try_from((&(*bsp).children)[side.flip()]).unwrap());
 		}
 	}
 }
