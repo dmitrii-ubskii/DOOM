@@ -1429,7 +1429,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 			return true;
 		}
 
-		if devparm != 0 && ch == i32::from(KEY_F1) {
+		if devparm && ch == i32::from(KEY_F1) {
 			G_ScreenShot();
 			return true;
 		}

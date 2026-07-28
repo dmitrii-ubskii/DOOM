@@ -633,7 +633,7 @@ pub(crate) fn A_Chase(actor: &mut mobj_t) {
 		// do not attack twice in a row
 		if actor.flags & MF_JUSTATTACKED != 0 {
 			actor.flags &= !MF_JUSTATTACKED;
-			if gameskill != skill_t::sk_nightmare && fastparm == 0 {
+			if gameskill != skill_t::sk_nightmare && !fastparm {
 				P_NewChaseDir(actor);
 			}
 			return;
@@ -651,7 +651,7 @@ pub(crate) fn A_Chase(actor: &mut mobj_t) {
 
 		// check for missile attack
 		if (*actor.info).missilestate != statenum_t::S_NULL
-			&& (gameskill >= skill_t::sk_nightmare || fastparm != 0 || actor.movecount == 0)
+			&& (gameskill >= skill_t::sk_nightmare || fastparm || actor.movecount == 0)
 			&& P_CheckMissileRange(actor)
 		{
 			P_SetMobjState(actor, (*actor.info).missilestate);

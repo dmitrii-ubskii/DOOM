@@ -933,7 +933,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		}
 
 		// don't spawn any monsters if -nomonsters
-		if nomonsters != 0
+		if nomonsters
 			&& (i == mobjtype_t::MT_SKULL || mobjinfo[usize::from(i)].flags & MF_COUNTKILL != 0)
 		{
 			return;

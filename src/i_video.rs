@@ -301,7 +301,7 @@ pub fn I_FinishUpdate() {
 		// UNUSED static unsigned char *bigscreen=0;
 
 		// draws little dots on the bottom of the screen
-		if devparm != 0 {
+		if devparm {
 			let i = I_GetTime();
 			let tics = usize::min(i - lasttic, 20);
 			lasttic = i;

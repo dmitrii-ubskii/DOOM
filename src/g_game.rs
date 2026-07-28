@@ -1201,9 +1201,9 @@ fn G_DoNewGame() {
 		playeringame[1] = false;
 		playeringame[2] = false;
 		playeringame[3] = false;
-		respawnparm = 0;
-		fastparm = 0;
-		nomonsters = 0;
+		respawnparm = false;
+		fastparm = false;
+		nomonsters = false;
 		consoleplayer = 0;
 		G_InitNew(d_skill, d_episode, d_map);
 		gameaction = gameaction_t::ga_nothing;
@@ -1244,9 +1244,9 @@ pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 
 		M_ClearRandom();
 
-		respawnmonsters = skill == skill_t::sk_nightmare || respawnparm != 0;
+		respawnmonsters = skill == skill_t::sk_nightmare || respawnparm;
 
-		if fastparm != 0 || (skill == skill_t::sk_nightmare && gameskill != skill_t::sk_nightmare) {
+		if fastparm || (skill == skill_t::sk_nightmare && gameskill != skill_t::sk_nightmare) {
 			#[allow(clippy::needless_range_loop)]
 			for i in usize::from(statenum_t::S_SARG_RUN1)..usize::from(statenum_t::S_SARG_PAIN2) {
 				states[i].tics >>= 1;
@@ -1437,11 +1437,11 @@ fn G_DoPlayDemo() {
 
 		deathmatch = boolean::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
-		respawnparm = boolean::from(*demo_p);
+		respawnparm = *demo_p != 0;
 		demo_p = demo_p.wrapping_add(1);
-		fastparm = boolean::from(*demo_p);
+		fastparm = *demo_p != 0;
 		demo_p = demo_p.wrapping_add(1);
-		nomonsters = boolean::from(*demo_p);
+		nomonsters = *demo_p != 0;
 		demo_p = demo_p.wrapping_add(1);
 		consoleplayer = usize::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
@@ -1510,9 +1510,9 @@ pub fn G_CheckDemoStatus() -> boolean {
 			playeringame[1] = false;
 			playeringame[2] = false;
 			playeringame[3] = false;
-			respawnparm = 0;
-			fastparm = 0;
-			nomonsters = 0;
+			respawnparm = false;
+			fastparm = false;
+			nomonsters = false;
 			consoleplayer = 0;
 			D_AdvanceDemo();
 			return 1;

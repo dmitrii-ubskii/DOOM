@@ -66,19 +66,17 @@ const MAXWADFILES: usize = 20;
 
 pub(crate) static mut wadfiles: [*mut c_char; MAXWADFILES] = [null_mut(); MAXWADFILES];
 
-type boolean = i32;
-
-pub static mut devparm: boolean = 0; // started game with -devparm
-pub static mut nomonsters: boolean = 0; // checkparm of -nomonsters
-pub static mut respawnparm: boolean = 0; // checkparm of -respawn
-pub static mut fastparm: boolean = 0; // checkparm of -fast
+pub static mut devparm: bool = false; // started game with -devparm
+pub static mut nomonsters: bool = false; // checkparm of -nomonsters
+pub static mut respawnparm: bool = false; // checkparm of -respawn
+pub static mut fastparm: bool = false; // checkparm of -fast
 
 pub static mut singletics: bool = false; // debug flag to cancel adaptiveness
 
 pub static mut startskill: skill_t = skill_t::sk_baby;
 pub static mut startepisode: usize = 0;
 pub static mut startmap: usize = 0;
-pub static mut autostart: boolean = 0;
+pub static mut autostart: bool = false;
 
 pub static mut debugfile: *const libc::FILE = null();
 
@@ -505,7 +503,7 @@ fn IdentifyVersion() {
 
 		if M_CheckParm(c"-shdev".as_ptr()) != 0 {
 			gamemode = GameMode_t::shareware;
-			devparm = 1;
+			devparm = true;
 			D_AddFile(devdata!("doom1.wad"));
 			D_AddFile(devmaps!("data_se/texture1.lmp"));
 			D_AddFile(devmaps!("data_se/pnames.lmp"));
@@ -515,7 +513,7 @@ fn IdentifyVersion() {
 
 		if M_CheckParm(c"-regdev".as_ptr()) != 0 {
 			gamemode = GameMode_t::registered;
-			devparm = 1;
+			devparm = true;
 			D_AddFile(devdata!("doom.wad"));
 			D_AddFile(devmaps!("data_se/texture1.lmp"));
 			D_AddFile(devmaps!("data_se/texture2.lmp"));
@@ -526,7 +524,7 @@ fn IdentifyVersion() {
 
 		if M_CheckParm(c"-comdev".as_ptr()) != 0 {
 			gamemode = GameMode_t::commercial;
-			devparm = 1;
+			devparm = true;
 			D_AddFile(devdata!("doom2.wad"));
 
 			D_AddFile(devmaps!("cdata/texture1.lmp"));
@@ -696,10 +694,10 @@ pub fn D_DoomMain() {
 		//setbuf(stdout, NULL);
 		modifiedgame = 0;
 
-		nomonsters = boolean::try_from(M_CheckParm(c"-nomonsters".as_ptr())).unwrap();
-		respawnparm = boolean::try_from(M_CheckParm(c"-respawn".as_ptr())).unwrap();
-		fastparm = boolean::try_from(M_CheckParm(c"-fast".as_ptr())).unwrap();
-		devparm = boolean::try_from(M_CheckParm(c"-devparm".as_ptr())).unwrap();
+		nomonsters = M_CheckParm(c"-nomonsters".as_ptr()) != 0;
+		respawnparm = M_CheckParm(c"-respawn".as_ptr()) != 0;
+		fastparm = M_CheckParm(c"-fast".as_ptr()) != 0;
+		devparm = M_CheckParm(c"-devparm".as_ptr()) != 0;
 		if M_CheckParm(c"-altdeath".as_ptr()) != 0 {
 			deathmatch = 2;
 		} else if M_CheckParm(c"-deathmatch".as_ptr()) != 0 {
@@ -767,7 +765,7 @@ pub fn D_DoomMain() {
 
 		printf(c"%s\n".as_ptr(), title.as_ptr());
 
-		if devparm != 0 {
+		if devparm {
 			printf(D_DEVSTR.as_ptr());
 		}
 
@@ -862,13 +860,13 @@ pub fn D_DoomMain() {
 		startskill = skill_t::sk_medium;
 		startepisode = 1;
 		startmap = 1;
-		autostart = 0;
+		autostart = false;
 
 		let p = M_CheckParm(c"-skill".as_ptr());
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			startskill = transmute::<i32, skill_t>(i32::from(*argvp1) - i32::from(b'1'));
-			autostart = 1;
+			autostart = true;
 		}
 
 		let p = M_CheckParm(c"-episode".as_ptr());
@@ -876,7 +874,7 @@ pub fn D_DoomMain() {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			startepisode = usize::try_from(*argvp1).unwrap() - usize::from(b'0');
 			startmap = 1;
-			autostart = 1;
+			autostart = true;
 		}
 
 		let p = M_CheckParm(c"-timer".as_ptr());
@@ -905,7 +903,7 @@ pub fn D_DoomMain() {
 				startepisode = usize::try_from(*argvp1).unwrap() - usize::from(b'0');
 				startmap = usize::try_from(*argvp2).unwrap() - usize::from(b'0');
 			}
-			autostart = 1;
+			autostart = true;
 		}
 
 		// init subsystems
@@ -1038,7 +1036,7 @@ pub fn D_DoomMain() {
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			G_RecordDemo(argvp1);
-			autostart = 1;
+			autostart = true;
 		}
 
 		let p = M_CheckParm(c"-playdemo".as_ptr());
@@ -1068,7 +1066,7 @@ pub fn D_DoomMain() {
 		}
 
 		if gameaction != gameaction_t::ga_loadgame {
-			if autostart != 0 || netgame {
+			if autostart || netgame {
 				G_InitNew(startskill, startepisode, startmap);
 			} else {
 				D_StartTitle(); // start up intro loop
