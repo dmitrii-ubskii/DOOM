@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{mem, num::Wrapping, ops::Index, ptr::null_mut};
+use std::{num::Wrapping, ops::Index, ptr::null_mut};
 
 use crate::{
 	d_net::*,
@@ -297,7 +297,7 @@ pub fn R_PointToDist(x: fixed_t, y: fixed_t) -> fixed_t {
 		let mut dy = fixed_t::abs(y - viewy);
 
 		if dy > dx {
-			mem::swap(&mut dx, &mut dy);
+			(dx, dy) = (dy, dx);
 		}
 
 		let angle = (tantoangle[usize::try_from(FixedDiv(dy, dx)).unwrap() >> DBITS] + ANG90).0
@@ -614,7 +614,7 @@ pub fn R_RenderPlayerView(player: &mut player_t) {
 		NetUpdate();
 
 		// The head node is the last node output.
-		R_RenderBSPNode(isize::try_from(numnodes).unwrap() - 1);
+		R_RenderBSPNode(numnodes.wrapping_sub(1));
 
 		// Check for new console commands.
 		NetUpdate();

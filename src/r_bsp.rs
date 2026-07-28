@@ -462,29 +462,29 @@ fn R_Subsector(num: usize) {
 // Renders all subsectors below a given node,
 //  traversing subtree recursively.
 // Just call with BSP root.
-pub fn R_RenderBSPNode(bspnum: isize) {
+pub fn R_RenderBSPNode(bspnum: usize) {
 	unsafe {
 		// Found a subsector?
-		if usize::try_from(bspnum).unwrap() & NF_SUBSECTOR != 0 {
-			if bspnum == -1 {
+		if bspnum & NF_SUBSECTOR != 0 {
+			if bspnum == usize::MAX {
 				R_Subsector(0);
 			} else {
-				R_Subsector(usize::try_from(bspnum).unwrap() & !NF_SUBSECTOR);
+				R_Subsector(bspnum & !NF_SUBSECTOR);
 			}
 			return;
 		}
 
-		let bsp = nodes.wrapping_add(usize::try_from(bspnum).unwrap());
+		let bsp = nodes.wrapping_add(bspnum);
 
 		// Decide which side the view point is on.
 		let side = R_PointOnSide(viewx, viewy, &*bsp);
 
 		// Recursively divide front space.
-		R_RenderBSPNode(isize::try_from((&(*bsp).children)[side]).unwrap());
+		R_RenderBSPNode(usize::from((&(*bsp).children)[side]));
 
 		// Possibly divide back space.
 		if R_CheckBBox((&(*bsp).bbox)[side.flip()].as_ptr()) {
-			R_RenderBSPNode(isize::try_from((&(*bsp).children)[side.flip()]).unwrap());
+			R_RenderBSPNode(usize::from((&(*bsp).children)[side.flip()]));
 		}
 	}
 }

@@ -150,7 +150,10 @@ pub unsafe fn R_RenderMaskedSegRange(ds: *mut drawseg_t, x1: i32, x2: i32) {
 				// draw the texture
 				let col = R_GetColumn(
 					texnum,
-					(*maskedtexturecol.wrapping_add(dc_x.try_into().unwrap())).try_into().unwrap(),
+					(i32::from(*maskedtexturecol).wrapping_add(dc_x))
+						.cast_unsigned()
+						.try_into()
+						.unwrap(),
 				)
 				.wrapping_byte_sub(3)
 				.cast();
@@ -171,7 +174,7 @@ pub unsafe fn R_RenderMaskedSegRange(ds: *mut drawseg_t, x1: i32, x2: i32) {
 //  textures.
 // CALLED: CORE LOOPING ROUTINE.
 const HEIGHTBITS: usize = 12;
-const HEIGHTUNIT: i32 = 1 << 12;
+const HEIGHTUNIT: i32 = 1 << HEIGHTBITS;
 
 #[allow(static_mut_refs)]
 fn R_RenderSegLoop() {
@@ -535,7 +538,7 @@ pub fn R_StoreWallRange(start: u32, stop: u32) {
 		}
 
 		// calculate rw_offset (only needed for textured lines)
-		segtextured = midtexture | toptexture | bottomtexture != 0 || maskedtexture;
+		segtextured = midtexture != 0 || toptexture != 0 || bottomtexture != 0 || maskedtexture;
 
 		if segtextured {
 			offsetangle = rw_normalangle - rw_angle1;

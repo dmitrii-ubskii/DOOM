@@ -102,7 +102,7 @@ const NCMD_EXIT: u32 = 0x80000000;
 const NCMD_RETRANSMIT: u32 = 0x40000000;
 const NCMD_SETUP: u32 = 0x20000000;
 const NCMD_KILL: u32 = 0x10000000; // kill game
-const NCMD_CHECKSUM: u32 = 0x0fffffff;
+// const NCMD_CHECKSUM: u32 = 0x0fffffff;
 
 pub static mut doomcom: *mut doomcom_t = null_mut();
 pub static mut netbuffer: *mut doomdata_t = null_mut(); // points inside doomcom
@@ -146,6 +146,7 @@ int NetbufferSize (void)
 */
 
 // Checksum
+#[allow(clippy::needless_return, reason = "might need to reimpl this")]
 fn NetbufferChecksum() -> u32 {
 	// 	unsigned		c;
 	// 	int		i,l;
@@ -399,11 +400,6 @@ static mut gametime: usize = 0;
 
 pub fn NetUpdate() {
 	unsafe {
-		/*
-		int				i,j;
-		int				realstart;
-		*/
-
 		// check time
 		let nowtime = I_GetTime() / ticdup;
 		let mut newtics = nowtime.saturating_sub(gametime);
@@ -460,7 +456,7 @@ pub fn NetUpdate() {
 				}
 
 				if remoteresend[i] {
-					(*netbuffer).retransmitfrom = u8::try_from(nettics[i]).unwrap();
+					(*netbuffer).retransmitfrom = u8::try_from(nettics[i] & 0xff).unwrap();
 					HSendPacket(i, NCMD_RETRANSMIT);
 				} else {
 					(*netbuffer).retransmitfrom = 0;
