@@ -41,22 +41,22 @@ pub(crate) static mut numvertexes: usize = 0;
 pub(crate) static mut vertexes: *mut vertex_t = null_mut();
 
 pub(crate) static mut numsegs: usize = 0;
-pub static mut segs: *mut seg_t = null_mut();
+pub(crate) static mut segs: *mut seg_t = null_mut();
 
-pub static mut numsectors: usize = 0;
-pub static mut sectors: *mut sector_t = null_mut();
+pub(crate) static mut numsectors: usize = 0;
+pub(crate) static mut sectors: *mut sector_t = null_mut();
 
-pub static mut numsubsectors: usize = 0;
-pub static mut subsectors: *mut subsector_t = null_mut();
+pub(crate) static mut numsubsectors: usize = 0;
+pub(crate) static mut subsectors: *mut subsector_t = null_mut();
 
-pub static mut numnodes: usize = 0;
-pub static mut nodes: *mut node_t = null_mut();
+pub(crate) static mut numnodes: usize = 0;
+pub(crate) static mut nodes: *mut node_t = null_mut();
 
-pub static mut numlines: usize = 0;
-pub static mut lines: *mut line_t = null_mut();
+pub(crate) static mut numlines: usize = 0;
+pub(crate) static mut lines: *mut line_t = null_mut();
 
-pub static mut numsides: usize = 0;
-pub static mut sides: *mut side_t = null_mut();
+pub(crate) static mut numsides: usize = 0;
+pub(crate) static mut sides: *mut side_t = null_mut();
 
 // BLOCKMAP
 // Created from axis aligned bounding box
@@ -66,16 +66,16 @@ pub static mut sides: *mut side_t = null_mut();
 // by spatial subdivision in 2D.
 
 // Blockmap size.
-pub static mut bmapwidth: usize = 0;
-pub static mut bmapheight: usize = 0; // size in mapblocks
-pub static mut blockmap: *mut i16 = null_mut(); // usize for larger maps
+pub(crate) static mut bmapwidth: usize = 0;
+pub(crate) static mut bmapheight: usize = 0; // size in mapblocks
+pub(crate) static mut blockmap: *mut i16 = null_mut(); // usize for larger maps
 // offsets in blockmap are from here
-pub static mut blockmaplump: *mut i16 = null_mut();
+pub(crate) static mut blockmaplump: *mut i16 = null_mut();
 // origin of block map
-pub static mut bmaporgx: fixed_t = 0;
-pub static mut bmaporgy: fixed_t = 0;
+pub(crate) static mut bmaporgx: fixed_t = 0;
+pub(crate) static mut bmaporgy: fixed_t = 0;
 // for thing chains
-pub static mut blocklinks: *mut *mut mobj_t = null_mut();
+pub(crate) static mut blocklinks: *mut *mut mobj_t = null_mut();
 
 // REJECT
 // For fast sight rejection.

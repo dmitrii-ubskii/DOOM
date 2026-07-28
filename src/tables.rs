@@ -23,13 +23,13 @@ use std::num::Wrapping;
 
 use crate::m_fixed::{FRACBITS, fixed_t};
 
-pub const FINEANGLES: usize = 8192;
-pub const FINEMASK: usize = FINEANGLES - 1;
+pub(crate) const FINEANGLES: usize = 8192;
+pub(crate) const FINEMASK: usize = FINEANGLES - 1;
 
 // 0x100000000 to 0x2000
-pub const ANGLETOFINESHIFT: usize = 19;
+pub(crate) const ANGLETOFINESHIFT: usize = 19;
 
-pub fn SlopeDiv(num: usize, den: usize) -> usize {
+pub(crate) fn SlopeDiv(num: usize, den: usize) -> usize {
 	if den < 512 {
 		return SLOPERANGE;
 	}
@@ -38,19 +38,19 @@ pub fn SlopeDiv(num: usize, den: usize) -> usize {
 }
 
 // Binary Angle Measument, BAM.
-pub const ANG45: angle_t = Wrapping(0x20000000);
-pub const ANG90: angle_t = Wrapping(0x40000000);
-pub const ANG180: angle_t = Wrapping(0x80000000);
-pub const ANG270: angle_t = Wrapping(0xc0000000);
+pub(crate) const ANG45: angle_t = Wrapping(0x20000000);
+pub(crate) const ANG90: angle_t = Wrapping(0x40000000);
+pub(crate) const ANG180: angle_t = Wrapping(0x80000000);
+pub(crate) const ANG270: angle_t = Wrapping(0xc0000000);
 
-pub const SLOPERANGE: usize = 2048;
-pub const SLOPEBITS: i32 = 11;
-pub const DBITS: i32 = FRACBITS - SLOPEBITS;
+pub(crate) const SLOPERANGE: usize = 2048;
+pub(crate) const SLOPEBITS: i32 = 11;
+pub(crate) const DBITS: i32 = FRACBITS - SLOPEBITS;
 
-pub type angle_t = Wrapping<usize>;
+pub(crate) type angle_t = Wrapping<usize>;
 
 // Effective size is 10240.
-pub static finesine: [fixed_t; 5 * FINEANGLES / 4] = [
+pub(crate) static finesine: [fixed_t; 5 * FINEANGLES / 4] = [
 	25, 75, 125, 175, 226, 276, 326, 376, 427, 477, 527, 578, 628, 678, 728, 779, 829, 879, 929,
 	980, 1030, 1080, 1130, 1181, 1231, 1281, 1331, 1382, 1432, 1482, 1532, 1583, 1633, 1683, 1733,
 	1784, 1834, 1884, 1934, 1985, 2035, 2085, 2135, 2186, 2236, 2286, 2336, 2387, 2437, 2487, 2537,
@@ -856,14 +856,14 @@ pub static finesine: [fixed_t; 5 * FINEANGLES / 4] = [
 ];
 
 // Re-use data, is just PI/2 pahse shift.
-pub static finecosine: &fixed_t = &finesine[FINEANGLES / 4];
+pub(crate) static finecosine: &fixed_t = &finesine[FINEANGLES / 4];
 
-pub fn finecos(angle: usize) -> fixed_t {
+pub(crate) fn finecos(angle: usize) -> fixed_t {
 	unsafe { *(finecosine as *const fixed_t).wrapping_add(angle) }
 }
 
 // Effective size is 4096.
-pub static finetangent: [fixed_t; FINEANGLES / 2] = [
+pub(crate) static finetangent: [fixed_t; FINEANGLES / 2] = [
 	-170910304, -56965752, -34178904, -24413316, -18988036, -15535599, -13145455, -11392683,
 	-10052327, -8994149, -8137527, -7429880, -6835455, -6329090, -5892567, -5512368, -5178251,
 	-4882318, -4618375, -4381502, -4167737, -3973855, -3797206, -3635590, -3487165, -3350381,
@@ -1214,7 +1214,7 @@ pub static finetangent: [fixed_t; FINEANGLES / 2] = [
 // The +1 size is to handle the case when x==y
 //  without additional checking.
 #[rustfmt::skip]
-pub static tantoangle: [angle_t; SLOPERANGE + 1] = [
+pub(crate) static tantoangle: [angle_t; SLOPERANGE + 1] = [
 	Wrapping(0), Wrapping(333772), Wrapping(667544), Wrapping(1001315), 
 	Wrapping(1335086), Wrapping(1668857), Wrapping(2002626), Wrapping(2336395), 
 	Wrapping(2670163), Wrapping(3003929), Wrapping(3337694), Wrapping(3671457), 

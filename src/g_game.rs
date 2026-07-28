@@ -65,46 +65,46 @@ type short = i16;
 type int = i32;
 type boolean = i32;
 
-pub const SAVEGAMESIZE: usize = 0x2c000;
-pub const SAVESTRINGSIZE: usize = 24;
+pub(crate) const SAVEGAMESIZE: usize = 0x2c000;
+pub(crate) const SAVESTRINGSIZE: usize = 24;
 
-pub static mut gameaction: gameaction_t = gameaction_t::ga_nothing;
-pub static mut gamestate: gamestate_t = gamestate_t::GS_LEVEL;
-pub static mut gameskill: skill_t = skill_t::sk_baby;
+pub(crate) static mut gameaction: gameaction_t = gameaction_t::ga_nothing;
+pub(crate) static mut gamestate: gamestate_t = gamestate_t::GS_LEVEL;
+pub(crate) static mut gameskill: skill_t = skill_t::sk_baby;
 pub(crate) static mut respawnmonsters: bool = false;
-pub static mut gameepisode: usize = 0;
-pub static mut gamemap: usize = 0;
+pub(crate) static mut gameepisode: usize = 0;
+pub(crate) static mut gamemap: usize = 0;
 
 pub(crate) static mut paused: bool = false;
 static mut sendpause: bool = false; // send a pause event next tic 
 static mut sendsave: bool = false; // send a save event next tic 
-pub static mut usergame: boolean = 0; // ok to save / end game 
+pub(crate) static mut usergame: boolean = 0; // ok to save / end game 
 
 static mut timingdemo: bool = false; // if true, exit with report on completion 
 pub(crate) static mut nodrawers: bool = false; // for comparative timing purposes 
 pub(crate) static mut noblit: bool = false; // for comparative timing purposes 
 static mut starttime: usize = 0; // for comparative timing purposes  	 
 
-pub static mut viewactive: bool = false;
+pub(crate) static mut viewactive: bool = false;
 
-pub static mut deathmatch: boolean = 0; // only if started as net death 
-pub static mut netgame: bool = false; // only true if packets are broadcast 
-pub static mut playeringame: [bool; MAXPLAYERS] = [false; MAXPLAYERS];
-pub static mut players: [player_t; MAXPLAYERS] = [player_t::new(); MAXPLAYERS];
+pub(crate) static mut deathmatch: boolean = 0; // only if started as net death 
+pub(crate) static mut netgame: bool = false; // only true if packets are broadcast 
+pub(crate) static mut playeringame: [bool; MAXPLAYERS] = [false; MAXPLAYERS];
+pub(crate) static mut players: [player_t; MAXPLAYERS] = [player_t::new(); MAXPLAYERS];
 
-pub static mut consoleplayer: usize = 0; // player taking events and displaying 
-pub static mut displayplayer: usize = 0; // view being displayed 
-pub static mut gametic: usize = 0;
+pub(crate) static mut consoleplayer: usize = 0; // player taking events and displaying 
+pub(crate) static mut displayplayer: usize = 0; // view being displayed 
+pub(crate) static mut gametic: usize = 0;
 static mut levelstarttic: usize = 0; // gametic at level start 
 
 // for intermission
 pub(crate) static mut totalkills: int = 0;
 pub(crate) static mut totalitems: int = 0;
-pub static mut totalsecret: int = 0;
+pub(crate) static mut totalsecret: int = 0;
 
 static mut demoname: [c_char; 32] = [0; 32];
-pub static mut demorecording: bool = false;
-pub static mut demoplayback: bool = false;
+pub(crate) static mut demorecording: bool = false;
+pub(crate) static mut demoplayback: bool = false;
 static mut netdemo: bool = false;
 static mut demobuffer: *mut byte = null_mut();
 static mut demo_p: *mut byte = null_mut();
@@ -135,7 +135,8 @@ pub(crate) static mut wminfo: wbstartstruct_t = wbstartstruct_t {
 	}; 4],
 }; // parms for world map / intermission 
 
-pub static mut consistancy: [[short; BACKUPTICS]; MAXPLAYERS] = [[0; BACKUPTICS]; MAXPLAYERS];
+pub(crate) static mut consistancy: [[short; BACKUPTICS]; MAXPLAYERS] =
+	[[0; BACKUPTICS]; MAXPLAYERS];
 
 static mut savebuffer: *mut byte = null_mut();
 
@@ -161,17 +162,17 @@ pub(crate) static mut joybstrafe: isize = 0;
 pub(crate) static mut joybuse: isize = 0;
 pub(crate) static mut joybspeed: isize = 0;
 
-pub const MAXPLMOVE: fixed_t = 0x32; // forwardmove[1]
+pub(crate) const MAXPLMOVE: fixed_t = 0x32; // forwardmove[1]
 
-pub const TURBOTHRESHOLD: usize = 0x32;
+pub(crate) const TURBOTHRESHOLD: usize = 0x32;
 
-pub static mut forwardmove: [fixed_t; 2] = [0x19, 0x32];
-pub static mut sidemove: [fixed_t; 2] = [0x18, 0x28];
-pub static mut angleturn: [fixed_t; 3] = [640, 1280, 320]; // + slow turn 
+pub(crate) static mut forwardmove: [fixed_t; 2] = [0x19, 0x32];
+pub(crate) static mut sidemove: [fixed_t; 2] = [0x18, 0x28];
+pub(crate) static mut angleturn: [fixed_t; 3] = [640, 1280, 320]; // + slow turn 
 
-pub const SLOWTURNTICS: usize = 6;
+pub(crate) const SLOWTURNTICS: usize = 6;
 
-pub const NUMKEYS: usize = 256;
+pub(crate) const NUMKEYS: usize = 256;
 
 static mut gamekeydown: [bool; NUMKEYS] = [false; NUMKEYS];
 static mut turnheld: usize = 0; // for accelerative turning 
@@ -199,7 +200,7 @@ static mut joybuttons: *mut bool = unsafe { &raw mut joyarray[1] }; // allow [-1
 static mut savegameslot: usize = 0;
 static mut savedescription: [c_char; 32] = [0; 32];
 
-pub const BODYQUESIZE: usize = 32;
+pub(crate) const BODYQUESIZE: usize = 32;
 
 static mut bodyque: [*mut mobj_t; BODYQUESIZE] = [null_mut(); BODYQUESIZE];
 pub(crate) static mut bodyqueslot: usize = 0;
@@ -210,7 +211,7 @@ pub(crate) static mut statcopy: *mut c_void = null_mut(); // for statistics driv
 // Builds a ticcmd from all of the available inputs
 // or reads it from the demo buffer.
 // If recording a demo, write it out
-pub unsafe fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
+pub(crate) unsafe fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 	unsafe {
 		let base = I_BaseTiccmd(); // empty, or external driver
 		libc::memcpy(cmd.cast(), base.cast(), size_of::<ticcmd_t>());
@@ -554,7 +555,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 // G_Ticker
 // Make ticcmd_ts for the players.
 #[allow(static_mut_refs)]
-pub fn G_Ticker() {
+pub(crate) fn G_Ticker() {
 	unsafe {
 		// do player reborns if needed
 		for i in 0..MAXPLAYERS {
@@ -872,7 +873,7 @@ static cpars: [usize; 32] = [
 // G_DoCompleted
 static mut secretexit: bool = false;
 
-pub fn G_ExitLevel() {
+pub(crate) fn G_ExitLevel() {
 	unsafe {
 		secretexit = false;
 		gameaction = gameaction_t::ga_completed;
@@ -880,7 +881,7 @@ pub fn G_ExitLevel() {
 }
 
 // Here's for the german edition.
-pub fn G_SecretExitLevel() {
+pub(crate) fn G_SecretExitLevel() {
 	unsafe {
 		// IF NO WOLF3D LEVELS, NO SECRET EXIT!
 		secretexit =
@@ -1028,7 +1029,7 @@ pub(crate) unsafe fn G_LoadGame(name: *const c_char) {
 	}
 }
 
-pub const VERSIONSIZE: usize = 16;
+pub(crate) const VERSIONSIZE: usize = 16;
 
 #[allow(static_mut_refs)]
 fn G_DoLoadGame() {
@@ -1097,7 +1098,7 @@ fn G_DoLoadGame() {
 // Called by the menu task.
 // Description is a 24 byte text string
 #[allow(static_mut_refs)]
-pub unsafe fn G_SaveGame(slot: usize, description: *const c_char) {
+pub(crate) unsafe fn G_SaveGame(slot: usize, description: *const c_char) {
 	unsafe {
 		savegameslot = slot;
 		libc::strcpy(savedescription.as_mut_ptr(), description);
@@ -1183,7 +1184,7 @@ static mut d_skill: skill_t = skill_t::sk_baby;
 static mut d_episode: usize = 0;
 static mut d_map: usize = 0;
 
-pub fn G_DeferedInitNew(skill: skill_t, episode: usize, map: usize) {
+pub(crate) fn G_DeferedInitNew(skill: skill_t, episode: usize, map: usize) {
 	unsafe {
 		d_skill = skill;
 		d_episode = episode;
@@ -1305,7 +1306,7 @@ pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 
 // DEMO RECORDING
 
-pub const DEMOMARKER: u8 = 0x80;
+pub(crate) const DEMOMARKER: u8 = 0x80;
 
 fn G_ReadDemoTiccmd(cmd: *mut ticcmd_t) {
 	unsafe {
@@ -1490,7 +1491,7 @@ pub(crate) fn G_TimeDemo(name: *const c_char) {
 */
 
 #[allow(static_mut_refs)]
-pub fn G_CheckDemoStatus() -> boolean {
+pub(crate) fn G_CheckDemoStatus() -> boolean {
 	unsafe {
 		if timingdemo {
 			let endtime = I_GetTime();

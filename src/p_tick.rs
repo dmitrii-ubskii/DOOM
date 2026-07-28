@@ -15,7 +15,7 @@ use crate::{
 };
 
 #[unsafe(no_mangle)]
-pub static mut leveltime: usize = 0;
+pub(crate) static mut leveltime: usize = 0;
 
 // THINKERS
 // All thinkers should be allocated by Z_Malloc
@@ -33,7 +33,7 @@ pub(crate) fn P_InitThinkers() {
 
 // P_AddThinker
 // Adds a new thinker at the end of the list.
-pub unsafe fn P_AddThinker(thinker: *mut thinker_t) {
+pub(crate) unsafe fn P_AddThinker(thinker: *mut thinker_t) {
 	unsafe {
 		(*thinkercap.prev).next = thinker;
 		let thinker_ref = &mut *thinker;
@@ -46,7 +46,7 @@ pub unsafe fn P_AddThinker(thinker: *mut thinker_t) {
 // P_RemoveThinker
 // Deallocation is lazy -- it will not actually be freed
 // until its thinking turn comes up.
-pub unsafe fn P_RemoveThinker(thinker: &mut thinker_t) {
+pub(crate) unsafe fn P_RemoveThinker(thinker: &mut thinker_t) {
 	thinker.function = think_t::null;
 }
 

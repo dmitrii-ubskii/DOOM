@@ -39,9 +39,10 @@ type int = i32;
 type boolean = i32;
 
 // Used by ST StatusBar stuff.
-pub const AM_MSGHEADER: usize = ((usize_from_u8(b'a')) << 24) + ((usize_from_u8(b'm')) << 16);
-pub const AM_MSGENTERED: usize = AM_MSGHEADER | (usize_from_u8(b'e') << 8);
-pub const AM_MSGEXITED: usize = AM_MSGHEADER | (usize_from_u8(b'x') << 8);
+pub(crate) const AM_MSGHEADER: usize =
+	((usize_from_u8(b'a')) << 24) + ((usize_from_u8(b'm')) << 16);
+pub(crate) const AM_MSGENTERED: usize = AM_MSGHEADER | (usize_from_u8(b'e') << 8);
+pub(crate) const AM_MSGEXITED: usize = AM_MSGHEADER | (usize_from_u8(b'x') << 8);
 
 // For use if I do walls with outsides/insides
 const REDS: i32 = 256 - 5 * 16;
@@ -244,7 +245,7 @@ static mut grid: int = 0;
 
 static mut leveljuststarted: int = 1; // kluge until AM_LevelInit() is called
 
-pub static mut automapactive: bool = false;
+pub(crate) static mut automapactive: bool = false;
 static mut finit_width: fixed_t = SCREENWIDTH as fixed_t;
 static mut finit_height: fixed_t = SCREENHEIGHT as fixed_t - 32;
 

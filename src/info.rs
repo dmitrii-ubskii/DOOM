@@ -17,7 +17,7 @@ use crate::{
 #[repr(usize)]
 #[rustfmt::skip]
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum spritenum_t {
+pub(crate) enum spritenum_t {
 	SPR_TROO, SPR_SHTG, SPR_PUNG, SPR_PISG, SPR_PISF, SPR_SHTF, SPR_SHT2, SPR_CHGG, SPR_CHGF,
 	SPR_MISG, SPR_MISF, SPR_SAWG, SPR_PLSG, SPR_PLSF, SPR_BFGG, SPR_BFGF, SPR_BLUD, SPR_PUFF,
 	SPR_BAL1, SPR_BAL2, SPR_PLSS, SPR_PLSE, SPR_MISL, SPR_BFS1, SPR_BFE1, SPR_BFE2, SPR_TFOG,
@@ -43,10 +43,11 @@ impl From<spritenum_t> for usize {
 	}
 }
 
+#[expect(unused, reason = "at the very least we need these to preserve values")]
 #[repr(usize)]
 #[rustfmt::skip]
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum statenum_t {
+pub(crate) enum statenum_t {
 	S_NULL, S_LIGHTDONE,
 	S_PUNCH, S_PUNCHDOWN, S_PUNCHUP, S_PUNCH1, S_PUNCH2, S_PUNCH3, S_PUNCH4, S_PUNCH5,
 	S_PISTOL, S_PISTOLDOWN, S_PISTOLUP, S_PISTOL1, S_PISTOL2, S_PISTOL3, S_PISTOL4, S_PISTOLFLASH,
@@ -304,20 +305,21 @@ impl From<statenum_t> for usize {
 }
 
 #[repr(C)]
-pub struct state_t {
-	pub sprite: spritenum_t,
-	pub frame: usize,
-	pub tics: i32,
-	pub action: think_t,
-	pub nextstate: statenum_t,
-	pub misc1: i32,
-	pub misc2: i32,
+pub(crate) struct state_t {
+	pub(crate) sprite: spritenum_t,
+	pub(crate) frame: usize,
+	pub(crate) tics: i32,
+	pub(crate) action: think_t,
+	pub(crate) nextstate: statenum_t,
+	pub(crate) misc1: i32,
+	pub(crate) misc2: i32,
 }
 
+#[expect(unused, reason = "doom2? I think??")]
 #[repr(usize)]
 #[rustfmt::skip]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub enum mobjtype_t {
+pub(crate) enum mobjtype_t {
 	MT_PLAYER, MT_POSSESSED, MT_SHOTGUY, MT_VILE, MT_FIRE, MT_UNDEAD, 
 	MT_TRACER, MT_SMOKE, MT_FATSO, MT_FATSHOT, MT_CHAINGUY, MT_TROOP, MT_SERGEANT, 
 	MT_SHADOWS, MT_HEAD, MT_BRUISER, MT_BRUISERSHOT, MT_KNIGHT, MT_SKULL, 
@@ -358,35 +360,35 @@ impl From<mobjtype_t> for usize {
 }
 
 #[repr(C)]
-pub struct mobjinfo_t {
-	pub doomednum: i32,
-	pub spawnstate: statenum_t,
-	pub spawnhealth: i32,
-	pub seestate: statenum_t,
-	pub seesound: sfxenum_t,
-	pub reactiontime: i32,
-	pub attacksound: sfxenum_t,
-	pub painstate: statenum_t,
-	pub painchance: i32,
-	pub painsound: sfxenum_t,
-	pub meleestate: statenum_t,
-	pub missilestate: statenum_t,
-	pub deathstate: statenum_t,
-	pub xdeathstate: statenum_t,
-	pub deathsound: sfxenum_t,
-	pub speed: i32,
-	pub radius: i32,
-	pub height: i32,
-	pub mass: i32,
-	pub damage: i32,
-	pub activesound: sfxenum_t,
-	pub flags: u32,
-	pub raisestate: statenum_t,
+pub(crate) struct mobjinfo_t {
+	pub(crate) doomednum: i32,
+	pub(crate) spawnstate: statenum_t,
+	pub(crate) spawnhealth: i32,
+	pub(crate) seestate: statenum_t,
+	pub(crate) seesound: sfxenum_t,
+	pub(crate) reactiontime: i32,
+	pub(crate) attacksound: sfxenum_t,
+	pub(crate) painstate: statenum_t,
+	pub(crate) painchance: i32,
+	pub(crate) painsound: sfxenum_t,
+	pub(crate) meleestate: statenum_t,
+	pub(crate) missilestate: statenum_t,
+	pub(crate) deathstate: statenum_t,
+	pub(crate) xdeathstate: statenum_t,
+	pub(crate) deathsound: sfxenum_t,
+	pub(crate) speed: i32,
+	pub(crate) radius: i32,
+	pub(crate) height: i32,
+	pub(crate) mass: i32,
+	pub(crate) damage: i32,
+	pub(crate) activesound: sfxenum_t,
+	pub(crate) flags: u32,
+	pub(crate) raisestate: statenum_t,
 }
 
 #[unsafe(no_mangle)]
 #[rustfmt::skip]
-pub static mut sprnames: [*const c_char; spritenum_t::NUMSPRITES as usize] = [
+pub(crate) static mut sprnames: [*const c_char; spritenum_t::NUMSPRITES as usize] = [
 	c"TROO".as_ptr(), c"SHTG".as_ptr(), c"PUNG".as_ptr(), c"PISG".as_ptr(), 
 	c"PISF".as_ptr(), c"SHTF".as_ptr(), c"SHT2".as_ptr(), c"CHGG".as_ptr(), c"CHGF".as_ptr(), 
 	c"MISG".as_ptr(), c"MISF".as_ptr(), c"SAWG".as_ptr(), c"PLSG".as_ptr(), c"PLSF".as_ptr(), 
@@ -419,7 +421,7 @@ pub static mut sprnames: [*const c_char; spritenum_t::NUMSPRITES as usize] = [
 
 #[unsafe(no_mangle)]
 #[rustfmt::skip]
-pub static mut states: [state_t; statenum_t::NUMSTATES as usize] = [ 
+pub(crate) static mut states: [state_t; statenum_t::NUMSTATES as usize] = [ 
 	state_t { sprite: spritenum_t::SPR_TROO, frame: 0, tics: -1, action: think_t::null, nextstate: statenum_t::S_NULL, misc1: 0, misc2: 0 }, // S_NULL
 	state_t { sprite: spritenum_t::SPR_SHTG, frame: 4, tics: 0, action: think_t::A_Light0, nextstate: statenum_t::S_NULL, misc1: 0, misc2: 0 }, // S_LIGHTDONE
 	state_t { sprite: spritenum_t::SPR_PUNG, frame: 0, tics: 1, action: think_t::A_WeaponReady, nextstate: statenum_t::S_PUNCH, misc1: 0, misc2: 0 }, // S_PUNCH
@@ -1390,7 +1392,7 @@ state_t { sprite: spritenum_t::SPR_BOS2, frame: 0, tics: 3, action: think_t::A_C
 ];
 
 #[unsafe(no_mangle)]
-pub static mut mobjinfo: [mobjinfo_t; mobjtype_t::NUMMOBJTYPES as usize] = [
+pub(crate) static mut mobjinfo: [mobjinfo_t; mobjtype_t::NUMMOBJTYPES as usize] = [
 	mobjinfo_t {
 		// MT_PLAYER
 		doomednum: -1,

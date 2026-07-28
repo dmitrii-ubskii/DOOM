@@ -192,7 +192,7 @@ pub(crate) fn P_ChangeSwitchTexture(line: &mut line_t, useAgain: bool) {
 // P_UseSpecialLine
 // Called when a thing uses a special line.
 // Only the front sides of lines are usable.
-pub fn P_UseSpecialLine(thing: &mut mobj_t, line: &mut line_t, side: i32) -> bool {
+pub(crate) fn P_UseSpecialLine(thing: &mut mobj_t, line: &mut line_t, side: i32) -> bool {
 	// Err...
 	// Use the back sides of VERY SPECIAL lines...
 	if side != 0 {

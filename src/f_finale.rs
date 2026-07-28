@@ -71,7 +71,7 @@ static mut finaletext: *const c_char = null();
 static mut finaleflat: *const c_char = null();
 
 // F_StartFinale
-pub fn F_StartFinale() {
+pub(crate) fn F_StartFinale() {
 	unsafe {
 		gameaction = gameaction_t::ga_nothing;
 		gamestate = gamestate_t::GS_FINALE;
@@ -153,12 +153,12 @@ pub fn F_StartFinale() {
 	}
 }
 
-pub fn F_Responder(event: *mut event_t) -> bool {
+pub(crate) fn F_Responder(event: *mut event_t) -> bool {
 	unsafe { finalestage == 2 && F_CastResponder(event) }
 }
 
 // F_Ticker
-pub fn F_Ticker() {
+pub(crate) fn F_Ticker() {
 	unsafe {
 		// check for skipping
 		if gamemode == GameMode_t::commercial && finalecount > 50 {
@@ -599,7 +599,7 @@ fn F_BunnyScroll() {
 }
 
 // F_Drawer
-pub fn F_Drawer() {
+pub(crate) fn F_Drawer() {
 	unsafe {
 		if finalestage == 2 {
 			F_CastDrawer();

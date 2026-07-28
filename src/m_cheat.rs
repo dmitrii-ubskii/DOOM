@@ -3,13 +3,13 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 #[unsafe(no_mangle)]
-pub static mut firsttime: i32 = 1;
-pub static mut cheat_xlate_table: [u8; 256] = [0; 256];
+pub(crate) static mut firsttime: i32 = 1;
+pub(crate) static mut cheat_xlate_table: [u8; 256] = [0; 256];
 
 #[repr(C)]
-pub struct cheatseq_t {
-	pub sequence: *mut u8,
-	pub p: *mut u8,
+pub(crate) struct cheatseq_t {
+	pub(crate) sequence: *mut u8,
+	pub(crate) p: *mut u8,
 }
 
 fn scramble(a: u8) -> u8 {
@@ -25,7 +25,7 @@ fn scramble(a: u8) -> u8 {
 
 // Called in st_stuff module, which handles the input.
 // Returns a 1 if the cheat was successful, 0 if failed.
-pub fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
+pub(crate) fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
 	unsafe {
 		if firsttime != 0 {
 			firsttime = 0;
@@ -59,7 +59,7 @@ pub fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
 	}
 }
 
-pub unsafe fn cht_GetParam(cht: &mut cheatseq_t, mut buffer: *mut u8) {
+pub(crate) unsafe fn cht_GetParam(cht: &mut cheatseq_t, mut buffer: *mut u8) {
 	unsafe {
 		let mut p = cht.sequence;
 

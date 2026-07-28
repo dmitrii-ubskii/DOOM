@@ -17,10 +17,10 @@ use crate::{
 
 // P_CheckSight
 static mut sightzstart: fixed_t = 0; // eye z of looker
-pub static mut topslope: fixed_t = 0;
-pub static mut bottomslope: fixed_t = 0; // slopes to top and bottom of target
+pub(crate) static mut topslope: fixed_t = 0;
+pub(crate) static mut bottomslope: fixed_t = 0; // slopes to top and bottom of target
 
-pub static mut strace: divline_t = divline_t { x: 0, y: 0, dx: 0, dy: 0 }; // from t1 to t2
+pub(crate) static mut strace: divline_t = divline_t { x: 0, y: 0, dx: 0, dy: 0 }; // from t1 to t2
 static mut t2x: fixed_t = 0;
 static mut t2y: fixed_t = 0;
 
@@ -232,7 +232,7 @@ fn P_CrossBSPNode(bspnum: usize) -> bool {
 // Returns true
 //  if a straight line between t1 and t2 is unobstructed.
 // Uses REJECT.
-pub fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> bool {
+pub(crate) fn P_CheckSight(t1: &mobj_t, t2: &mobj_t) -> bool {
 	unsafe {
 		// First check for trivial rejection.
 

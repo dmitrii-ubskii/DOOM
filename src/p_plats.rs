@@ -21,7 +21,7 @@ use crate::{
 	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
-pub static mut activeplats: [*mut plat_t; MAXPLATS] = [null_mut(); MAXPLATS];
+pub(crate) static mut activeplats: [*mut plat_t; MAXPLATS] = [null_mut(); MAXPLATS];
 
 // Move a plat up and down
 pub(crate) fn T_PlatRaise(plat: &mut plat_t) {
@@ -213,7 +213,7 @@ fn P_ActivateInStasis(tag: i32) {
 	}
 }
 
-pub fn EV_StopPlat(line: &mut line_t) {
+pub(crate) fn EV_StopPlat(line: &mut line_t) {
 	unsafe {
 		#[allow(clippy::needless_range_loop)]
 		for j in 0..MAXPLATS {

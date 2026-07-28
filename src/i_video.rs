@@ -124,7 +124,7 @@ fn xlatekey() -> u8 {
 }
 
 #[allow(static_mut_refs)]
-pub fn I_ShutdownGraphics() {
+pub(crate) fn I_ShutdownGraphics() {
 	unsafe {
 		// Detach from X server
 		if XShmDetach(X_display, X_shminfo.as_mut_ptr()) == 0 {
@@ -141,7 +141,7 @@ pub fn I_ShutdownGraphics() {
 }
 
 // I_StartFrame
-pub fn I_StartFrame() {
+pub(crate) fn I_StartFrame() {
 	// er?
 }
 
@@ -254,7 +254,7 @@ fn createnullcursor(display: *mut Display, root: Window) -> Cursor {
 }
 
 // I_StartTic
-pub fn I_StartTic() {
+pub(crate) fn I_StartTic() {
 	unsafe {
 		if X_display.is_null() {
 			return;
@@ -290,12 +290,12 @@ pub fn I_StartTic() {
 }
 
 // I_UpdateNoBlit
-pub fn I_UpdateNoBlit() {
+pub(crate) fn I_UpdateNoBlit() {
 	// what is this?
 }
 
 // I_FinishUpdate
-pub fn I_FinishUpdate() {
+pub(crate) fn I_FinishUpdate() {
 	unsafe {
 		static mut lasttic: usize = 0;
 		// UNUSED static unsigned char *bigscreen=0;
@@ -456,7 +456,7 @@ pub fn I_FinishUpdate() {
 }
 
 // I_ReadScreen
-pub fn I_ReadScreen(scr: *mut u8) {
+pub(crate) fn I_ReadScreen(scr: *mut u8) {
 	unsafe { libc::memcpy(scr.cast(), screens[0].cast(), SCREENWIDTH * SCREENHEIGHT) };
 }
 
@@ -504,7 +504,7 @@ fn UploadNewPalette(cmap: Colormap, mut palette: *mut u8) {
 }
 
 // I_SetPalette
-pub fn I_SetPalette(palette: *mut u8) {
+pub(crate) fn I_SetPalette(palette: *mut u8) {
 	unsafe {
 		UploadNewPalette(X_cmap, palette);
 	}
@@ -601,7 +601,7 @@ fn grabsharedmemory(size: i32) {
 
 #[allow(static_mut_refs)]
 #[allow(clippy::as_conversions)]
-pub fn I_InitGraphics() {
+pub(crate) fn I_InitGraphics() {
 	unsafe {
 		static mut firsttime: bool = true;
 

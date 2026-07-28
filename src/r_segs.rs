@@ -43,16 +43,16 @@ static mut toptexture: usize = 0;
 static mut bottomtexture: usize = 0;
 static mut midtexture: usize = 0;
 
-pub static mut rw_normalangle: angle_t = Wrapping(0);
+pub(crate) static mut rw_normalangle: angle_t = Wrapping(0);
 // angle to line origin
-pub static mut rw_angle1: angle_t = Wrapping(0);
+pub(crate) static mut rw_angle1: angle_t = Wrapping(0);
 
 // regular wall
 static mut rw_x: u32 = 0;
 static mut rw_stopx: u32 = 0;
 static mut rw_centerangle: angle_t = Wrapping(0);
 static mut rw_offset: fixed_t = 0;
-pub static mut rw_distance: fixed_t = 0;
+pub(crate) static mut rw_distance: fixed_t = 0;
 static mut rw_scale: fixed_t = 0;
 static mut rw_scalestep: fixed_t = 0;
 static mut rw_midtexturemid: fixed_t = 0;
@@ -76,14 +76,14 @@ static mut bottomfrac: fixed_t = 0;
 static mut bottomstep: fixed_t = 0;
 
 #[unsafe(no_mangle)]
-pub static mut walllights: *mut *mut lighttable_t = null_mut();
+pub(crate) static mut walllights: *mut *mut lighttable_t = null_mut();
 
 #[unsafe(no_mangle)]
-pub static mut maskedtexturecol: *mut i16 = null_mut();
+pub(crate) static mut maskedtexturecol: *mut i16 = null_mut();
 
 // R_RenderMaskedSegRange
 #[allow(static_mut_refs)]
-pub unsafe fn R_RenderMaskedSegRange(ds: *mut drawseg_t, x1: i32, x2: i32) {
+pub(crate) unsafe fn R_RenderMaskedSegRange(ds: *mut drawseg_t, x1: i32, x2: i32) {
 	unsafe {
 		// Calculate light table.
 		// Use different light tables
@@ -342,7 +342,7 @@ fn R_RenderSegLoop() {
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 #[allow(static_mut_refs)]
-pub fn R_StoreWallRange(start: u32, stop: u32) {
+pub(crate) fn R_StoreWallRange(start: u32, stop: u32) {
 	unsafe {
 		// don't overflow and crash
 		if ds_p == drawsegs.as_mut_ptr().wrapping_add(MAXDRAWSEGS) {

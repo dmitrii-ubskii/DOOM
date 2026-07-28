@@ -49,21 +49,20 @@ use crate::{
 type boolean = i32;
 
 // Globally visible constants.
-pub const HU_FONTSTART: u8 = b'!'; // the first font characters
-pub const HU_FONTEND: u8 = b'_'; // the last font characters
+pub(crate) const HU_FONTSTART: u8 = b'!'; // the first font characters
+pub(crate) const HU_FONTEND: u8 = b'_'; // the last font characters
 
 // Calculate # of glyphs in font.
-pub const HU_FONTSIZE: u8 = HU_FONTEND - HU_FONTSTART + 1;
+pub(crate) const HU_FONTSIZE: u8 = HU_FONTEND - HU_FONTSTART + 1;
 
-pub const HU_BROADCAST: u8 = 5;
+pub(crate) const HU_BROADCAST: u8 = 5;
 
-pub const HU_MSGREFRESH: u8 = KEY_ENTER;
-pub const HU_MSGX: usize = 0;
-pub const HU_MSGY: usize = 0;
-pub const HU_MSGWIDTH: usize = 64; // in characters
-pub const HU_MSGHEIGHT: usize = 1; // in lines
+pub(crate) const HU_MSGREFRESH: u8 = KEY_ENTER;
+pub(crate) const HU_MSGX: usize = 0;
+pub(crate) const HU_MSGY: usize = 0;
+pub(crate) const HU_MSGHEIGHT: usize = 1; // in lines
 
-pub const HU_MSGTIMEOUT: usize = 4 * TICRATE;
+pub(crate) const HU_MSGTIMEOUT: usize = 4 * TICRATE;
 
 // Locally used constants, shortcuts.
 fn HU_TITLE() -> *const c_char {
@@ -380,7 +379,7 @@ fn HU_Stop() {
 }
 
 #[allow(static_mut_refs)]
-pub fn HU_Start() {
+pub(crate) fn HU_Start() {
 	unsafe {
 		if headsupactive {
 			HU_Stop();
@@ -541,7 +540,7 @@ pub(crate) fn HU_Ticker() {
 	}
 }
 
-pub const QUEUESIZE: usize = 128;
+pub(crate) const QUEUESIZE: usize = 128;
 
 static mut chatchars: [c_char; QUEUESIZE] = [0; QUEUESIZE];
 static mut head: usize = 0;

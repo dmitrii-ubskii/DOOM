@@ -14,13 +14,8 @@ use crate::{
 	z_zone::{PU_STATIC, Z_Free, Z_Malloc},
 };
 
-// simple gradual pixel change for 8-bit only
-pub const wipe_ColorXForm: usize = 0;
-
 // weird screen melt
-pub const wipe_Melt: usize = 1;
-
-pub const wipe_NUMWIPES: usize = 2;
+pub(crate) const wipe_Melt: usize = 1;
 
 // when zero, stop the wipe
 static mut go: bool = false;

@@ -25,7 +25,7 @@ use crate::{
 // Player states.
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum playerstate_t {
+pub(crate) enum playerstate_t {
 	// Playing or camping.
 	PST_LIVE,
 	// Dead on the ground, view follows killer.
@@ -45,91 +45,91 @@ pub(crate) const CF_NOMOMENTUM: usize = 4;
 // Extended player object info: player_t
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub struct player_t {
-	pub mo: *mut mobj_t,
-	pub playerstate: playerstate_t,
-	pub cmd: ticcmd_t,
+pub(crate) struct player_t {
+	pub(crate) mo: *mut mobj_t,
+	pub(crate) playerstate: playerstate_t,
+	pub(crate) cmd: ticcmd_t,
 
 	// Determine POV,
 	//  including viewpoint bobbing during movement.
 	// Focal origin above r.z
-	pub viewz: fixed_t,
+	pub(crate) viewz: fixed_t,
 	// Base height above floor for viewz.
-	pub viewheight: fixed_t,
+	pub(crate) viewheight: fixed_t,
 	// Bob/squat speed.
-	pub deltaviewheight: fixed_t,
+	pub(crate) deltaviewheight: fixed_t,
 	// bounded/scaled total momentum.
-	pub bob: fixed_t,
+	pub(crate) bob: fixed_t,
 
 	// This is only used between levels,
 	// mo->health is used during levels.
-	pub health: i32,
-	pub armorpoints: i32,
+	pub(crate) health: i32,
+	pub(crate) armorpoints: i32,
 	// Armor type is 0-2.
-	pub armortype: i32,
+	pub(crate) armortype: i32,
 
 	// Power ups. invinc and invis are tic counters.
-	pub powers: [usize; powertype_t::NUMPOWERS.to_usize()],
-	pub cards: [i32; card_t::NUMCARDS.to_usize()],
-	pub backpack: i32,
+	pub(crate) powers: [usize; powertype_t::NUMPOWERS.to_usize()],
+	pub(crate) cards: [i32; card_t::NUMCARDS.to_usize()],
+	pub(crate) backpack: i32,
 
 	// Frags, kills of other players.
-	pub frags: [i32; MAXPLAYERS],
-	pub readyweapon: weapontype_t,
+	pub(crate) frags: [i32; MAXPLAYERS],
+	pub(crate) readyweapon: weapontype_t,
 
 	// Is wp_nochange if not changing.
-	pub pendingweapon: weapontype_t,
+	pub(crate) pendingweapon: weapontype_t,
 
-	pub weaponowned: [i32; weapontype_t::NUMWEAPONS.to_usize()],
-	pub ammo: [usize; ammotype_t::NUMAMMO.to_usize()],
-	pub maxammo: [usize; ammotype_t::NUMAMMO.to_usize()],
+	pub(crate) weaponowned: [i32; weapontype_t::NUMWEAPONS.to_usize()],
+	pub(crate) ammo: [usize; ammotype_t::NUMAMMO.to_usize()],
+	pub(crate) maxammo: [usize; ammotype_t::NUMAMMO.to_usize()],
 
 	// True if button down last tic.
-	pub attackdown: i32,
-	pub usedown: i32,
+	pub(crate) attackdown: i32,
+	pub(crate) usedown: i32,
 
 	// Bit flags, for cheats and debug.
 	// See cheat_t, above.
-	pub cheats: usize,
+	pub(crate) cheats: usize,
 
 	// Refired shots are less accurate.
-	pub refire: i32,
+	pub(crate) refire: i32,
 
 	// For intermission stats.
-	pub killcount: i32,
-	pub itemcount: i32,
-	pub secretcount: i32,
+	pub(crate) killcount: i32,
+	pub(crate) itemcount: i32,
+	pub(crate) secretcount: i32,
 
 	// Hint messages.
-	pub message: *const c_char,
+	pub(crate) message: *const c_char,
 
 	// For screen flashing (red or bright).
-	pub damagecount: i32,
-	pub bonuscount: usize,
+	pub(crate) damagecount: i32,
+	pub(crate) bonuscount: usize,
 
 	// Who did damage (NULL for floors/ceilings).
-	pub attacker: *mut mobj_t,
+	pub(crate) attacker: *mut mobj_t,
 
 	// So gun flashes light up areas.
-	pub extralight: i32,
+	pub(crate) extralight: i32,
 
 	// Current PLAYPAL, ???
 	//  can be set to REDCOLORMAP for pain, etc.
-	pub fixedcolormap: usize,
+	pub(crate) fixedcolormap: usize,
 
 	// Player skin colorshift,
 	//  0-3 for which color to draw player.
-	pub colormap: i32,
+	pub(crate) colormap: i32,
 
 	// Overlay view sprites (gun, etc).
-	pub psprites: [pspdef_t; psprnum_t::NUMPSPRITES.to_usize()],
+	pub(crate) psprites: [pspdef_t; psprnum_t::NUMPSPRITES.to_usize()],
 
 	// True if secret level has been done.
-	pub didsecret: i32,
+	pub(crate) didsecret: i32,
 }
 
 impl player_t {
-	pub const fn new() -> Self {
+	pub(crate) const fn new() -> Self {
 		Self {
 			mo: null_mut(),
 			playerstate: playerstate_t::PST_LIVE,
@@ -187,39 +187,39 @@ impl Default for player_t {
 // Structure passed e.g. to WI_Start(wb)
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub struct wbplayerstruct_t {
-	pub in_: i32, // whether the player is in game
+pub(crate) struct wbplayerstruct_t {
+	pub(crate) in_: i32, // whether the player is in game
 
 	// Player stats, kills, collected items etc.
-	pub skills: i32,
-	pub sitems: i32,
-	pub ssecret: i32,
-	pub stime: usize,
-	pub frags: [i32; 4],
-	pub score: i32, // current score on entry, modified on return
+	pub(crate) skills: i32,
+	pub(crate) sitems: i32,
+	pub(crate) ssecret: i32,
+	pub(crate) stime: usize,
+	pub(crate) frags: [i32; 4],
+	pub(crate) score: i32, // current score on entry, modified on return
 }
 
 #[repr(C)]
-pub struct wbstartstruct_t {
-	pub epsd: usize, // episode # (0-2)
+pub(crate) struct wbstartstruct_t {
+	pub(crate) epsd: usize, // episode # (0-2)
 
 	// if true, splash the secret level
-	pub didsecret: i32,
+	pub(crate) didsecret: i32,
 
 	// previous and next levels, origin 0
-	pub last: usize,
-	pub next: usize,
+	pub(crate) last: usize,
+	pub(crate) next: usize,
 
-	pub maxkills: i32,
-	pub maxitems: i32,
-	pub maxsecret: i32,
-	pub maxfrags: i32,
+	pub(crate) maxkills: i32,
+	pub(crate) maxitems: i32,
+	pub(crate) maxsecret: i32,
+	pub(crate) maxfrags: i32,
 
 	// the par time
-	pub partime: usize,
+	pub(crate) partime: usize,
 
 	// index of this player in game
-	pub pnum: usize,
+	pub(crate) pnum: usize,
 
-	pub plyr: [wbplayerstruct_t; MAXPLAYERS],
+	pub(crate) plyr: [wbplayerstruct_t; MAXPLAYERS],
 }

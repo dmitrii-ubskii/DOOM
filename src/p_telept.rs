@@ -15,7 +15,7 @@ use crate::{
 };
 
 // TELEPORTATION
-pub unsafe fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) -> bool {
+pub(crate) unsafe fn EV_Teleport(line: &mut line_t, side: usize, thing: &mut mobj_t) -> bool {
 	// don't teleport missiles
 	if thing.flags & MF_MISSILE != 0 {
 		return false;

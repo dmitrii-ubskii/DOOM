@@ -40,9 +40,9 @@ use crate::{
 	z_zone::{PU_CACHE, PU_STATIC, Z_Malloc},
 };
 
-pub const ST_HEIGHT: usize = 32 * SCREEN_MUL;
-pub const ST_WIDTH: usize = SCREENWIDTH;
-pub const ST_Y: usize = SCREENHEIGHT - ST_HEIGHT;
+pub(crate) const ST_HEIGHT: usize = 32 * SCREEN_MUL;
+pub(crate) const ST_WIDTH: usize = SCREENWIDTH;
+pub(crate) const ST_Y: usize = SCREENHEIGHT - ST_HEIGHT;
 
 // States for status bar code.
 enum st_stateenum_t {
@@ -428,7 +428,7 @@ fn ST_refreshBackground() {
 // Respond to keyboard input events,
 //  intercept cheats.
 #[allow(static_mut_refs)]
-pub fn ST_Responder(ev: &mut event_t) -> bool {
+pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 	unsafe {
 		// Filter automap on/off.
 		if ev.ty == evtype_t::ev_keyup
@@ -846,7 +846,7 @@ fn ST_updateWidgets() {
 	}
 }
 
-pub fn ST_Ticker() {
+pub(crate) fn ST_Ticker() {
 	unsafe {
 		st_clock += 1;
 		st_randomnumber = M_Random();
@@ -955,7 +955,7 @@ fn ST_diffDraw() {
 	ST_drawWidgets(false);
 }
 
-pub fn ST_Drawer(fullscreen: bool, refresh: bool) {
+pub(crate) fn ST_Drawer(fullscreen: bool, refresh: bool) {
 	unsafe {
 		st_statusbaron = boolean::from(!fullscreen || automapactive);
 		st_firsttime = st_firsttime || refresh;
@@ -1289,7 +1289,7 @@ fn ST_createWidgets() {
 
 static mut st_stopped: bool = true;
 
-pub fn ST_Start() {
+pub(crate) fn ST_Start() {
 	unsafe {
 		if !st_stopped {
 			ST_Stop();
@@ -1313,7 +1313,7 @@ fn ST_Stop() {
 	}
 }
 
-pub fn ST_Init() {
+pub(crate) fn ST_Init() {
 	unsafe {
 		veryfirsttime = 0;
 		ST_loadData();

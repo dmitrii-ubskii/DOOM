@@ -42,66 +42,63 @@ use crate::{
 	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
-//      Define values for map objects
-pub const MO_TELEPORTMAN: u32 = 14;
-
 // P_LIGHTS
 #[repr(C)]
-pub struct fireflicker_t {
-	pub thinker: thinker_t,
-	pub sector: *mut sector_t,
-	pub count: i32,
-	pub maxlight: i32,
-	pub minlight: i32,
+pub(crate) struct fireflicker_t {
+	pub(crate) thinker: thinker_t,
+	pub(crate) sector: *mut sector_t,
+	pub(crate) count: i32,
+	pub(crate) maxlight: i32,
+	pub(crate) minlight: i32,
 }
 
 #[repr(C)]
-pub struct lightflash_t {
-	pub thinker: thinker_t,
-	pub sector: *mut sector_t,
-	pub count: i32,
-	pub maxlight: i32,
-	pub minlight: i32,
-	pub maxtime: i32,
-	pub mintime: i32,
+pub(crate) struct lightflash_t {
+	pub(crate) thinker: thinker_t,
+	pub(crate) sector: *mut sector_t,
+	pub(crate) count: i32,
+	pub(crate) maxlight: i32,
+	pub(crate) minlight: i32,
+	pub(crate) maxtime: i32,
+	pub(crate) mintime: i32,
 }
 
 #[repr(C)]
-pub struct strobe_t {
-	pub thinker: thinker_t,
-	pub sector: *mut sector_t,
-	pub count: i32,
-	pub minlight: i32,
-	pub maxlight: i32,
-	pub darktime: i32,
-	pub brighttime: i32,
+pub(crate) struct strobe_t {
+	pub(crate) thinker: thinker_t,
+	pub(crate) sector: *mut sector_t,
+	pub(crate) count: i32,
+	pub(crate) minlight: i32,
+	pub(crate) maxlight: i32,
+	pub(crate) darktime: i32,
+	pub(crate) brighttime: i32,
 }
 
 #[repr(C)]
-pub struct glow_t {
-	pub thinker: thinker_t,
-	pub sector: *mut sector_t,
-	pub minlight: i32,
-	pub maxlight: i32,
-	pub direction: i32,
+pub(crate) struct glow_t {
+	pub(crate) thinker: thinker_t,
+	pub(crate) sector: *mut sector_t,
+	pub(crate) minlight: i32,
+	pub(crate) maxlight: i32,
+	pub(crate) direction: i32,
 }
 
-pub const GLOWSPEED: i16 = 8;
-pub const STROBEBRIGHT: i32 = 5;
-pub const FASTDARK: i32 = 15;
-pub const SLOWDARK: i32 = 35;
+pub(crate) const GLOWSPEED: i16 = 8;
+pub(crate) const STROBEBRIGHT: i32 = 5;
+pub(crate) const FASTDARK: i32 = 15;
+pub(crate) const SLOWDARK: i32 = 35;
 
 // P_SWITCH
 #[repr(C)]
-pub struct switchlist_t {
-	pub name1: [u8; 9],
-	pub name2: [u8; 9],
-	pub episode: i16,
+pub(crate) struct switchlist_t {
+	pub(crate) name1: [u8; 9],
+	pub(crate) name2: [u8; 9],
+	pub(crate) episode: i16,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub enum bwhere_e {
+pub(crate) enum bwhere_e {
 	top,
 	middle,
 	bottom,
@@ -109,16 +106,16 @@ pub enum bwhere_e {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct button_t {
-	pub line: *mut line_t,
-	pub where_: bwhere_e,
-	pub btexture: i32,
-	pub btimer: u32,
-	pub soundorg: *mut mobj_t,
+pub(crate) struct button_t {
+	pub(crate) line: *mut line_t,
+	pub(crate) where_: bwhere_e,
+	pub(crate) btexture: i32,
+	pub(crate) btimer: u32,
+	pub(crate) soundorg: *mut mobj_t,
 }
 
 impl button_t {
-	pub const fn new() -> Self {
+	pub(crate) const fn new() -> Self {
 		Self {
 			line: null_mut(),
 			where_: bwhere_e::top,
@@ -136,18 +133,18 @@ impl Default for button_t {
 }
 
 // max # of wall switches in a level
-pub const MAXSWITCHES: usize = 50;
+pub(crate) const MAXSWITCHES: usize = 50;
 
 // 4 players, 4 buttons each at once, max.
-pub const MAXBUTTONS: usize = 16;
+pub(crate) const MAXBUTTONS: usize = 16;
 
 // 1 second, in ticks.
-pub const BUTTONTIME: u32 = 35;
+pub(crate) const BUTTONTIME: u32 = 35;
 
 // P_PLATS
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum plat_e {
+pub(crate) enum plat_e {
 	up,
 	down,
 	waiting,
@@ -156,7 +153,7 @@ pub enum plat_e {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum plattype_e {
+pub(crate) enum plattype_e {
 	perpetualRaise,
 	downWaitUpStay,
 	raiseAndChange,
@@ -165,29 +162,29 @@ pub enum plattype_e {
 }
 
 #[repr(C)]
-pub struct plat_t {
-	pub thinker: thinker_t,
-	pub sector: *mut sector_t,
-	pub speed: fixed_t,
-	pub low: fixed_t,
-	pub high: fixed_t,
-	pub wait: i32,
-	pub count: i32,
-	pub status: plat_e,
-	pub oldstatus: plat_e,
-	pub crush: i32,
-	pub tag: i32,
-	pub ty: plattype_e,
+pub(crate) struct plat_t {
+	pub(crate) thinker: thinker_t,
+	pub(crate) sector: *mut sector_t,
+	pub(crate) speed: fixed_t,
+	pub(crate) low: fixed_t,
+	pub(crate) high: fixed_t,
+	pub(crate) wait: i32,
+	pub(crate) count: i32,
+	pub(crate) status: plat_e,
+	pub(crate) oldstatus: plat_e,
+	pub(crate) crush: i32,
+	pub(crate) tag: i32,
+	pub(crate) ty: plattype_e,
 }
 
-pub const PLATWAIT: i32 = 3;
-pub const PLATSPEED: i32 = FRACUNIT;
-pub const MAXPLATS: usize = 30;
+pub(crate) const PLATWAIT: i32 = 3;
+pub(crate) const PLATSPEED: i32 = FRACUNIT;
+pub(crate) const MAXPLATS: usize = 30;
 
 // P_DOORS
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum vldoor_e {
+pub(crate) enum vldoor_e {
 	normal,
 	close30ThenOpen,
 	close,
@@ -199,30 +196,30 @@ pub enum vldoor_e {
 }
 
 #[repr(C)]
-pub struct vldoor_t {
-	pub thinker: thinker_t,
-	pub ty: vldoor_e,
-	pub sector: *mut sector_t,
-	pub topheight: fixed_t,
-	pub speed: fixed_t,
+pub(crate) struct vldoor_t {
+	pub(crate) thinker: thinker_t,
+	pub(crate) ty: vldoor_e,
+	pub(crate) sector: *mut sector_t,
+	pub(crate) topheight: fixed_t,
+	pub(crate) speed: fixed_t,
 
 	// 1 = up, 0 = waiting at top, -1 = down
-	pub direction: i32,
+	pub(crate) direction: i32,
 
 	// tics to wait at the top
-	pub topwait: u32,
+	pub(crate) topwait: u32,
 	// (keep in case a door going down is reset)
 	// when it reaches 0, start going down
-	pub topcountdown: u32,
+	pub(crate) topcountdown: u32,
 }
 
-pub const VDOORSPEED: i32 = FRACUNIT * 2;
-pub const VDOORWAIT: u32 = 150;
+pub(crate) const VDOORSPEED: i32 = FRACUNIT * 2;
+pub(crate) const VDOORWAIT: u32 = 150;
 
 // P_CEILNG
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ceiling_e {
+pub(crate) enum ceiling_e {
 	lowerToFloor,
 	raiseToHighest,
 	lowerAndCrush,
@@ -232,31 +229,30 @@ pub enum ceiling_e {
 }
 
 #[repr(C)]
-pub struct ceiling_t {
-	pub thinker: thinker_t,
-	pub ty: ceiling_e,
-	pub sector: *mut sector_t,
-	pub bottomheight: fixed_t,
-	pub topheight: fixed_t,
-	pub speed: fixed_t,
-	pub crush: i32,
+pub(crate) struct ceiling_t {
+	pub(crate) thinker: thinker_t,
+	pub(crate) ty: ceiling_e,
+	pub(crate) sector: *mut sector_t,
+	pub(crate) bottomheight: fixed_t,
+	pub(crate) topheight: fixed_t,
+	pub(crate) speed: fixed_t,
+	pub(crate) crush: i32,
 
 	// 1 = up, 0 = waiting, -1 = down
-	pub direction: i32,
+	pub(crate) direction: i32,
 
 	// ID
-	pub tag: i32,
-	pub olddirection: i32,
+	pub(crate) tag: i32,
+	pub(crate) olddirection: i32,
 }
 
-pub const CEILSPEED: i32 = FRACUNIT;
-pub const CEILWAIT: u32 = 150;
-pub const MAXCEILINGS: usize = 30;
+pub(crate) const CEILSPEED: i32 = FRACUNIT;
+pub(crate) const MAXCEILINGS: usize = 30;
 
 // P_FLOOR
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub enum floor_e {
+pub(crate) enum floor_e {
 	// lower floor to highest surrounding floor
 	lowerFloor,
 
@@ -290,29 +286,29 @@ pub enum floor_e {
 }
 
 #[repr(C)]
-pub enum stair_e {
+pub(crate) enum stair_e {
 	build8,  // slowly build by 8
 	turbo16, // quickly build by 16
 }
 
 #[repr(C)]
-pub struct floormove_t {
-	pub thinker: thinker_t,
-	pub ty: floor_e,
-	pub crush: i32,
-	pub sector: *mut sector_t,
-	pub direction: i32,
-	pub newspecial: i32,
-	pub texture: i16,
-	pub floordestheight: fixed_t,
-	pub speed: fixed_t,
+pub(crate) struct floormove_t {
+	pub(crate) thinker: thinker_t,
+	pub(crate) ty: floor_e,
+	pub(crate) crush: i32,
+	pub(crate) sector: *mut sector_t,
+	pub(crate) direction: i32,
+	pub(crate) newspecial: i32,
+	pub(crate) texture: i16,
+	pub(crate) floordestheight: fixed_t,
+	pub(crate) speed: fixed_t,
 }
 
-pub const FLOORSPEED: i32 = FRACUNIT;
+pub(crate) const FLOORSPEED: i32 = FRACUNIT;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum result_e {
+pub(crate) enum result_e {
 	ok,
 	crushed,
 	pastdest,
@@ -322,19 +318,19 @@ pub enum result_e {
 // There is another anim_t used in wi_stuff, unrelated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct anim_t {
-	pub istexture: bool,
-	pub picnum: usize,
-	pub basepic: usize,
-	pub numpics: usize,
-	pub speed: usize,
+	pub(crate) istexture: bool,
+	pub(crate) picnum: usize,
+	pub(crate) basepic: usize,
+	pub(crate) numpics: usize,
+	pub(crate) speed: usize,
 }
 
 //      source animation definition
 struct animdef_t {
-	pub istexture: bool, // if false, it is a flat
-	pub endname: [u8; 9],
-	pub startname: [u8; 9],
-	pub speed: usize,
+	pub(crate) istexture: bool, // if false, it is a flat
+	pub(crate) endname: [u8; 9],
+	pub(crate) startname: [u8; 9],
+	pub(crate) speed: usize,
 }
 
 const MAXANIMS: usize = 32;
@@ -484,7 +480,7 @@ pub(crate) fn getNextSector(line: *mut line_t, sec: *mut sector_t) -> *mut secto
 
 // P_FindLowestFloorSurrounding()
 // FIND LOWEST FLOOR HEIGHT IN SURROUNDING SECTORS
-pub fn P_FindLowestFloorSurrounding(sec: &mut sector_t) -> fixed_t {
+pub(crate) fn P_FindLowestFloorSurrounding(sec: &mut sector_t) -> fixed_t {
 	unsafe {
 		let mut floor = sec.floorheight;
 
@@ -578,7 +574,7 @@ pub(crate) fn P_FindNextHighestFloor(sec: &mut sector_t, currentheight: fixed_t)
 }
 
 // FIND LOWEST CEILING IN THE SURROUNDING SECTORS
-pub fn P_FindLowestCeilingSurrounding(sec: &mut sector_t) -> fixed_t {
+pub(crate) fn P_FindLowestCeilingSurrounding(sec: &mut sector_t) -> fixed_t {
 	unsafe {
 		let mut height = fixed_t::MAX;
 
@@ -659,7 +655,7 @@ pub(crate) fn P_FindMinSurroundingLight(sector: &mut sector_t, max: i32) -> i32 
 // P_CrossSpecialLine - TRIGGER
 // Called every time a thing origin is about
 //  to cross a line with a non 0 special.
-pub fn P_CrossSpecialLine(linenum: usize, side: usize, thing: &mut mobj_t) {
+pub(crate) fn P_CrossSpecialLine(linenum: usize, side: usize, thing: &mut mobj_t) {
 	unsafe {
 		let line = &mut *lines.wrapping_add(linenum);
 
@@ -1112,7 +1108,7 @@ pub fn P_CrossSpecialLine(linenum: usize, side: usize, thing: &mut mobj_t) {
 
 // P_ShootSpecialLine - IMPACT SPECIALS
 // Called when a thing shoots a special line.
-pub fn P_ShootSpecialLine(thing: &mut mobj_t, line: &mut line_t) {
+pub(crate) fn P_ShootSpecialLine(thing: &mut mobj_t, line: &mut line_t) {
 	//	Impacts that other things can activate.
 	if thing.player.is_null() && line.special != 46 {
 		return;

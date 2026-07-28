@@ -99,43 +99,43 @@ struct point_t {
 // There is another anim_t used in p_spec.
 #[expect(unused)]
 struct anim_t {
-	pub ty: animenum_t,
+	pub(crate) ty: animenum_t,
 
 	// period in tics between animations
-	pub period: usize,
+	pub(crate) period: usize,
 
 	// number of animation frames
-	pub nanims: usize,
+	pub(crate) nanims: usize,
 
 	// location of animation
-	pub loc: point_t,
+	pub(crate) loc: point_t,
 
 	// ALWAYS: n/a,
 	// RANDOM: period deviation (<256),
 	// LEVEL: level
-	pub data1: usize,
+	pub(crate) data1: usize,
 
 	// ALWAYS: n/a,
 	// RANDOM: random base period,
 	// LEVEL: n/a
-	pub data2: usize,
+	pub(crate) data2: usize,
 
 	// actual graphics for frames of animations
-	pub p: [*mut patch_t; 3],
+	pub(crate) p: [*mut patch_t; 3],
 
 	// following must be initialized to zero before use!
 
 	// next value of bcnt (used in conjunction with period)
-	pub nexttic: usize,
+	pub(crate) nexttic: usize,
 
 	// last drawn animation frame
-	pub lastdrawn: int,
+	pub(crate) lastdrawn: int,
 
 	// next frame number to animate
-	pub ctr: int,
+	pub(crate) ctr: int,
 
 	// used by RANDOM and LEVEL when animating
-	pub state: int,
+	pub(crate) state: int,
 }
 
 unsafe impl Sync for anim_t {}

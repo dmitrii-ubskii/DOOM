@@ -44,13 +44,13 @@ const S_STEREO_SWING: fixed_t = 96 * 0x10000;
 
 struct channel_t {
 	// sound information (if null, channel avail.)
-	pub sfxinfo: *mut sfxinfo_t,
+	pub(crate) sfxinfo: *mut sfxinfo_t,
 
 	// origin of sound
-	pub origin: *mut c_void,
+	pub(crate) origin: *mut c_void,
 
 	// handle of the sound being played
-	pub handle: usize,
+	pub(crate) handle: usize,
 }
 
 // the set of channels available
@@ -59,10 +59,10 @@ static mut channels: *mut channel_t = null_mut();
 // These are not used, but should be (menu).
 // Maximum volume of a sound effect.
 // Internal default is max out of 0-15.
-pub static mut snd_SfxVolume: u32 = 15;
+pub(crate) static mut snd_SfxVolume: u32 = 15;
 
 // Maximum volume of music. Useless so far.
-pub static mut snd_MusicVolume: u32 = 15;
+pub(crate) static mut snd_MusicVolume: u32 = 15;
 
 // whether songs are mus_paused
 static mut mus_paused: bool = false;
@@ -272,7 +272,7 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u3
 
 // Start sound for thing at <origin>
 //  using <sound_id> from sounds.h
-pub fn S_StartSound(origin: *mut c_void, sfx_id: sfxenum_t) {
+pub(crate) fn S_StartSound(origin: *mut c_void, sfx_id: sfxenum_t) {
 	unsafe {
 		S_StartSoundAtVolume(origin, sfx_id, snd_SfxVolume);
 	}
@@ -385,13 +385,13 @@ pub(crate) fn S_SetSfxVolume(volume: u32) {
 }
 
 // Starts some music with the music id found in sounds.h.
-pub fn S_StartMusic(m_id: musicenum_t) {
+pub(crate) fn S_StartMusic(m_id: musicenum_t) {
 	S_ChangeMusic(m_id, false);
 }
 
 // Start music using <music_id> from sounds.h,
 //  and set whether looping
-pub fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
+pub(crate) fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 	unsafe {
 		let music = if (usize::from(musicnum)) <= usize::from(musicenum_t::mus_None)
 			|| usize::from(musicnum) >= usize::from(musicenum_t::NUMMUSIC)

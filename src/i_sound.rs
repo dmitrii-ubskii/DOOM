@@ -280,7 +280,7 @@ fn addsfx(sfxid: sfxenum_t, volume: u32, step: u32, mut seperation: i32) -> usiz
 // were simply dummies in the Linux
 // version.
 // See soundserver initdata().
-pub fn I_SetChannels() {
+pub(crate) fn I_SetChannels() {
 	unsafe {
 		// Init internal lookups (raw data, mixing buffer, channels).
 		// This function sets up internal lookups used during
@@ -307,7 +307,7 @@ pub fn I_SetChannels() {
 }
 
 // MUSIC API - dummy. Some code from DOS version.
-pub fn I_SetMusicVolume(volume: u32) {
+pub(crate) fn I_SetMusicVolume(volume: u32) {
 	// Internal state variable.
 	unsafe { snd_MusicVolume = volume };
 	// Now set volume on output device.
@@ -316,7 +316,7 @@ pub fn I_SetMusicVolume(volume: u32) {
 
 // Retrieve the raw data lump index
 //  for a given SFX name.
-pub unsafe fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> isize {
+pub(crate) unsafe fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> isize {
 	unsafe {
 		let mut namebuf = [0; 9];
 		libc::sprintf(namebuf.as_mut_ptr(), c"ds%s".as_ptr(), (*sfx).name);
@@ -334,18 +334,18 @@ pub unsafe fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> isize {
 //  priority, it is ignored.
 // Pitching (that is, increased speed of playback)
 //  is set, but currently not used by mixing.
-pub fn I_StartSound(id: sfxenum_t, vol: u32, sep: i32, pitch: i32, _priority: i32) -> usize {
+pub(crate) fn I_StartSound(id: sfxenum_t, vol: u32, sep: i32, pitch: i32, _priority: i32) -> usize {
 	unsafe { addsfx(id, vol, steptable[usize::try_from(pitch).unwrap()], sep) }
 }
 
-pub fn I_StopSound(_handle: usize) {
+pub(crate) fn I_StopSound(_handle: usize) {
 	// You need the handle returned by StartSound.
 	// Would be looping all channels,
 	//  tracking down the handle,
 	//  an setting the channel to zero.
 }
 
-pub fn I_SoundIsPlaying(handle: usize) -> bool {
+pub(crate) fn I_SoundIsPlaying(handle: usize) -> bool {
 	// Ouch.
 	unsafe { gametic < handle }
 }
@@ -362,7 +362,7 @@ pub fn I_SoundIsPlaying(handle: usize) -> bool {
 //
 // This function currently supports only 16bit.
 #[allow(static_mut_refs)]
-pub fn I_UpdateSound() {
+pub(crate) fn I_UpdateSound() {
 	unsafe {
 		static mut misses: usize = 0;
 
@@ -464,20 +464,21 @@ pub fn I_UpdateSound() {
 // It is called during Timer interrupt with SNDINTR.
 // Mixing now done synchronous, and
 //  only output be done asynchronous?
+#[expect(unused, reason = "used in unimplemented functions")]
 #[allow(static_mut_refs)]
-pub fn I_SubmitSound() {
+pub(crate) fn I_SubmitSound() {
 	// Write it to DSP device.
 	unsafe { libc::write(audio_fd, mixbuffer.as_ptr().cast(), SAMPLECOUNT * BUFMUL) };
 }
 
-pub fn I_UpdateSoundParams(_handle: usize, _vol: u32, _sep: i32, _pitch: i32) {
+pub(crate) fn I_UpdateSoundParams(_handle: usize, _vol: u32, _sep: i32, _pitch: i32) {
 	// I fail too see that this is used.
 	// Would be using the handle to identify
 	//  on which channel the sound might be active,
 	//  and resetting the channel parameters.
 }
 
-pub fn I_ShutdownSound() {
+pub(crate) fn I_ShutdownSound() {
 	// Wait till all pending sounds are finished.
 	let mut done = false;
 
@@ -499,7 +500,7 @@ pub fn I_ShutdownSound() {
 }
 
 #[allow(static_mut_refs)]
-pub fn I_InitSound() {
+pub(crate) fn I_InitSound() {
 	unsafe {
 		const SIOC_VOID: u32 = 0x0000_0000;
 		const SIOC_OUT: u32 = 0x8000_0000;
@@ -598,29 +599,29 @@ pub fn I_InitSound() {
 
 // Still no music done.
 // Remains. Dummies.
-pub fn I_ShutdownMusic() {}
+pub(crate) fn I_ShutdownMusic() {}
 
 static mut looping: bool = false;
 static mut musicdies: usize = usize::MAX;
 
-pub fn I_PlaySong(_handle: i32, _loops: bool) {
+pub(crate) fn I_PlaySong(_handle: i32, _loops: bool) {
 	unsafe { musicdies = gametic + TICRATE * 30 }
 }
 
-pub fn I_PauseSong(_handle: i32) {}
+pub(crate) fn I_PauseSong(_handle: i32) {}
 
-pub fn I_ResumeSong(_handle: i32) {}
+pub(crate) fn I_ResumeSong(_handle: i32) {}
 
-pub fn I_StopSong(_handle: i32) {
+pub(crate) fn I_StopSong(_handle: i32) {
 	unsafe {
 		looping = false;
 		musicdies = 0;
 	}
 }
 
-pub fn I_UnRegisterSong(_handle: i32) {}
+pub(crate) fn I_UnRegisterSong(_handle: i32) {}
 
-pub fn I_RegisterSong(_data: *mut c_void) -> i32 {
+pub(crate) fn I_RegisterSong(_data: *mut c_void) -> i32 {
 	1
 }
 

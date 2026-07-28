@@ -26,44 +26,44 @@ pub(crate) const HU_MAXLINELENGTH: usize = 80;
 // Text Line widget
 //  (parent of Scrolling Text and Input Text widgets)
 #[derive(Clone, Copy)]
-pub struct hu_textline_t {
+pub(crate) struct hu_textline_t {
 	// left-justified position of scrolling text window
-	pub x: usize,
-	pub y: usize,
+	pub(crate) x: usize,
+	pub(crate) y: usize,
 
-	pub f: *mut *mut patch_t,              // font
-	pub sc: i32,                           // start character
-	pub l: [c_char; HU_MAXLINELENGTH + 1], // line of text
-	pub len: usize,                        // current line length
+	pub(crate) f: *mut *mut patch_t,              // font
+	pub(crate) sc: i32,                           // start character
+	pub(crate) l: [c_char; HU_MAXLINELENGTH + 1], // line of text
+	pub(crate) len: usize,                        // current line length
 
 	// whether this line needs to be udpated
-	pub needsupdate: boolean,
+	pub(crate) needsupdate: boolean,
 }
 
 // Scrolling Text window widget
 //  (child of Text Line widget)
-pub struct hu_stext_t {
-	pub l: [hu_textline_t; HU_MAXLINES], // text lines to draw
-	pub h: usize,                        // height in lines
-	pub cl: usize,                       // current line number
+pub(crate) struct hu_stext_t {
+	pub(crate) l: [hu_textline_t; HU_MAXLINES], // text lines to draw
+	pub(crate) h: usize,                        // height in lines
+	pub(crate) cl: usize,                       // current line number
 
 	//	pointer to boolean stating whether to update window
-	pub on: *mut boolean,
-	pub laston: boolean, // last value of *on.
+	pub(crate) on: *mut boolean,
+	pub(crate) laston: boolean, // last value of *on.
 }
 
 // Input Text Line widget
 //  (child of Text Line widget)
 #[derive(Clone, Copy)]
-pub struct hu_itext_t {
-	pub l: hu_textline_t, // text line to input on
+pub(crate) struct hu_itext_t {
+	pub(crate) l: hu_textline_t, // text line to input on
 
 	// left margin past which I am not to delete characters
-	pub lm: usize,
+	pub(crate) lm: usize,
 
 	// pointer to boolean stating whether to update window
-	pub on: *mut boolean,
-	pub laston: boolean, // last value of *on.
+	pub(crate) on: *mut boolean,
+	pub(crate) laston: boolean, // last value of *on.
 }
 
 fn HUlib_clearTextLine(t: &mut hu_textline_t) {

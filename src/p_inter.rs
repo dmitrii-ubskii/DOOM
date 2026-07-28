@@ -46,7 +46,7 @@ const BONUSADD: usize = 6;
 
 // a weapon is found with two clip loads,
 // a big item has five clip loads
-pub static mut maxammo: [usize; ammotype_t::NUMAMMO.to_usize()] = [200, 50, 300, 50];
+pub(crate) static mut maxammo: [usize; ammotype_t::NUMAMMO.to_usize()] = [200, 50, 300, 50];
 static mut clipammo: [usize; ammotype_t::NUMAMMO.to_usize()] = [10, 4, 20, 1];
 
 // GET STUFF
@@ -221,7 +221,7 @@ fn P_GiveCard(player: &mut player_t, card: card_t) {
 }
 
 // P_GivePower
-pub fn P_GivePower(player: &mut player_t, power: powertype_t) -> bool {
+pub(crate) fn P_GivePower(player: &mut player_t, power: powertype_t) -> bool {
 	match power {
 		powertype_t::pw_invulnerability => {
 			player.powers[usize::from(power)] = INVULNTICS;
@@ -263,7 +263,7 @@ pub fn P_GivePower(player: &mut player_t, power: powertype_t) -> bool {
 }
 
 // P_TouchSpecialThing
-pub fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
+pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 	let delta = special.z - toucher.z;
 
 	if delta > toucher.height || delta < -8 * FRACUNIT {
@@ -729,7 +729,7 @@ fn P_KillMobj(source: *mut mobj_t, target: &mut mobj_t) {
 // Source and inflictor are the same for melee attacks.
 // Source can be NULL for slime, barrel explosions
 // and other environmental stuff.
-pub unsafe fn P_DamageMobj(
+pub(crate) unsafe fn P_DamageMobj(
 	target: &mut mobj_t,
 	inflictor: *mut mobj_t,
 	source: *mut mobj_t,

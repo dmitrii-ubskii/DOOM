@@ -9,62 +9,63 @@ use crate::sounds::sfxenum_t::sfx_pistol;
 
 // SoundFX struct.
 #[repr(C)]
-pub struct sfxinfo_t {
+pub(crate) struct sfxinfo_t {
 	// up to 6-character name
-	pub name: *const c_char,
+	pub(crate) name: *const c_char,
 
 	// Sfx singularity (only one at a time)
-	pub singularity: i32,
+	pub(crate) singularity: i32,
 
 	// Sfx priority
-	pub priority: i32,
+	pub(crate) priority: i32,
 
 	// referenced sound if a link
-	pub link: *mut sfxinfo_t,
+	pub(crate) link: *mut sfxinfo_t,
 
 	// pitch if a link
-	pub pitch: i32,
+	pub(crate) pitch: i32,
 
 	// volume if a link
-	pub volume: i32,
+	pub(crate) volume: i32,
 
 	// sound data
-	pub data: *mut c_void,
+	pub(crate) data: *mut c_void,
 
 	// this is checked every second to see if sound
 	// can be thrown out (if 0, then decrement, if -1,
 	// then throw out, if > 0, then it is in use)
-	pub usefulness: i32,
+	pub(crate) usefulness: i32,
 
 	// lump number of sfx
-	pub lumpnum: isize,
+	pub(crate) lumpnum: isize,
 }
 unsafe impl Sync for sfxinfo_t {}
 
 // MusicInfo struct.
 #[repr(C)]
-pub struct musicinfo_t {
+pub(crate) struct musicinfo_t {
 	// up to 6-character name
-	pub name: *const c_char,
+	pub(crate) name: *const c_char,
 
 	// lump number of music
-	pub lumpnum: usize,
+	pub(crate) lumpnum: usize,
 
 	// music data
-	pub data: *mut c_void,
+	pub(crate) data: *mut c_void,
 
 	// music handle once registered
-	pub handle: i32,
+	pub(crate) handle: i32,
 }
 
 unsafe impl Sync for musicinfo_t {}
 
 // Identifiers for all music in game.
 
+#[expect(unused, reason = "transmute tho")]
 #[repr(isize)]
 #[derive(Debug, Clone, Copy)]
 #[rustfmt::skip]
-pub enum musicenum_t {
+pub(crate) enum musicenum_t {
 	mus_None,
 	mus_e1m1, mus_e1m2, mus_e1m3, mus_e1m4, mus_e1m5, mus_e1m6, mus_e1m7, mus_e1m8, mus_e1m9,
 	mus_e2m1, mus_e2m2, mus_e2m3, mus_e2m4, mus_e2m5, mus_e2m6, mus_e2m7, mus_e2m8, mus_e2m9,
@@ -108,10 +109,11 @@ impl From<musicenum_t> for usize {
 }
 
 // Identifiers for all sfx in game.
+#[expect(unused, reason = "transmute tho")]
 #[repr(i32)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[rustfmt::skip]
-pub enum sfxenum_t {
+pub(crate) enum sfxenum_t {
 	sfx_None,
 	sfx_pistol, sfx_shotgn, sfx_sgcock, sfx_dshtgn, sfx_dbopn, sfx_dbcls, 
 	sfx_dbload, sfx_plasma, sfx_bfg, sfx_sawup, sfx_sawidl, sfx_sawful, sfx_sawhit, 
@@ -229,7 +231,7 @@ pub(crate) static mut S_music: [musicinfo_t; 68] = [
 
 // Information about all the sfx
 #[unsafe(no_mangle)]
-pub static mut S_sfx: [sfxinfo_t; 109] = [
+pub(crate) static mut S_sfx: [sfxinfo_t; 109] = [
 	sfxinfo_t {
 		name: null(),
 		singularity: 0,

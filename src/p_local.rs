@@ -11,95 +11,94 @@ use crate::{
 
 type boolean = i32;
 
-pub const FLOATSPEED: i32 = FRACUNIT * 4;
+pub(crate) const FLOATSPEED: i32 = FRACUNIT * 4;
 
-pub const MAXHEALTH: i32 = 100;
-pub const VIEWHEIGHT: i32 = 41 * FRACUNIT;
+pub(crate) const MAXHEALTH: i32 = 100;
+pub(crate) const VIEWHEIGHT: i32 = 41 * FRACUNIT;
 
 // mapblocks are used to check movement
 // against lines and things
-pub const MAPBLOCKUNITS: i32 = 128;
-pub const MAPBLOCKSIZE: i32 = MAPBLOCKUNITS * FRACUNIT;
-pub const MAPBLOCKSHIFT: i32 = FRACBITS + 7;
-pub const MAPBMASK: i32 = MAPBLOCKSIZE - 1;
-pub const MAPBTOFRAC: i32 = MAPBLOCKSHIFT - FRACBITS;
+pub(crate) const MAPBLOCKUNITS: i32 = 128;
+pub(crate) const MAPBLOCKSIZE: i32 = MAPBLOCKUNITS * FRACUNIT;
+pub(crate) const MAPBLOCKSHIFT: i32 = FRACBITS + 7;
+pub(crate) const MAPBTOFRAC: i32 = MAPBLOCKSHIFT - FRACBITS;
 
 // player radius for movement checking
-pub const PLAYERRADIUS: i32 = 16 * FRACUNIT;
+pub(crate) const PLAYERRADIUS: i32 = 16 * FRACUNIT;
 
 // MAXRADIUS is for precalculated sector block boxes
 // the spider demon is larger,
 // but we do not have any moving sectors nearby
-pub const MAXRADIUS: i32 = 32 * FRACUNIT;
+pub(crate) const MAXRADIUS: i32 = 32 * FRACUNIT;
 
-pub const GRAVITY: i32 = FRACUNIT;
-pub const MAXMOVE: i32 = 30 * FRACUNIT;
+pub(crate) const GRAVITY: i32 = FRACUNIT;
+pub(crate) const MAXMOVE: i32 = 30 * FRACUNIT;
 
-pub const USERANGE: i32 = 64 * FRACUNIT;
-pub const MELEERANGE: i32 = 64 * FRACUNIT;
-pub const MISSILERANGE: i32 = 32 * 64 * FRACUNIT;
+pub(crate) const USERANGE: i32 = 64 * FRACUNIT;
+pub(crate) const MELEERANGE: i32 = 64 * FRACUNIT;
+pub(crate) const MISSILERANGE: i32 = 32 * 64 * FRACUNIT;
 
 // follow a player exlusively for 3 seconds
-pub const BASETHRESHOLD: i32 = 100;
+pub(crate) const BASETHRESHOLD: i32 = 100;
 
 // P_TICK
 
 // Both the head and tail of the thinker list.
 #[unsafe(no_mangle)]
-pub static mut thinkercap: thinker_t =
+pub(crate) static mut thinkercap: thinker_t =
 	thinker_t { prev: null_mut(), next: null_mut(), function: think_t::null };
 
 // P_MOBJ
-pub const ONFLOORZ: i32 = i32::MIN;
-pub const ONCEILINGZ: i32 = i32::MAX;
+pub(crate) const ONFLOORZ: i32 = i32::MIN;
+pub(crate) const ONCEILINGZ: i32 = i32::MAX;
 
 // Time interval for item respawning.
-pub const ITEMQUESIZE: usize = 128;
+pub(crate) const ITEMQUESIZE: usize = 128;
 
 // P_MAPUTL
 #[repr(C)]
-pub struct divline_t {
-	pub x: fixed_t,
-	pub y: fixed_t,
-	pub dx: fixed_t,
-	pub dy: fixed_t,
+pub(crate) struct divline_t {
+	pub(crate) x: fixed_t,
+	pub(crate) y: fixed_t,
+	pub(crate) dx: fixed_t,
+	pub(crate) dy: fixed_t,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct intercept_t {
-	pub frac: fixed_t, // along trace line
-	pub isaline: boolean,
-	pub d: intercept_t_union,
+pub(crate) struct intercept_t {
+	pub(crate) frac: fixed_t, // along trace line
+	pub(crate) isaline: boolean,
+	pub(crate) d: intercept_t_union,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub union intercept_t_union {
-	pub thing: *mut mobj_t,
-	pub line: *mut line_t,
+pub(crate) union intercept_t_union {
+	pub(crate) thing: *mut mobj_t,
+	pub(crate) line: *mut line_t,
 }
 
-pub const MAXINTERCEPTS: usize = 128;
+pub(crate) const MAXINTERCEPTS: usize = 128;
 
-pub const PT_ADDLINES: i32 = 1;
-pub const PT_ADDTHINGS: i32 = 2;
-pub const PT_EARLYOUT: i32 = 4;
+pub(crate) const PT_ADDLINES: i32 = 1;
+pub(crate) const PT_ADDTHINGS: i32 = 2;
+pub(crate) const PT_EARLYOUT: i32 = 4;
 
 // P_SETUP
 /*
 #[unsafe(no_mangle)]
-pub static mut blockmaplump: *mut i16 = null_mut(); // offsets in blockmap are from here
+pub(crate) static mut blockmaplump: *mut i16 = null_mut(); // offsets in blockmap are from here
 #[unsafe(no_mangle)]
-pub static mut blockmap: *mut i16 = null_mut();
+pub(crate) static mut blockmap: *mut i16 = null_mut();
 #[unsafe(no_mangle)]
-pub static mut bmapwidth: i32 = 0;
+pub(crate) static mut bmapwidth: i32 = 0;
 #[unsafe(no_mangle)]
-pub static mut bmapheight: i32 = 0; // in mapblocks
+pub(crate) static mut bmapheight: i32 = 0; // in mapblocks
 #[unsafe(no_mangle)]
-pub static mut bmaporgx: fixed_t = 0;
+pub(crate) static mut bmaporgx: fixed_t = 0;
 #[unsafe(no_mangle)]
-pub static mut bmaporgy: fixed_t = 0; // origin of block map
+pub(crate) static mut bmaporgy: fixed_t = 0; // origin of block map
 #[unsafe(no_mangle)]
-pub static mut blocklinks: *mut *mut mobj_t = null_mut(); // for thing chains
+pub(crate) static mut blocklinks: *mut *mut mobj_t = null_mut(); // for thing chains
 */

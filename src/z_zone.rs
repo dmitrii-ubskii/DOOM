@@ -10,24 +10,24 @@ use crate::i_system::{I_Error, I_ZoneBase};
 // ZONE MEMORY
 // PU - purge tags.
 // Tags < 100 are not overwritten until freed.
-pub const PU_STATIC: usize = 1; // static entire execution time
-pub const PU_SOUND: usize = 2; // static while playing
-pub const PU_MUSIC: usize = 3; // static while playing
-pub const PU_DAVE: usize = 4; // anything else Dave wants static
-pub const PU_LEVEL: usize = 50; // static until level exited
-pub const PU_LEVSPEC: usize = 51; // a special thinker in a level
+pub(crate) const PU_STATIC: usize = 1; // static entire execution time
+// pub(crate) const PU_SOUND: usize = 2; // static while playing
+pub(crate) const PU_MUSIC: usize = 3; // static while playing
+// pub(crate) const PU_DAVE: usize = 4; // anything else Dave wants static
+pub(crate) const PU_LEVEL: usize = 50; // static until level exited
+pub(crate) const PU_LEVSPEC: usize = 51; // a special thinker in a level
 // Tags >= 100 are purgable whenever needed.
-pub const PU_PURGELEVEL: usize = 100;
-pub const PU_CACHE: usize = 101;
+pub(crate) const PU_PURGELEVEL: usize = 100;
+pub(crate) const PU_CACHE: usize = 101;
 
 #[repr(C)]
-pub struct memblock_t {
-	pub size: usize,            // including the header and possibly tiny fragments
-	pub user: *mut *mut c_void, // NULL if a free block
-	pub tag: usize,             // purgelevel
-	pub id: usize,              // should be ZONEID
-	pub next: *mut memblock_t,
-	pub prev: *mut memblock_t,
+pub(crate) struct memblock_t {
+	pub(crate) size: usize, // including the header and possibly tiny fragments
+	pub(crate) user: *mut *mut c_void, // NULL if a free block
+	pub(crate) tag: usize,  // purgelevel
+	pub(crate) id: usize,   // should be ZONEID
+	pub(crate) next: *mut memblock_t,
+	pub(crate) prev: *mut memblock_t,
 }
 
 // This is used to get the local FILE:LINE info from CPP
@@ -59,14 +59,14 @@ pub(crate) use Z_ChangeTag;
 const ZONEID: usize = 0x1d4a11;
 
 #[repr(C)]
-pub struct memzone_t {
+pub(crate) struct memzone_t {
 	// total bytes malloced, including header
-	pub size: usize,
+	pub(crate) size: usize,
 
 	// start / end cap for linked list
-	pub blocklist: memblock_t,
+	pub(crate) blocklist: memblock_t,
 
-	pub rover: *mut memblock_t,
+	pub(crate) rover: *mut memblock_t,
 }
 
 static mut mainzone: *mut memzone_t = null_mut();
@@ -110,7 +110,7 @@ pub(crate) fn Z_Init() {
 }
 
 // Z_Free
-pub fn Z_Free(ptr: *mut c_void) {
+pub(crate) fn Z_Free(ptr: *mut c_void) {
 	unsafe {
 		let mut block = &mut *(ptr.wrapping_byte_sub(size_of::<memblock_t>()).cast::<memblock_t>());
 
@@ -164,7 +164,7 @@ pub fn Z_Free(ptr: *mut c_void) {
 // You can pass a NULL user if the tag is < PU_PURGELEVEL.
 const MINFRAGMENT: usize = 64;
 
-pub fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c_void {
+pub(crate) fn Z_Malloc(size: usize, tag: usize, user: *mut c_void) -> *mut c_void {
 	unsafe {
 		// int		extra;
 		// memblock_t*	start;
@@ -312,7 +312,7 @@ pub(crate) fn Z_CheckHeap() {
 }
 
 // Z_ChangeTag
-pub fn Z_ChangeTag2(ptr: *mut c_void, tag: usize) {
+pub(crate) fn Z_ChangeTag2(ptr: *mut c_void, tag: usize) {
 	unsafe {
 		let block = ptr.wrapping_byte_sub(size_of::<memblock_t>()).cast::<memblock_t>();
 

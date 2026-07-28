@@ -7,13 +7,13 @@ use crate::{
 
 // Weapon info: sprite frames, ammunition use.
 #[repr(C)]
-pub struct weaponinfo_t {
-	pub ammo: ammotype_t,
-	pub upstate: statenum_t,
-	pub downstate: statenum_t,
-	pub readystate: statenum_t,
-	pub atkstate: statenum_t,
-	pub flashstate: statenum_t,
+pub(crate) struct weaponinfo_t {
+	pub(crate) ammo: ammotype_t,
+	pub(crate) upstate: statenum_t,
+	pub(crate) downstate: statenum_t,
+	pub(crate) readystate: statenum_t,
+	pub(crate) atkstate: statenum_t,
+	pub(crate) flashstate: statenum_t,
 }
 
 // PSPRITE ACTIONS for waepons.
@@ -27,7 +27,7 @@ pub struct weaponinfo_t {
 // atkstate, i.e. attack/fire/hit frame
 // flashstate, muzzle flash
 #[unsafe(no_mangle)]
-pub static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()] = [
+pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()] = [
 	weaponinfo_t {
 		// fist
 		ammo: ammotype_t::am_noammo,

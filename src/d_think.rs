@@ -30,7 +30,7 @@ use crate::{
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub enum think_t {
+pub(crate) enum think_t {
 	null,
 	mobj,
 	// p_pspr
@@ -125,7 +125,7 @@ impl think_t {
 	///
 	/// [`null`]: think_t::null
 	#[must_use]
-	pub fn is_null(self) -> bool {
+	pub(crate) fn is_null(self) -> bool {
 		matches!(self, Self::null)
 	}
 
@@ -133,11 +133,11 @@ impl think_t {
 	///
 	/// [`mobj`]: think_t::mobj
 	#[must_use]
-	pub fn is_mobj(self) -> bool {
+	pub(crate) fn is_mobj(self) -> bool {
 		matches!(self, Self::mobj)
 	}
 
-	pub fn as_ac_pspr(self) -> Option<fn(&mut player_t, &mut pspdef_t)> {
+	pub(crate) fn as_ac_pspr(self) -> Option<fn(&mut player_t, &mut pspdef_t)> {
 		match self {
 			think_t::A_Light0 => Some(A_Light0),
 			think_t::A_WeaponReady => Some(A_WeaponReady),
@@ -165,7 +165,7 @@ impl think_t {
 		}
 	}
 
-	pub fn as_ac_mobj(self) -> Option<fn(&mut mobj_t)> {
+	pub(crate) fn as_ac_mobj(self) -> Option<fn(&mut mobj_t)> {
 		match self {
 			think_t::A_BFGSpray => Some(A_BFGSpray),
 			think_t::A_Explode => Some(A_Explode),
@@ -223,7 +223,7 @@ impl think_t {
 		}
 	}
 
-	pub fn as_acp1(self) -> Option<fn(*mut c_void)> {
+	pub(crate) fn as_acp1(self) -> Option<fn(*mut c_void)> {
 		match self {
 			think_t::T_MoveFloor => Some(|p| unsafe { T_MoveFloor(&mut *p.cast()) }),
 			think_t::T_PlatRaise => Some(|p| unsafe { T_PlatRaise(&mut *p.cast()) }),
@@ -240,8 +240,8 @@ impl think_t {
 
 // Doubly linked list of actors.
 #[repr(C)]
-pub struct thinker_t {
-	pub prev: *mut thinker_t,
-	pub next: *mut thinker_t,
-	pub function: think_t,
+pub(crate) struct thinker_t {
+	pub(crate) prev: *mut thinker_t,
+	pub(crate) next: *mut thinker_t,
+	pub(crate) function: think_t,
 }

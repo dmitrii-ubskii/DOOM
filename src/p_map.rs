@@ -46,27 +46,27 @@ static mut tmy: fixed_t = 0;
 
 // If "floatok" true, move would be ok
 // if within "tmfloorz - tmceilingz".
-pub static mut floatok: bool = false;
+pub(crate) static mut floatok: bool = false;
 
-pub static mut tmfloorz: fixed_t = 0;
+pub(crate) static mut tmfloorz: fixed_t = 0;
 static mut tmceilingz: fixed_t = 0;
 static mut tmdropoffz: fixed_t = 0;
 
 // keep track of the line that lowers the ceiling,
 // so missiles don't explode against sky hack walls
-pub static mut ceilingline: *mut line_t = null_mut();
+pub(crate) static mut ceilingline: *mut line_t = null_mut();
 
 // keep track of special lines as they are hit,
 // but don't process them until the move is proven valid
-pub const MAXSPECIALCROSS: usize = 8;
+pub(crate) const MAXSPECIALCROSS: usize = 8;
 
-pub static mut spechit: [*mut line_t; MAXSPECIALCROSS] = [null_mut(); MAXSPECIALCROSS];
-pub static mut numspechit: usize = 0;
+pub(crate) static mut spechit: [*mut line_t; MAXSPECIALCROSS] = [null_mut(); MAXSPECIALCROSS];
+pub(crate) static mut numspechit: usize = 0;
 
 // TELEPORT MOVE
 
 // PIT_StompThing
-pub fn PIT_StompThing(thing: &mut mobj_t) -> bool {
+pub(crate) fn PIT_StompThing(thing: &mut mobj_t) -> bool {
 	unsafe {
 		if thing.flags & MF_SHOOTABLE == 0 {
 			return true;
@@ -96,7 +96,7 @@ pub fn PIT_StompThing(thing: &mut mobj_t) -> bool {
 }
 
 // P_TeleportMove
-pub fn P_TeleportMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
+pub(crate) fn P_TeleportMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 	unsafe {
 		// kill anything occupying the position
 		tmthing = thing;
@@ -158,7 +158,7 @@ pub fn P_TeleportMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 // PIT_CheckLine
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 #[allow(static_mut_refs)]
-pub fn PIT_CheckLine(ld: &mut line_t) -> bool {
+pub(crate) fn PIT_CheckLine(ld: &mut line_t) -> bool {
 	unsafe {
 		if tmbbox[BOXRIGHT] <= ld.bbox[BOXLEFT]
 			|| tmbbox[BOXLEFT] >= ld.bbox[BOXRIGHT]
@@ -225,7 +225,7 @@ pub fn PIT_CheckLine(ld: &mut line_t) -> bool {
 }
 
 // PIT_CheckThing
-pub fn PIT_CheckThing(thing: &mut mobj_t) -> bool {
+pub(crate) fn PIT_CheckThing(thing: &mut mobj_t) -> bool {
 	unsafe {
 		if thing.flags & (MF_SOLID | MF_SPECIAL | MF_SHOOTABLE) == 0 {
 			return true;
@@ -339,7 +339,7 @@ pub fn PIT_CheckThing(thing: &mut mobj_t) -> bool {
 //   (monsters won't move to a dropoff)
 //  speciallines[]
 //  numspeciallines
-pub fn P_CheckPosition(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
+pub(crate) fn P_CheckPosition(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 	unsafe {
 		tmthing = thing;
 		tmflags = thing.flags;
@@ -409,7 +409,7 @@ pub fn P_CheckPosition(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 // P_TryMove
 // Attempt to move to a new position,
 // crossing special lines unless MF_TELEPORT is set.
-pub fn P_TryMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
+pub(crate) fn P_TryMove(thing: &mut mobj_t, x: fixed_t, y: fixed_t) -> bool {
 	unsafe {
 		floatok = false;
 		if !P_CheckPosition(thing, x, y) {
@@ -560,7 +560,7 @@ fn P_HitSlideLine(ld: &line_t) {
 }
 
 // PTR_SlideTraverse
-pub fn PTR_SlideTraverse(intercept: &mut intercept_t) -> bool {
+pub(crate) fn PTR_SlideTraverse(intercept: &mut intercept_t) -> bool {
 	unsafe {
 		if intercept.isaline == 0 {
 			I_Error!(c"PTR_SlideTraverse: not a line?".as_ptr());
@@ -609,7 +609,7 @@ pub fn PTR_SlideTraverse(intercept: &mut intercept_t) -> bool {
 // and slide along it
 //
 // This is a kludgy mess.
-pub fn P_SlideMove(mo: &mut mobj_t) {
+pub(crate) fn P_SlideMove(mo: &mut mobj_t) {
 	fn stairstep(mo: &mut mobj_t) {
 		if !P_TryMove(mo, mo.x, mo.y + mo.momy) {
 			P_TryMove(mo, mo.x + mo.momx, mo.y);
@@ -722,7 +722,7 @@ pub fn P_SlideMove(mo: &mut mobj_t) {
 }
 
 // P_LineAttack
-pub static mut linetarget: *mut mobj_t = null_mut(); // who got hit (or NULL)
+pub(crate) static mut linetarget: *mut mobj_t = null_mut(); // who got hit (or NULL)
 static mut shootthing: *mut mobj_t = null_mut();
 
 // Height if not aiming up or down
@@ -730,7 +730,7 @@ static mut shootthing: *mut mobj_t = null_mut();
 static mut shootz: fixed_t = 0;
 
 static mut la_damage: i32 = 0;
-pub static mut attackrange: fixed_t = 0;
+pub(crate) static mut attackrange: fixed_t = 0;
 
 static mut aimslope: fixed_t = 0;
 
@@ -921,7 +921,7 @@ fn PTR_ShootTraverse(intercept: &mut intercept_t) -> bool {
 }
 
 // P_AimLineAttack
-pub fn P_AimLineAttack(t1: &mut mobj_t, mut angle: angle_t, distance: fixed_t) -> fixed_t {
+pub(crate) fn P_AimLineAttack(t1: &mut mobj_t, mut angle: angle_t, distance: fixed_t) -> fixed_t {
 	unsafe {
 		angle >>= ANGLETOFINESHIFT;
 		shootthing = t1;
@@ -950,7 +950,7 @@ pub fn P_AimLineAttack(t1: &mut mobj_t, mut angle: angle_t, distance: fixed_t) -
 // P_LineAttack
 // If damage == 0, it is just a test trace
 // that will leave linetarget set.
-pub fn P_LineAttack(
+pub(crate) fn P_LineAttack(
 	t1: &mut mobj_t,
 	mut angle: angle_t,
 	distance: fixed_t,
@@ -1003,7 +1003,7 @@ fn PTR_UseTraverse(intercept: &mut intercept_t) -> bool {
 
 // P_UseLines
 // Looks for special lines in front of the player to activate.
-pub fn P_UseLines(player: &mut player_t) {
+pub(crate) fn P_UseLines(player: &mut player_t) {
 	unsafe {
 		usething = player.mo;
 
@@ -1063,7 +1063,7 @@ fn PIT_RadiusAttack(thing: &mut mobj_t) -> bool {
 
 // P_RadiusAttack
 // Source is the creature that caused the explosion at spot.
-pub fn P_RadiusAttack(spot: &mut mobj_t, source: *mut mobj_t, damage: i32) {
+pub(crate) fn P_RadiusAttack(spot: &mut mobj_t, source: *mut mobj_t, damage: i32) {
 	unsafe {
 		let dist = (damage + MAXRADIUS) << FRACBITS;
 		let yh = (spot.y + dist - bmaporgy) >> MAPBLOCKSHIFT;
@@ -1148,7 +1148,7 @@ fn PIT_ChangeSector(thing: &mut mobj_t) -> bool {
 }
 
 // P_ChangeSector
-pub fn P_ChangeSector(sector: &mut sector_t, crunch: bool) -> bool {
+pub(crate) fn P_ChangeSector(sector: &mut sector_t, crunch: bool) -> bool {
 	unsafe {
 		nofit = false;
 		crushchange = crunch;

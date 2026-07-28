@@ -42,11 +42,11 @@ type boolean = i32;
 #[repr(C)]
 #[derive(Debug)]
 struct mappatch_t {
-	pub originx: short,
-	pub originy: short,
-	pub patch: short,
-	pub stepdir: short,
-	pub colormap: short,
+	pub(crate) originx: short,
+	pub(crate) originy: short,
+	pub(crate) patch: short,
+	pub(crate) stepdir: short,
+	pub(crate) colormap: short,
 }
 
 // Texture definition.
@@ -55,13 +55,13 @@ struct mappatch_t {
 #[repr(C)]
 #[derive(Debug)]
 struct maptexture_t {
-	pub name: [u8; 8],
-	pub masked: boolean,
-	pub width: short,
-	pub height: short,
-	pub columndirectory: *mut *mut (), // OBSOLETE
-	pub patchcount: short,
-	pub patches: [mappatch_t; 1],
+	pub(crate) name: [u8; 8],
+	pub(crate) masked: boolean,
+	pub(crate) width: short,
+	pub(crate) height: short,
+	pub(crate) columndirectory: *mut *mut (), // OBSOLETE
+	pub(crate) patchcount: short,
+	pub(crate) patches: [mappatch_t; 1],
 }
 
 // A single patch from a texture definition,
@@ -73,9 +73,9 @@ struct texpatch_t {
 	// Block origin (allways UL),
 	// which has allready accounted
 	// for the internal origin of the patch.
-	pub originx: int,
-	pub originy: int,
-	pub patch: isize,
+	pub(crate) originx: int,
+	pub(crate) originy: int,
+	pub(crate) patch: isize,
 }
 
 // A maptexturedef_t describes a rectangular texture,
@@ -85,45 +85,45 @@ struct texpatch_t {
 #[derive(Debug)]
 struct texture_t {
 	// Keep name for switch changing, etc.
-	pub name: [u8; 8],
-	pub width: short,
-	pub height: short,
+	pub(crate) name: [u8; 8],
+	pub(crate) width: short,
+	pub(crate) height: short,
 
 	// All the patches[patchcount]
 	//  are drawn back to front into the cached texture.
-	pub patchcount: short,
-	pub patches: [texpatch_t; 1],
+	pub(crate) patchcount: short,
+	pub(crate) patches: [texpatch_t; 1],
 }
 
-pub static mut firstflat: usize = 0;
-pub static mut lastflat: usize = 0;
+pub(crate) static mut firstflat: usize = 0;
+pub(crate) static mut lastflat: usize = 0;
 static mut numflats: usize = 0;
 
-pub static mut firstspritelump: usize = 0;
-pub static mut lastspritelump: usize = 0;
-pub static mut numspritelumps: usize = 0;
+pub(crate) static mut firstspritelump: usize = 0;
+pub(crate) static mut lastspritelump: usize = 0;
+pub(crate) static mut numspritelumps: usize = 0;
 
 static mut numtextures: usize = 0;
 static mut textures: *mut *mut texture_t = null_mut();
 
 static mut texturewidthmask: *mut usize = null_mut();
 // needed for texture pegging
-pub static mut textureheight: *mut fixed_t = null_mut();
+pub(crate) static mut textureheight: *mut fixed_t = null_mut();
 static mut texturecompositesize: *mut usize = null_mut();
 static mut texturecolumnlump: *mut *mut short = null_mut();
 static mut texturecolumnofs: *mut *mut u16 = null_mut();
 static mut texturecomposite: *mut *mut byte = null_mut();
 
 // for global animation
-pub static mut flattranslation: *mut usize = null_mut();
-pub static mut texturetranslation: *mut usize = null_mut();
+pub(crate) static mut flattranslation: *mut usize = null_mut();
+pub(crate) static mut texturetranslation: *mut usize = null_mut();
 
 // needed for pre rendering
-pub static mut spritewidth: *mut fixed_t = null_mut();
-pub static mut spriteoffset: *mut fixed_t = null_mut();
-pub static mut spritetopoffset: *mut fixed_t = null_mut();
+pub(crate) static mut spritewidth: *mut fixed_t = null_mut();
+pub(crate) static mut spriteoffset: *mut fixed_t = null_mut();
+pub(crate) static mut spritetopoffset: *mut fixed_t = null_mut();
 
-pub static mut colormaps: *mut lighttable_t = null_mut();
+pub(crate) static mut colormaps: *mut lighttable_t = null_mut();
 
 // MAPTEXTURE_T CACHING
 // When a texture is first needed,
@@ -309,7 +309,7 @@ fn R_GenerateLookup(texnum: usize) {
 }
 
 // R_GetColumn
-pub fn R_GetColumn(tex: usize, mut col: usize) -> *mut u8 {
+pub(crate) fn R_GetColumn(tex: usize, mut col: usize) -> *mut u8 {
 	unsafe {
 		col &= *texturewidthmask.wrapping_add(tex);
 		let lump = *(*texturecolumnlump.wrapping_add(tex)).wrapping_add(col);
@@ -543,7 +543,7 @@ fn R_InitColormaps() {
 // Locates all the lumps
 //  that will be used by all views
 // Must be called after W_Init.
-pub fn R_InitData() {
+pub(crate) fn R_InitData() {
 	R_InitTextures();
 	print!("\nInitTextures");
 	R_InitFlats();

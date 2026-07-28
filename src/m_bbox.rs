@@ -2,10 +2,10 @@
 
 use crate::m_fixed::fixed_t;
 
-pub const BOXTOP: usize = 0;
-pub const BOXBOTTOM: usize = 1;
-pub const BOXLEFT: usize = 2;
-pub const BOXRIGHT: usize = 3;
+pub(crate) const BOXTOP: usize = 0;
+pub(crate) const BOXBOTTOM: usize = 1;
+pub(crate) const BOXLEFT: usize = 2;
+pub(crate) const BOXRIGHT: usize = 3;
 
 pub(crate) fn M_ClearBox(bbox: &mut [fixed_t; 4]) {
 	bbox[BOXTOP] = i32::MIN;

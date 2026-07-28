@@ -187,7 +187,7 @@ int GetLocalAddress (void)
 
 // I_InitNetwork
 #[allow(static_mut_refs)]
-pub fn I_InitNetwork() {
+pub(crate) fn I_InitNetwork() {
 	unsafe {
 		/*
 		boolean		trueval = true;
@@ -278,7 +278,8 @@ pub fn I_InitNetwork() {
 	}
 }
 
-pub fn I_NetCmd() {
+#[expect(unused, reason = "used in unimplemented functions")]
+pub(crate) fn I_NetCmd() {
 	unsafe {
 		if (*doomcom).command == command_t::CMD_SEND {
 			netsend();

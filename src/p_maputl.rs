@@ -23,7 +23,7 @@ use crate::{
 
 // P_AproxDistance
 // Gives an estimation of distance (not exact)
-pub fn P_AproxDistance(dx: fixed_t, dy: fixed_t) -> fixed_t {
+pub(crate) fn P_AproxDistance(dx: fixed_t, dy: fixed_t) -> fixed_t {
 	let dx = fixed_t::abs(dx);
 	let dy = fixed_t::abs(dy);
 	dx + dy - (fixed_t::min(dx, dy) >> 1)
@@ -32,7 +32,7 @@ pub fn P_AproxDistance(dx: fixed_t, dy: fixed_t) -> fixed_t {
 // P_PointOnLineSide
 // Returns 0 or 1
 // false: front side, true: back side
-pub fn P_PointOnLineSide(x: fixed_t, y: fixed_t, line: &line_t) -> bool {
+pub(crate) fn P_PointOnLineSide(x: fixed_t, y: fixed_t, line: &line_t) -> bool {
 	unsafe {
 		if line.dx == 0 {
 			if x <= (*line.v1).x {
@@ -62,7 +62,7 @@ pub fn P_PointOnLineSide(x: fixed_t, y: fixed_t, line: &line_t) -> bool {
 // P_BoxOnLineSide
 // Considers the line to be infinite
 // Returns side false or true, None if box crosses the line.
-pub fn P_BoxOnLineSide(tmbox: &[fixed_t], ld: &line_t) -> Option<bool> {
+pub(crate) fn P_BoxOnLineSide(tmbox: &[fixed_t], ld: &line_t) -> Option<bool> {
 	unsafe {
 		let mut p1;
 		let mut p2;
@@ -165,12 +165,12 @@ fn P_InterceptVector(v2: &divline_t, v1: &divline_t) -> fixed_t {
 // Sets opentop and openbottom to the window
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
-pub static mut opentop: fixed_t = 0;
-pub static mut openbottom: fixed_t = 0;
-pub static mut openrange: fixed_t = 0;
-pub static mut lowfloor: fixed_t = 0;
+pub(crate) static mut opentop: fixed_t = 0;
+pub(crate) static mut openbottom: fixed_t = 0;
+pub(crate) static mut openrange: fixed_t = 0;
+pub(crate) static mut lowfloor: fixed_t = 0;
 
-pub fn P_LineOpening(linedef: &line_t) {
+pub(crate) fn P_LineOpening(linedef: &line_t) {
 	unsafe {
 		if linedef.sidenum[1] == -1 {
 			// single sided line
@@ -206,7 +206,7 @@ pub fn P_LineOpening(linedef: &line_t) {
 // On each position change, BLOCKMAP and other
 // lookups maintaining lists ot things inside
 // these structures need to be updated.
-pub fn P_UnsetThingPosition(thing: &mut mobj_t) {
+pub(crate) fn P_UnsetThingPosition(thing: &mut mobj_t) {
 	unsafe {
 		if thing.flags & MF_NOSECTOR == 0 {
 			// inert things don't need to be in blockmap?
@@ -251,7 +251,7 @@ pub fn P_UnsetThingPosition(thing: &mut mobj_t) {
 // Links a thing into both a block and a subsector
 // based on it's x y.
 // Sets thing->subsector properly
-pub fn P_SetThingPosition(thing: &mut mobj_t) {
+pub(crate) fn P_SetThingPosition(thing: &mut mobj_t) {
 	unsafe {
 		// link into subsector
 		let ss = R_PointInSubsector(thing.x, thing.y);
@@ -313,7 +313,7 @@ pub fn P_SetThingPosition(thing: &mut mobj_t) {
 // so increment validcount before the first call
 // to P_BlockLinesIterator, then make one or more calls
 // to it.
-pub fn P_BlockLinesIterator(x: i32, y: i32, func: fn(&mut line_t) -> bool) -> bool {
+pub(crate) fn P_BlockLinesIterator(x: i32, y: i32, func: fn(&mut line_t) -> bool) -> bool {
 	unsafe {
 		if x < 0
 			|| y < 0 || (usize::try_from(x).unwrap()) >= bmapwidth
@@ -345,7 +345,7 @@ pub fn P_BlockLinesIterator(x: i32, y: i32, func: fn(&mut line_t) -> bool) -> bo
 }
 
 // P_BlockThingsIterator
-pub fn P_BlockThingsIterator(x: i32, y: i32, func: fn(&mut mobj_t) -> bool) -> bool {
+pub(crate) fn P_BlockThingsIterator(x: i32, y: i32, func: fn(&mut mobj_t) -> bool) -> bool {
 	unsafe {
 		if x < 0
 			|| y < 0 || usize::try_from(x).unwrap() >= bmapwidth
@@ -372,7 +372,7 @@ static mut intercepts: [intercept_t; MAXINTERCEPTS] =
 		MAXINTERCEPTS];
 static mut intercept_p: *mut intercept_t = null_mut();
 
-pub static mut trace: divline_t = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
+pub(crate) static mut trace: divline_t = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
 static mut earlyout: bool = false;
 
 // PIT_AddLineIntercepts.
@@ -517,7 +517,7 @@ fn P_TraverseIntercepts(func: fn(&mut intercept_t) -> bool, maxfrac: fixed_t) ->
 // Returns true if the traverser function returns true
 // for all lines.
 #[allow(static_mut_refs)]
-pub fn P_PathTraverse(
+pub(crate) fn P_PathTraverse(
 	mut x1: fixed_t,
 	mut y1: fixed_t,
 	mut x2: fixed_t,

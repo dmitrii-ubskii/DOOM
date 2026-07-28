@@ -48,22 +48,22 @@ const BASEYCENTER: i32 = 100;
 // This is not the same as the angle,
 //  which increases counter clockwise (protractor).
 // There was a lot of stuff grabbed wrong, so I changed it...
-pub static mut pspritescale: fixed_t = 0;
-pub static mut pspriteiscale: fixed_t = 0;
+pub(crate) static mut pspritescale: fixed_t = 0;
+pub(crate) static mut pspriteiscale: fixed_t = 0;
 
 static mut spritelights: *mut *mut lighttable_t = null_mut();
 
 // constant arrays
 //  used for psprite clipping and initializing clipping
-pub static mut negonearray: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
-pub static mut screenheightarray: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
+pub(crate) static mut negonearray: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
+pub(crate) static mut screenheightarray: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
 
 // INITIALIZATION FUNCTIONS
 
 // variables used to look up
 //  and range check thing_t sprites patches
-pub static mut sprites: *mut spritedef_t = null_mut();
-pub static mut numsprites: usize = 0;
+pub(crate) static mut sprites: *mut spritedef_t = null_mut();
+pub(crate) static mut numsprites: usize = 0;
 
 static mut sprtemp: [spriteframe_t; 29] = unsafe { mem::zeroed() };
 static mut maxframe: i32 = 0;
@@ -270,7 +270,7 @@ static mut vissprite_p: *mut vissprite_t = null_mut();
 
 // R_InitSprites
 // Called at program start.
-pub fn R_InitSprites(namelist: *const *const u8) {
+pub(crate) fn R_InitSprites(namelist: *const *const u8) {
 	unsafe {
 		negonearray = [-1; SCREENWIDTH];
 		R_InitSpriteDefs(namelist);
@@ -280,7 +280,7 @@ pub fn R_InitSprites(namelist: *const *const u8) {
 // R_ClearSprites
 // Called at frame start.
 #[allow(static_mut_refs)]
-pub fn R_ClearSprites() {
+pub(crate) fn R_ClearSprites() {
 	unsafe { vissprite_p = vissprites.as_mut_ptr() }
 }
 
@@ -304,13 +304,13 @@ fn R_NewVisSprite() -> *mut vissprite_t {
 // Used for sprites and masked mid textures.
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
-pub static mut mfloorclip: *mut i16 = null_mut();
-pub static mut mceilingclip: *mut i16 = null_mut();
+pub(crate) static mut mfloorclip: *mut i16 = null_mut();
+pub(crate) static mut mceilingclip: *mut i16 = null_mut();
 
-pub static mut spryscale: fixed_t = 0;
-pub static mut sprtopscreen: fixed_t = 0;
+pub(crate) static mut spryscale: fixed_t = 0;
+pub(crate) static mut sprtopscreen: fixed_t = 0;
 
-pub unsafe fn R_DrawMaskedColumn(mut column: *mut column_t) {
+pub(crate) unsafe fn R_DrawMaskedColumn(mut column: *mut column_t) {
 	unsafe {
 		let basetexturemid = dc_texturemid;
 
@@ -506,7 +506,7 @@ fn R_ProjectSprite(thing: &mut mobj_t) {
 
 // R_AddSprites
 // During BSP traversal, this adds sprites by sector.
-pub fn R_AddSprites(sec: &mut sector_t) {
+pub(crate) fn R_AddSprites(sec: &mut sector_t) {
 	unsafe {
 		// BSP is traversed by subsector.
 		// A sector might have been split into several
@@ -815,7 +815,7 @@ fn R_DrawSprite(spr: &mut vissprite_t) {
 
 // R_DrawMasked
 #[allow(static_mut_refs)]
-pub fn R_DrawMasked() {
+pub(crate) fn R_DrawMasked() {
 	unsafe {
 		R_SortVisSprites();
 

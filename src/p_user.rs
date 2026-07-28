@@ -195,7 +195,7 @@ fn P_DeathThink(player: &mut player_t) {
 }
 
 // P_PlayerThink
-pub fn P_PlayerThink(player: &mut player_t) {
+pub(crate) fn P_PlayerThink(player: &mut player_t) {
 	unsafe {
 		// fixme: do this in the cheat code
 		if player.cheats & CF_NOCLIP != 0 {

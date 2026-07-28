@@ -34,7 +34,7 @@ pub(crate) fn I_ZoneBase(size: &mut usize) -> *mut u8 {
 
 // I_GetTime
 // returns time in 1/70th second tics
-pub fn I_GetTime() -> usize {
+pub(crate) fn I_GetTime() -> usize {
 	let mut tp = timeval { tv_sec: 0, tv_usec: 0 };
 	static mut basetime: i32 = 0;
 
@@ -50,13 +50,13 @@ pub fn I_GetTime() -> usize {
 }
 
 // I_Init
-pub fn I_Init() {
+pub(crate) fn I_Init() {
 	I_InitSound();
 	//  I_InitGraphics();
 }
 
 // I_Quit
-pub fn I_Quit() {
+pub(crate) fn I_Quit() {
 	D_QuitNetGame();
 	I_ShutdownSound();
 	I_ShutdownMusic();
@@ -65,7 +65,7 @@ pub fn I_Quit() {
 	exit(0);
 }
 
-pub fn I_WaitVBL(_count: i32) {
+pub(crate) fn I_WaitVBL(_count: i32) {
 	// #ifdef SGI
 	//     sginap(1);
 	// #else

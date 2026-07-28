@@ -22,7 +22,7 @@ type boolean = i32;
 
 // CEILINGS
 #[unsafe(no_mangle)]
-pub static mut activeceilings: [*mut ceiling_t; MAXCEILINGS] = [null_mut(); MAXCEILINGS];
+pub(crate) static mut activeceilings: [*mut ceiling_t; MAXCEILINGS] = [null_mut(); MAXCEILINGS];
 
 // T_MoveCeiling
 pub(crate) fn T_MoveCeiling(ceiling: &mut ceiling_t) {
@@ -235,7 +235,7 @@ fn P_ActivateInStasisCeiling(line: &mut line_t) {
 
 // EV_CeilingCrushStop
 // Stop a ceiling from crushing!
-pub fn EV_CeilingCrushStop(line: &mut line_t) -> boolean {
+pub(crate) fn EV_CeilingCrushStop(line: &mut line_t) -> boolean {
 	unsafe {
 		let mut rtn = 0;
 		#[allow(clippy::needless_range_loop)]

@@ -26,24 +26,24 @@ use crate::{
 };
 
 #[unsafe(no_mangle)]
-pub static mut curline: *mut seg_t = null_mut();
+pub(crate) static mut curline: *mut seg_t = null_mut();
 #[unsafe(no_mangle)]
-pub static mut sidedef: *mut side_t = null_mut();
+pub(crate) static mut sidedef: *mut side_t = null_mut();
 #[unsafe(no_mangle)]
-pub static mut linedef: *mut line_t = null_mut();
+pub(crate) static mut linedef: *mut line_t = null_mut();
 #[unsafe(no_mangle)]
-pub static mut frontsector: *mut sector_t = null_mut();
+pub(crate) static mut frontsector: *mut sector_t = null_mut();
 #[unsafe(no_mangle)]
-pub static mut backsector: *mut sector_t = null_mut();
+pub(crate) static mut backsector: *mut sector_t = null_mut();
 
 #[unsafe(no_mangle)]
-pub static mut drawsegs: [drawseg_t; MAXDRAWSEGS] = unsafe { mem::zeroed() };
+pub(crate) static mut drawsegs: [drawseg_t; MAXDRAWSEGS] = unsafe { mem::zeroed() };
 #[unsafe(no_mangle)]
-pub static mut ds_p: *mut drawseg_t = null_mut();
+pub(crate) static mut ds_p: *mut drawseg_t = null_mut();
 
 // R_ClearDrawSegs
 #[allow(static_mut_refs)]
-pub fn R_ClearDrawSegs() {
+pub(crate) fn R_ClearDrawSegs() {
 	unsafe {
 		ds_p = drawsegs.as_mut_ptr();
 	}
@@ -196,7 +196,7 @@ fn R_ClipPassWallSegment(first: u32, last: u32) {
 }
 
 // R_ClearClipSegs
-pub fn R_ClearClipSegs() {
+pub(crate) fn R_ClearClipSegs() {
 	unsafe {
 		solidsegs[0].first = 0x80000001;
 		solidsegs[0].last = u32::MAX;
@@ -462,7 +462,7 @@ fn R_Subsector(num: usize) {
 // Renders all subsectors below a given node,
 //  traversing subtree recursively.
 // Just call with BSP root.
-pub fn R_RenderBSPNode(bspnum: usize) {
+pub(crate) fn R_RenderBSPNode(bspnum: usize) {
 	unsafe {
 		// Found a subsector?
 		if bspnum & NF_SUBSECTOR != 0 {

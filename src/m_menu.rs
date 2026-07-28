@@ -51,9 +51,9 @@ pub(crate) static mut showMessages: int = 0;
 
 // Blocky mode, has default, 0 = high, 1 = normal
 #[unsafe(no_mangle)]
-pub static mut detailLevel: int = 0;
+pub(crate) static mut detailLevel: int = 0;
 #[unsafe(no_mangle)]
-pub static mut screenblocks: usize = 0; // has default
+pub(crate) static mut screenblocks: usize = 0; // has default
 
 // temp for screenblocks (0-9)
 static mut screenSize: usize = 0;
@@ -75,7 +75,8 @@ static mut messageRoutine: Option<fn(i32)> = None;
 
 const SAVESTRINGSIZE: usize = 24;
 
-pub static mut gammamsg: [[u8; 26]; 5] = [GAMMALVL0, GAMMALVL1, GAMMALVL2, GAMMALVL3, GAMMALVL4];
+pub(crate) static mut gammamsg: [[u8; 26]; 5] =
+	[GAMMALVL0, GAMMALVL1, GAMMALVL2, GAMMALVL3, GAMMALVL4];
 
 // we are going to be entering a savegame string
 static mut saveStringEnter: int = 0;
@@ -98,27 +99,27 @@ static mut endstring: [c_char; 160] = [0; 160];
 #[derive(Clone, Copy)]
 struct menuitem_t {
 	// 0 = no cursor here, 1 = ok, 2 = arrows ok
-	pub status: i16,
+	pub(crate) status: i16,
 
-	pub name: [u8; 10],
+	pub(crate) name: [u8; 10],
 
 	// choice = menu item #.
 	// if status = 2,
 	//   choice=0:leftarrow,1:rightarrow
-	pub routine: Option<fn(i32)>,
+	pub(crate) routine: Option<fn(i32)>,
 
 	// hotkey in menu
-	pub alphaKey: u8,
+	pub(crate) alphaKey: u8,
 }
 
 struct menu_t {
-	pub numitems: short,            // # of menu items
-	pub prevMenu: *mut menu_t,      // previous menu
-	pub menuitems: *mut menuitem_t, // menu items
-	pub routine: fn(),              // draw routine
-	pub x: short,
-	pub y: short,      // x,y of menu
-	pub lastOn: short, // last item user was on in menu
+	pub(crate) numitems: short,            // # of menu items
+	pub(crate) prevMenu: *mut menu_t,      // previous menu
+	pub(crate) menuitems: *mut menuitem_t, // menu items
+	pub(crate) routine: fn(),              // draw routine
+	pub(crate) x: short,
+	pub(crate) y: short,      // x,y of menu
+	pub(crate) lastOn: short, // last item user was on in menu
 }
 
 unsafe impl Sync for menu_t {}
@@ -1808,7 +1809,7 @@ fn M_SetupNextMenu(menudef: *mut menu_t) {
 }
 
 // M_Ticker
-pub fn M_Ticker() {
+pub(crate) fn M_Ticker() {
 	unsafe {
 		skullAnimCounter -= 1;
 		if skullAnimCounter <= 0 {

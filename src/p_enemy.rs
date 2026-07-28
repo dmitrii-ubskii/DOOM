@@ -50,7 +50,7 @@ use crate::{
 #[repr(C)]
 #[allow(clippy::upper_case_acronyms)] // ???
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum dirtype_t {
+pub(crate) enum dirtype_t {
 	DI_EAST,
 	DI_NORTHEAST,
 	DI_NORTH,
@@ -168,7 +168,7 @@ fn P_RecursiveSound(sec: &mut sector_t, soundblocks: i32) {
 // P_NoiseAlert
 // If a monster yells at a player,
 // it will alert other monsters to the player.
-pub fn P_NoiseAlert(target: *mut mobj_t, emmiter: &mut mobj_t) {
+pub(crate) fn P_NoiseAlert(target: *mut mobj_t, emmiter: &mut mobj_t) {
 	unsafe {
 		soundtarget = target;
 		validcount += 1;

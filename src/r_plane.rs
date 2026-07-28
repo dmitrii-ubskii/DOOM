@@ -33,19 +33,19 @@ use crate::{
 const MAXVISPLANES: usize = 128;
 static mut visplanes: [visplane_t; MAXVISPLANES] = unsafe { mem::zeroed() };
 static mut lastvisplane: *mut visplane_t = null_mut();
-pub static mut floorplane: *mut visplane_t = null_mut();
-pub static mut ceilingplane: *mut visplane_t = null_mut();
+pub(crate) static mut floorplane: *mut visplane_t = null_mut();
+pub(crate) static mut ceilingplane: *mut visplane_t = null_mut();
 
 // ?
 const MAXOPENINGS: usize = SCREENWIDTH * 64;
 static mut openings: [i16; MAXOPENINGS] = [0; MAXOPENINGS];
-pub static mut lastopening: *mut i16 = null_mut();
+pub(crate) static mut lastopening: *mut i16 = null_mut();
 
 // Clip values are the solid pixel bounding the range.
 //  floorclip starts out SCREENHEIGHT
 //  ceilingclip starts out -1
-pub static mut floorclip: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
-pub static mut ceilingclip: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
+pub(crate) static mut floorclip: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
+pub(crate) static mut ceilingclip: [i16; SCREENWIDTH] = [0; SCREENWIDTH];
 
 // spanstart holds the start of a plane span
 // initialized to 0 at start
@@ -55,8 +55,8 @@ static mut spanstart: [usize; SCREENHEIGHT] = [0; SCREENHEIGHT];
 static mut planezlight: *mut *mut lighttable_t = null_mut();
 static mut planeheight: fixed_t = 0;
 
-pub static mut yslope: [fixed_t; SCREENHEIGHT] = [0; SCREENHEIGHT];
-pub static mut distscale: [fixed_t; SCREENWIDTH] = [0; SCREENWIDTH];
+pub(crate) static mut yslope: [fixed_t; SCREENHEIGHT] = [0; SCREENHEIGHT];
+pub(crate) static mut distscale: [fixed_t; SCREENWIDTH] = [0; SCREENWIDTH];
 static mut basexscale: fixed_t = 0;
 static mut baseyscale: fixed_t = 0;
 
@@ -67,7 +67,7 @@ static mut cachedystep: [fixed_t; SCREENHEIGHT] = [0; SCREENHEIGHT];
 
 // R_InitPlanes
 // Only at game startup.
-pub fn R_InitPlanes() {
+pub(crate) fn R_InitPlanes() {
 	// Doh!
 }
 
@@ -130,7 +130,7 @@ fn R_MapPlane(y: usize, x1: usize, x2: usize) {
 // R_ClearPlanes
 // At begining of frame.
 #[allow(static_mut_refs)]
-pub fn R_ClearPlanes() {
+pub(crate) fn R_ClearPlanes() {
 	unsafe {
 		// opening / clipping determination
 		for i in 0..viewwidth {
@@ -155,7 +155,7 @@ pub fn R_ClearPlanes() {
 
 // R_FindPlane
 #[allow(static_mut_refs)]
-pub fn R_FindPlane(
+pub(crate) fn R_FindPlane(
 	mut height: fixed_t,
 	picnum: usize,
 	mut lightlevel: i32,
@@ -201,7 +201,7 @@ pub fn R_FindPlane(
 }
 
 // R_CheckPlane
-pub fn R_CheckPlane(pl: &mut visplane_t, start: isize, stop: isize) -> *mut visplane_t {
+pub(crate) fn R_CheckPlane(pl: &mut visplane_t, start: isize, stop: isize) -> *mut visplane_t {
 	let intrl;
 	let unionl;
 	if start < pl.minx {
@@ -281,7 +281,7 @@ fn R_MakeSpans(x: usize, mut t1: u8, mut b1: u8, mut t2: u8, mut b2: u8) {
 // R_DrawPlanes
 // At the end of each frame.
 #[allow(static_mut_refs)]
-pub fn R_DrawPlanes() {
+pub(crate) fn R_DrawPlanes() {
 	unsafe {
 		let mut pl = visplanes.as_mut_ptr();
 		while !ptr::eq(pl, lastvisplane) {

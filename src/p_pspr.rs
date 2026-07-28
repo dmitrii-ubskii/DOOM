@@ -28,15 +28,15 @@ use crate::{
 
 // Frame flags:
 // handles maximum brightness (torches, muzzle flare, light sources)
-pub const FF_FULLBRIGHT: usize = 0x8000; // flag in thing->frame
-pub const FF_FRAMEMASK: usize = 0x7fff;
+pub(crate) const FF_FULLBRIGHT: usize = 0x8000; // flag in thing->frame
+pub(crate) const FF_FRAMEMASK: usize = 0x7fff;
 
 // Overlay psprites are scaled shapes
 // drawn directly on the view screen,
 // coordinates are given for a 320*200 view screen.
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub enum psprnum_t {
+pub(crate) enum psprnum_t {
 	ps_weapon,
 	ps_flash,
 	NUMPSPRITES,
@@ -70,21 +70,21 @@ impl From<psprnum_t> for usize {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct pspdef_t {
-	pub state: *mut state_t, // a NULL state means not active
-	pub tics: i32,
-	pub sx: fixed_t,
-	pub sy: fixed_t,
+pub(crate) struct pspdef_t {
+	pub(crate) state: *mut state_t, // a NULL state means not active
+	pub(crate) tics: i32,
+	pub(crate) sx: fixed_t,
+	pub(crate) sy: fixed_t,
 }
 
-pub const LOWERSPEED: fixed_t = FRACUNIT * 6;
-pub const RAISESPEED: fixed_t = FRACUNIT * 6;
+pub(crate) const LOWERSPEED: fixed_t = FRACUNIT * 6;
+pub(crate) const RAISESPEED: fixed_t = FRACUNIT * 6;
 
-pub const WEAPONBOTTOM: fixed_t = 128 * FRACUNIT;
-pub const WEAPONTOP: fixed_t = 32 * FRACUNIT;
+pub(crate) const WEAPONBOTTOM: fixed_t = 128 * FRACUNIT;
+pub(crate) const WEAPONTOP: fixed_t = 32 * FRACUNIT;
 
 // plasma cells for a bfg attack
-pub const BFGCELLS: usize = 40;
+pub(crate) const BFGCELLS: usize = 40;
 
 // P_SetPsprite
 fn P_SetPsprite(player: &mut player_t, position: psprnum_t, mut stnum: statenum_t) {
@@ -238,7 +238,7 @@ fn P_FireWeapon(player: &mut player_t) {
 
 // P_DropWeapon
 // Player died, so put the weapon away.
-pub fn P_DropWeapon(player: &mut player_t) {
+pub(crate) fn P_DropWeapon(player: &mut player_t) {
 	P_SetPsprite(
 		player,
 		psprnum_t::ps_weapon,

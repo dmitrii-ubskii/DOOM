@@ -89,9 +89,9 @@ static mut mousedev: *mut c_char = null_mut();
 // #endif
 
 struct default_t {
-	pub name: *const c_char,
-	pub location: *mut *const c_void,
-	pub defaultvalue: *const c_void,
+	pub(crate) name: *const c_char,
+	pub(crate) location: *mut *const c_void,
+	pub(crate) defaultvalue: *const c_void,
 }
 
 #[allow(clippy::manual_dangling_ptr)]

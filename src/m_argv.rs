@@ -8,7 +8,7 @@ unsafe extern "C" {
 	fn strcasecmp(lhs: *const c_char, rhs: *const c_char) -> i32;
 }
 
-pub unsafe fn M_CheckParm(check: *const c_char) -> usize {
+pub(crate) unsafe fn M_CheckParm(check: *const c_char) -> usize {
 	unsafe {
 		for i in 1..myargc {
 			if strcasecmp(check, *myargv.add(i)) == 0 {

@@ -12,95 +12,95 @@ use crate::{
 };
 
 // Background and foreground screen numbers
-pub const BG: usize = 4;
-pub const FG: usize = 0;
+pub(crate) const BG: usize = 4;
+pub(crate) const FG: usize = 0;
 
 // Typedefs of widgets
 
 // Number widget
 
 #[repr(C)]
-pub struct st_number_t {
+pub(crate) struct st_number_t {
 	// upper right-hand corner
 	//  of the number (right-justified)
-	pub x: usize,
-	pub y: usize,
+	pub(crate) x: usize,
+	pub(crate) y: usize,
 
 	// max # of digits in number
-	pub width: usize,
+	pub(crate) width: usize,
 
 	// last number value
-	pub oldnum: i32,
+	pub(crate) oldnum: i32,
 
 	// pointer to current value
-	pub num: *mut i32,
+	pub(crate) num: *mut i32,
 
 	// pointer to i32ean stating
 	//  whether to update number
-	pub on: *mut i32,
+	pub(crate) on: *mut i32,
 
 	// list of patches for 0-9
-	pub p: *mut *mut patch_t,
+	pub(crate) p: *mut *mut patch_t,
 
 	// user data
-	pub data: i32,
+	pub(crate) data: i32,
 }
 
 // Percent widget ("child" of number widget,
 //  or, more precisely, contains a number widget.)
 #[repr(C)]
-pub struct st_percent_t {
+pub(crate) struct st_percent_t {
 	// number information
-	pub n: st_number_t,
+	pub(crate) n: st_number_t,
 
 	// percent sign graphic
-	pub p: *mut patch_t,
+	pub(crate) p: *mut patch_t,
 }
 
 // Multiple Icon widget
 #[repr(C)]
-pub struct st_multicon_t {
+pub(crate) struct st_multicon_t {
 	// center-justified location of icons
-	pub x: usize,
-	pub y: usize,
+	pub(crate) x: usize,
+	pub(crate) y: usize,
 
 	// last icon number
-	pub oldinum: i32,
+	pub(crate) oldinum: i32,
 
 	// pointer to current icon
-	pub inum: *mut i32,
+	pub(crate) inum: *mut i32,
 
 	// pointer to i32ean stating
 	//  whether to update icon
-	pub on: *mut i32,
+	pub(crate) on: *mut i32,
 
 	// list of icons
-	pub p: *mut *mut patch_t,
+	pub(crate) p: *mut *mut patch_t,
 
 	// user data
-	pub data: i32,
+	pub(crate) data: i32,
 }
 
 // Binary Icon widget
 
 #[repr(C)]
-pub struct st_binicon_t {
+pub(crate) struct st_binicon_t {
 	// center-justified location of icon
-	pub x: usize,
-	pub y: usize,
+	pub(crate) x: usize,
+	pub(crate) y: usize,
 
 	// last icon value
-	pub oldval: i32,
+	pub(crate) oldval: i32,
 
 	// pointer to current icon status
-	pub val: *mut i32,
+	pub(crate) val: *mut i32,
 
 	// pointer to i32ean
 	//  stating whether to update icon
-	pub on: *mut i32,
+	pub(crate) on: *mut i32,
 
-	pub p: *mut patch_t, // icon
-	pub data: i32,       // user data
+	pub(crate) p: *mut patch_t, // icon
+	pub(crate) data: i32,       // user data
 }
 
 // Hack display negative frags.
@@ -112,7 +112,7 @@ static mut sttminus: *mut patch_t = null_mut();
 // Initializes widget library.
 // More precisely, initialize STMINUS,
 //  everything else is done somewhere else.
-pub fn STlib_init() {
+pub(crate) fn STlib_init() {
 	unsafe {
 		sttminus = W_CacheLumpName(c"STTMINUS".as_ptr(), PU_STATIC).cast();
 	}
@@ -121,7 +121,7 @@ pub fn STlib_init() {
 // Number widget routines
 
 // ?
-pub fn STlib_initNum(
+pub(crate) fn STlib_initNum(
 	n: &mut st_number_t,
 	x: usize,
 	y: usize,
@@ -200,7 +200,7 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: bool) {
 	}
 }
 
-pub fn STlib_updateNum(n: &mut st_number_t, refresh: bool) {
+pub(crate) fn STlib_updateNum(n: &mut st_number_t, refresh: bool) {
 	unsafe {
 		if *n.on != 0 {
 			STlib_drawNum(n, refresh);
@@ -210,7 +210,7 @@ pub fn STlib_updateNum(n: &mut st_number_t, refresh: bool) {
 
 // Percent widget routines
 
-pub fn STlib_initPercent(
+pub(crate) fn STlib_initPercent(
 	p: &mut st_percent_t,
 	x: usize,
 	y: usize,
@@ -223,7 +223,7 @@ pub fn STlib_initPercent(
 	p.p = percent;
 }
 
-pub fn STlib_updatePercent(per: &mut st_percent_t, refresh: bool) {
+pub(crate) fn STlib_updatePercent(per: &mut st_percent_t, refresh: bool) {
 	unsafe {
 		if refresh && *per.n.on != 0 {
 			V_DrawPatch(per.n.x, per.n.y, FG, per.p);
@@ -235,7 +235,7 @@ pub fn STlib_updatePercent(per: &mut st_percent_t, refresh: bool) {
 
 // Multiple Icon widget routines
 
-pub fn STlib_initMultIcon(
+pub(crate) fn STlib_initMultIcon(
 	i: &mut st_multicon_t,
 	x: usize,
 	y: usize,
@@ -251,7 +251,7 @@ pub fn STlib_initMultIcon(
 	i.p = il;
 }
 
-pub fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
+pub(crate) fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 	unsafe {
 		if *mi.on != 0 && (mi.oldinum != *mi.inum || refresh) && (*mi.inum != -1) {
 			if mi.oldinum != -1 {
@@ -288,7 +288,7 @@ pub fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 
 // Binary Icon widget routines
 
-pub fn STlib_initBinIcon(
+pub(crate) fn STlib_initBinIcon(
 	b: &mut st_binicon_t,
 	x: usize,
 	y: usize,
@@ -304,7 +304,7 @@ pub fn STlib_initBinIcon(
 	b.p = i;
 }
 
-pub fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
+pub(crate) fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
 	unsafe {
 		if *bi.on != 0 && (bi.oldval != *bi.val || refresh) {
 			let x = bi.x.checked_add_signed(isize::from(-((*bi.p).leftoffset))).unwrap();

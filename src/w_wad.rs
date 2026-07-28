@@ -17,34 +17,34 @@ type int = i32;
 
 // TYPES
 #[repr(C)]
-pub struct wadinfo_t {
+pub(crate) struct wadinfo_t {
 	// Should be "IWAD" or "PWAD".
-	pub identification: [c_char; 4],
-	pub numlumps: usize,
-	pub infotableofs: int,
+	pub(crate) identification: [c_char; 4],
+	pub(crate) numlumps: usize,
+	pub(crate) infotableofs: int,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct filelump_t {
-	pub filepos: int,
-	pub size: usize,
-	pub name: [c_char; 8],
+pub(crate) struct filelump_t {
+	pub(crate) filepos: int,
+	pub(crate) size: usize,
+	pub(crate) name: [c_char; 8],
 }
 
 // WADFILE I/O related stuff.
 #[repr(C)]
-pub struct lumpinfo_t {
-	pub name: [c_char; 8],
-	pub handle: int,
-	pub position: int,
-	pub size: usize,
+pub(crate) struct lumpinfo_t {
+	pub(crate) name: [c_char; 8],
+	pub(crate) handle: int,
+	pub(crate) position: int,
+	pub(crate) size: usize,
 }
 
 // GLOBALS
 
 // Location of each lump on disk.
-pub static mut lumpinfo: *mut lumpinfo_t = null_mut();
+pub(crate) static mut lumpinfo: *mut lumpinfo_t = null_mut();
 pub(crate) static mut numlumps: usize = 0;
 
 static mut lumpcache: *mut *mut c_void = null_mut();
@@ -294,7 +294,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 
 // W_CheckNumForName
 // Returns -1 if name not found.
-pub unsafe fn W_CheckNumForName(name: *const c_char) -> isize {
+pub(crate) unsafe fn W_CheckNumForName(name: *const c_char) -> isize {
 	unsafe {
 		let mut name8 = [0; 9];
 
@@ -324,7 +324,7 @@ pub unsafe fn W_CheckNumForName(name: *const c_char) -> isize {
 
 // W_GetNumForName
 // Calls W_CheckNumForName, but bombs out if not found.
-pub unsafe fn W_GetNumForName(name: *const c_char) -> isize {
+pub(crate) unsafe fn W_GetNumForName(name: *const c_char) -> isize {
 	unsafe {
 		match W_CheckNumForName(name) {
 			-1 => I_Error!(c"W_GetNumForName: %s not found!".as_ptr(), name),
@@ -335,7 +335,7 @@ pub unsafe fn W_GetNumForName(name: *const c_char) -> isize {
 
 // W_LumpLength
 // Returns the buffer size needed to load the given lump.
-pub fn W_LumpLength(lump: usize) -> usize {
+pub(crate) fn W_LumpLength(lump: usize) -> usize {
 	unsafe {
 		if lump >= numlumps {
 			I_Error!(c"W_LumpLength: %i >= numlumps".as_ptr(), lump);
@@ -348,7 +348,7 @@ pub fn W_LumpLength(lump: usize) -> usize {
 // W_ReadLump
 // Loads the lump into the given buffer,
 //  which must be >= W_LumpLength().
-pub unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
+pub(crate) unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 	unsafe {
 		if lump >= numlumps {
 			I_Error!(c"W_ReadLump: %i >= numlumps".as_ptr(), lump);
@@ -385,7 +385,7 @@ pub unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 }
 
 // W_CacheLumpNum
-pub fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
+pub(crate) fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
 	unsafe {
 		if lump >= numlumps {
 			I_Error!(c"W_CacheLumpNum: %i >= numlumps".as_ptr(), lump);
@@ -409,6 +409,6 @@ pub fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
 }
 
 // W_CacheLumpName
-pub unsafe fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void {
+pub(crate) unsafe fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void {
 	unsafe { W_CacheLumpNum(usize::try_from(W_GetNumForName(name)).unwrap(), tag) }
 }

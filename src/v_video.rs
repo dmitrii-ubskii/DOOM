@@ -12,12 +12,12 @@ use crate::{
 	r_defs::{column_t, patch_t},
 };
 
-pub static mut screens: [*mut u8; 5] = [null_mut(); 5];
+pub(crate) static mut screens: [*mut u8; 5] = [null_mut(); 5];
 
 static mut dirtybox: [i32; 4] = [0; 4];
 
 // Now where did these came from?
-pub static gammatable: [[u8; 256]; 5] = [
+pub(crate) static gammatable: [[u8; 256]; 5] = [
 	[
 		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
 		26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
@@ -99,10 +99,10 @@ pub static gammatable: [[u8; 256]; 5] = [
 	],
 ];
 
-pub static mut usegamma: usize = 0;
+pub(crate) static mut usegamma: usize = 0;
 
 // V_MarkRect
-pub fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
+pub(crate) fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
 	#[allow(static_mut_refs)]
 	unsafe {
 		M_AddToBox(&mut dirtybox, fixed_t::try_from(x).unwrap(), fixed_t::try_from(y).unwrap());
@@ -116,7 +116,7 @@ pub fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
 
 // V_CopyRect
 #[allow(clippy::too_many_arguments)]
-pub fn V_CopyRect(
+pub(crate) fn V_CopyRect(
 	srcx: usize,
 	srcy: usize,
 	srcscrn: usize,
@@ -153,12 +153,7 @@ pub fn V_CopyRect(
 
 // V_DrawPatch
 // Masks a column based masked pic to the screen.
-pub unsafe fn V_DrawPatch(
-	mut x: usize,
-	mut y: usize,
-	scrn: usize,
-	patch: *const patch_t,
-) {
+pub(crate) unsafe fn V_DrawPatch(mut x: usize, mut y: usize, scrn: usize, patch: *const patch_t) {
 	unsafe {
 		y = y.checked_add_signed(isize::from(-(*patch).topoffset)).unwrap();
 		x = x.checked_add_signed(isize::from(-(*patch).leftoffset)).unwrap();
@@ -214,7 +209,12 @@ pub unsafe fn V_DrawPatch(
 // V_DrawPatchFlipped
 // Masks a column based masked pic to the screen.
 // Flips horizontally, e.g. to mirror face.
-pub unsafe fn V_DrawPatchFlipped(mut x: usize, mut y: usize, scrn: usize, patch: *mut patch_t) {
+pub(crate) unsafe fn V_DrawPatchFlipped(
+	mut x: usize,
+	mut y: usize,
+	scrn: usize,
+	patch: *mut patch_t,
+) {
 	unsafe {
 		y = y.checked_add_signed(isize::from(-(*patch).topoffset)).unwrap();
 		x = x.checked_add_signed(isize::from(-(*patch).leftoffset)).unwrap();

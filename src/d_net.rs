@@ -21,24 +21,25 @@ type byte = u8;
 //  one that defines the actual packets to
 //  be transmitted.
 
-pub const DOOMCOM_ID: u32 = 0x12345678;
+pub(crate) const DOOMCOM_ID: u32 = 0x12345678;
 
 // Max computers/players in a game.
-pub const MAXNETNODES: usize = 8;
+pub(crate) const MAXNETNODES: usize = 8;
 
 // Networking and tick handling related.
-pub const BACKUPTICS: usize = 12;
+pub(crate) const BACKUPTICS: usize = 12;
 
+#[expect(unused, reason = "used in unimplemented functions")]
 #[repr(i16)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum command_t {
+pub(crate) enum command_t {
 	CMD_SEND = 1,
 	CMD_GET = 2,
 }
 
 // Network packet data.
 #[derive(Clone, Copy)]
-pub struct doomdata_t {
+pub(crate) struct doomdata_t {
 	// High bit is retransmit request.
 	checksum: unsigned,
 	// Only valid if NCMD_RETRANSMIT.
@@ -50,39 +51,40 @@ pub struct doomdata_t {
 	cmds: [ticcmd_t; BACKUPTICS],
 }
 
-pub struct doomcom_t {
+#[expect(unused, reason = "used in unimplemented functions")]
+pub(crate) struct doomcom_t {
 	// Supposed to be DOOMCOM_ID?
-	pub id: u32,
+	pub(crate) id: u32,
 
 	// DOOM executes an int to execute commands.
-	pub intnum: short,
+	pub(crate) intnum: short,
 	// Communication between DOOM and the driver.
 	// Is CMD_SEND or CMD_GET.
-	pub command: command_t,
+	pub(crate) command: command_t,
 	// Is dest for send, set by get (-1 = no packet).
-	pub remotenode: u16,
+	pub(crate) remotenode: u16,
 
 	// Number of bytes in doomdata to be sent
-	pub datalength: short,
+	pub(crate) datalength: short,
 
 	// Info common to all nodes.
 	// Console is allways node 0.
-	pub numnodes: u16,
+	pub(crate) numnodes: u16,
 	// Flag: 1 = no duplication, 2-5 = dup for slow nets.
-	pub ticdup: u16,
+	pub(crate) ticdup: u16,
 	// Flag: 1 = send a backup tic in every packet.
-	pub extratics: u16,
+	pub(crate) extratics: u16,
 	// Flag: 1 = deathmatch.
-	pub deathmatch: short,
+	pub(crate) deathmatch: short,
 	// Flag: -1 = new game, 0-5 = load savegame
-	pub savegame: short,
-	pub episode: short, // 1-3
-	pub map: short,     // 1-9
-	pub skill: short,   // 1-5
+	pub(crate) savegame: short,
+	pub(crate) episode: short, // 1-3
+	pub(crate) map: short,     // 1-9
+	pub(crate) skill: short,   // 1-5
 
 	// Info specific to this node.
-	pub consoleplayer: u16,
-	pub numplayers: u16,
+	pub(crate) consoleplayer: u16,
+	pub(crate) numplayers: u16,
 
 	// These are related to the 3-display mode,
 	//  in which two drones looking left and right
@@ -90,12 +92,12 @@ pub struct doomcom_t {
 	//  on two additional computers.
 	// Probably not operational anymore.
 	// 1 = left, 0 = center, -1 = right
-	pub angleoffset: short,
+	pub(crate) angleoffset: short,
 	// 1 = drone
-	pub drone: short,
+	pub(crate) drone: short,
 
 	// The packet data to be sent.
-	pub data: doomdata_t,
+	pub(crate) data: doomdata_t,
 }
 
 const NCMD_EXIT: u32 = 0x80000000;
@@ -104,8 +106,8 @@ const NCMD_SETUP: u32 = 0x20000000;
 const NCMD_KILL: u32 = 0x10000000; // kill game
 // const NCMD_CHECKSUM: u32 = 0x0fffffff;
 
-pub static mut doomcom: *mut doomcom_t = null_mut();
-pub static mut netbuffer: *mut doomdata_t = null_mut(); // points inside doomcom
+pub(crate) static mut doomcom: *mut doomcom_t = null_mut();
+pub(crate) static mut netbuffer: *mut doomdata_t = null_mut(); // points inside doomcom
 
 // NETWORKING
 //
@@ -117,9 +119,9 @@ pub static mut netbuffer: *mut doomdata_t = null_mut(); // points inside doomcom
 const RESENDCOUNT: usize = 10;
 const PL_DRONE: u8 = 0x80; // bit flag in doomdata->player
 
-pub static mut localcmds: [ticcmd_t; BACKUPTICS] = [unsafe { mem::zeroed() }; BACKUPTICS];
+pub(crate) static mut localcmds: [ticcmd_t; BACKUPTICS] = [unsafe { mem::zeroed() }; BACKUPTICS];
 
-pub static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS] =
+pub(crate) static mut netcmds: [[ticcmd_t; BACKUPTICS]; MAXPLAYERS] =
 	[[unsafe { mem::zeroed() }; BACKUPTICS]; MAXPLAYERS];
 static mut nettics: [usize; MAXNETNODES] = [0; MAXNETNODES];
 static mut nodeingame: [bool; MAXNETNODES] = [false; MAXNETNODES]; // set false as nodes leave game
@@ -129,11 +131,10 @@ static mut resendcount: [Saturating<usize>; MAXNETNODES] = [Saturating(0); MAXNE
 
 static mut nodeforplayer: [usize; MAXNETNODES] = [0; MAXNETNODES];
 
-pub static mut maketic: usize = 0;
-pub static mut lastnettic: usize = 0;
-pub static mut skiptics: usize = 0;
-pub static mut ticdup: usize = 0;
-pub static mut maxsend: usize = 0; // BACKUPTICS/(2*ticdup)-1
+pub(crate) static mut maketic: usize = 0;
+pub(crate) static mut skiptics: usize = 0;
+pub(crate) static mut ticdup: usize = 0;
+pub(crate) static mut maxsend: usize = 0; // BACKUPTICS/(2*ticdup)-1
 
 static mut reboundpacket: bool = false;
 static mut reboundstore: doomdata_t = unsafe { mem::zeroed() };
@@ -398,7 +399,7 @@ fn GetPackets() {
 // sends out a packet
 static mut gametime: usize = 0;
 
-pub fn NetUpdate() {
+pub(crate) fn NetUpdate() {
 	unsafe {
 		// check time
 		let nowtime = I_GetTime() / ticdup;
@@ -569,7 +570,7 @@ fn D_ArbitrateNetStart() {
 // D_CheckNetGame
 // Works out player numbers among the net participants
 #[allow(static_mut_refs)]
-pub fn D_CheckNetGame() {
+pub(crate) fn D_CheckNetGame() {
 	unsafe {
 		for i in 0..MAXNETNODES {
 			nodeingame[i] = false;
@@ -625,7 +626,7 @@ pub fn D_CheckNetGame() {
 // D_QuitNetGame
 // Called before quitting to leave a net game
 // without hanging the other players
-pub fn D_QuitNetGame() {
+pub(crate) fn D_QuitNetGame() {
 	todo!()
 	/*
 	int             i, j;
@@ -654,7 +655,7 @@ static mut frameon: usize = 0;
 static mut frameskip: [bool; 4] = [false; 4];
 static mut oldnettics: usize = 0;
 
-pub fn TryRunTics() {
+pub(crate) fn TryRunTics() {
 	static mut oldentertics: usize = 0;
 
 	unsafe {

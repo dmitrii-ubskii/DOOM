@@ -34,25 +34,25 @@ const SBARHEIGHT: usize = 32;
 // Conveniently, the frame buffer is a linear one,
 //  and we need only the base address,
 //  and the total size == width*height*depth/8.,
-pub static mut viewwidth: usize = 0;
-pub static mut scaledviewwidth: i32 = 0;
-pub static mut viewheight: usize = 0;
-pub static mut viewwindowx: usize = 0;
-pub static mut viewwindowy: usize = 0;
+pub(crate) static mut viewwidth: usize = 0;
+pub(crate) static mut scaledviewwidth: i32 = 0;
+pub(crate) static mut viewheight: usize = 0;
+pub(crate) static mut viewwindowx: usize = 0;
+pub(crate) static mut viewwindowy: usize = 0;
 static mut ylookup: [*mut i8; MAXHEIGHT] = [null_mut(); MAXHEIGHT];
 static mut columnofs: [i32; MAXWIDTH] = [0; MAXWIDTH];
 
 // R_DrawColumn
 // Source is the top of the column to scale.
-pub static mut dc_colormap: *mut lighttable_t = null_mut();
-pub static mut dc_x: i32 = 0;
-pub static mut dc_yl: i32 = 0;
-pub static mut dc_yh: i32 = 0;
-pub static mut dc_iscale: fixed_t = 0;
-pub static mut dc_texturemid: fixed_t = 0;
+pub(crate) static mut dc_colormap: *mut lighttable_t = null_mut();
+pub(crate) static mut dc_x: i32 = 0;
+pub(crate) static mut dc_yl: i32 = 0;
+pub(crate) static mut dc_yh: i32 = 0;
+pub(crate) static mut dc_iscale: fixed_t = 0;
+pub(crate) static mut dc_texturemid: fixed_t = 0;
 
 // first pixel in a column (possibly virtual)
-pub static mut dc_source: *mut u8 = null_mut();
+pub(crate) static mut dc_source: *mut u8 = null_mut();
 
 // A column is a vertical slice/span from a wall texture that,
 //  given the DOOM style restrictions on the view orientation,
@@ -60,7 +60,7 @@ pub static mut dc_source: *mut u8 = null_mut();
 // Thus a special case loop for very fast rendering can
 //  be used. It has also been used with Wolfenstein 3D.
 #[allow(static_mut_refs)]
-pub fn R_DrawColumn() {
+pub(crate) fn R_DrawColumn() {
 	unsafe {
 		let count = dc_yh - dc_yl;
 
@@ -103,7 +103,7 @@ pub fn R_DrawColumn() {
 	}
 }
 
-pub fn R_DrawColumnLow() {
+pub(crate) fn R_DrawColumnLow() {
 	unsafe {
 		let count = dc_yh - dc_yl;
 
@@ -163,7 +163,7 @@ static mut fuzzpos: usize = 0;
 // Used with an all black colormap, this
 //  could create the SHADOW effect,
 //  i.e. spectres and invisible players.
-pub fn R_DrawFuzzColumn() {
+pub(crate) fn R_DrawFuzzColumn() {
 	unsafe {
 		// Adjust borders. Low...
 		if dc_yl == 0 {
@@ -227,10 +227,10 @@ pub fn R_DrawFuzzColumn() {
 //  tables, e.g. the lighter colored version
 //  of the BaronOfHell, the HellKnight, uses
 //  identical sprites, kinda brightened up.
-pub static mut dc_translation: *mut u8 = null_mut();
-pub static mut translationtables: *mut u8 = null_mut();
+pub(crate) static mut dc_translation: *mut u8 = null_mut();
+pub(crate) static mut translationtables: *mut u8 = null_mut();
 
-pub fn R_DrawTranslatedColumn() {
+pub(crate) fn R_DrawTranslatedColumn() {
 	unsafe {
 		let count = dc_yh - dc_yl;
 		if count < 0 {
@@ -274,7 +274,7 @@ pub fn R_DrawTranslatedColumn() {
 //  the green color ramp to gray, brown, red.
 // Assumes a given structure of the PLAYPAL.
 // Could be read from a lump instead.
-pub fn R_InitTranslationTables() {
+pub(crate) fn R_InitTranslationTables() {
 	unsafe {
 		translationtables = Z_Malloc(256 * 3 + 255, PU_STATIC, null_mut()).cast();
 		translationtables = translationtables.wrapping_add(255 - (translationtables.addr() & 255));
@@ -306,23 +306,23 @@ pub fn R_InitTranslationTables() {
 //  the texture at an angle in all but a few cases.
 // In consequence, flats are not stored by column (like walls),
 //  and the inner loop has to step in texture space u and v.
-pub static mut ds_y: usize = 0;
-pub static mut ds_x1: usize = 0;
-pub static mut ds_x2: usize = 0;
+pub(crate) static mut ds_y: usize = 0;
+pub(crate) static mut ds_x1: usize = 0;
+pub(crate) static mut ds_x2: usize = 0;
 
-pub static mut ds_colormap: *mut lighttable_t = null_mut();
+pub(crate) static mut ds_colormap: *mut lighttable_t = null_mut();
 
-pub static mut ds_xfrac: fixed_t = 0;
-pub static mut ds_yfrac: fixed_t = 0;
+pub(crate) static mut ds_xfrac: fixed_t = 0;
+pub(crate) static mut ds_yfrac: fixed_t = 0;
 
-pub static mut ds_xstep: fixed_t = 0;
-pub static mut ds_ystep: fixed_t = 0;
+pub(crate) static mut ds_xstep: fixed_t = 0;
+pub(crate) static mut ds_ystep: fixed_t = 0;
 
 // start of a 64*64 tile image
-pub static mut ds_source: *mut u8 = null_mut();
+pub(crate) static mut ds_source: *mut u8 = null_mut();
 
 // Draws the actual span.
-pub fn R_DrawSpan() {
+pub(crate) fn R_DrawSpan() {
 	unsafe {
 		if ds_x2 < ds_x1 || ds_x2 >= SCREENWIDTH || ds_y > SCREENHEIGHT {
 			I_Error!(c"R_DrawSpan: %i to %i at %i".as_ptr(), ds_x1, ds_x2, ds_y);
@@ -354,7 +354,7 @@ pub fn R_DrawSpan() {
 }
 
 // Again..
-pub fn R_DrawSpanLow() {
+pub(crate) fn R_DrawSpanLow() {
 	unsafe {
 		if ds_x2 < ds_x1 || ds_x2 >= SCREENWIDTH || ds_y > SCREENHEIGHT {
 			I_Error!(c"R_DrawSpan: %i to %i at %i".as_ptr(), ds_x1, ds_x2, ds_y);
@@ -393,7 +393,7 @@ pub fn R_DrawSpanLow() {
 //  for getting the framebuffer address
 //  of a pixel to draw.
 #[allow(static_mut_refs)]
-pub fn R_InitBuffer(width: usize, height: usize) {
+pub(crate) fn R_InitBuffer(width: usize, height: usize) {
 	unsafe {
 		// Handle resize,
 		//  e.g. smaller view windows
@@ -425,7 +425,7 @@ pub fn R_InitBuffer(width: usize, height: usize) {
 // Fills the back screen with a pattern
 //  for variable screen sizes
 // Also draws a beveled edge.
-pub fn R_FillBackScreen() {
+pub(crate) fn R_FillBackScreen() {
 	unsafe {
 		// DOOM border patch.
 		let name1 = c"FLOOR7_2";
@@ -512,7 +512,7 @@ pub fn R_FillBackScreen() {
 
 // Copy a screen buffer.
 #[allow(static_mut_refs)]
-pub fn R_VideoErase(ofs: usize, count: usize) {
+pub(crate) fn R_VideoErase(ofs: usize, count: usize) {
 	// LFB copy.
 	// This might not be a good idea if memcpy
 	//  is not optiomal, e.g. byte by byte on
@@ -526,7 +526,7 @@ pub fn R_VideoErase(ofs: usize, count: usize) {
 // R_DrawViewBorder
 // Draws the border around the view
 //  for different size windows?
-pub fn R_DrawViewBorder() {
+pub(crate) fn R_DrawViewBorder() {
 	unsafe {
 		if usize::try_from(scaledviewwidth).unwrap() == SCREENWIDTH {
 			return;

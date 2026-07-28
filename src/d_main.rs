@@ -66,27 +66,27 @@ const MAXWADFILES: usize = 20;
 
 pub(crate) static mut wadfiles: [*mut c_char; MAXWADFILES] = [null_mut(); MAXWADFILES];
 
-pub static mut devparm: bool = false; // started game with -devparm
-pub static mut nomonsters: bool = false; // checkparm of -nomonsters
-pub static mut respawnparm: bool = false; // checkparm of -respawn
-pub static mut fastparm: bool = false; // checkparm of -fast
+pub(crate) static mut devparm: bool = false; // started game with -devparm
+pub(crate) static mut nomonsters: bool = false; // checkparm of -nomonsters
+pub(crate) static mut respawnparm: bool = false; // checkparm of -respawn
+pub(crate) static mut fastparm: bool = false; // checkparm of -fast
 
-pub static mut singletics: bool = false; // debug flag to cancel adaptiveness
+pub(crate) static mut singletics: bool = false; // debug flag to cancel adaptiveness
 
-pub static mut startskill: skill_t = skill_t::sk_baby;
-pub static mut startepisode: usize = 0;
-pub static mut startmap: usize = 0;
-pub static mut autostart: bool = false;
+pub(crate) static mut startskill: skill_t = skill_t::sk_baby;
+pub(crate) static mut startepisode: usize = 0;
+pub(crate) static mut startmap: usize = 0;
+pub(crate) static mut autostart: bool = false;
 
-pub static mut debugfile: *const libc::FILE = null();
+pub(crate) static mut debugfile: *const libc::FILE = null();
 
-pub static mut advancedemo: bool = false;
+pub(crate) static mut advancedemo: bool = false;
 
 pub(crate) static mut basedefault: [c_char; 1024] = [0; 1024]; // default file
 
 // D_PostEvent
 // Called by the I/O functions when input is detected
-pub fn D_PostEvent(ev: &mut event_t) {
+pub(crate) fn D_PostEvent(ev: &mut event_t) {
 	unsafe {
 		events[eventhead] = *ev;
 		eventhead = (eventhead + 1) & (MAXEVENTS - 1);
@@ -95,7 +95,7 @@ pub fn D_PostEvent(ev: &mut event_t) {
 
 // D_ProcessEvents
 // Send all the events of the given timestamp down the responder chain
-pub fn D_ProcessEvents() {
+pub(crate) fn D_ProcessEvents() {
 	unsafe {
 		// IF STORE DEMO, DO NOT ACCEPT INPUT
 		if gamemode == GameMode_t::commercial && W_CheckNumForName(c"map01".as_ptr()) < 0 {
@@ -118,7 +118,7 @@ pub fn D_ProcessEvents() {
 //  draw current display, possibly wiping it from the previous
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
-pub static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
+pub(crate) static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
 
 fn D_Display() {
 	unsafe {
@@ -349,7 +349,7 @@ pub(crate) fn D_AdvanceDemo() {
 
 // This cycles through the demo sequences.
 // FIXME - version dependend demo numbers?
-pub fn D_DoAdvanceDemo() {
+pub(crate) fn D_DoAdvanceDemo() {
 	unsafe {
 		players[consoleplayer].playerstate = playerstate_t::PST_LIVE; // not reborn
 		advancedemo = false;
@@ -427,7 +427,7 @@ pub(crate) fn D_StartTitle() {
 }
 
 //      print title for every printed line
-pub static mut title: [c_char; 128] = [0; 128];
+pub(crate) static mut title: [c_char; 128] = [0; 128];
 
 // D_AddFile
 fn D_AddFile(file: *const c_char) {
@@ -685,7 +685,7 @@ macro_rules! savegamename {
 
 // D_DoomMain
 #[allow(static_mut_refs)]
-pub fn D_DoomMain() {
+pub(crate) fn D_DoomMain() {
 	unsafe {
 		FindResponseFile();
 

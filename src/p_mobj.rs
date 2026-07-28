@@ -107,173 +107,173 @@ use crate::{
 // Misc. mobj flags
 
 // Call P_SpecialThing when touched.
-pub const MF_SPECIAL: u32 = 1;
+pub(crate) const MF_SPECIAL: u32 = 1;
 // Blocks.
-pub const MF_SOLID: u32 = 2;
+pub(crate) const MF_SOLID: u32 = 2;
 // Can be hit.
-pub const MF_SHOOTABLE: u32 = 4;
+pub(crate) const MF_SHOOTABLE: u32 = 4;
 // Don't use the sector links (invisible but touchable).
-pub const MF_NOSECTOR: u32 = 8;
+pub(crate) const MF_NOSECTOR: u32 = 8;
 // Don't use the blocklinks (inert but displayable)
-pub const MF_NOBLOCKMAP: u32 = 16;
+pub(crate) const MF_NOBLOCKMAP: u32 = 16;
 
 // Not to be activated by sound, deaf monster.
-pub const MF_AMBUSH: u32 = 32;
+pub(crate) const MF_AMBUSH: u32 = 32;
 // Will try to attack right back.
-pub const MF_JUSTHIT: u32 = 64;
+pub(crate) const MF_JUSTHIT: u32 = 64;
 // Will take at least one step before attacking.
-pub const MF_JUSTATTACKED: u32 = 128;
+pub(crate) const MF_JUSTATTACKED: u32 = 128;
 // On level spawning (initial position),
 //  hang from ceiling instead of stand on floor.
-pub const MF_SPAWNCEILING: u32 = 256;
+pub(crate) const MF_SPAWNCEILING: u32 = 256;
 // Don't apply gravity (every tic),
 //  that is, object will float, keeping current height
 //  or changing it actively.
-pub const MF_NOGRAVITY: u32 = 512;
+pub(crate) const MF_NOGRAVITY: u32 = 512;
 
 // Movement flags.
 // This allows jumps from high places.
-pub const MF_DROPOFF: u32 = 0x400;
+pub(crate) const MF_DROPOFF: u32 = 0x400;
 // For players, will pick up items.
-pub const MF_PICKUP: u32 = 0x800;
+pub(crate) const MF_PICKUP: u32 = 0x800;
 // Player cheat. ???
-pub const MF_NOCLIP: u32 = 0x1000;
-// Player: keep info about sliding along walls.
-pub const MF_SLIDE: u32 = 0x2000;
+pub(crate) const MF_NOCLIP: u32 = 0x1000;
+// // Player: keep info about sliding along walls.
+// pub(crate) const MF_SLIDE: u32 = 0x2000;
 // Allow moves to any height, no gravity.
 // For active floaters, e.g. cacodemons, pain elementals.
-pub const MF_FLOAT: u32 = 0x4000;
+pub(crate) const MF_FLOAT: u32 = 0x4000;
 // Don't cross lines
 //   ??? or look at heights on teleport.
-pub const MF_TELEPORT: u32 = 0x8000;
+pub(crate) const MF_TELEPORT: u32 = 0x8000;
 // Don't hit same species, explode on block.
 // Player missiles as well as fireballs of various kinds.
-pub const MF_MISSILE: u32 = 0x10000;
+pub(crate) const MF_MISSILE: u32 = 0x10000;
 // Dropped by a demon, not level spawned.
 // E.g. ammo clips dropped by dying former humans.
-pub const MF_DROPPED: u32 = 0x20000;
+pub(crate) const MF_DROPPED: u32 = 0x20000;
 // Use fuzzy draw (shadow demons or spectres),
 //  temporary player invisibility powerup.
-pub const MF_SHADOW: u32 = 0x40000;
+pub(crate) const MF_SHADOW: u32 = 0x40000;
 // Flag: don't bleed when shot (use puff),
 //  barrels and shootable furniture shall not bleed.
-pub const MF_NOBLOOD: u32 = 0x80000;
+pub(crate) const MF_NOBLOOD: u32 = 0x80000;
 // Don't stop moving halfway off a step,
 //  that is, have dead bodies slide down all the way.
-pub const MF_CORPSE: u32 = 0x100000;
+pub(crate) const MF_CORPSE: u32 = 0x100000;
 // Floating to a height for a move, ???
 //  don't auto float to target's height.
-pub const MF_INFLOAT: u32 = 0x200000;
+pub(crate) const MF_INFLOAT: u32 = 0x200000;
 
 // On kill, count this enemy object
 //  towards intermission kill total.
 // Happy gathering.
-pub const MF_COUNTKILL: u32 = 0x400000;
+pub(crate) const MF_COUNTKILL: u32 = 0x400000;
 
 // On picking up, count this item object
 //  towards intermission item total.
-pub const MF_COUNTITEM: u32 = 0x800000;
+pub(crate) const MF_COUNTITEM: u32 = 0x800000;
 
 // Special handling: skull in flight.
 // Neither a cacodemon nor a missile.
-pub const MF_SKULLFLY: u32 = 0x1000000;
+pub(crate) const MF_SKULLFLY: u32 = 0x1000000;
 
 // Don't spawn this object
 //  in death match mode (e.g. key cards).
-pub const MF_NOTDMATCH: u32 = 0x2000000;
+pub(crate) const MF_NOTDMATCH: u32 = 0x2000000;
 
 // Player sprites in multiplayer modes are modified
 //  using an internal color lookup table for re-indexing.
 // If 0x4 0x8 or 0xc,
 //  use a translation table for player colormaps
-pub const MF_TRANSLATION: u32 = 0xc000000;
+pub(crate) const MF_TRANSLATION: u32 = 0xc000000;
 // Hmm ???.
-pub const MF_TRANSSHIFT: u32 = 26;
+pub(crate) const MF_TRANSSHIFT: u32 = 26;
 
 // Map Object definition.
 #[repr(C)]
-pub struct mobj_t {
+pub(crate) struct mobj_t {
 	// List: thinker links.
-	pub thinker: thinker_t,
+	pub(crate) thinker: thinker_t,
 
 	// Info for drawing: position.
-	pub x: fixed_t,
-	pub y: fixed_t,
-	pub z: fixed_t,
+	pub(crate) x: fixed_t,
+	pub(crate) y: fixed_t,
+	pub(crate) z: fixed_t,
 
 	// More list: links in sector (if needed)
-	pub snext: *mut mobj_t,
-	pub sprev: *mut mobj_t,
+	pub(crate) snext: *mut mobj_t,
+	pub(crate) sprev: *mut mobj_t,
 
 	//More drawing info: to determine current sprite.
-	pub angle: angle_t,      // orientation
-	pub sprite: spritenum_t, // used to find patch_t and flip value
-	pub frame: usize,        // might be ORed with FF_FULLBRIGHT
+	pub(crate) angle: angle_t,      // orientation
+	pub(crate) sprite: spritenum_t, // used to find patch_t and flip value
+	pub(crate) frame: usize,        // might be ORed with FF_FULLBRIGHT
 
 	// Interaction info, by BLOCKMAP.
 	// Links in blocks (if needed).
-	pub bnext: *mut mobj_t,
-	pub bprev: *mut mobj_t,
+	pub(crate) bnext: *mut mobj_t,
+	pub(crate) bprev: *mut mobj_t,
 
-	pub subsector: *mut subsector_t,
+	pub(crate) subsector: *mut subsector_t,
 
 	// The closest interval over all contacted Sectors.
-	pub floorz: fixed_t,
-	pub ceilingz: fixed_t,
+	pub(crate) floorz: fixed_t,
+	pub(crate) ceilingz: fixed_t,
 
 	// For movement checking.
-	pub radius: fixed_t,
-	pub height: fixed_t,
+	pub(crate) radius: fixed_t,
+	pub(crate) height: fixed_t,
 
 	// Momentums, used to update position.
-	pub momx: fixed_t,
-	pub momy: fixed_t,
-	pub momz: fixed_t,
+	pub(crate) momx: fixed_t,
+	pub(crate) momy: fixed_t,
+	pub(crate) momz: fixed_t,
 
 	// If == validcount, already checked.
-	pub validcount: i32,
+	pub(crate) validcount: i32,
 
-	pub ty: mobjtype_t,
-	pub info: *mut mobjinfo_t, // &mobjinfo[mobj->type]
+	pub(crate) ty: mobjtype_t,
+	pub(crate) info: *mut mobjinfo_t, // &mobjinfo[mobj->type]
 
-	pub tics: i32, // state tic counter
-	pub state: *mut state_t,
-	pub flags: u32,
-	pub health: i32,
+	pub(crate) tics: i32, // state tic counter
+	pub(crate) state: *mut state_t,
+	pub(crate) flags: u32,
+	pub(crate) health: i32,
 
 	// Movement direction, movement generation (zig-zagging).
-	pub movedir: dirtype_t, // 0-7
-	pub movecount: i32,     // when 0, select a new dir
+	pub(crate) movedir: dirtype_t, // 0-7
+	pub(crate) movecount: i32,     // when 0, select a new dir
 
 	// Thing being chased/attacked (or NULL),
 	// also the originator for missiles.
-	pub target: *mut mobj_t,
+	pub(crate) target: *mut mobj_t,
 
 	// Reaction time: if non 0, don't attack yet.
 	// Used by player to freeze a bit after teleporting.
-	pub reactiontime: i32,
+	pub(crate) reactiontime: i32,
 
 	// If >0, the target will be chased
 	// no matter what (even if shot)
-	pub threshold: i32,
+	pub(crate) threshold: i32,
 
 	// Additional info record for player avatars only.
 	// Only valid if type == MT_PLAYER
-	pub player: *mut player_t,
+	pub(crate) player: *mut player_t,
 
 	// Player number last looked for.
-	pub lastlook: i32,
+	pub(crate) lastlook: i32,
 
 	// For nightmare respawn.
-	pub spawnpoint: mapthing_t,
+	pub(crate) spawnpoint: mapthing_t,
 
 	// Thing being chased/attacked for tracers.
-	pub tracer: *mut mobj_t,
+	pub(crate) tracer: *mut mobj_t,
 }
 
 // P_SetMobjState
 // Returns true if the mobj is still present.
-pub fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> bool {
+pub(crate) fn P_SetMobjState(mobj: &mut mobj_t, mut state: statenum_t) -> bool {
 	loop {
 		if state == statenum_t::S_NULL {
 			mobj.state = null_mut();
@@ -601,7 +601,7 @@ fn P_NightmareRespawn(mobj: &mut mobj_t) {
 }
 
 // P_MobjThinker
-pub fn P_MobjThinker(mobj: &mut mobj_t) {
+pub(crate) fn P_MobjThinker(mobj: &mut mobj_t) {
 	unsafe {
 		// momentum movement
 		if mobj.momx != 0 || mobj.momy != 0 || mobj.flags & MF_SKULLFLY != 0 {
@@ -660,7 +660,7 @@ pub fn P_MobjThinker(mobj: &mut mobj_t) {
 }
 
 // P_SpawnMobj
-pub fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut mobj_t {
+pub(crate) fn P_SpawnMobj(x: fixed_t, y: fixed_t, z: fixed_t, ty: mobjtype_t) -> *mut mobj_t {
 	unsafe {
 		let mobj = Z_Malloc(size_of::<mobj_t>(), PU_LEVEL, null_mut()).cast::<mobj_t>();
 		ptr::write_bytes(mobj, 0, 1);
@@ -719,7 +719,7 @@ static mut itemrespawntime: [usize; ITEMQUESIZE] = [0; ITEMQUESIZE];
 pub(crate) static mut iquehead: usize = 0;
 pub(crate) static mut iquetail: usize = 0;
 
-pub fn P_RemoveMobj(mobj: &mut mobj_t) {
+pub(crate) fn P_RemoveMobj(mobj: &mut mobj_t) {
 	if mobj.flags & MF_SPECIAL != 0
 		&& mobj.flags & MF_DROPPED == 0
 		&& mobj.ty != mobjtype_t::MT_INV
@@ -972,7 +972,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 // GAME SPAWN FUNCTIONS
 
 // P_SpawnPuff
-pub fn P_SpawnPuff(x: fixed_t, y: fixed_t, mut z: fixed_t) {
+pub(crate) fn P_SpawnPuff(x: fixed_t, y: fixed_t, mut z: fixed_t) {
 	unsafe {
 		z += (P_Random() - P_Random()) << 10;
 
@@ -992,7 +992,7 @@ pub fn P_SpawnPuff(x: fixed_t, y: fixed_t, mut z: fixed_t) {
 }
 
 // P_SpawnBlood
-pub fn P_SpawnBlood(x: fixed_t, y: fixed_t, mut z: fixed_t, damage: i32) {
+pub(crate) fn P_SpawnBlood(x: fixed_t, y: fixed_t, mut z: fixed_t, damage: i32) {
 	unsafe {
 		z += (P_Random() - P_Random()) << 10;
 		let th = &mut *P_SpawnMobj(x, y, z, mobjtype_t::MT_BLOOD);
@@ -1032,7 +1032,11 @@ fn P_CheckMissileSpawn(th: &mut mobj_t) {
 }
 
 // P_SpawnMissile
-pub fn P_SpawnMissile(source: &mut mobj_t, dest: &mut mobj_t, ty: mobjtype_t) -> *mut mobj_t {
+pub(crate) fn P_SpawnMissile(
+	source: &mut mobj_t,
+	dest: &mut mobj_t,
+	ty: mobjtype_t,
+) -> *mut mobj_t {
 	unsafe {
 		let th = &mut *P_SpawnMobj(source.x, source.y, source.z + 4 * 8 * FRACUNIT, ty);
 
@@ -1071,7 +1075,7 @@ pub fn P_SpawnMissile(source: &mut mobj_t, dest: &mut mobj_t, ty: mobjtype_t) ->
 
 // P_SpawnPlayerMissile
 // Tries to aim at a nearby monster
-pub fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
+pub(crate) fn P_SpawnPlayerMissile(source: &mut mobj_t, ty: mobjtype_t) {
 	unsafe {
 		// see which target is to be aimed at
 		let mut an = source.angle;

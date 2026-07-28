@@ -34,91 +34,90 @@ use crate::{
 
 // Lighting constants.
 // Now why not 32 levels here?
-pub const LIGHTLEVELS: usize = 16;
-pub const LIGHTSEGSHIFT: usize = 4;
+pub(crate) const LIGHTLEVELS: usize = 16;
+pub(crate) const LIGHTSEGSHIFT: usize = 4;
 
-pub const MAXLIGHTSCALE: usize = 48;
-pub const LIGHTSCALESHIFT: i32 = 12;
-pub const MAXLIGHTZ: usize = 128;
-pub const LIGHTZSHIFT: i32 = 20;
+pub(crate) const MAXLIGHTSCALE: usize = 48;
+pub(crate) const LIGHTSCALESHIFT: i32 = 12;
+pub(crate) const MAXLIGHTZ: usize = 128;
+pub(crate) const LIGHTZSHIFT: i32 = 20;
 
 const NUMCOLORMAPS: usize = 32;
 
 // Fineangles in the SCREENWIDTH wide window.
 const FIELDOFVIEW: usize = 2048;
 
-pub static mut viewangleoffset: i32 = 0;
+pub(crate) static mut viewangleoffset: i32 = 0;
 
 // increment every time a check is made
-pub static mut validcount: i32 = 1;
+pub(crate) static mut validcount: i32 = 1;
 
-pub static mut fixedcolormap: *mut lighttable_t = null_mut();
+pub(crate) static mut fixedcolormap: *mut lighttable_t = null_mut();
 
-pub static mut centerx: usize = 0;
-pub static mut centery: usize = 0;
+pub(crate) static mut centerx: usize = 0;
+pub(crate) static mut centery: usize = 0;
 
-pub static mut centerxfrac: fixed_t = 0;
-pub static mut centeryfrac: fixed_t = 0;
-pub static mut projection: fixed_t = 0;
+pub(crate) static mut centerxfrac: fixed_t = 0;
+pub(crate) static mut centeryfrac: fixed_t = 0;
+pub(crate) static mut projection: fixed_t = 0;
 
 // just for profiling purposes
-pub static mut framecount: i32 = 0;
+pub(crate) static mut framecount: i32 = 0;
 
-pub static mut sscount: i32 = 0;
-pub static mut linecount: i32 = 0;
-pub static mut loopcount: i32 = 0;
+pub(crate) static mut sscount: i32 = 0;
 
-pub static mut viewx: fixed_t = 0;
-pub static mut viewy: fixed_t = 0;
-pub static mut viewz: fixed_t = 0;
+pub(crate) static mut viewx: fixed_t = 0;
+pub(crate) static mut viewy: fixed_t = 0;
+pub(crate) static mut viewz: fixed_t = 0;
 
-pub static mut viewangle: angle_t = Wrapping(0);
+pub(crate) static mut viewangle: angle_t = Wrapping(0);
 
-pub static mut viewcos: fixed_t = 0;
-pub static mut viewsin: fixed_t = 0;
+pub(crate) static mut viewcos: fixed_t = 0;
+pub(crate) static mut viewsin: fixed_t = 0;
 
-pub static mut viewplayer: *mut player_t = null_mut();
+pub(crate) static mut viewplayer: *mut player_t = null_mut();
 
 // 0 = high, 1 = low
-pub static mut detailshift: i32 = 0;
+pub(crate) static mut detailshift: i32 = 0;
 
 // precalculated math tables
-pub static mut clipangle: angle_t = Wrapping(0);
+pub(crate) static mut clipangle: angle_t = Wrapping(0);
 
 // The viewangletox[viewangle + FINEANGLES/4] lookup
 // maps the visible view angles to screen X coordinates,
 // flattening the arc to a flat projection plane.
 // There will be many angles mapped to the same X.
-pub static mut viewangletox: [u32; FINEANGLES / 2] = [0; FINEANGLES / 2];
+pub(crate) static mut viewangletox: [u32; FINEANGLES / 2] = [0; FINEANGLES / 2];
 
 // The xtoviewangleangle[] table maps a screen pixel
 // to the lowest viewangle that maps back to x ranges
 // from clipangle to -clipangle.
-pub static mut xtoviewangle: [angle_t; SCREENWIDTH + 1] = [Wrapping(0); SCREENWIDTH + 1];
+pub(crate) static mut xtoviewangle: [angle_t; SCREENWIDTH + 1] = [Wrapping(0); SCREENWIDTH + 1];
 
-pub static mut scalelight: [[*mut lighttable_t; MAXLIGHTSCALE]; LIGHTLEVELS] =
+pub(crate) static mut scalelight: [[*mut lighttable_t; MAXLIGHTSCALE]; LIGHTLEVELS] =
 	[[null_mut(); MAXLIGHTSCALE]; LIGHTLEVELS];
-pub static mut scalelightfixed: [*mut lighttable_t; MAXLIGHTSCALE] = [null_mut(); MAXLIGHTSCALE];
-pub static mut zlight: [[*mut lighttable_t; MAXLIGHTZ]; LIGHTLEVELS] =
+pub(crate) static mut scalelightfixed: [*mut lighttable_t; MAXLIGHTSCALE] =
+	[null_mut(); MAXLIGHTSCALE];
+pub(crate) static mut zlight: [[*mut lighttable_t; MAXLIGHTZ]; LIGHTLEVELS] =
 	[[null_mut(); MAXLIGHTZ]; LIGHTLEVELS];
 
 // bumped light from gun blasts
-pub static mut extralight: i32 = 0;
+pub(crate) static mut extralight: i32 = 0;
 
-pub static mut colfunc: unsafe fn() = R_DrawColumn;
-pub static mut basecolfunc: unsafe fn() = R_DrawColumn;
-pub static mut fuzzcolfunc: unsafe fn() = R_DrawColumn;
-pub static mut transcolfunc: unsafe fn() = R_DrawColumn;
-pub static mut spanfunc: unsafe fn() = R_DrawColumn;
+pub(crate) static mut colfunc: unsafe fn() = R_DrawColumn;
+pub(crate) static mut basecolfunc: unsafe fn() = R_DrawColumn;
+pub(crate) static mut fuzzcolfunc: unsafe fn() = R_DrawColumn;
+pub(crate) static mut transcolfunc: unsafe fn() = R_DrawColumn;
+pub(crate) static mut spanfunc: unsafe fn() = R_DrawColumn;
 
 #[derive(Debug, Clone, Copy)]
-pub enum Side {
+pub(crate) enum Side {
 	Front,
 	Back,
 }
 
 impl Side {
-	pub fn flip(self) -> Self {
+	pub(crate) fn flip(self) -> Self {
 		match self {
 			Self::Front => Self::Back,
 			Self::Back => Self::Front,
@@ -141,7 +140,7 @@ impl<T> Index<Side> for [T; 2] {
 // Traverse BSP (sub) tree,
 //  check point against partition plane.
 // Returns side 0 (front) or 1 (back).
-pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &node_t) -> Side {
+pub(crate) fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &node_t) -> Side {
 	if node.dx == 0 {
 		if x <= node.x && node.dy > 0 || x > node.x && node.dy < 0 {
 			return Side::Back;
@@ -177,7 +176,7 @@ pub fn R_PointOnSide(x: fixed_t, y: fixed_t, node: &node_t) -> Side {
 	if right >= left { Side::Back } else { Side::Front }
 }
 
-pub fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: &mut seg_t) -> i32 {
+pub(crate) fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: &mut seg_t) -> i32 {
 	unsafe {
 		let lx = (*line.v1).x;
 		let ly = (*line.v1).y;
@@ -215,7 +214,7 @@ pub fn R_PointOnSegSide(x: fixed_t, y: fixed_t, line: &mut seg_t) -> i32 {
 //  the y (<=x) is scaled and divided by x to get a
 //  tangent (slope) value which is looked up in the
 //  tantoangle[] table.
-pub fn R_PointToAngle(mut x: fixed_t, mut y: fixed_t) -> angle_t {
+pub(crate) fn R_PointToAngle(mut x: fixed_t, mut y: fixed_t) -> angle_t {
 	unsafe {
 		x -= viewx;
 		y -= viewy;
@@ -282,7 +281,7 @@ pub fn R_PointToAngle(mut x: fixed_t, mut y: fixed_t) -> angle_t {
 	}
 }
 
-pub fn R_PointToAngle2(x1: fixed_t, y1: fixed_t, x2: fixed_t, y2: fixed_t) -> angle_t {
+pub(crate) fn R_PointToAngle2(x1: fixed_t, y1: fixed_t, x2: fixed_t, y2: fixed_t) -> angle_t {
 	unsafe {
 		viewx = x1;
 		viewy = y1;
@@ -291,7 +290,7 @@ pub fn R_PointToAngle2(x1: fixed_t, y1: fixed_t, x2: fixed_t, y2: fixed_t) -> an
 	}
 }
 
-pub fn R_PointToDist(x: fixed_t, y: fixed_t) -> fixed_t {
+pub(crate) fn R_PointToDist(x: fixed_t, y: fixed_t) -> fixed_t {
 	unsafe {
 		let mut dx = fixed_t::abs(x - viewx);
 		let mut dy = fixed_t::abs(y - viewy);
@@ -318,7 +317,7 @@ fn R_InitPointToAngle() {
 //  for the current line (horizontal span)
 //  at the given angle.
 // rw_distance must be calculated first.
-pub fn R_ScaleFromGlobalAngle(visangle: angle_t) -> fixed_t {
+pub(crate) fn R_ScaleFromGlobalAngle(visangle: angle_t) -> fixed_t {
 	unsafe {
 		let anglea = ANG90 + (visangle - viewangle);
 		let angleb = ANG90 + (visangle - rw_normalangle);
@@ -423,11 +422,11 @@ fn R_InitLightTables() {
 // Do not really change anything here,
 //  because it might be in the middle of a refresh.
 // The change will take effect next refresh.
-pub static mut setsizeneeded: bool = false;
+pub(crate) static mut setsizeneeded: bool = false;
 static mut setblocks: usize = 0;
 static mut setdetail: i32 = 0;
 
-pub fn R_SetViewSize(blocks: usize, detail: i32) {
+pub(crate) fn R_SetViewSize(blocks: usize, detail: i32) {
 	unsafe {
 		setsizeneeded = true;
 		setblocks = blocks;
@@ -436,7 +435,7 @@ pub fn R_SetViewSize(blocks: usize, detail: i32) {
 }
 
 // R_ExecuteSetViewSize
-pub fn R_ExecuteSetViewSize() {
+pub(crate) fn R_ExecuteSetViewSize() {
 	unsafe {
 		setsizeneeded = false;
 
@@ -519,7 +518,7 @@ pub fn R_ExecuteSetViewSize() {
 }
 
 // R_Init
-pub fn R_Init() {
+pub(crate) fn R_Init() {
 	unsafe {
 		R_InitData();
 		print!("\nR_InitData");
@@ -544,7 +543,7 @@ pub fn R_Init() {
 }
 
 // R_PointInSubsector
-pub fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t {
+pub(crate) fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t {
 	unsafe {
 		// single subsector is a special case
 		if numnodes == 0 {
@@ -600,7 +599,7 @@ fn R_SetupFrame(player: &mut player_t) {
 }
 
 // R_RenderView
-pub fn R_RenderPlayerView(player: &mut player_t) {
+pub(crate) fn R_RenderPlayerView(player: &mut player_t) {
 	unsafe {
 		R_SetupFrame(player);
 

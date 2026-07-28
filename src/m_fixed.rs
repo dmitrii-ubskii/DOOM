@@ -2,17 +2,17 @@
 
 use crate::i_system::I_Error;
 
-pub type fixed_t = i32;
+pub(crate) type fixed_t = i32;
 
-pub const FRACBITS: i32 = 16;
-pub const FRACUNIT: i32 = 1 << FRACBITS;
+pub(crate) const FRACBITS: i32 = 16;
+pub(crate) const FRACUNIT: i32 = 1 << FRACBITS;
 
-pub fn FixedMul(a: fixed_t, b: fixed_t) -> fixed_t {
+pub(crate) fn FixedMul(a: fixed_t, b: fixed_t) -> fixed_t {
 	fixed_t::try_from((i64::from(a) * i64::from(b)) >> FRACBITS).unwrap()
 }
 
 /// FixedDiv, C version.
-pub fn FixedDiv(a: fixed_t, b: fixed_t) -> fixed_t {
+pub(crate) fn FixedDiv(a: fixed_t, b: fixed_t) -> fixed_t {
 	if (a.abs() >> 14) >= b.abs() {
 		return if (a ^ b) < 0 { i32::MIN } else { i32::MAX };
 	}

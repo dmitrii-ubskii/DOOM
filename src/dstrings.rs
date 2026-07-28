@@ -1,17 +1,17 @@
 use std::ffi::{CStr, c_char};
 
-pub const SAVEGAMENAME: *const c_char = c"doomsav".as_ptr();
+pub(crate) const SAVEGAMENAME: *const c_char = c"doomsav".as_ptr();
 
 pub(crate) const NUM_QUITMESSAGES: usize = 22;
 
 #[repr(transparent)]
 #[derive(Copy, Clone)]
-pub struct Smuggle<T>(pub *const T);
+pub(crate) struct Smuggle<T>(pub(crate) *const T);
 
 unsafe impl<T> Sync for Smuggle<T> {}
 
 impl<T> Smuggle<T> {
-	pub fn u(self) -> *const T {
+	pub(crate) fn u(self) -> *const T {
 		self.0
 	}
 }
