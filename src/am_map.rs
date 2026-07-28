@@ -599,7 +599,7 @@ fn AM_maxOutWindowScale() {
 
 // Handle events (user inputs) in automap mode
 #[allow(static_mut_refs)]
-pub(crate) fn AM_Responder(ev: *mut event_t) -> boolean {
+pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 	unsafe {
 		static mut cheatstate: i32 = 0;
 		static mut bigstate: i32 = 0;
@@ -738,7 +738,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> boolean {
 			}
 		}
 
-		boolean::from(rc)
+		rc
 	}
 }
 

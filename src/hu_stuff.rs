@@ -510,7 +510,7 @@ pub(crate) fn HU_Ticker() {
 							c = *shiftxform.wrapping_add(usize::from(c));
 						}
 						let rc = HUlib_keyInIText(&mut w_inputbuffer[i], c);
-						if rc != 0 && c == KEY_ENTER {
+						if rc && c == KEY_ENTER {
 							if w_inputbuffer[i].l.len != 0
 								&& (chat_dest[i] == c_char::try_from(consoleplayer).unwrap() + 1
 									|| chat_dest[i] == i8::try_from(HU_BROADCAST).unwrap())
@@ -570,7 +570,7 @@ pub(crate) fn HU_dequeueChatChar() -> c_char {
 }
 
 #[allow(static_mut_refs)]
-pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
+pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 	unsafe {
 		static mut lastmessage: [c_char; HU_MAXLINELENGTH + 1] = [0; HU_MAXLINELENGTH + 1];
 		static mut shiftdown: bool = false;
@@ -591,24 +591,24 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 
 		if ev.data1 == i32::from(KEY_RSHIFT) {
 			shiftdown = ev.ty == evtype_t::ev_keydown;
-			return 0;
+			return false;
 		} else if ev.data1 == i32::from(KEY_RALT) || ev.data1 == i32::from(KEY_LALT) {
 			altdown = ev.ty == evtype_t::ev_keydown;
-			return 0;
+			return false;
 		}
 
 		if ev.ty != evtype_t::ev_keydown {
-			return 0;
+			return false;
 		}
 
-		let mut eatkey = 0;
+		let mut eatkey = false;
 		if chat_on == 0 {
 			if ev.data1 == i32::from(HU_MSGREFRESH) {
 				message_on = 1;
 				message_counter = HU_MSGTIMEOUT;
-				eatkey = 1;
+				eatkey = true;
 			} else if netgame && ev.data1 == i32::from(HU_INPUTTOGGLE) {
-				eatkey = 1;
+				eatkey = true;
 				chat_on = 1;
 				HUlib_resetIText(&mut w_chat);
 				HU_queueChatChar(c_char::try_from(HU_BROADCAST).unwrap());
@@ -616,7 +616,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 				for i in 0..MAXPLAYERS {
 					if ev.data1 == i32::from(destination_keys[i]) {
 						if playeringame[i] && i != consoleplayer {
-							eatkey = 1;
+							eatkey = true;
 							chat_on = 1;
 							HUlib_resetIText(&mut w_chat);
 							HU_queueChatChar(c_char::try_from(i).unwrap() + 1);
@@ -644,7 +644,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 			if altdown {
 				c -= b'0';
 				if c > 9 {
-					return 0;
+					return false;
 				}
 				// fprintf(stderr, "got here\n");
 				let Smuggle(mut macromessage) = chat_macros[usize::from(c)];
@@ -663,7 +663,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 				chat_on = 0;
 				libc::strcpy(lastmessage.as_mut_ptr(), chat_macros[usize::from(c)].u());
 				(*plr).message = lastmessage.as_mut_ptr();
-				eatkey = 1;
+				eatkey = true;
 			} else {
 				// if french {
 				// 	c = ForeignTranslation(c);
@@ -672,7 +672,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> boolean {
 					c = *shiftxform.wrapping_add(usize::from(c));
 				}
 				eatkey = HUlib_keyInIText(&mut w_chat, c);
-				if eatkey != 0 {
+				if eatkey {
 					// static unsigned char buf[20]; // DEBUG
 					HU_queueChatChar(c_char::try_from(c).unwrap());
 

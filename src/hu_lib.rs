@@ -292,16 +292,16 @@ pub(crate) fn HUlib_resetIText(it: &mut hu_itext_t) {
 
 // wrapper function for handling general keyed input.
 // returns true if it ate the key
-pub(crate) fn HUlib_keyInIText(it: &mut hu_itext_t, ch: u8) -> boolean {
+pub(crate) fn HUlib_keyInIText(it: &mut hu_itext_t, ch: u8) -> bool {
 	if (b' '..=b'_').contains(&ch) {
 		HUlib_addCharToTextLine(&mut it.l, c_char::try_from(ch).unwrap());
 	} else if ch == KEY_BACKSPACE {
 		HUlib_delCharFromIText(it);
 	} else if ch != KEY_ENTER {
-		return 0; // did not eat key
+		return false; // did not eat key
 	}
 
-	1 // ate the key
+	true // ate the key
 }
 
 pub(crate) fn HUlib_drawIText(it: &mut hu_itext_t) {

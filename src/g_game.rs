@@ -462,7 +462,7 @@ fn G_DoLoadLevel() {
 
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
-pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
+pub(crate) fn G_Responder(ev: &mut event_t) -> bool {
 	unsafe {
 		// allow spy mode changes even during the demo
 		if gamestate == gamestate_t::GS_LEVEL
@@ -480,7 +480,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 					break;
 				}
 			}
-			return 1;
+			return true;
 		}
 
 		// any other key pops up menu if in demos
@@ -493,43 +493,43 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 				|| (ev.ty == evtype_t::ev_joystick && ev.data1 != 0)
 			{
 				M_StartControlPanel();
-				return 1;
+				return true;
 			}
-			return 0;
+			return false;
 		}
 
 		if gamestate == gamestate_t::GS_LEVEL {
-			if HU_Responder(ev) != 0 {
-				return 1; // chat ate the event
+			if HU_Responder(ev) {
+				return true; // chat ate the event
 			}
 			if ST_Responder(ev) {
-				return 1; // status window ate it
+				return true; // status window ate it
 			}
-			if AM_Responder(ev) != 0 {
-				return 1; // automap ate it
+			if AM_Responder(ev) {
+				return true; // automap ate it
 			}
 		}
 
 		if gamestate == gamestate_t::GS_FINALE && F_Responder(ev) {
-			return 1; // finale ate the event
+			return true; // finale ate the event
 		}
 
 		match ev.ty {
 			evtype_t::ev_keydown => {
 				if ev.data1 == i32::from(KEY_PAUSE) {
 					sendpause = true;
-					return 1;
+					return true;
 				}
 				if ev.data1 < i32::try_from(NUMKEYS).unwrap() {
 					gamekeydown[usize::try_from(ev.data1).unwrap()] = true;
 				}
-				1 // eat key down events
+				true // eat key down events
 			}
 			evtype_t::ev_keyup => {
 				if ev.data1 < i32::try_from(NUMKEYS).unwrap() {
 					gamekeydown[usize::try_from(ev.data1).unwrap()] = false;
 				}
-				0 // always let key up events filter down
+				false // always let key up events filter down
 			}
 			evtype_t::ev_mouse => {
 				*mousebuttons.wrapping_add(0) = ev.data1 & 1 != 0;
@@ -537,7 +537,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 				*mousebuttons.wrapping_add(2) = ev.data1 & 4 != 0;
 				mousex = ev.data2 * (mouseSensitivity + 5) / 10;
 				mousey = ev.data3 * (mouseSensitivity + 5) / 10;
-				1 // eat events
+				true // eat events
 			}
 			evtype_t::ev_joystick => {
 				*joybuttons.wrapping_add(0) = ev.data1 & 1 != 0;
@@ -546,7 +546,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> boolean {
 				*joybuttons.wrapping_add(3) = ev.data1 & 8 != 0;
 				joyxmove = ev.data2;
 				joyymove = ev.data3;
-				1 // eat events
+				true // eat events
 			}
 		}
 	}
