@@ -7,11 +7,14 @@ use libc::memcpy;
 
 use crate::{
 	doomdata::{ML_DONTPEGBOTTOM, ML_DONTPEGTOP, ML_MAPPED},
+	i_system::I_Error,
 	m_fixed::{FRACBITS, FixedMul, fixed_t},
 	r_bsp::{backsector, curline, drawsegs, ds_p, frontsector, linedef, sidedef},
 	r_data::{R_GetColumn, textureheight, texturetranslation},
 	r_defs::{MAXDRAWSEGS, SIL_BOTH, SIL_BOTTOM, SIL_TOP, drawseg_t, lighttable_t},
-	r_draw::{dc_colormap, dc_iscale, dc_source, dc_texturemid, dc_x, dc_yh, dc_yl, viewheight},
+	r_draw::{
+		dc_colormap, dc_iscale, dc_source, dc_texturemid, dc_x, dc_yh, dc_yl, viewheight, viewwidth,
+	},
 	r_main::{
 		LIGHTLEVELS, LIGHTSCALESHIFT, LIGHTSEGSHIFT, MAXLIGHTSCALE, R_PointToDist,
 		R_ScaleFromGlobalAngle, centeryfrac, colfunc, extralight, fixedcolormap, scalelight,
@@ -344,6 +347,10 @@ pub fn R_StoreWallRange(start: u32, stop: u32) {
 		// don't overflow and crash
 		if ds_p == drawsegs.as_mut_ptr().wrapping_add(MAXDRAWSEGS) {
 			return;
+		}
+
+		if usize::try_from(start).unwrap() >= viewwidth || start > stop {
+			I_Error!(c"Bad R_RenderWallRange: %i to %i".as_ptr(), start, stop);
 		}
 
 		sidedef = (*curline).sidedef;
