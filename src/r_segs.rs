@@ -351,7 +351,7 @@ pub fn R_StoreWallRange(start: u32, stop: u32) {
 
 		// calculate rw_distance for scale calculation
 		rw_normalangle = (*curline).angle + ANG90;
-		let mut offsetangle = Wrapping(rw_normalangle.0.abs_diff(rw_angle1.0));
+		let mut offsetangle = Wrapping((rw_normalangle - rw_angle1).0.cast_signed().unsigned_abs());
 
 		if offsetangle > ANG90 {
 			offsetangle = ANG90;
