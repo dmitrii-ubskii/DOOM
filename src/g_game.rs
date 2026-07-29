@@ -1386,11 +1386,11 @@ pub(crate) fn G_BeginRecording() {
 		demo_p = demo_p.wrapping_add(1);
 		*demo_p = u8::try_from(deathmatch).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = u8::try_from(respawnparm).unwrap();
+		*demo_p = u8::from(respawnparm);
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = u8::try_from(fastparm).unwrap();
+		*demo_p = u8::from(fastparm);
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = u8::try_from(nomonsters).unwrap();
+		*demo_p = u8::from(nomonsters);
 		demo_p = demo_p.wrapping_add(1);
 		*demo_p = u8::try_from(consoleplayer).unwrap();
 		demo_p = demo_p.wrapping_add(1);
