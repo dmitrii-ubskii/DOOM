@@ -146,7 +146,7 @@ fn D_Display() {
 		// save the current screen if about to wipe
 		if gamestate != wipegamestate {
 			wipe = true;
-			wipe_StartScreen(0, 0, SCREENWIDTH, SCREENHEIGHT);
+			wipe_StartScreen();
 		} else {
 			wipe = false;
 		}
@@ -252,11 +252,11 @@ fn D_Display() {
 				}
 			}
 			wipestart = nowtime;
-			let done = wipe_ScreenWipe(wipe_Melt, 0, 0, SCREENWIDTH, SCREENHEIGHT, tics);
+			let done = wipe_ScreenWipe(wipe_Melt, SCREENWIDTH, SCREENHEIGHT, tics);
 			I_UpdateNoBlit();
 			M_Drawer(); // menu is drawn even on top of wipes
 			I_FinishUpdate(); // page flip or blit buffer
-			if done != 0 {
+			if done {
 				break;
 			}
 		}

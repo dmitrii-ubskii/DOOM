@@ -40,12 +40,12 @@ fn wipe_shittyColMajorXform(array: *mut i16, width: usize, height: usize) {
 	}
 }
 
-fn wipe_initColorXForm(width: usize, height: usize, _ticks: usize) -> i32 {
+fn wipe_initColorXForm(width: usize, height: usize, _ticks: usize) -> bool {
 	unsafe { memcpy(wipe_scr.cast(), wipe_scr_start.cast(), width * height) };
-	0
+	false
 }
 
-fn wipe_doColorXForm(width: usize, height: usize, ticks: usize) -> i32 {
+fn wipe_doColorXForm(width: usize, height: usize, ticks: usize) -> bool {
 	unsafe {
 		let mut changed = false;
 		let mut w = wipe_scr;
@@ -75,17 +75,17 @@ fn wipe_doColorXForm(width: usize, height: usize, ticks: usize) -> i32 {
 			e = e.wrapping_add(1);
 		}
 
-		i32::from(!changed)
+		!changed
 	}
 }
 
-fn wipe_exitColorXForm(_width: usize, _height: usize, _ticks: usize) -> i32 {
-	0
+fn wipe_exitColorXForm(_width: usize, _height: usize, _ticks: usize) -> bool {
+	false
 }
 
 static mut y: *mut i32 = null_mut();
 
-fn wipe_initMelt(width: usize, height: usize, _ticks: usize) -> i32 {
+fn wipe_initMelt(width: usize, height: usize, _ticks: usize) -> bool {
 	unsafe {
 		// copy start screen to main screen
 		memcpy(wipe_scr.cast(), wipe_scr_start.cast(), width * height);
@@ -110,15 +110,15 @@ fn wipe_initMelt(width: usize, height: usize, _ticks: usize) -> i32 {
 				y_slice[i] = -15;
 			}
 		}
-
-		0
 	}
+
+	false
 }
 
-fn wipe_doMelt(mut width: usize, height: usize, ticks: usize) -> i32 {
-	unsafe {
-		let mut done = true;
+fn wipe_doMelt(mut width: usize, height: usize, ticks: usize) -> bool {
+	let mut done = true;
 
+	unsafe {
 		width /= 2;
 		let y_slice = slice::from_raw_parts_mut(y, width);
 
@@ -156,43 +156,34 @@ fn wipe_doMelt(mut width: usize, height: usize, ticks: usize) -> i32 {
 				}
 			}
 		}
-
-		i32::from(done)
 	}
+
+	done
 }
 
-fn wipe_exitMelt(_width: usize, _height: usize, _ticks: usize) -> i32 {
+fn wipe_exitMelt(_width: usize, _height: usize, _ticks: usize) -> bool {
 	unsafe { Z_Free(y.cast()) };
-	0
+	false
 }
 
-pub(crate) fn wipe_StartScreen(_x: i32, _y: i32, _width: usize, _height: usize) -> i32 {
+pub(crate) fn wipe_StartScreen() {
 	unsafe {
 		wipe_scr_start = screens[2];
 		I_ReadScreen(wipe_scr_start);
 	}
-	0
 }
 
-pub(crate) fn wipe_EndScreen(x: usize, y_: usize, width: usize, height: usize) -> i32 {
+pub(crate) fn wipe_EndScreen(x: usize, y_: usize, width: usize, height: usize) {
 	unsafe {
 		wipe_scr_end = screens[3];
 		I_ReadScreen(wipe_scr_end);
 		V_DrawBlock(x, y_, 0, width, height, wipe_scr_start); // restore start scr.
 	}
-	0
 }
 
-pub(crate) fn wipe_ScreenWipe(
-	wipeno: usize,
-	_x: i32,
-	_y: i32,
-	width: usize,
-	height: usize,
-	ticks: usize,
-) -> i32 {
+pub(crate) fn wipe_ScreenWipe(wipeno: usize, width: usize, height: usize, ticks: usize) -> bool {
 	unsafe {
-		static mut wipes: [fn(usize, usize, usize) -> i32; 6] = [
+		static mut wipes: [fn(usize, usize, usize) -> bool; 6] = [
 			wipe_initColorXForm,
 			wipe_doColorXForm,
 			wipe_exitColorXForm,
@@ -215,11 +206,11 @@ pub(crate) fn wipe_ScreenWipe(
 		//  V_DrawBlock(x, y, 0, width, height, wipe_scr); // DEBUG
 
 		// final stuff
-		if rc != 0 {
+		if rc {
 			go = false;
 			wipes[wipeno * 3 + 2](width, height, ticks);
 		}
 
-		i32::from(!go)
+		!go
 	}
 }
