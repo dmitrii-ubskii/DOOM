@@ -8,13 +8,12 @@ use crate::{
 	doomdef::{SCREENHEIGHT, SCREENWIDTH},
 	i_system::{I_AllocLow, I_Error},
 	m_bbox::M_AddToBox,
-	m_fixed::fixed_t,
 	r_defs::{column_t, patch_t},
 };
 
 pub(crate) static mut screens: [*mut u8; 5] = [null_mut(); 5];
 
-static mut dirtybox: [i32; 4] = [0; 4];
+static mut dirtybox: [usize; 4] = [0; 4];
 
 // Now where did these came from?
 pub(crate) static gammatable: [[u8; 256]; 5] = [
@@ -105,12 +104,8 @@ pub(crate) static mut usegamma: usize = 0;
 pub(crate) fn V_MarkRect(x: usize, y: usize, width: usize, height: usize) {
 	#[allow(static_mut_refs)]
 	unsafe {
-		M_AddToBox(&mut dirtybox, fixed_t::try_from(x).unwrap(), fixed_t::try_from(y).unwrap());
-		M_AddToBox(
-			&mut dirtybox,
-			fixed_t::try_from(x + width - 1).unwrap(),
-			fixed_t::try_from(y + height - 1).unwrap(),
-		);
+		M_AddToBox(&mut dirtybox, x, y);
+		M_AddToBox(&mut dirtybox, x + width - 1, y + height - 1);
 	}
 }
 

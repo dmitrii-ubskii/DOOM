@@ -14,7 +14,7 @@ pub(crate) fn M_ClearBox(bbox: &mut [fixed_t; 4]) {
 	bbox[BOXLEFT] = i32::MAX;
 }
 
-pub(crate) fn M_AddToBox(bbox: &mut [fixed_t; 4], x: fixed_t, y: fixed_t) {
+pub(crate) fn M_AddToBox<T: Ord>(bbox: &mut [T; 4], x: T, y: T) {
 	if x < bbox[BOXLEFT] {
 		bbox[BOXLEFT] = x;
 	} else if x > bbox[BOXRIGHT] {
