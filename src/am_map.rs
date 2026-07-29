@@ -313,7 +313,7 @@ static mut marknums: [*mut patch_t; 10] = [null_mut(); 10]; // numbers used for 
 static mut markpoints: [mpoint_t; AM_NUMMARKPOINTS] = [mpoint_t { x: 0, y: 0 }; AM_NUMMARKPOINTS];
 static mut markpointnum: usize = 0; // next point to be assigned
 
-static mut followplayer: int = 1; // specifies whether to follow the player around
+static mut followplayer: bool = true; // specifies whether to follow the player around
 
 static mut cheat_amap_seq: [u8; 5] = [0xb2, 0x26, 0x26, 0x2e, 0xff];
 #[allow(static_mut_refs)]
@@ -348,7 +348,7 @@ fn AM_restoreScaleAndLoc() {
 	unsafe {
 		m_w = old_m_w;
 		m_h = old_m_h;
-		if followplayer == 0 {
+		if !followplayer {
 			m_x = old_m_x;
 			m_y = old_m_y;
 		} else {
@@ -414,7 +414,7 @@ fn AM_findMinMaxBoundaries() {
 fn AM_changeWindowLoc() {
 	unsafe {
 		if m_paninc.x == 0 || m_paninc.y == 0 {
-			followplayer = 0;
+			followplayer = false;
 			f_oldloc.x = i32::MAX;
 		}
 
@@ -618,7 +618,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 			match u8::try_from((*ev).data1).unwrap() {
 				AM_PANRIGHTKEY => {
 					// pan right
-					if followplayer == 0 {
+					if !followplayer {
 						m_paninc.x = FTOM(F_PANINC);
 					} else {
 						rc = false;
@@ -626,7 +626,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 				}
 				AM_PANLEFTKEY => {
 					// pan left
-					if followplayer == 0 {
+					if !followplayer {
 						m_paninc.x = -FTOM(F_PANINC);
 					} else {
 						rc = false;
@@ -634,7 +634,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 				}
 				AM_PANUPKEY => {
 					// pan up
-					if followplayer == 0 {
+					if !followplayer {
 						m_paninc.y = FTOM(F_PANINC);
 					} else {
 						rc = false;
@@ -642,7 +642,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 				}
 				AM_PANDOWNKEY => {
 					// pan down
-					if followplayer == 0 {
+					if !followplayer {
 						m_paninc.y = -FTOM(F_PANINC);
 					} else {
 						rc = false;
@@ -673,10 +673,9 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 					}
 				}
 				AM_FOLLOWKEY => {
-					followplayer = if followplayer == 0 { 1 } else { 0 };
+					followplayer = !followplayer;
 					f_oldloc.x = i32::MAX;
-					(*plr).message =
-						if followplayer != 0 { AMSTR_FOLLOWON } else { AMSTR_FOLLOWOFF };
+					(*plr).message = if followplayer { AMSTR_FOLLOWON } else { AMSTR_FOLLOWOFF };
 				}
 				AM_GRIDKEY => {
 					grid = if grid == 0 { 1 } else { 0 };
@@ -711,22 +710,22 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 			rc = false;
 			match u8::try_from((*ev).data1).unwrap() {
 				AM_PANRIGHTKEY => {
-					if followplayer == 0 {
+					if !followplayer {
 						m_paninc.x = 0;
 					}
 				}
 				AM_PANLEFTKEY => {
-					if followplayer == 0 {
+					if !followplayer {
 						m_paninc.x = 0;
 					}
 				}
 				AM_PANUPKEY => {
-					if followplayer == 0 {
+					if !followplayer {
 						m_paninc.y = 0;
 					}
 				}
 				AM_PANDOWNKEY => {
-					if followplayer == 0 {
+					if !followplayer {
 						m_paninc.y = 0;
 					}
 				}
@@ -781,7 +780,7 @@ pub(crate) fn AM_Ticker() {
 
 		amclock += 1;
 
-		if followplayer != 0 {
+		if followplayer {
 			AM_doFollowPlayer();
 		}
 
