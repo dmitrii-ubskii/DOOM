@@ -442,10 +442,10 @@ fn P_XYMovement(mo: &mut mobj_t) {
 		{
 			// if in a walking frame, stop moving
 			if !player.is_null()
-				&& usize::try_from((*(*player).mo).state.offset_from(states.as_mut_ptr())).unwrap()
+				&& usize::try_from((*player).mo().state.offset_from(states.as_mut_ptr())).unwrap()
 					< usize::from(statenum_t::S_PLAY_RUN1) + 4
 			{
-				P_SetMobjState(&mut *(*player).mo, statenum_t::S_PLAY);
+				P_SetMobjState((*player).mo_mut(), statenum_t::S_PLAY);
 			}
 
 			mo.momx = 0;

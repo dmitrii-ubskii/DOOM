@@ -632,7 +632,7 @@ fn R_DrawPSprite(psp: &pspdef_t) {
 fn R_DrawPlayerSprites() {
 	unsafe {
 		// get light level
-		let lightnum = ((*(*(*(*viewplayer).mo).subsector).sector).lightlevel >> LIGHTSEGSHIFT)
+		let lightnum = ((*(*(*viewplayer).mo().subsector).sector).lightlevel >> LIGHTSEGSHIFT)
 			+ i16::try_from(extralight).unwrap();
 
 		spritelights = if lightnum < 0 {

@@ -34,10 +34,8 @@ static mut onground: bool = false;
 // Moves the given origin along a given angle.
 fn P_Thrust(player: &mut player_t, mut angle: angle_t, mov: fixed_t) {
 	angle >>= ANGLETOFINESHIFT;
-	unsafe {
-		(*player.mo).momx += FixedMul(mov, finecos(angle.0));
-		(*player.mo).momy += FixedMul(mov, finesine[angle.0]);
-	}
+	player.mo_mut().momx += FixedMul(mov, finecos(angle.0));
+	player.mo_mut().momy += FixedMul(mov, finesine[angle.0]);
 }
 
 // P_CalcHeight
@@ -199,18 +197,18 @@ pub(crate) fn P_PlayerThink(player: &mut player_t) {
 	unsafe {
 		// fixme: do this in the cheat code
 		if player.cheats & CF_NOCLIP != 0 {
-			(*player.mo).flags |= MF_NOCLIP;
+			player.mo_mut().flags |= MF_NOCLIP;
 		} else {
-			(*player.mo).flags &= !MF_NOCLIP;
+			player.mo_mut().flags &= !MF_NOCLIP;
 		}
 
 		// chain saw run forward
-		let cmd = &mut player.cmd;
-		if (*player.mo).flags & MF_JUSTATTACKED != 0 {
+		if player.mo().flags & MF_JUSTATTACKED != 0 {
+			let cmd = &mut player.cmd;
 			cmd.angleturn = 0;
 			cmd.forwardmove = 100;
 			cmd.sidemove = 0;
-			(*player.mo).flags &= !MF_JUSTATTACKED;
+			player.mo_mut().flags &= !MF_JUSTATTACKED;
 		}
 
 		if player.playerstate == playerstate_t::PST_DEAD {
@@ -221,15 +219,15 @@ pub(crate) fn P_PlayerThink(player: &mut player_t) {
 		// Move around.
 		// Reactiontime is used to prevent movement
 		//  for a bit after a teleport.
-		if (*player.mo).reactiontime != 0 {
-			(*player.mo).reactiontime -= 1;
+		if player.mo().reactiontime != 0 {
+			player.mo_mut().reactiontime -= 1;
 		} else {
 			P_MovePlayer(player);
 		}
 
 		P_CalcHeight(player);
 
-		if (*(*(*player.mo).subsector).sector).special != 0 {
+		if (*(*player.mo().subsector).sector).special != 0 {
 			P_PlayerInSpecialSector(player);
 		}
 
@@ -304,7 +302,7 @@ pub(crate) fn P_PlayerThink(player: &mut player_t) {
 		if player.powers[powertype_t::pw_invisibility as usize] != 0 {
 			player.powers[powertype_t::pw_invisibility as usize] -= 1;
 			if player.powers[powertype_t::pw_invisibility as usize] == 0 {
-				(*player.mo).flags &= !MF_SHADOW;
+				player.mo_mut().flags &= !MF_SHADOW;
 			}
 		}
 

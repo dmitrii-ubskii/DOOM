@@ -627,7 +627,7 @@ pub(crate) fn G_Ticker() {
 						);
 					}
 					if !players[i].mo.is_null() {
-						consistancy[i][buf] = i16::try_from((*players[i].mo).x).unwrap();
+						consistancy[i][buf] = i16::try_from(players[i].mo().x).unwrap();
 					} else {
 						consistancy[i][buf] = i16::try_from(rndindex).unwrap();
 					}
@@ -689,7 +689,7 @@ fn G_PlayerFinishLevel(player: usize) {
 
 		(*p).powers = [0; 6];
 		(*p).cards = [0; 6];
-		(*(*p).mo).flags &= !MF_SHADOW; // cancel invisibility
+		(*p).mo_mut().flags &= !MF_SHADOW; // cancel invisibility
 		(*p).extralight = 0; // cancel gun flashes
 		(*p).fixedcolormap = 0; // cancel ir gogles
 		(*p).damagecount = 0; // no palette changes
@@ -741,8 +741,8 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 		if players[playernum].mo.is_null() {
 			// first spawn of level, before corpses
 			for p in &players[..playernum] {
-				if (*p.mo).x == (i32::from((*mthing).x)) << FRACBITS
-					&& (*p.mo).y == (i32::from((*mthing).y)) << FRACBITS
+				if p.mo().x == i32::from((*mthing).x) << FRACBITS
+					&& p.mo().y == i32::from((*mthing).y) << FRACBITS
 				{
 					return 0;
 				}
@@ -753,7 +753,7 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 		let x = (i32::from((*mthing).x)) << FRACBITS;
 		let y = (i32::from((*mthing).y)) << FRACBITS;
 
-		if P_CheckPosition(&mut *players[playernum].mo, x, y) {
+		if P_CheckPosition(players[playernum].mo_mut(), x, y) {
 			return 0;
 		}
 
@@ -819,7 +819,7 @@ fn G_DoReborn(playernum: usize) {
 			// respawn at the start
 
 			// first dissasociate the corpse
-			(*players[playernum].mo).player = null_mut();
+			players[playernum].mo_mut().player = null_mut();
 
 			// spawn at random spot if in death match
 			if deathmatch != 0 {

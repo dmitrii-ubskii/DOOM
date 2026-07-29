@@ -175,6 +175,14 @@ impl player_t {
 			didsecret: 0,
 		}
 	}
+
+	pub(crate) fn mo(&self) -> &mobj_t {
+		unsafe { &*self.mo }
+	}
+
+	pub(crate) fn mo_mut(&mut self) -> &mut mobj_t {
+		unsafe { &mut *self.mo }
+	}
 }
 
 impl Default for player_t {

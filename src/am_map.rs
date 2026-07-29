@@ -352,8 +352,8 @@ fn AM_restoreScaleAndLoc() {
 			m_x = old_m_x;
 			m_y = old_m_y;
 		} else {
-			m_x = (*(*plr).mo).x - m_w / 2;
-			m_y = (*(*plr).mo).y - m_h / 2;
+			m_x = (*plr).mo().x - m_w / 2;
+			m_y = (*plr).mo().y - m_h / 2;
 		}
 		m_x2 = m_x + m_w;
 		m_y2 = m_y + m_h;
@@ -474,8 +474,8 @@ fn AM_initVariables() {
 			}
 		}
 		plr = &raw mut players[pnum];
-		m_x = (*(*plr).mo).x - m_w / 2;
-		m_y = (*(*plr).mo).y - m_h / 2;
+		m_x = (*plr).mo().x - m_w / 2;
+		m_y = (*plr).mo().y - m_h / 2;
 		AM_changeWindowLoc();
 
 		// for saving & restoring
@@ -760,13 +760,13 @@ fn AM_changeWindowScale() {
 
 fn AM_doFollowPlayer() {
 	unsafe {
-		if f_oldloc.x != (*(*plr).mo).x || f_oldloc.y != (*(*plr).mo).y {
-			m_x = FTOM(MTOF((*(*plr).mo).x)) - m_w / 2;
-			m_y = FTOM(MTOF((*(*plr).mo).y)) - m_h / 2;
+		if f_oldloc.x != (*plr).mo().x || f_oldloc.y != (*plr).mo().y {
+			m_x = FTOM(MTOF((*plr).mo().x)) - m_w / 2;
+			m_y = FTOM(MTOF((*plr).mo().y)) - m_h / 2;
 			m_x2 = m_x + m_w;
 			m_y2 = m_y + m_h;
-			f_oldloc.x = (*(*plr).mo).x;
-			f_oldloc.y = (*(*plr).mo).y;
+			f_oldloc.x = (*plr).mo().x;
+			f_oldloc.y = (*plr).mo().y;
 		}
 	}
 }
@@ -1175,20 +1175,20 @@ fn AM_drawPlayers() {
 					cheat_player_arrow.as_ptr(),
 					NUMCHEATPLYRLINES,
 					0,
-					(*(*plr).mo).angle,
+					(*plr).mo().angle,
 					WHITE,
-					(*(*plr).mo).x,
-					(*(*plr).mo).y,
+					(*plr).mo().x,
+					(*plr).mo().y,
 				);
 			} else {
 				AM_drawLineCharacter(
 					player_arrow.as_ptr(),
 					NUMPLYRLINES,
 					0,
-					(*(*plr).mo).angle,
+					(*plr).mo().angle,
 					WHITE,
-					(*(*plr).mo).x,
-					(*(*plr).mo).y,
+					(*plr).mo().x,
+					(*plr).mo().y,
 				);
 			}
 			return;
@@ -1216,10 +1216,10 @@ fn AM_drawPlayers() {
 				player_arrow.as_ptr(),
 				NUMPLYRLINES,
 				0,
-				(*(*p).mo).angle,
+				(*p).mo().angle,
 				color,
-				(*(*p).mo).x,
-				(*(*p).mo).y,
+				(*p).mo().x,
+				(*p).mo().y,
 			);
 		}
 	}

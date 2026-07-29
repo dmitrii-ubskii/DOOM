@@ -467,16 +467,16 @@ fn P_LookForPlayers(actor: &mut mobj_t, allaround: bool) -> bool {
 				continue; // dead
 			}
 
-			if !P_CheckSight(actor, &*player.mo) {
+			if !P_CheckSight(actor, player.mo()) {
 				continue; // out of sight
 			}
 
 			if !allaround {
 				let an =
-					R_PointToAngle2(actor.x, actor.y, (*player.mo).x, (*player.mo).y) - actor.angle;
+					R_PointToAngle2(actor.x, actor.y, player.mo().x, player.mo().y) - actor.angle;
 
 				if an > ANG90 && an < ANG270 {
-					let dist = P_AproxDistance((*player.mo).x - actor.x, (*player.mo).y - actor.y);
+					let dist = P_AproxDistance(player.mo().x - actor.x, player.mo().y - actor.y);
 					// if real close, react anyway
 					if dist > MELEERANGE {
 						continue; // behind back

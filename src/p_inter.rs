@@ -183,17 +183,15 @@ fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: boolean) -
 // P_GiveBody
 // Returns false if the body isn't needed at all
 fn P_GiveBody(player: &mut player_t, num: int) -> boolean {
-	unsafe {
-		if player.health >= MAXHEALTH {
-			return 0;
-		}
-		player.health += num;
-		if player.health > MAXHEALTH {
-			player.health = MAXHEALTH;
-		}
-		(*player.mo).health = player.health;
-		1
+	if player.health >= MAXHEALTH {
+		return 0;
 	}
+	player.health += num;
+	if player.health > MAXHEALTH {
+		player.health = MAXHEALTH;
+	}
+	player.mo_mut().health = player.health;
+	1
 }
 
 // P_GiveArmor
@@ -229,9 +227,7 @@ pub(crate) fn P_GivePower(player: &mut player_t, power: powertype_t) -> bool {
 		}
 		powertype_t::pw_invisibility => {
 			player.powers[usize::from(power)] = INVISTICS;
-			unsafe {
-				(*player.mo).flags |= MF_SHADOW;
-			}
+			player.mo_mut().flags |= MF_SHADOW;
 			true
 		}
 		powertype_t::pw_infrared => {
@@ -303,9 +299,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 			if player.health > 200 {
 				player.health = 200;
 			}
-			unsafe {
-				(*player.mo).health = player.health;
-			}
+			player.mo_mut().health = player.health;
 			player.message = GOTHTHBONUS;
 		}
 
@@ -325,9 +319,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 			if player.health > 200 {
 				player.health = 200;
 			}
-			unsafe {
-				(*player.mo).health = player.health;
-			}
+			player.mo_mut().health = player.health;
 			player.message = GOTSUPER;
 			sound = sfxenum_t::sfx_getpow;
 		}
@@ -337,7 +329,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 				return;
 			}
 			player.health = 200;
-			(*player.mo).health = player.health;
+			player.mo_mut().health = player.health;
 			P_GiveArmor(player, 2);
 			player.message = GOTMSPHERE;
 			sound = sfxenum_t::sfx_getpow;

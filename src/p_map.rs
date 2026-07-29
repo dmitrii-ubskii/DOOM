@@ -1007,10 +1007,10 @@ pub(crate) fn P_UseLines(player: &mut player_t) {
 	unsafe {
 		usething = player.mo;
 
-		let angle = (*player.mo).angle >> ANGLETOFINESHIFT;
+		let angle = player.mo().angle >> ANGLETOFINESHIFT;
 
-		let x1 = (*player.mo).x;
-		let y1 = (*player.mo).y;
+		let x1 = player.mo().x;
+		let y1 = player.mo().y;
 		let x2 = x1 + (USERANGE >> FRACBITS) * finecos(angle.0);
 		let y2 = y1 + (USERANGE >> FRACBITS) * finesine[angle.0];
 

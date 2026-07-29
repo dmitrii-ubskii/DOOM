@@ -1141,10 +1141,10 @@ pub(crate) fn P_ShootSpecialLine(thing: &mut mobj_t, line: &mut line_t) {
 //  that the player origin is in a special sector
 pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 	unsafe {
-		let sector = &mut *(*(*player.mo).subsector).sector;
+		let sector = &mut *(*player.mo().subsector).sector;
 
 		// Falling, not all the way down yet?
-		if (*player.mo).z != sector.floorheight {
+		if player.mo().z != sector.floorheight {
 			return;
 		}
 
@@ -1155,7 +1155,7 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 				if player.powers[usize::from(powertype_t::pw_ironfeet)] == 0
 					&& leveltime & 0x1f == 0
 				{
-					P_DamageMobj(&mut *player.mo, null_mut(), null_mut(), 10);
+					P_DamageMobj(player.mo_mut(), null_mut(), null_mut(), 10);
 				}
 			}
 
@@ -1164,7 +1164,7 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 				if player.powers[usize::from(powertype_t::pw_ironfeet)] == 0
 					&& leveltime & 0x1f == 0
 				{
-					P_DamageMobj(&mut *player.mo, null_mut(), null_mut(), 5);
+					P_DamageMobj(player.mo_mut(), null_mut(), null_mut(), 5);
 				}
 			}
 
@@ -1174,7 +1174,7 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 				if (player.powers[usize::from(powertype_t::pw_ironfeet)] == 0 || P_Random() < 5)
 					&& leveltime & 0x1f == 0
 				{
-					P_DamageMobj(&mut *player.mo, null_mut(), null_mut(), 20);
+					P_DamageMobj(player.mo_mut(), null_mut(), null_mut(), 20);
 				}
 			}
 
@@ -1189,7 +1189,7 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 				player.cheats &= !CF_GODMODE;
 
 				if leveltime & 0x1f == 0 {
-					P_DamageMobj(&mut *player.mo, null_mut(), null_mut(), 20);
+					P_DamageMobj(player.mo_mut(), null_mut(), null_mut(), 20);
 				}
 
 				if player.health <= 10 {

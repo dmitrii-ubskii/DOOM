@@ -459,7 +459,7 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 					(*plyr).cheats ^= CF_GODMODE;
 					if (*plyr).cheats & CF_GODMODE != 0 {
 						if !(*plyr).mo.is_null() {
-							(*(*plyr).mo).health = 100;
+							(*plyr).mo_mut().health = 100;
 						}
 
 						(*plyr).health = 100;
@@ -573,9 +573,9 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 					libc::sprintf(
 						buf.as_mut_ptr(),
 						c"ang=0x%x;x,y=(0x%x,0x%x)".as_ptr(),
-						(*players[consoleplayer].mo).angle,
-						(*players[consoleplayer].mo).x,
-						(*players[consoleplayer].mo).y,
+						players[consoleplayer].mo().angle,
+						players[consoleplayer].mo().x,
+						players[consoleplayer].mo().y,
 					);
 					(*plyr).message = buf.as_ptr();
 				}
@@ -701,21 +701,21 @@ fn ST_updateFaceWidget() {
 					st_faceindex = ST_calcPainOffset() + ST_OUCHOFFSET;
 				} else {
 					let badguyangle = R_PointToAngle2(
-						(*(*plyr).mo).x,
-						(*(*plyr).mo).y,
+						(*plyr).mo().x,
+						(*plyr).mo().y,
 						(*(*plyr).attacker).x,
 						(*(*plyr).attacker).y,
 					);
 
 					let diffang;
 					let i;
-					if badguyangle > (*(*plyr).mo).angle {
+					if badguyangle > (*plyr).mo().angle {
 						// whether right or left
-						diffang = badguyangle - (*(*plyr).mo).angle;
+						diffang = badguyangle - (*plyr).mo().angle;
 						i = diffang > ANG180;
 					} else {
 						// whether left or right
-						diffang = (*(*plyr).mo).angle - badguyangle;
+						diffang = (*plyr).mo().angle - badguyangle;
 						i = diffang <= ANG180;
 					} // confusing, aint it?
 

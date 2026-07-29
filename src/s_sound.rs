@@ -204,15 +204,15 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u3
 		let mut sep = 0;
 		if !origin.is_null() && !std::ptr::eq(origin, players[consoleplayer].mo) {
 			let rc = S_AdjustSoundParams(
-				&mut *players[consoleplayer].mo,
+				players[consoleplayer].mo_mut(),
 				&mut *origin,
 				&mut volume,
 				&mut sep,
 				&mut pitch,
 			);
 
-			if (*origin).x == (*players[consoleplayer].mo).x
-				&& (*origin).y == (*players[consoleplayer].mo).y
+			if (*origin).x == players[consoleplayer].mo().x
+				&& (*origin).y == players[consoleplayer].mo().y
 			{
 				sep = NORM_SEP;
 			}

@@ -567,10 +567,10 @@ pub(crate) fn R_PointInSubsector(x: fixed_t, y: fixed_t) -> *mut subsector_t {
 fn R_SetupFrame(player: &mut player_t) {
 	unsafe {
 		viewplayer = player;
-		viewx = (*player.mo).x;
-		viewy = (*player.mo).y;
-		viewangle = (*player.mo).angle
-			+ Wrapping(isize::try_from(viewangleoffset).unwrap().cast_unsigned());
+		viewx = player.mo().x;
+		viewy = player.mo().y;
+		viewangle =
+			player.mo().angle + Wrapping(isize::try_from(viewangleoffset).unwrap().cast_unsigned());
 		extralight = player.extralight;
 
 		viewz = player.viewz;
