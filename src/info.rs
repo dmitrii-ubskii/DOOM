@@ -1,4 +1,9 @@
-#![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc, clippy::upper_case_acronyms)]
+#![allow(
+	non_snake_case,
+	non_camel_case_types,
+	clippy::missing_safety_doc,
+	clippy::upper_case_acronyms
+)]
 #![allow(clippy::as_conversions)]
 
 use std::ffi::c_char;
