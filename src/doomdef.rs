@@ -1,8 +1,11 @@
 // Global parameters/defines.
 
-#![allow(non_camel_case_types, non_upper_case_globals, clippy::upper_case_acronyms)]
+#![allow(non_camel_case_types, non_upper_case_globals)]
 
-use std::fmt;
+use std::{
+	fmt,
+	ops::{Index, IndexMut},
+};
 
 // DOOM version
 pub(crate) const VERSION: i32 = 109;
@@ -152,27 +155,35 @@ pub(crate) enum card_t {
 	it_blueskull,
 	it_yellowskull,
 	it_redskull,
-
-	NUMCARDS,
 }
 
-impl card_t {
-	pub(crate) const fn to_usize(self) -> usize {
-		match self {
-			card_t::it_bluecard => 0,
-			card_t::it_yellowcard => 1,
-			card_t::it_redcard => 2,
-			card_t::it_blueskull => 3,
-			card_t::it_yellowskull => 4,
-			card_t::it_redskull => 5,
-			card_t::NUMCARDS => 6,
+pub(crate) const NUMCARDS: usize = 6;
+
+impl<T> IndexMut<card_t> for [T; NUMCARDS] {
+	fn index_mut(&mut self, index: card_t) -> &mut Self::Output {
+		match index {
+			card_t::it_bluecard => &mut self[0],
+			card_t::it_yellowcard => &mut self[1],
+			card_t::it_redcard => &mut self[2],
+			card_t::it_blueskull => &mut self[3],
+			card_t::it_yellowskull => &mut self[4],
+			card_t::it_redskull => &mut self[5],
 		}
 	}
 }
 
-impl From<card_t> for usize {
-	fn from(value: card_t) -> Self {
-		value.to_usize()
+impl<T> Index<card_t> for [T; NUMCARDS] {
+	type Output = T;
+
+	fn index(&self, index: card_t) -> &Self::Output {
+		match index {
+			card_t::it_bluecard => &self[0],
+			card_t::it_yellowcard => &self[1],
+			card_t::it_redcard => &self[2],
+			card_t::it_blueskull => &self[3],
+			card_t::it_yellowskull => &self[4],
+			card_t::it_redskull => &self[5],
+		}
 	}
 }
 
@@ -191,16 +202,13 @@ pub(crate) enum weapontype_t {
 	wp_bfg,
 	wp_chainsaw,
 	wp_supershotgun,
-
-	NUMWEAPONS,
-
-	// No pending weapon change.
-	wp_nochange,
 }
 
-impl weapontype_t {
-	pub(crate) const fn to_usize(self) -> usize {
-		match self {
+pub(crate) const NUMWEAPONS: usize = 9;
+
+impl From<weapontype_t> for i32 {
+	fn from(value: weapontype_t) -> Self {
+		match value {
 			weapontype_t::wp_fist => 0,
 			weapontype_t::wp_pistol => 1,
 			weapontype_t::wp_shotgun => 2,
@@ -210,21 +218,41 @@ impl weapontype_t {
 			weapontype_t::wp_bfg => 6,
 			weapontype_t::wp_chainsaw => 7,
 			weapontype_t::wp_supershotgun => 8,
-			weapontype_t::NUMWEAPONS => 9,
-			weapontype_t::wp_nochange => 10,
 		}
 	}
 }
 
-impl From<weapontype_t> for i32 {
-	fn from(value: weapontype_t) -> Self {
-		value.to_usize().try_into().unwrap()
+impl<T> IndexMut<weapontype_t> for [T; NUMWEAPONS] {
+	fn index_mut(&mut self, index: weapontype_t) -> &mut Self::Output {
+		match index {
+			weapontype_t::wp_fist => &mut self[0],
+			weapontype_t::wp_pistol => &mut self[1],
+			weapontype_t::wp_shotgun => &mut self[2],
+			weapontype_t::wp_chaingun => &mut self[3],
+			weapontype_t::wp_missile => &mut self[4],
+			weapontype_t::wp_plasma => &mut self[5],
+			weapontype_t::wp_bfg => &mut self[6],
+			weapontype_t::wp_chainsaw => &mut self[7],
+			weapontype_t::wp_supershotgun => &mut self[8],
+		}
 	}
 }
 
-impl From<weapontype_t> for usize {
-	fn from(value: weapontype_t) -> Self {
-		value.to_usize()
+impl<T> Index<weapontype_t> for [T; NUMWEAPONS] {
+	type Output = T;
+
+	fn index(&self, index: weapontype_t) -> &Self::Output {
+		match index {
+			weapontype_t::wp_fist => &self[0],
+			weapontype_t::wp_pistol => &self[1],
+			weapontype_t::wp_shotgun => &self[2],
+			weapontype_t::wp_chaingun => &self[3],
+			weapontype_t::wp_missile => &self[4],
+			weapontype_t::wp_plasma => &self[5],
+			weapontype_t::wp_bfg => &self[6],
+			weapontype_t::wp_chainsaw => &self[7],
+			weapontype_t::wp_supershotgun => &self[8],
+		}
 	}
 }
 
@@ -236,9 +264,9 @@ pub(crate) enum ammotype_t {
 	am_shell, // Shotgun / double barreled shotgun.
 	am_cell,  // Plasma rifle, BFG.
 	am_misl,  // Missile launcher.
-	NUMAMMO,
-	am_noammo, // Unlimited for chainsaw / fist.
 }
+
+pub(crate) const NUMAMMO: usize = 4;
 
 impl ammotype_t {
 	pub(crate) const fn to_u8(self) -> u8 {
@@ -247,19 +275,6 @@ impl ammotype_t {
 			ammotype_t::am_shell => 1,
 			ammotype_t::am_cell => 2,
 			ammotype_t::am_misl => 3,
-			ammotype_t::NUMAMMO => 4,
-			ammotype_t::am_noammo => 5,
-		}
-	}
-
-	pub(crate) const fn to_usize(self) -> usize {
-		match self {
-			ammotype_t::am_clip => 0,
-			ammotype_t::am_shell => 1,
-			ammotype_t::am_cell => 2,
-			ammotype_t::am_misl => 3,
-			ammotype_t::NUMAMMO => 4,
-			ammotype_t::am_noammo => 5,
 		}
 	}
 }
@@ -282,9 +297,27 @@ impl From<ammotype_t> for u8 {
 	}
 }
 
-impl From<ammotype_t> for usize {
-	fn from(value: ammotype_t) -> Self {
-		value.to_usize()
+impl<T> IndexMut<ammotype_t> for [T; NUMAMMO] {
+	fn index_mut(&mut self, index: ammotype_t) -> &mut Self::Output {
+		match index {
+			ammotype_t::am_clip => &mut self[0],
+			ammotype_t::am_shell => &mut self[1],
+			ammotype_t::am_cell => &mut self[2],
+			ammotype_t::am_misl => &mut self[3],
+		}
+	}
+}
+
+impl<T> Index<ammotype_t> for [T; NUMAMMO] {
+	type Output = T;
+
+	fn index(&self, index: ammotype_t) -> &Self::Output {
+		match index {
+			ammotype_t::am_clip => &self[0],
+			ammotype_t::am_shell => &self[1],
+			ammotype_t::am_cell => &self[2],
+			ammotype_t::am_misl => &self[3],
+		}
 	}
 }
 
@@ -298,22 +331,9 @@ pub(crate) enum powertype_t {
 	pw_ironfeet,
 	pw_allmap,
 	pw_infrared,
-	NUMPOWERS,
 }
 
-impl powertype_t {
-	pub(crate) const fn to_usize(self) -> usize {
-		match self {
-			powertype_t::pw_invulnerability => 0,
-			powertype_t::pw_strength => 1,
-			powertype_t::pw_invisibility => 2,
-			powertype_t::pw_ironfeet => 3,
-			powertype_t::pw_allmap => 4,
-			powertype_t::pw_infrared => 5,
-			powertype_t::NUMPOWERS => 6,
-		}
-	}
-}
+pub(crate) const NUMPOWERS: usize = 6;
 
 impl From<usize> for powertype_t {
 	fn from(value: usize) -> Self {
@@ -329,9 +349,31 @@ impl From<usize> for powertype_t {
 	}
 }
 
-impl From<powertype_t> for usize {
-	fn from(value: powertype_t) -> Self {
-		value.to_usize()
+impl<T> IndexMut<powertype_t> for [T; NUMPOWERS] {
+	fn index_mut(&mut self, index: powertype_t) -> &mut Self::Output {
+		match index {
+			powertype_t::pw_invulnerability => &mut self[0],
+			powertype_t::pw_strength => &mut self[1],
+			powertype_t::pw_invisibility => &mut self[2],
+			powertype_t::pw_ironfeet => &mut self[3],
+			powertype_t::pw_allmap => &mut self[4],
+			powertype_t::pw_infrared => &mut self[5],
+		}
+	}
+}
+
+impl<T> Index<powertype_t> for [T; NUMPOWERS] {
+	type Output = T;
+
+	fn index(&self, index: powertype_t) -> &Self::Output {
+		match index {
+			powertype_t::pw_invulnerability => &self[0],
+			powertype_t::pw_strength => &self[1],
+			powertype_t::pw_invisibility => &self[2],
+			powertype_t::pw_ironfeet => &self[3],
+			powertype_t::pw_allmap => &self[4],
+			powertype_t::pw_infrared => &self[5],
+		}
 	}
 }
 

@@ -558,7 +558,7 @@ BLAZE THROUGH THIS ONE!\n"
 // sucks down the shards of the last
 // prototype Accelerator, not to mention the
 // few remaining demons.  You're done. Hell
-// has gone back to pounding bad dead folks 
+// has gone back to pounding bad dead folks
 // instead of good live ones.  Remember to
 // tell your grandkids to put a rocket
 // launcher in your coffin. If you go to Hell
@@ -619,8 +619,8 @@ BLAZE THROUGH THIS ONE!\n"
 // pub(crate) const T4TEXT: *const c_char = c"Suddenly, all is silent, from one horizon
 // to the other. The agonizing echo of Hell
 // fades away, the nightmare sky turns to
-// blue, the heaps of monster corpses start 
-// to evaporate along with the evil stench 
+// blue, the heaps of monster corpses start
+// to evaporate along with the evil stench
 // that filled the air. Jeeze, maybe you've
 // done it. Have you really won?
 //

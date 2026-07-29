@@ -1097,7 +1097,7 @@ fn AM_drawWalls() {
 				} else if cheating != 0 {
 					AM_drawMline(&l, TSWALLCOLORS + lightlev);
 				}
-			} else if (*plr).powers[usize::from(powertype_t::pw_allmap)] != 0
+			} else if (&(*plr).powers)[powertype_t::pw_allmap] != 0
 				&& usize::try_from((*line).flags).unwrap() & LINE_NEVERSEE == 0
 			{
 				AM_drawMline(&l, GRAYS + 3);
@@ -1205,7 +1205,7 @@ fn AM_drawPlayers() {
 				continue;
 			}
 
-			let color = if (*p).powers[usize::from(powertype_t::pw_invisibility)] != 0 {
+			let color = if (&(*p).powers)[powertype_t::pw_invisibility] != 0 {
 				246 // *close* to black
 			} else {
 				their_colors[usize::try_from(their_color).unwrap()]

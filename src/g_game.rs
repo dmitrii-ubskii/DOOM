@@ -21,7 +21,7 @@ use crate::{
 	d_ticcmd::ticcmd_t,
 	doomdata::mapthing_t,
 	doomdef::{
-		GameMission_t, GameMode_t, KEY_F12, KEY_PAUSE, MAXPLAYERS, VERSION, ammotype_t,
+		GameMission_t, GameMode_t, KEY_F12, KEY_PAUSE, MAXPLAYERS, NUMWEAPONS, VERSION, ammotype_t,
 		gamestate_t, skill_t, weapontype_t,
 	},
 	doomstat::{gamemission, gamemode},
@@ -313,7 +313,7 @@ pub(crate) unsafe fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		// chainsaw overrides
-		for i in 0..usize::from(weapontype_t::NUMWEAPONS) - 1 {
+		for i in 0..NUMWEAPONS - 1 {
 			if gamekeydown[usize::from(b'1') + i] {
 				(*cmd).buttons |= BT_CHANGE;
 				(*cmd).buttons |= u8::try_from(i << BT_WEAPONSHIFT).unwrap();
@@ -721,10 +721,10 @@ pub(crate) fn G_PlayerReborn(player: usize) {
 		(*p).playerstate = playerstate_t::PST_LIVE;
 		(*p).health = MAXHEALTH;
 		(*p).readyweapon = weapontype_t::wp_pistol;
-		(*p).pendingweapon = weapontype_t::wp_pistol;
-		(*p).weaponowned[usize::from(weapontype_t::wp_fist)] = 1;
-		(*p).weaponowned[usize::from(weapontype_t::wp_pistol)] = 1;
-		(*p).ammo[usize::from(ammotype_t::am_clip)] = 50;
+		(*p).pendingweapon = Some(weapontype_t::wp_pistol);
+		(&mut (*p).weaponowned)[weapontype_t::wp_fist] = 1;
+		(&mut (*p).weaponowned)[weapontype_t::wp_pistol] = 1;
+		(&mut (*p).ammo)[ammotype_t::am_clip] = 50;
 
 		(*p).maxammo = maxammo;
 	}

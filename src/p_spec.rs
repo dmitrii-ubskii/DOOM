@@ -1152,18 +1152,14 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 		match sector.special {
 			5 => {
 				// HELLSLIME DAMAGE
-				if player.powers[usize::from(powertype_t::pw_ironfeet)] == 0
-					&& leveltime & 0x1f == 0
-				{
+				if player.powers[powertype_t::pw_ironfeet] == 0 && leveltime & 0x1f == 0 {
 					P_DamageMobj(player.mo_mut(), null_mut(), null_mut(), 10);
 				}
 			}
 
 			7 => {
 				// NUKAGE DAMAGE
-				if player.powers[usize::from(powertype_t::pw_ironfeet)] == 0
-					&& leveltime & 0x1f == 0
-				{
+				if player.powers[powertype_t::pw_ironfeet] == 0 && leveltime & 0x1f == 0 {
 					P_DamageMobj(player.mo_mut(), null_mut(), null_mut(), 5);
 				}
 			}
@@ -1171,7 +1167,7 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 			// SUPER HELLSLIME DAMAGE
 			// STROBE HURT
 			16 | 4 => {
-				if (player.powers[usize::from(powertype_t::pw_ironfeet)] == 0 || P_Random() < 5)
+				if (player.powers[powertype_t::pw_ironfeet] == 0 || P_Random() < 5)
 					&& leveltime & 0x1f == 0
 				{
 					P_DamageMobj(player.mo_mut(), null_mut(), null_mut(), 20);

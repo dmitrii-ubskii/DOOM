@@ -270,7 +270,7 @@ pub(crate) fn P_PlayerThink(player: &mut player_t) {
 					|| (gamemode != GameMode_t::shareware)
 				{
 					player.pendingweapon =
-						std::mem::transmute::<u32, weapontype_t>(newweapon as u32);
+						Some(std::mem::transmute::<u32, weapontype_t>(newweapon as u32));
 				}
 			}
 		}

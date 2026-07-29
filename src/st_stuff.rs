@@ -16,8 +16,8 @@ use crate::{
 	d_items::weaponinfo,
 	d_player::{CF_GODMODE, CF_NOCLIP, player_t},
 	doomdef::{
-		GameMode_t, MAXPLAYERS, SCREEN_MUL, SCREENHEIGHT, SCREENWIDTH, TICRATE, ammotype_t, card_t,
-		powertype_t, weapontype_t,
+		GameMode_t, MAXPLAYERS, NUMAMMO, NUMCARDS, NUMWEAPONS, SCREEN_MUL, SCREENHEIGHT,
+		SCREENWIDTH, TICRATE, powertype_t, weapontype_t,
 	},
 	doomstat::gamemode,
 	g_game::{G_DeferedInitNew, consoleplayer, deathmatch, gameskill, netgame, players},
@@ -237,8 +237,7 @@ static mut tallpercent: *mut patch_t = null_mut();
 static mut shortnum: [*mut patch_t; 10] = [null_mut(); 10];
 
 // 3 key-cards, 3 skulls
-static mut keys: [*mut patch_t; card_t::NUMCARDS.to_usize()] =
-	[null_mut(); card_t::NUMCARDS.to_usize()];
+static mut keys: [*mut patch_t; NUMCARDS] = [null_mut(); NUMCARDS];
 
 // face status patches
 static mut faces: [*mut patch_t; ST_NUMFACES] = [null_mut(); ST_NUMFACES];
@@ -318,8 +317,7 @@ static mut st_fragscount: int = 0;
 static mut st_oldhealth: int = -1;
 
 // used for evil grin
-static mut oldweaponsowned: [bool; weapontype_t::NUMWEAPONS.to_usize()] =
-	[false; weapontype_t::NUMWEAPONS.to_usize()];
+static mut oldweaponsowned: [bool; NUMWEAPONS] = [false; NUMWEAPONS];
 
 // count until face changes
 static mut st_facecount: usize = 0;
@@ -479,11 +477,11 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 					(*plyr).armorpoints = 200;
 					(*plyr).armortype = 2;
 
-					for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
+					for i in 0..NUMWEAPONS {
 						(*plyr).weaponowned[i] = 1;
 					}
 
-					for i in 0..usize::from(ammotype_t::NUMAMMO) {
+					for i in 0..NUMAMMO {
 						(*plyr).ammo[i] = (*plyr).maxammo[i];
 					}
 
@@ -494,15 +492,15 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 					(*plyr).armorpoints = 200;
 					(*plyr).armortype = 2;
 
-					for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
+					for i in 0..NUMWEAPONS {
 						(*plyr).weaponowned[i] = 1;
 					}
 
-					for i in 0..usize::from(ammotype_t::NUMAMMO) {
+					for i in 0..NUMAMMO {
 						(*plyr).ammo[i] = (*plyr).maxammo[i];
 					}
 
-					for i in 0..usize::from(card_t::NUMCARDS) {
+					for i in 0..NUMCARDS {
 						(*plyr).cards[i] = 1;
 					}
 
@@ -569,8 +567,8 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 				}
 				// 'choppers' invulnerability & chainsaw
 				else if cht_CheckCheat(&mut cheat_choppers, u8::try_from(ev.data1).unwrap()) {
-					(*plyr).weaponowned[usize::from(weapontype_t::wp_chainsaw)] = 1;
-					(*plyr).powers[usize::from(powertype_t::pw_invulnerability)] = 1;
+					(&mut (*plyr).weaponowned)[weapontype_t::wp_chainsaw] = 1;
+					(&mut (*plyr).powers)[powertype_t::pw_invulnerability] = 1;
 					(*plyr).message = STSTR_CHOPPERS;
 				}
 				// 'mypos' for player position
@@ -678,7 +676,7 @@ fn ST_updateFaceWidget() {
 				let mut doevilgrin = false;
 
 				#[allow(clippy::needless_range_loop)]
-				for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
+				for i in 0..NUMWEAPONS {
 					if oldweaponsowned[i] != ((*plyr).weaponowned[i] != 0) {
 						doevilgrin = true;
 						oldweaponsowned[i] = (*plyr).weaponowned[i] != 0;
@@ -779,7 +777,7 @@ fn ST_updateFaceWidget() {
 		if priority < 5 {
 			// invulnerability
 			if (*plyr).cheats & CF_GODMODE != 0
-				|| (*plyr).powers[usize::from(powertype_t::pw_invulnerability)] != 0
+				|| (&(*plyr).powers)[powertype_t::pw_invulnerability] != 0
 			{
 				priority = 4;
 
@@ -804,13 +802,11 @@ fn ST_updateWidgets() {
 		static mut largeammo: i32 = 1994; // means "n/a"
 
 		// must redirect the pointer if the ready weapon has changed.
-		if weaponinfo[usize::from((*plyr).readyweapon)].ammo == ammotype_t::am_noammo {
-			w_ready.num = &raw mut largeammo;
+		w_ready.num = if weaponinfo[(*plyr).readyweapon].ammo.is_none() {
+			&raw mut largeammo
 		} else {
-			w_ready.num = (&raw mut (*plyr).ammo
-				[usize::from(weaponinfo[usize::from((*plyr).readyweapon)].ammo)])
-				.cast();
-		}
+			(&raw mut (&mut (*plyr).ammo)[weaponinfo[(*plyr).readyweapon].ammo.unwrap()]).cast()
+		};
 		w_ready.data = i32::from((*plyr).readyweapon);
 
 		// update keycard multiple widgets
@@ -867,10 +863,9 @@ fn ST_doPaletteStuff() {
 	unsafe {
 		let mut cnt = usize::try_from((*plyr).damagecount).unwrap();
 
-		if (*plyr).powers[usize::from(powertype_t::pw_strength)] != 0 {
+		if (&(*plyr).powers)[powertype_t::pw_strength] != 0 {
 			// slowly fade the berzerk out
-			let bzc =
-				12usize.saturating_sub((*plyr).powers[usize::from(powertype_t::pw_strength)] >> 6);
+			let bzc = 12usize.saturating_sub((&(*plyr).powers)[powertype_t::pw_strength] >> 6);
 
 			if bzc > cnt {
 				cnt = bzc;
@@ -894,8 +889,8 @@ fn ST_doPaletteStuff() {
 			}
 
 			palette += STARTBONUSPALS;
-		} else if (*plyr).powers[usize::from(powertype_t::pw_ironfeet)] > 4 * 32
-			|| (*plyr).powers[usize::from(powertype_t::pw_ironfeet)] & 8 != 0
+		} else if (&(*plyr).powers)[powertype_t::pw_ironfeet] > 4 * 32
+			|| (&(*plyr).powers)[powertype_t::pw_ironfeet] & 8 != 0
 		{
 			palette = RADIATIONPAL;
 		} else {
@@ -1003,7 +998,7 @@ fn ST_loadGraphics() {
 
 		// key cards
 		#[allow(clippy::needless_range_loop)]
-		for i in 0..usize::from(card_t::NUMCARDS) {
+		for i in 0..NUMCARDS {
 			libc::sprintf(namebuf.as_mut_ptr(), c"STKEYS%d".as_ptr(), i);
 			keys[i] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
 		}
@@ -1086,7 +1081,7 @@ fn ST_initData() {
 		st_oldhealth = -1;
 
 		#[allow(clippy::needless_range_loop)]
-		for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
+		for i in 0..NUMWEAPONS {
 			oldweaponsowned[i] = (*plyr).weaponowned[i] != 0;
 		}
 
@@ -1107,8 +1102,7 @@ fn ST_createWidgets() {
 			ST_AMMOX,
 			ST_AMMOY,
 			tallnum.as_mut_ptr(),
-			(&raw mut (*plyr).ammo[usize::from(weaponinfo[usize::from((*plyr).readyweapon)].ammo)])
-				.cast(),
+			(&raw mut (&mut (*plyr).ammo)[weaponinfo[(*plyr).readyweapon].ammo.unwrap()]).cast(),
 			&raw mut st_statusbaron,
 			ST_AMMOWIDTH,
 		);

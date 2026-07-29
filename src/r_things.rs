@@ -605,8 +605,8 @@ fn R_DrawPSprite(psp: &pspdef_t) {
 
 		avis.patch = lump;
 
-		if (*viewplayer).powers[usize::from(powertype_t::pw_invisibility)] > 4 * 32
-			|| (*viewplayer).powers[usize::from(powertype_t::pw_invisibility)] & 8 != 0
+		if (&(*viewplayer).powers)[powertype_t::pw_invisibility] > 4 * 32
+			|| (&(*viewplayer).powers)[powertype_t::pw_invisibility] & 8 != 0
 		{
 			// shadow draw
 			avis.colormap = null_mut();

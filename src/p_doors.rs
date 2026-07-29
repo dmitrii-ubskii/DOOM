@@ -16,6 +16,7 @@ use crate::{
 	},
 	p_tick::{P_AddThinker, P_RemoveThinker},
 	r_defs::{line_t, sector_t},
+	r_main::Side,
 	s_sound::S_StartSound,
 	sounds::sfxenum_t,
 	z_zone::{PU_LEVSPEC, Z_Malloc},
@@ -165,20 +166,14 @@ pub(crate) fn EV_DoLockedDoor(line: &mut line_t, ty: vldoor_e, thing: &mut mobj_
 
 		match line.special {
 			// Blue Lock
-			99 | 133
-				if p.cards[usize::from(card_t::it_bluecard)] == 0
-					&& p.cards[usize::from(card_t::it_blueskull)] == 0 =>
-			{
+			99 | 133 if p.cards[card_t::it_bluecard] == 0 && p.cards[card_t::it_blueskull] == 0 => {
 				p.message = PD_BLUEO;
 				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
 				return false;
 			}
 
 			// Red Lock
-			134 | 135
-				if p.cards[usize::from(card_t::it_redcard)] == 0
-					&& p.cards[usize::from(card_t::it_redskull)] == 0 =>
-			{
+			134 | 135 if p.cards[card_t::it_redcard] == 0 && p.cards[card_t::it_redskull] == 0 => {
 				p.message = PD_REDO;
 				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
 				return false;
@@ -186,8 +181,7 @@ pub(crate) fn EV_DoLockedDoor(line: &mut line_t, ty: vldoor_e, thing: &mut mobj_
 
 			// Yellow Lock
 			136 | 137
-				if p.cards[usize::from(card_t::it_yellowcard)] == 0
-					&& p.cards[usize::from(card_t::it_yellowskull)] == 0 =>
+				if p.cards[card_t::it_yellowcard] == 0 && p.cards[card_t::it_yellowskull] == 0 =>
 			{
 				p.message = PD_YELLOWO;
 				S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -284,7 +278,7 @@ pub(crate) fn EV_DoDoor(line: &mut line_t, ty: vldoor_e) -> bool {
 // EV_VerticalDoor : open a door manually, no tag value
 pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 	unsafe {
-		let side = 0; // only front sides can be used
+		let side = Side::Front; // only front sides can be used
 
 		//	Check for locks
 		let player = thing.player;
@@ -294,8 +288,7 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 				// Blue Lock
 				let Some(player) = player.as_mut() else { return };
 
-				if player.cards[usize::from(card_t::it_bluecard)] == 0
-					&& player.cards[usize::from(card_t::it_blueskull)] == 0
+				if player.cards[card_t::it_bluecard] == 0 && player.cards[card_t::it_blueskull] == 0
 				{
 					player.message = PD_BLUEK;
 					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -307,8 +300,8 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 				// Yellow Lock
 				let Some(player) = player.as_mut() else { return };
 
-				if player.cards[usize::from(card_t::it_yellowcard)] == 0
-					&& player.cards[usize::from(card_t::it_yellowskull)] == 0
+				if player.cards[card_t::it_yellowcard] == 0
+					&& player.cards[card_t::it_yellowskull] == 0
 				{
 					player.message = PD_YELLOWK;
 					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
@@ -320,9 +313,7 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 				// Red Lock
 				let Some(player) = player.as_mut() else { return };
 
-				if player.cards[usize::from(card_t::it_redcard)] == 0
-					&& player.cards[usize::from(card_t::it_redskull)] == 0
-				{
+				if player.cards[card_t::it_redcard] == 0 && player.cards[card_t::it_redskull] == 0 {
 					player.message = PD_REDK;
 					S_StartSound(null_mut(), sfxenum_t::sfx_oof);
 					return;
@@ -333,7 +324,7 @@ pub(crate) fn EV_VerticalDoor(line: &mut line_t, thing: &mut mobj_t) {
 		}
 
 		// if the sector has an active thinker, use it
-		let sec = (*sides.wrapping_add(usize::try_from(line.sidenum[side ^ 1]).unwrap())).sector;
+		let sec = (*sides.wrapping_add(usize::try_from(line.sidenum[side.flip()]).unwrap())).sector;
 
 		if !(*sec).specialdata.is_null() {
 			let door = &mut *((*sec).specialdata.cast::<vldoor_t>());

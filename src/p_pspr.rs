@@ -138,17 +138,16 @@ fn P_SetPsprite(player: &mut player_t, position: psprnum_t, mut stnum: statenum_
 // from the bottom of the screen.
 // Uses player
 fn P_BringUpWeapon(player: &mut player_t) {
-	if player.pendingweapon == weapontype_t::wp_nochange {
-		player.pendingweapon = player.readyweapon;
-	}
+	let pending =
+		if let Some(pending) = player.pendingweapon { pending } else { player.readyweapon };
 
-	if player.pendingweapon == weapontype_t::wp_chainsaw {
+	if pending == weapontype_t::wp_chainsaw {
 		S_StartSound(player.mo.cast(), sfxenum_t::sfx_sawup);
 	}
 
-	let newstate = weaponinfo[usize::from(player.pendingweapon)].upstate;
+	let newstate = weaponinfo[pending].upstate;
 
-	player.pendingweapon = weapontype_t::wp_nochange;
+	player.pendingweapon = None;
 	player.psprites[usize::from(psprnum_t::ps_weapon)].sy = WEAPONBOTTOM;
 
 	P_SetPsprite(player, psprnum_t::ps_weapon, newstate);
@@ -159,7 +158,7 @@ fn P_BringUpWeapon(player: &mut player_t) {
 // If not, selects the next weapon to use.
 fn P_CheckAmmo(player: &mut player_t) -> bool {
 	unsafe {
-		let ammo = weaponinfo[usize::from(player.readyweapon)].ammo;
+		let ammo = weaponinfo[player.readyweapon].ammo;
 
 		// Minimal amount for one shot varies.
 		let count = match player.readyweapon {
@@ -170,60 +169,56 @@ fn P_CheckAmmo(player: &mut player_t) -> bool {
 
 		// Some do not need ammunition anyway.
 		// Return if current ammunition sufficient.
-		if ammo == ammotype_t::am_noammo || player.ammo[usize::from(ammo)] >= count {
+		if ammo.is_none_or(|ammo| player.ammo[ammo] >= count) {
 			return true;
 		}
 
 		// Out of ammo, pick a weapon to change to.
 		// Preferences are set here.
 		loop {
-			if player.weaponowned[usize::from(weapontype_t::wp_plasma)] != 0
-				&& player.ammo[usize::from(ammotype_t::am_cell)] != 0
+			if player.weaponowned[weapontype_t::wp_plasma] != 0
+				&& player.ammo[ammotype_t::am_cell] != 0
 				&& gamemode != GameMode_t::shareware
 			{
-				player.pendingweapon = weapontype_t::wp_plasma;
-			} else if player.weaponowned[usize::from(weapontype_t::wp_supershotgun)] != 0
-				&& player.ammo[usize::from(ammotype_t::am_shell)] > 2
+				player.pendingweapon = Some(weapontype_t::wp_plasma);
+			} else if player.weaponowned[weapontype_t::wp_supershotgun] != 0
+				&& player.ammo[ammotype_t::am_shell] > 2
 				&& gamemode == GameMode_t::commercial
 			{
-				player.pendingweapon = weapontype_t::wp_supershotgun;
-			} else if player.weaponowned[usize::from(weapontype_t::wp_chaingun)] != 0
-				&& player.ammo[usize::from(ammotype_t::am_clip)] != 0
+				player.pendingweapon = Some(weapontype_t::wp_supershotgun);
+			} else if player.weaponowned[weapontype_t::wp_chaingun] != 0
+				&& player.ammo[ammotype_t::am_clip] != 0
 			{
-				player.pendingweapon = weapontype_t::wp_chaingun;
-			} else if player.weaponowned[usize::from(weapontype_t::wp_shotgun)] != 0
-				&& player.ammo[usize::from(ammotype_t::am_shell)] != 0
+				player.pendingweapon = Some(weapontype_t::wp_chaingun);
+			} else if player.weaponowned[weapontype_t::wp_shotgun] != 0
+				&& player.ammo[ammotype_t::am_shell] != 0
 			{
-				player.pendingweapon = weapontype_t::wp_shotgun;
-			} else if player.ammo[usize::from(ammotype_t::am_clip)] != 0 {
-				player.pendingweapon = weapontype_t::wp_pistol;
-			} else if player.weaponowned[usize::from(weapontype_t::wp_chainsaw)] != 0 {
-				player.pendingweapon = weapontype_t::wp_chainsaw;
-			} else if player.weaponowned[usize::from(weapontype_t::wp_missile)] != 0
-				&& player.ammo[usize::from(ammotype_t::am_misl)] != 0
+				player.pendingweapon = Some(weapontype_t::wp_shotgun);
+			} else if player.ammo[ammotype_t::am_clip] != 0 {
+				player.pendingweapon = Some(weapontype_t::wp_pistol);
+			} else if player.weaponowned[weapontype_t::wp_chainsaw] != 0 {
+				player.pendingweapon = Some(weapontype_t::wp_chainsaw);
+			} else if player.weaponowned[weapontype_t::wp_missile] != 0
+				&& player.ammo[ammotype_t::am_misl] != 0
 			{
-				player.pendingweapon = weapontype_t::wp_missile;
-			} else if player.weaponowned[usize::from(weapontype_t::wp_bfg)] != 0
-				&& player.ammo[usize::from(ammotype_t::am_cell)] > BFGCELLS
+				player.pendingweapon = Some(weapontype_t::wp_missile);
+			} else if player.weaponowned[weapontype_t::wp_bfg] != 0
+				&& player.ammo[ammotype_t::am_cell] > BFGCELLS
 				&& gamemode != GameMode_t::shareware
 			{
-				player.pendingweapon = weapontype_t::wp_bfg;
+				player.pendingweapon = Some(weapontype_t::wp_bfg);
 			} else {
 				// If everything fails.
-				player.pendingweapon = weapontype_t::wp_fist;
+				player.pendingweapon = Some(weapontype_t::wp_fist);
 			}
 
-			if player.pendingweapon != weapontype_t::wp_nochange {
+			if player.pendingweapon.is_some() {
 				break;
 			}
 		}
 
 		// Now set appropriate weapon overlay.
-		P_SetPsprite(
-			player,
-			psprnum_t::ps_weapon,
-			weaponinfo[usize::from(player.readyweapon)].downstate,
-		);
+		P_SetPsprite(player, psprnum_t::ps_weapon, weaponinfo[player.readyweapon].downstate);
 
 		false
 	}
@@ -236,7 +231,7 @@ fn P_FireWeapon(player: &mut player_t) {
 	}
 
 	P_SetMobjState(player.mo_mut(), statenum_t::S_PLAY_ATK1);
-	let newstate = weaponinfo[usize::from(player.readyweapon)].atkstate;
+	let newstate = weaponinfo[player.readyweapon].atkstate;
 	P_SetPsprite(player, psprnum_t::ps_weapon, newstate);
 	P_NoiseAlert(player.mo, player.mo_mut());
 }
@@ -244,11 +239,7 @@ fn P_FireWeapon(player: &mut player_t) {
 // P_DropWeapon
 // Player died, so put the weapon away.
 pub(crate) fn P_DropWeapon(player: &mut player_t) {
-	P_SetPsprite(
-		player,
-		psprnum_t::ps_weapon,
-		weaponinfo[usize::from(player.readyweapon)].downstate,
-	);
+	P_SetPsprite(player, psprnum_t::ps_weapon, weaponinfo[player.readyweapon].downstate);
 }
 
 // A_WeaponReady
@@ -273,10 +264,10 @@ pub(crate) fn A_WeaponReady(player: &mut player_t, psp: &mut pspdef_t) {
 
 		// check for change
 		//  if player is dead, put the weapon away
-		if player.pendingweapon != weapontype_t::wp_nochange || player.health == 0 {
+		if player.pendingweapon.is_some() || player.health == 0 {
 			// change weapon
 			//  (pending weapon should allready be validated)
-			let newstate = weaponinfo[usize::from(player.readyweapon)].downstate;
+			let newstate = weaponinfo[player.readyweapon].downstate;
 			P_SetPsprite(player, psprnum_t::ps_weapon, newstate);
 			return;
 		}
@@ -310,10 +301,7 @@ pub(crate) fn A_WeaponReady(player: &mut player_t, psp: &mut pspdef_t) {
 pub(crate) fn A_ReFire(player: &mut player_t, _psp: &mut pspdef_t) {
 	// check for fire
 	//  (if a weaponchange is pending, let it go through instead)
-	if player.cmd.buttons & BT_ATTACK != 0
-		&& player.pendingweapon == weapontype_t::wp_nochange
-		&& player.health != 0
-	{
+	if player.cmd.buttons & BT_ATTACK != 0 && player.pendingweapon.is_none() && player.health != 0 {
 		player.refire += 1;
 		P_FireWeapon(player);
 	} else {
@@ -353,7 +341,7 @@ pub(crate) fn A_Lower(player: &mut player_t, psp: &mut pspdef_t) {
 		return;
 	}
 
-	player.readyweapon = player.pendingweapon;
+	player.readyweapon = player.pendingweapon.unwrap();
 
 	P_BringUpWeapon(player);
 }
@@ -370,7 +358,7 @@ pub(crate) fn A_Raise(player: &mut player_t, psp: &mut pspdef_t) {
 
 	// The weapon has been raised all the way,
 	//  so change to the ready state.
-	let newstate = weaponinfo[usize::from(player.readyweapon)].readystate;
+	let newstate = weaponinfo[player.readyweapon].readystate;
 
 	P_SetPsprite(player, psprnum_t::ps_weapon, newstate);
 }
@@ -378,11 +366,7 @@ pub(crate) fn A_Raise(player: &mut player_t, psp: &mut pspdef_t) {
 // A_GunFlash
 pub(crate) fn A_GunFlash(player: &mut player_t, _psp: &mut pspdef_t) {
 	P_SetMobjState(player.mo_mut(), statenum_t::S_PLAY_ATK2);
-	P_SetPsprite(
-		player,
-		psprnum_t::ps_flash,
-		weaponinfo[usize::from(player.readyweapon)].flashstate,
-	);
+	P_SetPsprite(player, psprnum_t::ps_flash, weaponinfo[player.readyweapon].flashstate);
 }
 
 // WEAPON ATTACKS
@@ -392,7 +376,7 @@ pub(crate) fn A_Punch(player: &mut player_t, _psp: &mut pspdef_t) {
 	unsafe {
 		let mut damage = (P_Random() % 10 + 1) << 1;
 
-		if player.powers[usize::from(powertype_t::pw_strength)] != 0 {
+		if player.powers[powertype_t::pw_strength] != 0 {
 			damage *= 10;
 		}
 
@@ -446,25 +430,25 @@ pub(crate) fn A_Saw(player: &mut player_t, _psp: &mut pspdef_t) {
 
 // A_FireMissile
 pub(crate) fn A_FireMissile(player: &mut player_t, _psp: &mut pspdef_t) {
-	player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
+	player.ammo[weaponinfo[player.readyweapon].ammo.unwrap()] -= 1;
 	P_SpawnPlayerMissile(player.mo_mut(), mobjtype_t::MT_ROCKET);
 }
 
 // A_FireBFG
 pub(crate) fn A_FireBFG(player: &mut player_t, _psp: &mut pspdef_t) {
-	player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= BFGCELLS;
+	player.ammo[weaponinfo[player.readyweapon].ammo.unwrap()] -= BFGCELLS;
 	P_SpawnPlayerMissile(player.mo_mut(), mobjtype_t::MT_BFG);
 }
 
 // A_FirePlasma
 pub(crate) fn A_FirePlasma(player: &mut player_t, _psp: &mut pspdef_t) {
-	player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
+	player.ammo[weaponinfo[player.readyweapon].ammo.unwrap()] -= 1;
 
 	P_SetPsprite(
 		player,
 		psprnum_t::ps_flash,
 		statenum_t::from(
-			usize::from(weaponinfo[usize::from(player.readyweapon)].flashstate)
+			usize::from(weaponinfo[player.readyweapon].flashstate)
 				+ usize::try_from(P_Random() & 1).unwrap(),
 		),
 	);
@@ -511,13 +495,9 @@ pub(crate) fn A_FirePistol(player: &mut player_t, _psp: &mut pspdef_t) {
 	S_StartSound(player.mo.cast(), sfxenum_t::sfx_pistol);
 
 	P_SetMobjState(player.mo_mut(), statenum_t::S_PLAY_ATK2);
-	player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
+	player.ammo[weaponinfo[player.readyweapon].ammo.unwrap()] -= 1;
 
-	P_SetPsprite(
-		player,
-		psprnum_t::ps_flash,
-		weaponinfo[usize::from(player.readyweapon)].flashstate,
-	);
+	P_SetPsprite(player, psprnum_t::ps_flash, weaponinfo[player.readyweapon].flashstate);
 
 	P_BulletSlope(player.mo_mut());
 	let accurate = player.refire == 0;
@@ -529,13 +509,9 @@ pub(crate) fn A_FireShotgun(player: &mut player_t, _psp: &mut pspdef_t) {
 	S_StartSound(player.mo.cast(), sfxenum_t::sfx_shotgn);
 	P_SetMobjState(player.mo_mut(), statenum_t::S_PLAY_ATK2);
 
-	player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
+	player.ammo[weaponinfo[player.readyweapon].ammo.unwrap()] -= 1;
 
-	P_SetPsprite(
-		player,
-		psprnum_t::ps_flash,
-		weaponinfo[usize::from(player.readyweapon)].flashstate,
-	);
+	P_SetPsprite(player, psprnum_t::ps_flash, weaponinfo[player.readyweapon].flashstate);
 
 	P_BulletSlope(player.mo_mut());
 
@@ -550,13 +526,9 @@ pub(crate) fn A_FireShotgun2(player: &mut player_t, _psp: &mut pspdef_t) {
 		S_StartSound(player.mo.cast(), sfxenum_t::sfx_dshtgn);
 		P_SetMobjState(player.mo_mut(), statenum_t::S_PLAY_ATK2);
 
-		player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 2;
+		player.ammo[weaponinfo[player.readyweapon].ammo.unwrap()] -= 2;
 
-		P_SetPsprite(
-			player,
-			psprnum_t::ps_flash,
-			weaponinfo[usize::from(player.readyweapon)].flashstate,
-		);
+		P_SetPsprite(player, psprnum_t::ps_flash, weaponinfo[player.readyweapon].flashstate);
 
 		P_BulletSlope(player.mo_mut());
 
@@ -580,18 +552,18 @@ pub(crate) fn A_FireCGun(player: &mut player_t, psp: &mut pspdef_t) {
 	unsafe {
 		S_StartSound(player.mo.cast(), sfxenum_t::sfx_pistol);
 
-		if player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] == 0 {
+		if player.ammo[weaponinfo[player.readyweapon].ammo.unwrap()] == 0 {
 			return;
 		}
 
 		P_SetMobjState(player.mo_mut(), statenum_t::S_PLAY_ATK2);
-		player.ammo[usize::from(weaponinfo[usize::from(player.readyweapon)].ammo)] -= 1;
+		player.ammo[weaponinfo[player.readyweapon].ammo.unwrap()] -= 1;
 
 		P_SetPsprite(
 			player,
 			psprnum_t::ps_flash,
 			statenum_t::from(
-				usize::from(weaponinfo[usize::from(player.readyweapon)].flashstate)
+				usize::from(weaponinfo[player.readyweapon].flashstate)
 					+ usize::try_from(
 						psp.state.offset_from(&raw const states[usize::from(statenum_t::S_CHAIN1)]),
 					)
@@ -666,7 +638,7 @@ pub(crate) fn P_SetupPsprites(player: &mut player_t) {
 	}
 
 	// spawn the gun
-	player.pendingweapon = player.readyweapon;
+	player.pendingweapon = Some(player.readyweapon);
 	P_BringUpWeapon(player);
 }
 

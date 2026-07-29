@@ -1,14 +1,14 @@
 #![allow(non_camel_case_types, non_upper_case_globals)]
 
 use crate::{
-	doomdef::{ammotype_t, weapontype_t},
+	doomdef::{NUMWEAPONS, ammotype_t},
 	info::statenum_t,
 };
 
 // Weapon info: sprite frames, ammunition use.
 #[repr(C)]
 pub(crate) struct weaponinfo_t {
-	pub(crate) ammo: ammotype_t,
+	pub(crate) ammo: Option<ammotype_t>,
 	pub(crate) upstate: statenum_t,
 	pub(crate) downstate: statenum_t,
 	pub(crate) readystate: statenum_t,
@@ -27,10 +27,10 @@ pub(crate) struct weaponinfo_t {
 // atkstate, i.e. attack/fire/hit frame
 // flashstate, muzzle flash
 #[unsafe(no_mangle)]
-pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()] = [
+pub(crate) static weaponinfo: [weaponinfo_t; NUMWEAPONS] = [
 	weaponinfo_t {
 		// fist
-		ammo: ammotype_t::am_noammo,
+		ammo: None,
 		upstate: statenum_t::S_PUNCHUP,
 		downstate: statenum_t::S_PUNCHDOWN,
 		readystate: statenum_t::S_PUNCH,
@@ -39,7 +39,7 @@ pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()
 	},
 	weaponinfo_t {
 		// pistol
-		ammo: ammotype_t::am_clip,
+		ammo: Some(ammotype_t::am_clip),
 		upstate: statenum_t::S_PISTOLUP,
 		downstate: statenum_t::S_PISTOLDOWN,
 		readystate: statenum_t::S_PISTOL,
@@ -48,7 +48,7 @@ pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()
 	},
 	weaponinfo_t {
 		// shotgun
-		ammo: ammotype_t::am_shell,
+		ammo: Some(ammotype_t::am_shell),
 		upstate: statenum_t::S_SGUNUP,
 		downstate: statenum_t::S_SGUNDOWN,
 		readystate: statenum_t::S_SGUN,
@@ -57,7 +57,7 @@ pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()
 	},
 	weaponinfo_t {
 		// chaingun
-		ammo: ammotype_t::am_clip,
+		ammo: Some(ammotype_t::am_clip),
 		upstate: statenum_t::S_CHAINUP,
 		downstate: statenum_t::S_CHAINDOWN,
 		readystate: statenum_t::S_CHAIN,
@@ -66,7 +66,7 @@ pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()
 	},
 	weaponinfo_t {
 		// missile launcher
-		ammo: ammotype_t::am_misl,
+		ammo: Some(ammotype_t::am_misl),
 		upstate: statenum_t::S_MISSILEUP,
 		downstate: statenum_t::S_MISSILEDOWN,
 		readystate: statenum_t::S_MISSILE,
@@ -75,7 +75,7 @@ pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()
 	},
 	weaponinfo_t {
 		// plasma rifle
-		ammo: ammotype_t::am_cell,
+		ammo: Some(ammotype_t::am_cell),
 		upstate: statenum_t::S_PLASMAUP,
 		downstate: statenum_t::S_PLASMADOWN,
 		readystate: statenum_t::S_PLASMA,
@@ -84,7 +84,7 @@ pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()
 	},
 	weaponinfo_t {
 		// bfg 9000
-		ammo: ammotype_t::am_cell,
+		ammo: Some(ammotype_t::am_cell),
 		upstate: statenum_t::S_BFGUP,
 		downstate: statenum_t::S_BFGDOWN,
 		readystate: statenum_t::S_BFG,
@@ -93,7 +93,7 @@ pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()
 	},
 	weaponinfo_t {
 		// chainsaw
-		ammo: ammotype_t::am_noammo,
+		ammo: None,
 		upstate: statenum_t::S_SAWUP,
 		downstate: statenum_t::S_SAWDOWN,
 		readystate: statenum_t::S_SAW,
@@ -102,7 +102,7 @@ pub(crate) static weaponinfo: [weaponinfo_t; weapontype_t::NUMWEAPONS.to_usize()
 	},
 	weaponinfo_t {
 		// super shotgun
-		ammo: ammotype_t::am_shell,
+		ammo: Some(ammotype_t::am_shell),
 		upstate: statenum_t::S_DSGUNUP,
 		downstate: statenum_t::S_DSGUNDOWN,
 		readystate: statenum_t::S_DSGUN,

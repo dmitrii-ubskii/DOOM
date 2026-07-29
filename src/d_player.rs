@@ -16,7 +16,7 @@ use std::{ffi::c_char, ptr::null_mut};
 
 use crate::{
 	d_ticcmd::ticcmd_t,
-	doomdef::{MAXPLAYERS, ammotype_t, card_t, powertype_t, weapontype_t},
+	doomdef::{MAXPLAYERS, NUMAMMO, NUMCARDS, NUMPOWERS, NUMWEAPONS, weapontype_t},
 	m_fixed::fixed_t,
 	p_mobj::mobj_t,
 	p_pspr::{pspdef_t, psprnum_t},
@@ -69,8 +69,8 @@ pub(crate) struct player_t {
 	pub(crate) armortype: i32,
 
 	// Power ups. invinc and invis are tic counters.
-	pub(crate) powers: [usize; powertype_t::NUMPOWERS.to_usize()],
-	pub(crate) cards: [i32; card_t::NUMCARDS.to_usize()],
+	pub(crate) powers: [usize; NUMPOWERS],
+	pub(crate) cards: [i32; NUMCARDS],
 	pub(crate) backpack: i32,
 
 	// Frags, kills of other players.
@@ -78,11 +78,11 @@ pub(crate) struct player_t {
 	pub(crate) readyweapon: weapontype_t,
 
 	// Is wp_nochange if not changing.
-	pub(crate) pendingweapon: weapontype_t,
+	pub(crate) pendingweapon: Option<weapontype_t>,
 
-	pub(crate) weaponowned: [i32; weapontype_t::NUMWEAPONS.to_usize()],
-	pub(crate) ammo: [usize; ammotype_t::NUMAMMO.to_usize()],
-	pub(crate) maxammo: [usize; ammotype_t::NUMAMMO.to_usize()],
+	pub(crate) weaponowned: [i32; NUMWEAPONS],
+	pub(crate) ammo: [usize; NUMAMMO],
+	pub(crate) maxammo: [usize; NUMAMMO],
 
 	// True if button down last tic.
 	pub(crate) attackdown: i32,
@@ -153,7 +153,7 @@ impl player_t {
 			backpack: 0,
 			frags: [0; 4],
 			readyweapon: weapontype_t::wp_pistol,
-			pendingweapon: weapontype_t::wp_fist,
+			pendingweapon: Some(weapontype_t::wp_fist),
 			weaponowned: [0; 9],
 			ammo: [0; 4],
 			maxammo: [0; 4],

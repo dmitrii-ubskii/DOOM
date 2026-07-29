@@ -72,7 +72,7 @@ use crate::{
 	d_player::{CF_NOMOMENTUM, player_t, playerstate_t},
 	d_think::{think_t, thinker_t},
 	doomdata::mapthing_t,
-	doomdef::{MAXPLAYERS, MTF_AMBUSH, card_t, skill_t},
+	doomdef::{MAXPLAYERS, MTF_AMBUSH, NUMCARDS, skill_t},
 	g_game::{
 		G_PlayerReborn, consoleplayer, deathmatch, gameskill, netgame, playeringame, players,
 		respawnmonsters, totalitems, totalkills,
@@ -847,7 +847,7 @@ pub(crate) fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 
 		// give all cards in death match mode
 		if deathmatch != 0 {
-			for i in 0..usize::from(card_t::NUMCARDS) {
+			for i in 0..NUMCARDS {
 				p.cards[i] = 1;
 			}
 		}
