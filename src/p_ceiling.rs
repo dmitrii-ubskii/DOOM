@@ -18,8 +18,6 @@ use crate::{
 	z_zone::{PU_LEVSPEC, Z_Malloc},
 };
 
-type boolean = i32;
-
 // CEILINGS
 #[unsafe(no_mangle)]
 pub(crate) static mut activeceilings: [*mut ceiling_t; MAXCEILINGS] = [null_mut(); MAXCEILINGS];
@@ -235,9 +233,8 @@ fn P_ActivateInStasisCeiling(line: &mut line_t) {
 
 // EV_CeilingCrushStop
 // Stop a ceiling from crushing!
-pub(crate) fn EV_CeilingCrushStop(line: &mut line_t) -> boolean {
+pub(crate) fn EV_CeilingCrushStop(line: &mut line_t) {
 	unsafe {
-		let mut rtn = 0;
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..MAXCEILINGS {
 			if !activeceilings[i].is_null()
@@ -247,10 +244,7 @@ pub(crate) fn EV_CeilingCrushStop(line: &mut line_t) -> boolean {
 				(*activeceilings[i]).olddirection = (*activeceilings[i]).direction;
 				(*activeceilings[i]).thinker.function = think_t::null;
 				(*activeceilings[i]).direction = 0; // in-stasis
-				rtn = 1;
 			}
 		}
-
-		rtn
 	}
 }

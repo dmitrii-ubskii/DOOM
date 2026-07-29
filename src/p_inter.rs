@@ -40,7 +40,6 @@ use crate::{
 };
 
 type int = i32;
-type boolean = i32;
 
 const BONUSADD: usize = 6;
 
@@ -55,10 +54,10 @@ static mut clipammo: [usize; ammotype_t::NUMAMMO.to_usize()] = [10, 4, 20, 1];
 // Num is the number of clip loads,
 // not the individual count (0= 1/2 clip).
 // Returns false if the ammo can't be picked up at all
-fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolean {
+fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> bool {
 	unsafe {
 		if ammo == ammotype_t::am_noammo {
-			return 0;
+			return false;
 		}
 
 		// if (ammo < 0 || ammo > NUMAMMO) {
@@ -66,7 +65,7 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 		// }
 
 		if (*player).ammo[usize::from(ammo)] == (*player).maxammo[usize::from(ammo)] {
-			return 0;
+			return false;
 		}
 
 		if num != 0 {
@@ -92,7 +91,7 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 		// don't change up weapons,
 		// player was lower on purpose.
 		if oldammo != 0 {
-			return 1;
+			return true;
 		}
 
 		// We were down to zero,
@@ -124,18 +123,18 @@ fn P_GiveAmmo(player: *mut player_t, ammo: ammotype_t, mut num: usize) -> boolea
 			_ => (),
 		}
 
-		1
+		true
 	}
 }
 
 // P_GiveWeapon
 // The weapon name may have a MF_DROPPED flag ored in.
-fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: boolean) -> boolean {
+fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: bool) -> bool {
 	unsafe {
-		if netgame && deathmatch != 2 && dropped == 0 {
+		if netgame && deathmatch != 2 && !dropped {
 			// leave placed weapons forever on net games
 			if (*player).weaponowned[usize::from(weapon)] != 0 {
-				return 0;
+				return false;
 			}
 
 			(*player).bonuscount += BONUSADD;
@@ -151,20 +150,20 @@ fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: boolean) -
 			if std::ptr::eq(player, &raw mut players[consoleplayer]) {
 				S_StartSound(null_mut(), sfxenum_t::sfx_wpnup);
 			}
-			return 0;
+			return false;
 		}
 
 		let gaveammo;
 		if weaponinfo[usize::from(weapon)].ammo != ammotype_t::am_noammo {
 			// give one clip with a dropped weapon,
 			// two clips with a found weapon
-			if dropped != 0 {
+			if dropped {
 				gaveammo = P_GiveAmmo(player, weaponinfo[usize::from(weapon)].ammo, 1);
 			} else {
 				gaveammo = P_GiveAmmo(player, weaponinfo[usize::from(weapon)].ammo, 2);
 			}
 		} else {
-			gaveammo = 0;
+			gaveammo = false;
 		}
 
 		let gaveweapon;
@@ -176,22 +175,22 @@ fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: boolean) -
 			(*player).pendingweapon = weapon;
 		}
 
-		boolean::from(gaveweapon != 0 || gaveammo != 0)
+		gaveweapon != 0 || gaveammo
 	}
 }
 
 // P_GiveBody
 // Returns false if the body isn't needed at all
-fn P_GiveBody(player: &mut player_t, num: int) -> boolean {
+fn P_GiveBody(player: &mut player_t, num: int) -> bool {
 	if player.health >= MAXHEALTH {
-		return 0;
+		return false;
 	}
 	player.health += num;
 	if player.health > MAXHEALTH {
 		player.health = MAXHEALTH;
 	}
 	player.mo_mut().health = player.health;
-	1
+	true
 }
 
 // P_GiveArmor
@@ -399,14 +398,14 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 
 		// medikits, heals
 		spritenum_t::SPR_STIM => {
-			if P_GiveBody(player, 10) == 0 {
+			if !P_GiveBody(player, 10) {
 				return;
 			}
 			player.message = GOTSTIM;
 		}
 
 		spritenum_t::SPR_MEDI => {
-			if P_GiveBody(player, 25) == 0 {
+			if !P_GiveBody(player, 25) {
 				return;
 			}
 
@@ -472,56 +471,56 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		// ammo
 		spritenum_t::SPR_CLIP => {
 			let num = if special.flags & MF_DROPPED != 0 { 0 } else { 1 };
-			if P_GiveAmmo(player, ammotype_t::am_clip, num) == 0 {
+			if !P_GiveAmmo(player, ammotype_t::am_clip, num) {
 				return;
 			}
 			player.message = GOTCLIP;
 		}
 
 		spritenum_t::SPR_AMMO => {
-			if P_GiveAmmo(player, ammotype_t::am_clip, 5) == 0 {
+			if !P_GiveAmmo(player, ammotype_t::am_clip, 5) {
 				return;
 			}
 			player.message = GOTCLIPBOX;
 		}
 
 		spritenum_t::SPR_ROCK => {
-			if P_GiveAmmo(player, ammotype_t::am_misl, 1) == 0 {
+			if !P_GiveAmmo(player, ammotype_t::am_misl, 1) {
 				return;
 			}
 			player.message = GOTROCKET;
 		}
 
 		spritenum_t::SPR_BROK => {
-			if P_GiveAmmo(player, ammotype_t::am_misl, 5) == 0 {
+			if !P_GiveAmmo(player, ammotype_t::am_misl, 5) {
 				return;
 			}
 			player.message = GOTROCKBOX;
 		}
 
 		spritenum_t::SPR_CELL => {
-			if P_GiveAmmo(player, ammotype_t::am_cell, 1) == 0 {
+			if !P_GiveAmmo(player, ammotype_t::am_cell, 1) {
 				return;
 			}
 			player.message = GOTCELL;
 		}
 
 		spritenum_t::SPR_CELP => {
-			if P_GiveAmmo(player, ammotype_t::am_cell, 5) == 0 {
+			if !P_GiveAmmo(player, ammotype_t::am_cell, 5) {
 				return;
 			}
 			player.message = GOTCELLBOX;
 		}
 
 		spritenum_t::SPR_SHEL => {
-			if P_GiveAmmo(player, ammotype_t::am_shell, 1) == 0 {
+			if !P_GiveAmmo(player, ammotype_t::am_shell, 1) {
 				return;
 			}
 			player.message = GOTSHELLS;
 		}
 
 		spritenum_t::SPR_SBOX => {
-			if P_GiveAmmo(player, ammotype_t::am_shell, 5) == 0 {
+			if !P_GiveAmmo(player, ammotype_t::am_shell, 5) {
 				return;
 			}
 			player.message = GOTSHELLBOX;
@@ -542,7 +541,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 
 		// weapons
 		spritenum_t::SPR_BFUG => {
-			if P_GiveWeapon(player, weapontype_t::wp_bfg, 0) == 0 {
+			if !P_GiveWeapon(player, weapontype_t::wp_bfg, false) {
 				return;
 			}
 			player.message = GOTBFG9000;
@@ -550,12 +549,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_MGUN => {
-			if P_GiveWeapon(
-				player,
-				weapontype_t::wp_chaingun,
-				boolean::try_from(special.flags & MF_DROPPED).unwrap(),
-			) == 0
-			{
+			if !P_GiveWeapon(player, weapontype_t::wp_chaingun, special.flags & MF_DROPPED != 0) {
 				return;
 			}
 			player.message = GOTCHAINGUN;
@@ -563,7 +557,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_CSAW => {
-			if P_GiveWeapon(player, weapontype_t::wp_chainsaw, 0) == 0 {
+			if !P_GiveWeapon(player, weapontype_t::wp_chainsaw, false) {
 				return;
 			}
 			player.message = GOTCHAINSAW;
@@ -571,7 +565,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_LAUN => {
-			if P_GiveWeapon(player, weapontype_t::wp_missile, 0) == 0 {
+			if !P_GiveWeapon(player, weapontype_t::wp_missile, false) {
 				return;
 			}
 			player.message = GOTLAUNCHER;
@@ -579,7 +573,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_PLAS => {
-			if P_GiveWeapon(player, weapontype_t::wp_plasma, 0) == 0 {
+			if !P_GiveWeapon(player, weapontype_t::wp_plasma, false) {
 				return;
 			}
 			player.message = GOTPLASMA;
@@ -587,12 +581,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_SHOT => {
-			if P_GiveWeapon(
-				player,
-				weapontype_t::wp_shotgun,
-				boolean::try_from(special.flags & MF_DROPPED).unwrap(),
-			) == 0
-			{
+			if !P_GiveWeapon(player, weapontype_t::wp_shotgun, special.flags & MF_DROPPED != 0) {
 				return;
 			}
 			player.message = GOTSHOTGUN;
@@ -600,11 +589,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 		}
 
 		spritenum_t::SPR_SGN2 => {
-			if P_GiveWeapon(
-				player,
-				weapontype_t::wp_supershotgun,
-				boolean::try_from(special.flags & MF_DROPPED).unwrap(),
-			) == 0
+			if !P_GiveWeapon(player, weapontype_t::wp_supershotgun, special.flags & MF_DROPPED != 0)
 			{
 				return;
 			}

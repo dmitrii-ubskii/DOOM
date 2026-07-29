@@ -737,7 +737,7 @@ fn M_SaveSelect(choice: i32) {
 // Selected from DOOM menu
 fn M_SaveGame(_choice: i32) {
 	unsafe {
-		if usergame == 0 {
+		if !usergame {
 			M_StartMessage(SAVEDEAD, None, false);
 			return;
 		}
@@ -763,7 +763,7 @@ fn M_QuickSaveResponse(ch: i32) {
 #[allow(static_mut_refs)]
 fn M_QuickSave() {
 	unsafe {
-		if usergame == 0 {
+		if !usergame {
 			S_StartSound(null_mut(), sfxenum_t::sfx_oof);
 			return;
 		}
@@ -1059,7 +1059,7 @@ fn M_EndGameResponse(ch: i32) {
 
 fn M_EndGame(_choice: i32) {
 	unsafe {
-		if usergame == 0 {
+		if !usergame {
 			S_StartSound(null_mut(), sfxenum_t::sfx_oof);
 			return;
 		}
@@ -1440,7 +1440,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 			match ch {
 				_ if ch == i32::from(KEY_MINUS) => {
 					// Screen size down
-					if automapactive || chat_on != 0 {
+					if automapactive || chat_on {
 						return false;
 					}
 					M_SizeDisplay(0);
@@ -1450,7 +1450,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 
 				_ if ch == i32::from(KEY_EQUALS) => {
 					// Screen size up
-					if automapactive || chat_on != 0 {
+					if automapactive || chat_on {
 						return false;
 					}
 					M_SizeDisplay(1);

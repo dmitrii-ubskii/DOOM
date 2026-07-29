@@ -10,8 +10,6 @@ use crate::{
 	v_video::V_DrawPatchDirect,
 };
 
-type boolean = i32;
-
 // background and foreground screen numbers
 // different from other modules.
 // const BG: usize = 1;
@@ -37,7 +35,7 @@ pub(crate) struct hu_textline_t {
 	pub(crate) len: usize,                        // current line length
 
 	// whether this line needs to be udpated
-	pub(crate) needsupdate: boolean,
+	pub(crate) needsupdate: i32,
 }
 
 // Scrolling Text window widget
@@ -48,8 +46,8 @@ pub(crate) struct hu_stext_t {
 	pub(crate) cl: usize,                       // current line number
 
 	//	pointer to boolean stating whether to update window
-	pub(crate) on: *mut boolean,
-	pub(crate) laston: boolean, // last value of *on.
+	pub(crate) on: *mut bool,
+	pub(crate) laston: bool, // last value of *on.
 }
 
 // Input Text Line widget
@@ -62,8 +60,8 @@ pub(crate) struct hu_itext_t {
 	pub(crate) lm: usize,
 
 	// pointer to boolean stating whether to update window
-	pub(crate) on: *mut boolean,
-	pub(crate) laston: boolean, // last value of *on.
+	pub(crate) on: *mut bool,
+	pub(crate) laston: bool, // last value of *on.
 }
 
 fn HUlib_clearTextLine(t: &mut hu_textline_t) {
@@ -86,30 +84,30 @@ pub(crate) fn HUlib_initTextLine(
 	HUlib_clearTextLine(t);
 }
 
-pub(crate) fn HUlib_addCharToTextLine(t: &mut hu_textline_t, ch: c_char) -> boolean {
+pub(crate) fn HUlib_addCharToTextLine(t: &mut hu_textline_t, ch: c_char) -> bool {
 	if t.len == HU_MAXLINELENGTH {
-		0
+		false
 	} else {
 		t.l[t.len] = ch;
 		t.len += 1;
 		t.l[t.len] = 0;
 		t.needsupdate = 4;
-		1
+		true
 	}
 }
 
-fn HUlib_delCharFromTextLine(t: &mut hu_textline_t) -> boolean {
+fn HUlib_delCharFromTextLine(t: &mut hu_textline_t) -> bool {
 	if t.len == 0 {
-		0
+		false
 	} else {
 		t.len -= 1;
 		t.l[t.len] = 0;
 		t.needsupdate = 4;
-		1
+		true
 	}
 }
 
-pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, drawcursor: boolean) {
+pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, drawcursor: bool) {
 	unsafe {
 		// draw the new stuff
 		let mut x = l.x;
@@ -137,7 +135,7 @@ pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, drawcursor: boolean) {
 
 		// draw the cursor if requested
 		let underscore = usize::from(b'_') - usize::try_from(l.sc).unwrap();
-		if drawcursor != 0
+		if drawcursor
 			&& x + usize::try_from((**l.f.wrapping_add(underscore)).width).unwrap() <= SCREENWIDTH
 		{
 			V_DrawPatchDirect(x, l.y, FG, *l.f.wrapping_add(underscore));
@@ -178,12 +176,12 @@ pub(crate) fn HUlib_initSText(
 	h: usize,
 	font: *mut *mut patch_t,
 	startchar: i32,
-	on: *mut boolean,
+	on: *mut bool,
 ) {
 	unsafe {
 		s.h = h;
 		s.on = on;
-		s.laston = 1;
+		s.laston = true;
 		s.cl = 0;
 		for i in 0..h {
 			HUlib_initTextLine(
@@ -233,7 +231,7 @@ pub(crate) fn HUlib_addMessageToSText(
 
 pub(crate) fn HUlib_drawSText(s: &mut hu_stext_t) {
 	unsafe {
-		if *s.on == 0 {
+		if !*s.on {
 			return; // if not on, don't draw
 		}
 
@@ -246,7 +244,7 @@ pub(crate) fn HUlib_drawSText(s: &mut hu_stext_t) {
 			};
 
 			// need a decision made here on whether to skip the draw
-			HUlib_drawTextLine(&mut s.l[idx], 0); // no cursor, please
+			HUlib_drawTextLine(&mut s.l[idx], false); // no cursor, please
 		}
 	}
 }
@@ -254,7 +252,7 @@ pub(crate) fn HUlib_drawSText(s: &mut hu_stext_t) {
 pub(crate) fn HUlib_eraseSText(s: &mut hu_stext_t) {
 	unsafe {
 		for i in 0..s.h {
-			if s.laston != 0 && *s.on == 0 {
+			if s.laston && !*s.on {
 				s.l[i].needsupdate = 4;
 			}
 			HUlib_eraseTextLine(&mut s.l[i]);
@@ -269,11 +267,11 @@ pub(crate) fn HUlib_initIText(
 	y: usize,
 	font: *mut *mut patch_t,
 	startchar: i32,
-	on: *mut boolean,
+	on: *mut bool,
 ) {
 	it.lm = 0; // default left margin is start of text
 	it.on = on;
-	it.laston = 1;
+	it.laston = true;
 	HUlib_initTextLine(&mut it.l, x, y, font, startchar);
 }
 
@@ -306,16 +304,16 @@ pub(crate) fn HUlib_keyInIText(it: &mut hu_itext_t, ch: u8) -> bool {
 
 pub(crate) fn HUlib_drawIText(it: &mut hu_itext_t) {
 	unsafe {
-		if *it.on == 0 {
+		if !*it.on {
 			return;
 		}
-		HUlib_drawTextLine(&mut it.l, 1); // draw the line w/ cursor
+		HUlib_drawTextLine(&mut it.l, true); // draw the line w/ cursor
 	}
 }
 
 pub(crate) fn HUlib_eraseIText(it: &mut hu_itext_t) {
 	unsafe {
-		if it.laston != 0 && *it.on == 0 {
+		if it.laston && !*it.on {
 			it.l.needsupdate = 4;
 		}
 		HUlib_eraseTextLine(&mut it.l);

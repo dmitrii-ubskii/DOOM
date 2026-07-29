@@ -177,7 +177,6 @@ const ST_MAXAMMO3Y: usize = 185;
 const ST_MSGWIDTH: usize = 52;
 
 type int = i32;
-type boolean = i32;
 type unsigned = u32;
 
 // main player in game
@@ -205,7 +204,7 @@ static mut st_chatstate: st_chatstateenum_t = st_chatstateenum_t::StartChatState
 static mut st_gamestate: st_stateenum_t = st_stateenum_t::FirstPersonState;
 
 // whether left-side main status bar is active
-static mut st_statusbaron: boolean = 0;
+static mut st_statusbaron: bool = false;
 
 // whether status bar chat is active
 static mut st_chat: bool = false;
@@ -217,13 +216,13 @@ static mut st_oldchat: bool = false;
 static mut st_cursoron: bool = false;
 
 // !deathmatch
-static mut st_notdeathmatch: boolean = 0;
+static mut st_notdeathmatch: bool = false;
 
 // !deathmatch && st_statusbaron
-static mut st_armson: boolean = 0;
+static mut st_armson: bool = false;
 
 // !deathmatch
-static mut st_fragson: boolean = 0;
+static mut st_fragson: bool = false;
 
 // main bar left
 static mut sbar: *mut patch_t = null_mut();
@@ -274,8 +273,15 @@ static mut w_frags: st_number_t = NULL_ST_NUMBER_T;
 static mut w_health: st_percent_t = st_percent_t { n: NULL_ST_NUMBER_T, p: null_mut() };
 
 // arms background
-static mut w_armsbg: st_binicon_t =
-	st_binicon_t { x: 0, y: 0, oldval: 0, val: null_mut(), on: null_mut(), p: null_mut(), data: 0 };
+static mut w_armsbg: st_binicon_t = st_binicon_t {
+	x: 0,
+	y: 0,
+	oldval: false,
+	val: null_mut(),
+	on: null_mut(),
+	p: null_mut(),
+	data: 0,
+};
 
 const NULL_ST_MULTICON_T: st_multicon_t = st_multicon_t {
 	x: 0,
@@ -312,8 +318,8 @@ static mut st_fragscount: int = 0;
 static mut st_oldhealth: int = -1;
 
 // used for evil grin
-static mut oldweaponsowned: [boolean; weapontype_t::NUMWEAPONS.to_usize()] =
-	[0; weapontype_t::NUMWEAPONS.to_usize()];
+static mut oldweaponsowned: [bool; weapontype_t::NUMWEAPONS.to_usize()] =
+	[false; weapontype_t::NUMWEAPONS.to_usize()];
 
 // count until face changes
 static mut st_facecount: usize = 0;
@@ -413,7 +419,7 @@ static mut cheat_mypos: cheatseq_t =
 
 fn ST_refreshBackground() {
 	unsafe {
-		if st_statusbaron != 0 {
+		if st_statusbaron {
 			V_DrawPatch(ST_X, 0, BG, sbar);
 
 			if netgame {
@@ -673,9 +679,9 @@ fn ST_updateFaceWidget() {
 
 				#[allow(clippy::needless_range_loop)]
 				for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
-					if oldweaponsowned[i] != (*plyr).weaponowned[i] {
+					if oldweaponsowned[i] != ((*plyr).weaponowned[i] != 0) {
 						doevilgrin = true;
-						oldweaponsowned[i] = (*plyr).weaponowned[i];
+						oldweaponsowned[i] = (*plyr).weaponowned[i] != 0;
 					}
 				}
 
@@ -821,13 +827,13 @@ fn ST_updateWidgets() {
 		ST_updateFaceWidget();
 
 		// used by the w_armsbg widget
-		st_notdeathmatch = !deathmatch;
+		st_notdeathmatch = deathmatch == 0;
 
 		// used by w_arms[] widgets
-		st_armson = boolean::from(st_statusbaron != 0 && (deathmatch == 0));
+		st_armson = st_statusbaron && deathmatch == 0;
 
 		// used by w_frags widget
-		st_fragson = boolean::from(st_statusbaron != 0 && (deathmatch != 0));
+		st_fragson = st_statusbaron && deathmatch != 0;
 		st_fragscount = 0;
 
 		for i in 0..MAXPLAYERS {
@@ -907,10 +913,10 @@ fn ST_doPaletteStuff() {
 fn ST_drawWidgets(refresh: bool) {
 	unsafe {
 		// used by w_arms[] widgets
-		st_armson = boolean::from(st_statusbaron != 0 && deathmatch == 0);
+		st_armson = st_statusbaron && deathmatch == 0;
 
 		// used by w_frags widget
-		st_fragson = boolean::from(deathmatch != 0 && st_statusbaron != 0);
+		st_fragson = deathmatch != 0 && st_statusbaron;
 
 		STlib_updateNum(&mut w_ready, refresh);
 
@@ -957,7 +963,7 @@ fn ST_diffDraw() {
 
 pub(crate) fn ST_Drawer(fullscreen: bool, refresh: bool) {
 	unsafe {
-		st_statusbaron = boolean::from(!fullscreen || automapactive);
+		st_statusbaron = !fullscreen || automapactive;
 		st_firsttime = st_firsttime || refresh;
 
 		// Do red-/gold-shifts from damage/items
@@ -1069,7 +1075,7 @@ fn ST_initData() {
 		st_chatstate = st_chatstateenum_t::StartChatState;
 		st_gamestate = st_stateenum_t::FirstPersonState;
 
-		st_statusbaron = 1;
+		st_statusbaron = true;
 		st_oldchat = false;
 		st_chat = false;
 		st_cursoron = false;
@@ -1081,7 +1087,7 @@ fn ST_initData() {
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..usize::from(weapontype_t::NUMWEAPONS) {
-			oldweaponsowned[i] = (*plyr).weaponowned[i];
+			oldweaponsowned[i] = (*plyr).weaponowned[i] != 0;
 		}
 
 		#[allow(clippy::needless_range_loop)]

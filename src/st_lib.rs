@@ -37,7 +37,7 @@ pub(crate) struct st_number_t {
 
 	// pointer to i32ean stating
 	//  whether to update number
-	pub(crate) on: *mut i32,
+	pub(crate) on: *mut bool,
 
 	// list of patches for 0-9
 	pub(crate) p: *mut *mut patch_t,
@@ -72,7 +72,7 @@ pub(crate) struct st_multicon_t {
 
 	// pointer to i32ean stating
 	//  whether to update icon
-	pub(crate) on: *mut i32,
+	pub(crate) on: *mut bool,
 
 	// list of icons
 	pub(crate) p: *mut *mut patch_t,
@@ -90,14 +90,14 @@ pub(crate) struct st_binicon_t {
 	pub(crate) y: usize,
 
 	// last icon value
-	pub(crate) oldval: i32,
+	pub(crate) oldval: bool,
 
 	// pointer to current icon status
-	pub(crate) val: *mut i32,
+	pub(crate) val: *mut bool,
 
 	// pointer to i32ean
 	//  stating whether to update icon
-	pub(crate) on: *mut i32,
+	pub(crate) on: *mut bool,
 
 	pub(crate) p: *mut patch_t, // icon
 	pub(crate) data: i32,       // user data
@@ -127,7 +127,7 @@ pub(crate) fn STlib_initNum(
 	y: usize,
 	pl: *mut *mut patch_t,
 	num: *mut i32,
-	on: *mut i32,
+	on: *mut bool,
 	width: usize,
 ) {
 	n.x = x;
@@ -202,7 +202,7 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: bool) {
 
 pub(crate) fn STlib_updateNum(n: &mut st_number_t, refresh: bool) {
 	unsafe {
-		if *n.on != 0 {
+		if *n.on {
 			STlib_drawNum(n, refresh);
 		}
 	}
@@ -216,7 +216,7 @@ pub(crate) fn STlib_initPercent(
 	y: usize,
 	pl: *mut *mut patch_t,
 	num: *mut i32,
-	on: *mut i32,
+	on: *mut bool,
 	percent: *mut patch_t,
 ) {
 	STlib_initNum(&mut p.n, x, y, pl, num, on, 3);
@@ -225,7 +225,7 @@ pub(crate) fn STlib_initPercent(
 
 pub(crate) fn STlib_updatePercent(per: &mut st_percent_t, refresh: bool) {
 	unsafe {
-		if refresh && *per.n.on != 0 {
+		if refresh && *per.n.on {
 			V_DrawPatch(per.n.x, per.n.y, FG, per.p);
 		}
 
@@ -241,7 +241,7 @@ pub(crate) fn STlib_initMultIcon(
 	y: usize,
 	il: *mut *mut patch_t,
 	inum: *mut i32,
-	on: *mut i32,
+	on: *mut bool,
 ) {
 	i.x = x;
 	i.y = y;
@@ -253,7 +253,7 @@ pub(crate) fn STlib_initMultIcon(
 
 pub(crate) fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 	unsafe {
-		if *mi.on != 0 && (mi.oldinum != *mi.inum || refresh) && (*mi.inum != -1) {
+		if *mi.on && (mi.oldinum != *mi.inum || refresh) && (*mi.inum != -1) {
 			if mi.oldinum != -1 {
 				let x =
 					mi.x.checked_add_signed(isize::from(
@@ -293,12 +293,12 @@ pub(crate) fn STlib_initBinIcon(
 	x: usize,
 	y: usize,
 	i: *mut patch_t,
-	val: *mut i32,
-	on: &mut i32,
+	val: *mut bool,
+	on: &mut bool,
 ) {
 	b.x = x;
 	b.y = y;
-	b.oldval = 0;
+	b.oldval = false;
 	b.val = val;
 	b.on = on;
 	b.p = i;
@@ -306,7 +306,7 @@ pub(crate) fn STlib_initBinIcon(
 
 pub(crate) fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
 	unsafe {
-		if *bi.on != 0 && (bi.oldval != *bi.val || refresh) {
+		if *bi.on && (bi.oldval != *bi.val || refresh) {
 			let x = bi.x.checked_add_signed(isize::from(-((*bi.p).leftoffset))).unwrap();
 			let y = bi.y.checked_add_signed(isize::from(-((*bi.p).topoffset))).unwrap();
 			let w = usize::try_from((*bi.p).width).unwrap();
@@ -316,7 +316,7 @@ pub(crate) fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
 				I_Error!(c"updateBinIcon: y - ST_Y < 0".as_ptr());
 			}
 
-			if *bi.val != 0 {
+			if *bi.val {
 				V_DrawPatch(bi.x, bi.y, FG, bi.p);
 			} else {
 				V_CopyRect(x, y - ST_Y, BG, w, h, x, y, FG);

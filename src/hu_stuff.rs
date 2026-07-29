@@ -46,8 +46,6 @@ use crate::{
 	z_zone::PU_STATIC,
 };
 
-type boolean = i32;
-
 // Globally visible constants.
 pub(crate) const HU_FONTSTART: u8 = b'!'; // the first font characters
 pub(crate) const HU_FONTEND: u8 = b'_'; // the last font characters
@@ -117,7 +115,7 @@ static mut w_title: hu_textline_t = hu_textline_t {
 	len: 0,
 	needsupdate: 0,
 };
-pub(crate) static mut chat_on: boolean = 0;
+pub(crate) static mut chat_on: bool = false;
 static mut w_chat: hu_itext_t = hu_itext_t {
 	l: hu_textline_t {
 		x: 0,
@@ -130,9 +128,9 @@ static mut w_chat: hu_itext_t = hu_itext_t {
 	},
 	lm: 0,
 	on: null_mut(),
-	laston: 0,
+	laston: false,
 };
-static mut always_off: boolean = 0;
+static mut always_off: bool = false;
 static mut chat_dest: [c_char; MAXPLAYERS] = [0; MAXPLAYERS];
 static mut w_inputbuffer: [hu_itext_t; MAXPLAYERS] = [hu_itext_t {
 	l: hu_textline_t {
@@ -146,10 +144,10 @@ static mut w_inputbuffer: [hu_itext_t; MAXPLAYERS] = [hu_itext_t {
 	},
 	lm: 0,
 	on: null_mut(),
-	laston: 0,
+	laston: false,
 }; MAXPLAYERS];
 
-static mut message_on: boolean = 0;
+static mut message_on: bool = false;
 pub(crate) static mut message_dontfuckwithme: bool = false;
 static mut message_nottobefuckedwith: bool = false;
 
@@ -166,7 +164,7 @@ static mut w_message: hu_stext_t = hu_stext_t {
 	h: 0,
 	cl: 0,
 	on: null_mut(),
-	laston: 0,
+	laston: false,
 };
 static mut message_counter: usize = 0;
 
@@ -386,10 +384,10 @@ pub(crate) fn HU_Start() {
 		}
 
 		plr = &raw mut players[consoleplayer];
-		message_on = 0;
+		message_on = false;
 		message_dontfuckwithme = false;
 		message_nottobefuckedwith = false;
-		chat_on = 0;
+		chat_on = false;
 
 		// create the message widget
 		HUlib_initSText(
@@ -457,7 +455,7 @@ pub(crate) fn HU_Drawer() {
 		HUlib_drawSText(&mut w_message);
 		HUlib_drawIText(&mut w_chat);
 		if automapactive {
-			HUlib_drawTextLine(&mut w_title, 0);
+			HUlib_drawTextLine(&mut w_title, false);
 		}
 	}
 }
@@ -478,7 +476,7 @@ pub(crate) fn HU_Ticker() {
 		if message_counter != 0 {
 			message_counter -= 1;
 			if message_counter == 0 {
-				message_on = 0;
+				message_on = false;
 				message_nottobefuckedwith = false;
 			}
 		}
@@ -488,7 +486,7 @@ pub(crate) fn HU_Ticker() {
 			if !(*plr).message.is_null() && (!message_nottobefuckedwith || message_dontfuckwithme) {
 				HUlib_addMessageToSText(&mut w_message, null(), (*plr).message);
 				(*plr).message = null();
-				message_on = 1;
+				message_on = true;
 				message_counter = HU_MSGTIMEOUT;
 				message_nottobefuckedwith = message_dontfuckwithme;
 				message_dontfuckwithme = false;
@@ -522,7 +520,7 @@ pub(crate) fn HU_Ticker() {
 								);
 
 								message_nottobefuckedwith = true;
-								message_on = 1;
+								message_on = true;
 								message_counter = HU_MSGTIMEOUT;
 								if gamemode == GameMode_t::commercial {
 									S_StartSound(null_mut(), sfxenum_t::sfx_radio);
@@ -602,14 +600,14 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 		}
 
 		let mut eatkey = false;
-		if chat_on == 0 {
+		if !chat_on {
 			if ev.data1 == i32::from(HU_MSGREFRESH) {
-				message_on = 1;
+				message_on = true;
 				message_counter = HU_MSGTIMEOUT;
 				eatkey = true;
 			} else if netgame && ev.data1 == i32::from(HU_INPUTTOGGLE) {
 				eatkey = true;
-				chat_on = 1;
+				chat_on = true;
 				HUlib_resetIText(&mut w_chat);
 				HU_queueChatChar(c_char::try_from(HU_BROADCAST).unwrap());
 			} else if netgame && numplayers > 2 {
@@ -617,7 +615,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 					if ev.data1 == i32::from(destination_keys[i]) {
 						if playeringame[i] && i != consoleplayer {
 							eatkey = true;
-							chat_on = 1;
+							chat_on = true;
 							HUlib_resetIText(&mut w_chat);
 							HU_queueChatChar(c_char::try_from(i).unwrap() + 1);
 							break;
@@ -660,7 +658,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 				HU_queueChatChar(c_char::try_from(KEY_ENTER).unwrap());
 
 				// leave chat mode and notify that it was sent
-				chat_on = 0;
+				chat_on = false;
 				libc::strcpy(lastmessage.as_mut_ptr(), chat_macros[usize::from(c)].u());
 				(*plr).message = lastmessage.as_mut_ptr();
 				eatkey = true;
@@ -680,13 +678,13 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 					//      plr.message = buf;
 				}
 				if c == KEY_ENTER {
-					chat_on = 0;
+					chat_on = false;
 					if w_chat.l.len != 0 {
 						libc::strcpy(lastmessage.as_mut_ptr(), w_chat.l.l.as_ptr());
 						(*plr).message = lastmessage.as_mut_ptr();
 					}
 				} else if c == KEY_ESCAPE {
-					chat_on = 0;
+					chat_on = false;
 				}
 			}
 		}

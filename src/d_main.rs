@@ -353,7 +353,7 @@ pub(crate) fn D_DoAdvanceDemo() {
 	unsafe {
 		players[consoleplayer].playerstate = playerstate_t::PST_LIVE; // not reborn
 		advancedemo = false;
-		usergame = 0; // no save / end game here
+		usergame = false; // no save / end game here
 		paused = false;
 		gameaction = gameaction_t::ga_nothing;
 

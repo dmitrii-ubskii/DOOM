@@ -36,7 +36,6 @@ use crate::{
 };
 
 type int = i32;
-type boolean = i32;
 
 // Used by ST StatusBar stuff.
 pub(crate) const AM_MSGHEADER: usize =
@@ -811,7 +810,7 @@ fn AM_clearFB(color: i32) {
 // Based on Cohen-Sutherland clipping algorithm but with a slightly
 // faster reject and precalculated slopes.  If the speed is needed,
 // use a hash algorithm to handle  the common cases.
-fn AM_clipMline(ml: &mline_t, fl: &mut fline_t) -> boolean {
+fn AM_clipMline(ml: &mline_t, fl: &mut fline_t) -> bool {
 	unsafe {
 		const LEFT: i32 = 1;
 		const RIGHT: i32 = 2;
@@ -851,7 +850,7 @@ fn AM_clipMline(ml: &mline_t, fl: &mut fline_t) -> boolean {
 		}
 
 		if outcode1 & outcode2 != 0 {
-			return 0; // trivially outside
+			return false; // trivially outside
 		}
 
 		if ml.a.x < m_x {
@@ -867,7 +866,7 @@ fn AM_clipMline(ml: &mline_t, fl: &mut fline_t) -> boolean {
 		}
 
 		if outcode1 & outcode2 != 0 {
-			return 0; // trivially outside
+			return false; // trivially outside
 		}
 
 		// transform to frame-buffer coordinates.
@@ -880,7 +879,7 @@ fn AM_clipMline(ml: &mline_t, fl: &mut fline_t) -> boolean {
 		DOOUTCODE!(outcode2, fl.b.x, fl.b.y);
 
 		if outcode1 & outcode2 != 0 {
-			return 0;
+			return false;
 		}
 
 		while outcode1 | outcode2 != 0 {
@@ -923,11 +922,11 @@ fn AM_clipMline(ml: &mline_t, fl: &mut fline_t) -> boolean {
 			}
 
 			if outcode1 & outcode2 != 0 {
-				return 0; // trivially outside
+				return false; // trivially outside
 			}
 		}
 
-		1
+		true
 	}
 }
 
@@ -1013,7 +1012,7 @@ fn AM_drawMline(ml: &mline_t, color: i32) {
 	unsafe {
 		static mut fl: fline_t = fline_t { a: fpoint_t { x: 0, y: 0 }, b: fpoint_t { x: 0, y: 0 } };
 
-		if AM_clipMline(ml, &mut fl) != 0 {
+		if AM_clipMline(ml, &mut fl) {
 			AM_drawFline(&fl, color); // draws it on frame buffer using fb coords
 		}
 	}

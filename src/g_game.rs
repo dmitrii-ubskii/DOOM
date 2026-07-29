@@ -63,7 +63,6 @@ use crate::{
 type byte = u8;
 type short = i16;
 type int = i32;
-type boolean = i32;
 
 pub(crate) const SAVEGAMESIZE: usize = 0x2c000;
 pub(crate) const SAVESTRINGSIZE: usize = 24;
@@ -78,7 +77,7 @@ pub(crate) static mut gamemap: usize = 0;
 pub(crate) static mut paused: bool = false;
 static mut sendpause: bool = false; // send a pause event next tic 
 static mut sendsave: bool = false; // send a save event next tic 
-pub(crate) static mut usergame: boolean = 0; // ok to save / end game 
+pub(crate) static mut usergame: bool = false; // ok to save / end game 
 
 static mut timingdemo: bool = false; // if true, exit with report on completion 
 pub(crate) static mut nodrawers: bool = false; // for comparative timing purposes 
@@ -87,7 +86,7 @@ static mut starttime: usize = 0; // for comparative timing purposes
 
 pub(crate) static mut viewactive: bool = false;
 
-pub(crate) static mut deathmatch: boolean = 0; // only if started as net death 
+pub(crate) static mut deathmatch: u8 = 0; // only if started as net death 
 pub(crate) static mut netgame: bool = false; // only true if packets are broadcast 
 pub(crate) static mut playeringame: [bool; MAXPLAYERS] = [false; MAXPLAYERS];
 pub(crate) static mut players: [player_t; MAXPLAYERS] = [player_t::new(); MAXPLAYERS];
@@ -736,7 +735,7 @@ pub(crate) fn G_PlayerReborn(player: usize) {
 // at the given mapthing_t spot
 // because something is occupying it
 
-fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
+fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> bool {
 	unsafe {
 		if players[playernum].mo.is_null() {
 			// first spawn of level, before corpses
@@ -744,17 +743,17 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 				if p.mo().x == i32::from((*mthing).x) << FRACBITS
 					&& p.mo().y == i32::from((*mthing).y) << FRACBITS
 				{
-					return 0;
+					return false;
 				}
 			}
-			return 1;
+			return true;
 		}
 
 		let x = (i32::from((*mthing).x)) << FRACBITS;
 		let y = (i32::from((*mthing).y)) << FRACBITS;
 
 		if P_CheckPosition(players[playernum].mo_mut(), x, y) {
-			return 0;
+			return false;
 		}
 
 		// flush an old corpse if needed
@@ -780,7 +779,7 @@ fn G_CheckSpot(playernum: usize, mthing: *mut mapthing_t) -> boolean {
 			S_StartSound(mo.cast(), sfxenum_t::sfx_telept); // don't start sound on first frame
 		}
 
-		1
+		true
 	}
 }
 
@@ -797,7 +796,7 @@ pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 
 		for _ in 0..20 {
 			let i = usize::try_from(P_Random() % i32::try_from(selections).unwrap()).unwrap();
-			if G_CheckSpot(playernum, &raw mut deathmatchstarts[i]) != 0 {
+			if G_CheckSpot(playernum, &raw mut deathmatchstarts[i]) {
 				deathmatchstarts[i].ty = i16::try_from(playernum).unwrap() + 1;
 				P_SpawnPlayer(&mut deathmatchstarts[i]);
 				return;
@@ -827,7 +826,7 @@ fn G_DoReborn(playernum: usize) {
 				return;
 			}
 
-			if G_CheckSpot(playernum, &raw mut playerstarts[playernum]) != 0 {
+			if G_CheckSpot(playernum, &raw mut playerstarts[playernum]) {
 				P_SpawnPlayer(&mut playerstarts[playernum]);
 				return;
 			}
@@ -835,7 +834,7 @@ fn G_DoReborn(playernum: usize) {
 			// try to spawn at one of the other players spots
 			#[allow(clippy::needless_range_loop)]
 			for i in 0..MAXPLAYERS {
-				if G_CheckSpot(playernum, &raw mut playerstarts[i]) != 0 {
+				if G_CheckSpot(playernum, &raw mut playerstarts[i]) {
 					playerstarts[i].ty = i16::try_from(playernum).unwrap() + 1; // fake as other player
 					P_SpawnPlayer(&mut playerstarts[i]);
 					playerstarts[i].ty = i16::try_from(i).unwrap() + 1; // restore
@@ -1271,7 +1270,7 @@ pub(crate) fn G_InitNew(skill: skill_t, mut episode: usize, mut map: usize) {
 			players[i].playerstate = playerstate_t::PST_REBORN;
 		}
 
-		usergame = 1; // will be set false if a demo
+		usergame = true; // will be set false if a demo
 		paused = false;
 		demoplayback = false;
 		automapactive = false;
@@ -1357,7 +1356,7 @@ fn G_WriteDemoTiccmd(cmd: *mut ticcmd_t) {
 #[allow(static_mut_refs)]
 pub(crate) fn G_RecordDemo(name: *const c_char) {
 	unsafe {
-		usergame = 0;
+		usergame = false;
 		libc::strcpy(demoname.as_mut_ptr(), name);
 		libc::strcat(demoname.as_mut_ptr(), c".lmp".as_ptr());
 		let mut maxsize = 0x20000;
@@ -1384,7 +1383,7 @@ pub(crate) fn G_BeginRecording() {
 		demo_p = demo_p.wrapping_add(1);
 		*demo_p = u8::try_from(gamemap).unwrap();
 		demo_p = demo_p.wrapping_add(1);
-		*demo_p = u8::try_from(deathmatch).unwrap();
+		*demo_p = deathmatch;
 		demo_p = demo_p.wrapping_add(1);
 		*demo_p = u8::from(respawnparm);
 		demo_p = demo_p.wrapping_add(1);
@@ -1436,7 +1435,7 @@ fn G_DoPlayDemo() {
 		let map = usize::from(*demo_p);
 		demo_p = demo_p.wrapping_add(1);
 
-		deathmatch = boolean::from(*demo_p);
+		deathmatch = *demo_p;
 		demo_p = demo_p.wrapping_add(1);
 		respawnparm = *demo_p != 0;
 		demo_p = demo_p.wrapping_add(1);
@@ -1462,7 +1461,7 @@ fn G_DoPlayDemo() {
 		G_InitNew(skill, episode, map);
 		precache = true;
 
-		usergame = 0;
+		usergame = false;
 		demoplayback = true;
 	}
 }
@@ -1491,7 +1490,7 @@ pub(crate) fn G_TimeDemo(name: *const c_char) {
 */
 
 #[allow(static_mut_refs)]
-pub(crate) fn G_CheckDemoStatus() -> boolean {
+pub(crate) fn G_CheckDemoStatus() {
 	unsafe {
 		if timingdemo {
 			let endtime = I_GetTime();
@@ -1516,7 +1515,7 @@ pub(crate) fn G_CheckDemoStatus() -> boolean {
 			nomonsters = false;
 			consoleplayer = 0;
 			D_AdvanceDemo();
-			return 1;
+			return;
 		}
 
 		if demorecording {
@@ -1531,7 +1530,5 @@ pub(crate) fn G_CheckDemoStatus() -> boolean {
 			demorecording = false;
 			I_Error!(c"Demo %s recorded".as_ptr(), demoname);
 		}
-
-		0
 	}
 }
