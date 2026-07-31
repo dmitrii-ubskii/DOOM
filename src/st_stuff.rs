@@ -510,7 +510,7 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 				else if cht_CheckCheat(&mut cheat_mus, u8::try_from(ev.data1).unwrap()) {
 					(*plyr).message = STSTR_MUS;
 					let mut buf = [0; 3];
-					cht_GetParam(&mut cheat_mus, buf.as_mut_ptr());
+					cht_GetParam(&mut cheat_mus, &mut buf);
 
 					if gamemode == GameMode_t::commercial {
 						let offset = (buf[0] - b'0') * 10 + buf[1] - b'0';
@@ -591,7 +591,7 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 				let map;
 
 				let mut buf = [0; 3];
-				cht_GetParam(&mut cheat_clev, buf.as_mut_ptr());
+				cht_GetParam(&mut cheat_clev, &mut buf);
 
 				if gamemode == GameMode_t::commercial {
 					epsd = 0;

@@ -2,8 +2,20 @@
 
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-pub(crate) static mut firsttime: i32 = 1;
-pub(crate) static mut cheat_xlate_table: [u8; 256] = [0; 256];
+use crate::const_conv::usize_from_u8;
+
+const cheat_xlate_table: [u8; 256] = const {
+	let mut table = [0; 256];
+	let mut i = 0;
+	loop {
+		table[usize_from_u8(i)] = scramble(i);
+		if i == 255 {
+			break;
+		}
+		i += 1;
+	}
+	table
+};
 
 #[repr(C)]
 pub(crate) struct cheatseq_t {
@@ -11,28 +23,14 @@ pub(crate) struct cheatseq_t {
 	pub(crate) p: *mut u8,
 }
 
-fn scramble(a: u8) -> u8 {
-	((a & 0b1) << 7)
-		+ ((a & 2) << 5)
-		+ (a & 4)
-		+ ((a & 8) << 1)
-		+ ((a & 16) >> 1)
-		+ (a & 32)
-		+ ((a & 64) >> 5)
-		+ ((a & 128) >> 7)
+const fn scramble(a: u8) -> u8 {
+	(a & 0b_0010_0100) + (a & 0b_1101_1011).reverse_bits()
 }
 
 // Called in st_stuff module, which handles the input.
 // Returns a 1 if the cheat was successful, 0 if failed.
 pub(crate) fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
 	unsafe {
-		if firsttime != 0 {
-			firsttime = 0;
-			for i in 0..=255 {
-				cheat_xlate_table[usize::from(i)] = scramble(i);
-			}
-		}
-
 		if cht.p.is_null() {
 			cht.p = cht.sequence; // initialize if first time
 		}
@@ -58,7 +56,7 @@ pub(crate) fn cht_CheckCheat(cht: &mut cheatseq_t, key: u8) -> bool {
 	}
 }
 
-pub(crate) unsafe fn cht_GetParam(cht: &mut cheatseq_t, mut buffer: *mut u8) {
+pub(crate) unsafe fn cht_GetParam(cht: &mut cheatseq_t, buffer: &mut [u8]) {
 	unsafe {
 		let mut p = cht.sequence;
 
@@ -67,22 +65,22 @@ pub(crate) unsafe fn cht_GetParam(cht: &mut cheatseq_t, mut buffer: *mut u8) {
 		}
 		p = p.add(1);
 
-		let mut c = *p;
-		*buffer = c;
-		buffer = buffer.add(1);
-		*p = 0;
-		p = p.add(1);
+		let mut i = 0;
 
-		while c != 0 && *p != 0xff {
-			c = *p;
-			*buffer = c;
-			buffer = buffer.add(1);
+		loop {
+			let c = *p;
+			buffer[i] = c;
+			i += 1;
 			*p = 0;
 			p = p.add(1);
+
+			if c == 0 || *p == 0xff {
+				break;
+			}
 		}
 
 		if *p == 0xff {
-			*buffer = 0;
+			buffer[i] = 0;
 		}
 	}
 }
