@@ -157,7 +157,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 fn R_InitSpriteDefs(namelist: *const *const u8) {
 	unsafe {
 		// count the number of sprite names
-		numsprites = spritenum_t::NUMSPRITES as usize;
+		numsprites = spritenum_t::NUMSPRITES.into();
 
 		if numsprites == 0 {
 			return;
