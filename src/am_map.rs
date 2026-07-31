@@ -157,7 +157,7 @@ struct mline_t {
 //   starting from the middle.
 const R_: fixed_t = (8 * PLAYERRADIUS) / 7;
 const NUMPLYRLINES: usize = 7;
-static player_arrow: [mline_t; NUMPLYRLINES] = [
+const player_arrow: [mline_t; NUMPLYRLINES] = [
 	mline_t { a: mpoint_t { x: -R_ + R_ / 8, y: 0 }, b: mpoint_t { x: R_, y: 0 } }, //  -----
 	mline_t { a: mpoint_t { x: R_, y: 0 }, b: mpoint_t { x: R_ - R_ / 2, y: R_ / 4 } }, //  ----->
 	mline_t { a: mpoint_t { x: R_, y: 0 }, b: mpoint_t { x: R_ - R_ / 2, y: -R_ / 4 } },
@@ -174,7 +174,7 @@ static player_arrow: [mline_t; NUMPLYRLINES] = [
 ];
 
 const NUMCHEATPLYRLINES: usize = 16;
-static cheat_player_arrow: [mline_t; NUMCHEATPLYRLINES] = [
+const cheat_player_arrow: [mline_t; NUMCHEATPLYRLINES] = [
 	mline_t { a: mpoint_t { x: -R_ + R_ / 8, y: 0 }, b: mpoint_t { x: R_, y: 0 } }, //  -----
 	mline_t { a: mpoint_t { x: R_, y: 0 }, b: mpoint_t { x: R_ - R_ / 2, y: R_ / 6 } }, //  ----->
 	mline_t { a: mpoint_t { x: R_, y: 0 }, b: mpoint_t { x: R_ - R_ / 2, y: -R_ / 6 } },
@@ -212,7 +212,7 @@ static cheat_player_arrow: [mline_t; NUMCHEATPLYRLINES] = [
 ];
 
 const NUMTHINTRIANGLEGUYLINES: usize = 3;
-static thintriangle_guy: [mline_t; NUMTHINTRIANGLEGUYLINES] = [
+const thintriangle_guy: [mline_t; NUMTHINTRIANGLEGUYLINES] = [
 	mline_t {
 		a: mpoint_t {
 			x: (-0.5 * FRACUNIT as f64) as fixed_t,
@@ -1165,7 +1165,7 @@ fn AM_drawLineCharacter(
 
 fn AM_drawPlayers() {
 	unsafe {
-		static their_colors: [i32; 4] = [GREENS, GRAYS, BROWNS, REDS];
+		const their_colors: [i32; 4] = [GREENS, GRAYS, BROWNS, REDS];
 		let mut their_color = -1;
 
 		if !netgame {

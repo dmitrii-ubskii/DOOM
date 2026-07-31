@@ -140,7 +140,7 @@ struct anim_t {
 
 unsafe impl Sync for anim_t {}
 
-static lnodes: [[point_t; NUMMAPS]; NUMEPISODES - 1] = [
+const lnodes: [[point_t; NUMMAPS]; NUMEPISODES - 1] = [
 	// Episode 0 World Map
 	[
 		point_t { x: 185, y: 164 }, // location of level 0 (CJ)
@@ -517,7 +517,7 @@ static mut epsd2animinfo: [anim_t; 6] = [
 ];
 
 #[allow(static_mut_refs)]
-static NUMANIMS: [usize; NUMEPISODES - 1] = unsafe {
+const NUMANIMS: [usize; NUMEPISODES - 1] = unsafe {
 	[
 		size_of_val(&epsd0animinfo) / size_of::<anim_t>(),
 		size_of_val(&epsd1animinfo) / size_of::<anim_t>(),

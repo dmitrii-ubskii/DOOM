@@ -981,8 +981,8 @@ fn M_Episode(mut choice: i32) {
 }
 
 // M_Options
-static detailNames: [[u8; 9]; 2] = [*b"M_GDHIGH\0", *b"M_GDLOW\0\0"];
-static msgNames: [[u8; 9]; 2] = [*b"M_MSGOFF\0", *b"M_MSGON\0\0"];
+const detailNames: [[u8; 9]; 2] = [*b"M_GDHIGH\0", *b"M_GDLOW\0\0"];
+const msgNames: [[u8; 9]; 2] = [*b"M_MSGOFF\0", *b"M_MSGON\0\0"];
 
 fn M_DrawOptions() {
 	unsafe {
@@ -1087,7 +1087,7 @@ fn M_FinishReadThis(_choice: i32) {
 }
 
 // M_QuitDOOM
-static quitsounds: [sfxenum_t; 8] = [
+const quitsounds: [sfxenum_t; 8] = [
 	sfxenum_t::sfx_pldeth,
 	sfxenum_t::sfx_dmpain,
 	sfxenum_t::sfx_popain,
@@ -1098,7 +1098,7 @@ static quitsounds: [sfxenum_t; 8] = [
 	sfxenum_t::sfx_sgtatk,
 ];
 
-static quitsounds2: [sfxenum_t; 8] = [
+const quitsounds2: [sfxenum_t; 8] = [
 	sfxenum_t::sfx_vilact,
 	sfxenum_t::sfx_getpow,
 	sfxenum_t::sfx_boscub,

@@ -24,7 +24,7 @@ use crate::{
 };
 
 // CHANGE THE TEXTURE OF A WALL SWITCH TO ITS OPPOSITE
-static alphSwitchList: [switchlist_t; 41] = [
+const alphSwitchList: [switchlist_t; 41] = [
 	// Doom shareware episode 1 switches
 	switchlist_t { name1: *b"SW1BRCOM\0", name2: *b"SW2BRCOM\0", episode: 1 },
 	switchlist_t { name1: *b"SW1BRN1\0\0", name2: *b"SW2BRN1\0\0", episode: 1 },

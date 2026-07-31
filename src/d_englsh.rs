@@ -287,17 +287,16 @@ pub(crate) const HUSTR_32: *const c_char = c"level 32: grosse".as_ptr();
 // pub(crate) const THUSTR_31: *const c_char = c"level 31: pharaoh".as_ptr();
 // pub(crate) const THUSTR_32: *const c_char = c"level 32: caribbean".as_ptr();
 
-pub(crate) static HUSTR_CHATMACRO1: Smuggle<c_char> = Smuggle(c"I'm ready to kick butt!".as_ptr());
-pub(crate) static HUSTR_CHATMACRO2: Smuggle<c_char> = Smuggle(c"I'm OK.".as_ptr());
-pub(crate) static HUSTR_CHATMACRO3: Smuggle<c_char> =
-	Smuggle(c"I'm not looking too good!".as_ptr());
-pub(crate) static HUSTR_CHATMACRO4: Smuggle<c_char> = Smuggle(c"Help!".as_ptr());
-pub(crate) static HUSTR_CHATMACRO5: Smuggle<c_char> = Smuggle(c"You suck!".as_ptr());
-pub(crate) static HUSTR_CHATMACRO6: Smuggle<c_char> = Smuggle(c"Next time, scumbag...".as_ptr());
-pub(crate) static HUSTR_CHATMACRO7: Smuggle<c_char> = Smuggle(c"Come here!".as_ptr());
-pub(crate) static HUSTR_CHATMACRO8: Smuggle<c_char> = Smuggle(c"I'll take care of it.".as_ptr());
-pub(crate) static HUSTR_CHATMACRO9: Smuggle<c_char> = Smuggle(c"Yes".as_ptr());
-pub(crate) static HUSTR_CHATMACRO0: Smuggle<c_char> = Smuggle(c"No".as_ptr());
+pub(crate) const HUSTR_CHATMACRO1: Smuggle<c_char> = Smuggle(c"I'm ready to kick butt!".as_ptr());
+pub(crate) const HUSTR_CHATMACRO2: Smuggle<c_char> = Smuggle(c"I'm OK.".as_ptr());
+pub(crate) const HUSTR_CHATMACRO3: Smuggle<c_char> = Smuggle(c"I'm not looking too good!".as_ptr());
+pub(crate) const HUSTR_CHATMACRO4: Smuggle<c_char> = Smuggle(c"Help!".as_ptr());
+pub(crate) const HUSTR_CHATMACRO5: Smuggle<c_char> = Smuggle(c"You suck!".as_ptr());
+pub(crate) const HUSTR_CHATMACRO6: Smuggle<c_char> = Smuggle(c"Next time, scumbag...".as_ptr());
+pub(crate) const HUSTR_CHATMACRO7: Smuggle<c_char> = Smuggle(c"Come here!".as_ptr());
+pub(crate) const HUSTR_CHATMACRO8: Smuggle<c_char> = Smuggle(c"I'll take care of it.".as_ptr());
+pub(crate) const HUSTR_CHATMACRO9: Smuggle<c_char> = Smuggle(c"Yes".as_ptr());
+pub(crate) const HUSTR_CHATMACRO0: Smuggle<c_char> = Smuggle(c"No".as_ptr());
 
 pub(crate) const HUSTR_TALKTOSELF1: *const c_char = c"You mumble to yourself".as_ptr();
 pub(crate) const HUSTR_TALKTOSELF2: *const c_char = c"Who's there?".as_ptr();

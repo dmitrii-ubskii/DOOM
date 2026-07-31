@@ -289,7 +289,7 @@ static mut shiftxform: *const u8 = null();
 // ];
 
 #[rustfmt::skip]
-static english_shiftxform:[u8; 128] = [
+const english_shiftxform:[u8; 128] = [
 	0,
 	1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 	11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -574,7 +574,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 		static mut shiftdown: bool = false;
 		static mut altdown: bool = false;
 
-		static destination_keys: [c_char; MAXPLAYERS] =
+		const destination_keys: [c_char; MAXPLAYERS] =
 			[HUSTR_KEYGREEN, HUSTR_KEYINDIGO, HUSTR_KEYBROWN, HUSTR_KEYRED];
 
 		static mut num_nobrainers: i32 = 0;

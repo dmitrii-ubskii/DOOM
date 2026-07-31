@@ -345,7 +345,7 @@ const MAXANIMS: usize = 32;
 //  using all the flats between the start
 //  and end entry, in the order found in
 //  the WAD file.
-static animdefs: [animdef_t; 23] = [
+const animdefs: [animdef_t; 23] = [
 	animdef_t { istexture: false, endname: *b"NUKAGE3\0\0", startname: *b"NUKAGE1\0\0", speed: 8 },
 	animdef_t { istexture: false, endname: *b"FWATER4\0\0", startname: *b"FWATER1\0\0", speed: 8 },
 	animdef_t { istexture: false, endname: *b"SWATER4\0\0", startname: *b"SWATER1\0\0", speed: 8 },

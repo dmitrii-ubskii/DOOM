@@ -26,8 +26,7 @@ pub(crate) struct weaponinfo_t {
 // readystate
 // atkstate, i.e. attack/fire/hit frame
 // flashstate, muzzle flash
-#[unsafe(no_mangle)]
-pub(crate) static weaponinfo: [weaponinfo_t; NUMWEAPONS] = [
+pub(crate) const weaponinfo: [weaponinfo_t; NUMWEAPONS] = [
 	weaponinfo_t {
 		// fist
 		ammo: None,
