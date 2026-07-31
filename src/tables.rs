@@ -50,7 +50,7 @@ pub(crate) const DBITS: i32 = FRACBITS - SLOPEBITS;
 pub(crate) type angle_t = Wrapping<usize>;
 
 // Effective size is 10240.
-pub(crate) const finesine: [fixed_t; 5 * FINEANGLES / 4] = [
+pub(crate) static finesine: [fixed_t; 5 * FINEANGLES / 4] = [
 	25, 75, 125, 175, 226, 276, 326, 376, 427, 477, 527, 578, 628, 678, 728, 779, 829, 879, 929,
 	980, 1030, 1080, 1130, 1181, 1231, 1281, 1331, 1382, 1432, 1482, 1532, 1583, 1633, 1683, 1733,
 	1784, 1834, 1884, 1934, 1985, 2035, 2085, 2135, 2186, 2236, 2286, 2336, 2387, 2437, 2487, 2537,
