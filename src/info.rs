@@ -391,7 +391,6 @@ pub(crate) struct mobjinfo_t {
 	pub(crate) raisestate: statenum_t,
 }
 
-#[unsafe(no_mangle)]
 #[rustfmt::skip]
 pub(crate) static mut sprnames: [*const c_char; spritenum_t::NUMSPRITES as usize] = [
 	c"TROO".as_ptr(), c"SHTG".as_ptr(), c"PUNG".as_ptr(), c"PISG".as_ptr(), 
@@ -424,7 +423,6 @@ pub(crate) static mut sprnames: [*const c_char; spritenum_t::NUMSPRITES as usize
 	c"POB2".as_ptr(), c"BRS1".as_ptr(), c"TLMP".as_ptr(), c"TLP2".as_ptr(),
 ];
 
-#[unsafe(no_mangle)]
 #[rustfmt::skip]
 pub(crate) static mut states: [state_t; statenum_t::NUMSTATES as usize] = [ 
 	state_t { sprite: spritenum_t::SPR_TROO, frame: 0, tics: -1, action: think_t::null, nextstate: statenum_t::S_NULL, misc1: 0, misc2: 0 }, // S_NULL
@@ -1396,7 +1394,6 @@ state_t { sprite: spritenum_t::SPR_BOS2, frame: 0, tics: 3, action: think_t::A_C
 	state_t { sprite: spritenum_t::SPR_TLP2, frame: 32771, tics: 4, action: think_t::null, nextstate: statenum_t::S_TECH2LAMP, misc1: 0, misc2: 0 }, // S_TECH2LAMP4
 ];
 
-#[unsafe(no_mangle)]
 pub(crate) static mut mobjinfo: [mobjinfo_t; mobjtype_t::NUMMOBJTYPES as usize] = [
 	mobjinfo_t {
 		// MT_PLAYER

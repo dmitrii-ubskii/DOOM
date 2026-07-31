@@ -75,10 +75,8 @@ static mut topstep: fixed_t = 0;
 static mut bottomfrac: fixed_t = 0;
 static mut bottomstep: fixed_t = 0;
 
-#[unsafe(no_mangle)]
 pub(crate) static mut walllights: *mut *mut lighttable_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub(crate) static mut maskedtexturecol: *mut i16 = null_mut();
 
 // R_RenderMaskedSegRange

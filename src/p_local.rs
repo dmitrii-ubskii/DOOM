@@ -44,7 +44,6 @@ pub(crate) const BASETHRESHOLD: i32 = 100;
 // P_TICK
 
 // Both the head and tail of the thinker list.
-#[unsafe(no_mangle)]
 pub(crate) static mut thinkercap: thinker_t =
 	thinker_t { prev: null_mut(), next: null_mut(), function: think_t::null };
 
@@ -87,18 +86,11 @@ pub(crate) const PT_EARLYOUT: i32 = 4;
 
 // P_SETUP
 /*
-#[unsafe(no_mangle)]
 pub(crate) static mut blockmaplump: *mut i16 = null_mut(); // offsets in blockmap are from here
-#[unsafe(no_mangle)]
 pub(crate) static mut blockmap: *mut i16 = null_mut();
-#[unsafe(no_mangle)]
 pub(crate) static mut bmapwidth: i32 = 0;
-#[unsafe(no_mangle)]
 pub(crate) static mut bmapheight: i32 = 0; // in mapblocks
-#[unsafe(no_mangle)]
 pub(crate) static mut bmaporgx: fixed_t = 0;
-#[unsafe(no_mangle)]
 pub(crate) static mut bmaporgy: fixed_t = 0; // origin of block map
-#[unsafe(no_mangle)]
 pub(crate) static mut blocklinks: *mut *mut mobj_t = null_mut(); // for thing chains
 */

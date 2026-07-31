@@ -14,7 +14,6 @@ use crate::{
 	z_zone::Z_Free,
 };
 
-#[unsafe(no_mangle)]
 pub(crate) static mut leveltime: usize = 0;
 
 // THINKERS

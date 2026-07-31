@@ -11,6 +11,7 @@ use crate::{
 	doomdef::{SCREENWIDTH, powertype_t},
 	doomstat::modifiedgame,
 	i_system::I_Error,
+	info::spritenum_t,
 	m_fixed::{FRACBITS, FRACUNIT, FixedDiv, FixedMul, fixed_t},
 	p_mobj::{MF_SHADOW, MF_TRANSLATION, MF_TRANSSHIFT, mobj_t},
 	p_pspr::{FF_FRAMEMASK, FF_FULLBRIGHT, pspdef_t, psprnum_t},
@@ -156,12 +157,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 fn R_InitSpriteDefs(namelist: *const *const u8) {
 	unsafe {
 		// count the number of sprite names
-		let mut check = namelist;
-		while !(*check).is_null() {
-			check = check.wrapping_add(1);
-		}
-
-		numsprites = check.offset_from_unsigned(namelist);
+		numsprites = spritenum_t::NUMSPRITES as usize;
 
 		if numsprites == 0 {
 			return;

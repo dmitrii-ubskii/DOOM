@@ -25,20 +25,13 @@ use crate::{
 	tables::{ANG90, ANG180, ANGLETOFINESHIFT},
 };
 
-#[unsafe(no_mangle)]
 pub(crate) static mut curline: *mut seg_t = null_mut();
-#[unsafe(no_mangle)]
 pub(crate) static mut sidedef: *mut side_t = null_mut();
-#[unsafe(no_mangle)]
 pub(crate) static mut linedef: *mut line_t = null_mut();
-#[unsafe(no_mangle)]
 pub(crate) static mut frontsector: *mut sector_t = null_mut();
-#[unsafe(no_mangle)]
 pub(crate) static mut backsector: *mut sector_t = null_mut();
 
-#[unsafe(no_mangle)]
 pub(crate) static mut drawsegs: [drawseg_t; MAXDRAWSEGS] = unsafe { mem::zeroed() };
-#[unsafe(no_mangle)]
 pub(crate) static mut ds_p: *mut drawseg_t = null_mut();
 
 // R_ClearDrawSegs

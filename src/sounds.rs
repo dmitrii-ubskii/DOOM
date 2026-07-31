@@ -235,7 +235,6 @@ pub(crate) static mut S_music: [musicinfo_t; 68] = [
 ];
 
 // Information about all the sfx
-#[unsafe(no_mangle)]
 pub(crate) static mut S_sfx: [sfxinfo_t; 109] = [
 	sfxinfo_t {
 		name: null(),

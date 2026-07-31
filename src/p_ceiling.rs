@@ -19,7 +19,6 @@ use crate::{
 };
 
 // CEILINGS
-#[unsafe(no_mangle)]
 pub(crate) static mut activeceilings: [*mut ceiling_t; MAXCEILINGS] = [null_mut(); MAXCEILINGS];
 
 // T_MoveCeiling

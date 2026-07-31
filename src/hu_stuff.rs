@@ -103,7 +103,6 @@ pub(crate) const player_names: [*const c_char; 4] =
 	[HUSTR_PLRGREEN, HUSTR_PLRINDIGO, HUSTR_PLRBROWN, HUSTR_PLRRED];
 
 static mut plr: *mut player_t = null_mut();
-#[unsafe(no_mangle)]
 pub(crate) static mut hu_font: [*mut patch_t; usize_from_u8(HU_FONTSIZE)] =
 	[null_mut(); usize_from_u8(HU_FONTSIZE)];
 static mut w_title: hu_textline_t = hu_textline_t {

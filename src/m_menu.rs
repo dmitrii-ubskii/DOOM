@@ -50,9 +50,7 @@ pub(crate) static mut mouseSensitivity: int = 0; // has default
 pub(crate) static mut showMessages: int = 0;
 
 // Blocky mode, has default, 0 = high, 1 = normal
-#[unsafe(no_mangle)]
 pub(crate) static mut detailLevel: int = 0;
-#[unsafe(no_mangle)]
 pub(crate) static mut screenblocks: usize = 0; // has default
 
 // temp for screenblocks (0-9)

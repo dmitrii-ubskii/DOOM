@@ -11,11 +11,8 @@ pub(crate) const SKYFLATNAME: *const c_char = c"F_SKY1".as_ptr();
 pub(crate) const ANGLETOSKYSHIFT: angle_t = Wrapping(22);
 
 // sky mapping
-#[unsafe(no_mangle)]
 pub(crate) static mut skyflatnum: usize = 0;
-#[unsafe(no_mangle)]
 pub(crate) static mut skytexture: usize = 0;
-#[unsafe(no_mangle)]
 pub(crate) static mut skytexturemid: i32 = 0;
 
 // Called whenever the view size changes.
