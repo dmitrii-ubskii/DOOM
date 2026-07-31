@@ -275,16 +275,16 @@ pub(crate) fn A_WeaponReady(player: &mut player_t, psp: &mut pspdef_t) {
 		// check for fire
 		//  the missile launcher and bfg do not auto fire
 		if player.cmd.buttons & BT_ATTACK != 0 {
-			if player.attackdown == 0
+			if !player.attackdown
 				|| (player.readyweapon != weapontype_t::wp_missile
 					&& player.readyweapon != weapontype_t::wp_bfg)
 			{
-				player.attackdown = 1;
+				player.attackdown = true;
 				P_FireWeapon(player);
 				return;
 			}
 		} else {
-			player.attackdown = 0;
+			player.attackdown = false;
 		}
 
 		// bob the weapon based on movement speed

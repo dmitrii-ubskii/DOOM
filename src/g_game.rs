@@ -715,8 +715,8 @@ pub(crate) fn G_PlayerReborn(player: usize) {
 		players[player].secretcount = secretcount;
 
 		// don't do anything immediately
-		(*p).usedown = 1;
-		(*p).attackdown = 1;
+		(*p).usedown = true;
+		(*p).attackdown = true;
 
 		(*p).playerstate = playerstate_t::PST_LIVE;
 		(*p).health = MAXHEALTH;

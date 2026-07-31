@@ -1592,20 +1592,20 @@ fn WI_checkForAccelerate() {
 		for i in 0..MAXPLAYERS {
 			if playeringame[i] {
 				if players[i].cmd.buttons & BT_ATTACK != 0 {
-					if players[i].attackdown == 0 {
+					if !players[i].attackdown {
 						acceleratestage = 1;
 					}
-					players[i].attackdown = 1;
+					players[i].attackdown = true;
 				} else {
-					players[i].attackdown = 0;
+					players[i].attackdown = false;
 				}
 				if players[i].cmd.buttons & BT_USE != 0 {
-					if players[i].usedown == 0 {
+					if !players[i].usedown {
 						acceleratestage = 1;
 					}
-					players[i].usedown = 1;
+					players[i].usedown = true;
 				} else {
-					players[i].usedown = 0;
+					players[i].usedown = false;
 				}
 			}
 		}

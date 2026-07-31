@@ -84,8 +84,8 @@ pub(crate) struct player_t {
 	pub(crate) maxammo: [usize; NUMAMMO],
 
 	// True if button down last tic.
-	pub(crate) attackdown: i32,
-	pub(crate) usedown: i32,
+	pub(crate) attackdown: bool,
+	pub(crate) usedown: bool,
 
 	// Bit flags, for cheats and debug.
 	// See cheat_t, above.
@@ -152,8 +152,8 @@ impl player_t {
 			weaponowned: [false; 9],
 			ammo: [0; 4],
 			maxammo: [0; 4],
-			attackdown: 0,
-			usedown: 0,
+			attackdown: false,
+			usedown: false,
 			cheats: 0,
 			refire: 0,
 			killcount: 0,

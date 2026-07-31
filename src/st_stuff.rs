@@ -757,7 +757,7 @@ fn ST_updateFaceWidget() {
 
 		if priority < 6 {
 			// rapid firing
-			if (*plyr).attackdown != 0 {
+			if (*plyr).attackdown {
 				if lastattackdown == -1 {
 					lastattackdown = i32::try_from(ST_RAMPAGEDELAY).unwrap();
 				} else {

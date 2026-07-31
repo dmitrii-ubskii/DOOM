@@ -276,12 +276,12 @@ pub(crate) fn P_PlayerThink(player: &mut player_t) {
 
 		// check for use
 		if cmd.buttons & BT_USE != 0 {
-			if player.usedown == 0 {
+			if !player.usedown {
 				P_UseLines(player);
-				player.usedown = 1;
+				player.usedown = true;
 			}
 		} else {
-			player.usedown = 0;
+			player.usedown = false;
 		}
 
 		// cycle psprites

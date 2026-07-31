@@ -679,6 +679,8 @@ impl From<player_t> for player_t_saveg {
 				None => 10, // wp_nochange is 10
 			},
 			weaponowned: value.weaponowned.map(i32::from),
+			attackdown: i32::from(value.attackdown),
+			usedown: i32::from(value.usedown),
 			// the rest are copied over
 			playerstate: value.playerstate,
 			cmd: value.cmd,
@@ -696,8 +698,6 @@ impl From<player_t> for player_t_saveg {
 			readyweapon: value.readyweapon,
 			ammo: value.ammo,
 			maxammo: value.maxammo,
-			attackdown: value.attackdown,
-			usedown: value.usedown,
 			cheats: value.cheats,
 			refire: value.refire,
 			killcount: value.killcount,
@@ -750,8 +750,8 @@ impl From<player_t_saveg> for player_t {
 			readyweapon: value.readyweapon,
 			ammo: value.ammo,
 			maxammo: value.maxammo,
-			attackdown: value.attackdown,
-			usedown: value.usedown,
+			attackdown: value.attackdown != 0,
+			usedown: value.usedown != 0,
 			cheats: value.cheats,
 			refire: value.refire,
 			killcount: value.killcount,
