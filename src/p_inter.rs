@@ -97,24 +97,24 @@ fn P_GiveAmmo(player: *mut player_t, ammo: Option<ammotype_t>, mut num: usize) -
 		// Preferences are not user selectable.
 		match (ammo, (*player).readyweapon) {
 			(ammotype_t::am_clip, weapontype_t::wp_fist) => {
-				if (&(*player).weaponowned)[weapontype_t::wp_chaingun] != 0 {
+				if (&(*player).weaponowned)[weapontype_t::wp_chaingun] {
 					(*player).pendingweapon = Some(weapontype_t::wp_chaingun);
 				} else {
 					(*player).pendingweapon = Some(weapontype_t::wp_pistol);
 				}
 			}
 			(ammotype_t::am_shell, weapontype_t::wp_fist | weapontype_t::wp_pistol) => {
-				if (&(*player).weaponowned)[weapontype_t::wp_shotgun] != 0 {
+				if (&(*player).weaponowned)[weapontype_t::wp_shotgun] {
 					(*player).pendingweapon = Some(weapontype_t::wp_shotgun);
 				}
 			}
 			(ammotype_t::am_cell, weapontype_t::wp_fist | weapontype_t::wp_pistol) => {
-				if (&(*player).weaponowned)[weapontype_t::wp_plasma] != 0 {
+				if (&(*player).weaponowned)[weapontype_t::wp_plasma] {
 					(*player).pendingweapon = Some(weapontype_t::wp_plasma);
 				}
 			}
 			(ammotype_t::am_misl, weapontype_t::wp_fist) => {
-				if (&(*player).weaponowned)[weapontype_t::wp_missile] != 0 {
+				if (&(*player).weaponowned)[weapontype_t::wp_missile] {
 					(*player).pendingweapon = Some(weapontype_t::wp_missile);
 				}
 			}
@@ -131,12 +131,12 @@ fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: bool) -> b
 	unsafe {
 		if netgame && deathmatch != 2 && !dropped {
 			// leave placed weapons forever on net games
-			if (&(*player).weaponowned)[weapon] != 0 {
+			if (&(*player).weaponowned)[weapon] {
 				return false;
 			}
 
 			(*player).bonuscount += BONUSADD;
-			(&mut (*player).weaponowned)[weapon] = 1;
+			(&mut (*player).weaponowned)[weapon] = true;
 
 			if deathmatch != 0 {
 				P_GiveAmmo(player, weaponinfo[weapon].ammo, 5);
@@ -165,11 +165,11 @@ fn P_GiveWeapon(player: *mut player_t, weapon: weapontype_t, dropped: bool) -> b
 		}
 
 		let gaveweapon;
-		if (&(*player).weaponowned)[weapon] != 0 {
+		if (&(*player).weaponowned)[weapon] {
 			gaveweapon = 0;
 		} else {
 			gaveweapon = 1;
-			(&mut (*player).weaponowned)[weapon] = 1;
+			(&mut (*player).weaponowned)[weapon] = true;
 			(*player).pendingweapon = Some(weapon);
 		}
 

@@ -246,7 +246,7 @@ pub(crate) fn P_PlayerThink(player: &mut player_t) {
 			let mut newweapon = (cmd.buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT;
 
 			if newweapon == weapontype_t::wp_fist as u8
-				&& player.weaponowned[weapontype_t::wp_chainsaw as usize] != 0
+				&& player.weaponowned[weapontype_t::wp_chainsaw as usize]
 				&& !(player.readyweapon == weapontype_t::wp_chainsaw
 					&& player.powers[powertype_t::pw_strength as usize] != 0)
 			{
@@ -255,14 +255,13 @@ pub(crate) fn P_PlayerThink(player: &mut player_t) {
 
 			if (gamemode == GameMode_t::commercial)
 				&& newweapon == weapontype_t::wp_shotgun as u8
-				&& player.weaponowned[weapontype_t::wp_supershotgun as usize] != 0
+				&& player.weaponowned[weapontype_t::wp_supershotgun as usize]
 				&& player.readyweapon != weapontype_t::wp_supershotgun
 			{
 				newweapon = weapontype_t::wp_supershotgun as u8;
 			}
 
-			if player.weaponowned[newweapon as usize] != 0 && newweapon != player.readyweapon as u8
-			{
+			if player.weaponowned[newweapon as usize] && newweapon != player.readyweapon as u8 {
 				// Do not go to plasma or BFG in shareware,
 				//  even if cheated.
 				if (newweapon != weapontype_t::wp_plasma as u8

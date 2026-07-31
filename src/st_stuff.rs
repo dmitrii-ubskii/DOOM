@@ -326,7 +326,7 @@ static mut st_facecount: usize = 0;
 static mut st_faceindex: usize = 0;
 
 // holds key-type for each key box on bar
-static mut keyboxes: [int; 3] = [0; 3];
+static mut keyboxes: [i8; 3] = [0; 3];
 
 // a random number per tick
 static mut st_randomnumber: i32 = 0;
@@ -478,7 +478,7 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 					(*plyr).armortype = 2;
 
 					for i in 0..NUMWEAPONS {
-						(*plyr).weaponowned[i] = 1;
+						(*plyr).weaponowned[i] = true;
 					}
 
 					for i in 0..NUMAMMO {
@@ -493,7 +493,7 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 					(*plyr).armortype = 2;
 
 					for i in 0..NUMWEAPONS {
-						(*plyr).weaponowned[i] = 1;
+						(*plyr).weaponowned[i] = true;
 					}
 
 					for i in 0..NUMAMMO {
@@ -567,7 +567,7 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 				}
 				// 'choppers' invulnerability & chainsaw
 				else if cht_CheckCheat(&mut cheat_choppers, u8::try_from(ev.data1).unwrap()) {
-					(&mut (*plyr).weaponowned)[weapontype_t::wp_chainsaw] = 1;
+					(&mut (*plyr).weaponowned)[weapontype_t::wp_chainsaw] = true;
 					(&mut (*plyr).powers)[powertype_t::pw_invulnerability] = 1;
 					(*plyr).message = STSTR_CHOPPERS;
 				}
@@ -677,9 +677,9 @@ fn ST_updateFaceWidget() {
 
 				#[allow(clippy::needless_range_loop)]
 				for i in 0..NUMWEAPONS {
-					if oldweaponsowned[i] != ((*plyr).weaponowned[i] != 0) {
+					if oldweaponsowned[i] != (*plyr).weaponowned[i] {
 						doevilgrin = true;
-						oldweaponsowned[i] = (*plyr).weaponowned[i] != 0;
+						oldweaponsowned[i] = (*plyr).weaponowned[i];
 					}
 				}
 
@@ -811,11 +811,12 @@ fn ST_updateWidgets() {
 
 		// update keycard multiple widgets
 		#[allow(clippy::needless_range_loop)]
-		for i in 0..3 {
-			keyboxes[i] = if (*plyr).cards[i] != 0 { i32::try_from(i).unwrap() } else { -1 };
+		for i in 0..3i8 {
+			let u = usize::try_from(i).unwrap();
+			keyboxes[u] = if (*plyr).cards[u] != 0 { i } else { -1 };
 
-			if (*plyr).cards[i + 3] != 0 {
-				keyboxes[i] = i32::try_from(i).unwrap() + 3;
+			if (*plyr).cards[u + 3] != 0 {
+				keyboxes[u] = i + 3;
 			}
 		}
 
@@ -1082,7 +1083,7 @@ fn ST_initData() {
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..NUMWEAPONS {
-			oldweaponsowned[i] = (*plyr).weaponowned[i] != 0;
+			oldweaponsowned[i] = (*plyr).weaponowned[i];
 		}
 
 		#[allow(clippy::needless_range_loop)]
@@ -1138,7 +1139,7 @@ fn ST_createWidgets() {
 				ST_ARMSX + (i % 3) * ST_ARMSXSPACE,
 				ST_ARMSY + (i / 3) * ST_ARMSYSPACE,
 				arms[i].as_mut_ptr(),
-				&mut (*plyr).weaponowned[i + 1],
+				(&raw mut (*plyr).weaponowned[i + 1]).cast(),
 				&mut st_armson,
 			);
 		}

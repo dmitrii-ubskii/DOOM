@@ -176,33 +176,33 @@ fn P_CheckAmmo(player: &mut player_t) -> bool {
 		// Out of ammo, pick a weapon to change to.
 		// Preferences are set here.
 		loop {
-			if player.weaponowned[weapontype_t::wp_plasma] != 0
+			if player.weaponowned[weapontype_t::wp_plasma]
 				&& player.ammo[ammotype_t::am_cell] != 0
 				&& gamemode != GameMode_t::shareware
 			{
 				player.pendingweapon = Some(weapontype_t::wp_plasma);
-			} else if player.weaponowned[weapontype_t::wp_supershotgun] != 0
+			} else if player.weaponowned[weapontype_t::wp_supershotgun]
 				&& player.ammo[ammotype_t::am_shell] > 2
 				&& gamemode == GameMode_t::commercial
 			{
 				player.pendingweapon = Some(weapontype_t::wp_supershotgun);
-			} else if player.weaponowned[weapontype_t::wp_chaingun] != 0
+			} else if player.weaponowned[weapontype_t::wp_chaingun]
 				&& player.ammo[ammotype_t::am_clip] != 0
 			{
 				player.pendingweapon = Some(weapontype_t::wp_chaingun);
-			} else if player.weaponowned[weapontype_t::wp_shotgun] != 0
+			} else if player.weaponowned[weapontype_t::wp_shotgun]
 				&& player.ammo[ammotype_t::am_shell] != 0
 			{
 				player.pendingweapon = Some(weapontype_t::wp_shotgun);
 			} else if player.ammo[ammotype_t::am_clip] != 0 {
 				player.pendingweapon = Some(weapontype_t::wp_pistol);
-			} else if player.weaponowned[weapontype_t::wp_chainsaw] != 0 {
+			} else if player.weaponowned[weapontype_t::wp_chainsaw] {
 				player.pendingweapon = Some(weapontype_t::wp_chainsaw);
-			} else if player.weaponowned[weapontype_t::wp_missile] != 0
+			} else if player.weaponowned[weapontype_t::wp_missile]
 				&& player.ammo[ammotype_t::am_misl] != 0
 			{
 				player.pendingweapon = Some(weapontype_t::wp_missile);
-			} else if player.weaponowned[weapontype_t::wp_bfg] != 0
+			} else if player.weaponowned[weapontype_t::wp_bfg]
 				&& player.ammo[ammotype_t::am_cell] > BFGCELLS
 				&& gamemode != GameMode_t::shareware
 			{

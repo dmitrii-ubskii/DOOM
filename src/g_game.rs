@@ -42,7 +42,7 @@ use crate::{
 	p_mobj::{MF_SHADOW, P_RemoveMobj, P_SpawnMobj, P_SpawnPlayer, mobj_t},
 	p_saveg::{
 		P_ArchivePlayers, P_ArchiveSpecials, P_ArchiveThinkers, P_ArchiveWorld, P_UnArchivePlayers,
-		P_UnArchiveSpecials, P_UnArchiveThinkers, P_UnArchiveWorld, save_p,
+		P_UnArchiveSpecials, P_UnArchiveThinkers, P_UnArchiveWorld,
 	},
 	p_setup::{P_SetupLevel, deathmatch_p, deathmatchstarts, playerstarts},
 	p_tick::{P_Ticker, leveltime},
@@ -722,8 +722,8 @@ pub(crate) fn G_PlayerReborn(player: usize) {
 		(*p).health = MAXHEALTH;
 		(*p).readyweapon = weapontype_t::wp_pistol;
 		(*p).pendingweapon = Some(weapontype_t::wp_pistol);
-		(&mut (*p).weaponowned)[weapontype_t::wp_fist] = 1;
-		(&mut (*p).weaponowned)[weapontype_t::wp_pistol] = 1;
+		(&mut (*p).weaponowned)[weapontype_t::wp_fist] = true;
+		(&mut (*p).weaponowned)[weapontype_t::wp_pistol] = true;
 		(&mut (*p).ammo)[ammotype_t::am_clip] = 50;
 
 		(*p).maxammo = maxammo;
@@ -1036,7 +1036,7 @@ fn G_DoLoadGame() {
 		gameaction = gameaction_t::ga_nothing;
 
 		let _length = M_ReadFile(savename.as_ptr(), &raw mut savebuffer);
-		save_p = savebuffer.wrapping_add(SAVESTRINGSIZE);
+		let mut save_p = savebuffer.wrapping_add(SAVESTRINGSIZE);
 
 		// skip the description field
 		let mut vcheck = [0; VERSIONSIZE];
@@ -1072,10 +1072,10 @@ fn G_DoLoadGame() {
 		leveltime = (a << 16) + (b << 8) + c;
 
 		// dearchive all the modifications
-		P_UnArchivePlayers();
-		P_UnArchiveWorld();
-		P_UnArchiveThinkers();
-		P_UnArchiveSpecials();
+		P_UnArchivePlayers(&mut save_p, playeringame, &mut players);
+		P_UnArchiveWorld(&mut save_p);
+		P_UnArchiveThinkers(&mut save_p, &mut players);
+		P_UnArchiveSpecials(&mut save_p);
 
 		if *save_p != 0x1d {
 			I_Error!(c"Bad savegame".as_ptr());
@@ -1105,6 +1105,7 @@ pub(crate) unsafe fn G_SaveGame(slot: usize, description: *const c_char) {
 	}
 }
 
+#[allow(static_mut_refs)]
 fn G_DoSaveGame() {
 	unsafe {
 		let mut name = [0; 100];
@@ -1122,7 +1123,7 @@ fn G_DoSaveGame() {
 		let description = savedescription;
 
 		savebuffer = screens[1].wrapping_add(0x4000);
-		save_p = savebuffer;
+		let mut save_p = savebuffer;
 
 		libc::memcpy(save_p.cast(), (&raw const description).cast(), SAVESTRINGSIZE);
 		save_p = save_p.wrapping_add(SAVESTRINGSIZE);
@@ -1147,15 +1148,15 @@ fn G_DoSaveGame() {
 
 		*save_p = u8::try_from(leveltime >> 16).unwrap();
 		save_p = save_p.wrapping_add(1);
-		*save_p = u8::try_from(leveltime >> 8).unwrap();
+		*save_p = u8::try_from((leveltime >> 8) & 255).unwrap();
 		save_p = save_p.wrapping_add(1);
-		*save_p = u8::try_from(leveltime).unwrap();
+		*save_p = u8::try_from(leveltime & 255).unwrap();
 		save_p = save_p.wrapping_add(1);
 
-		P_ArchivePlayers();
-		P_ArchiveWorld();
-		P_ArchiveThinkers();
-		P_ArchiveSpecials();
+		P_ArchivePlayers(&mut save_p, playeringame, &players);
+		P_ArchiveWorld(&mut save_p);
+		P_ArchiveThinkers(&mut save_p, &players);
+		P_ArchiveSpecials(&mut save_p);
 
 		*save_p = 0x1d; // consistancy marker
 		save_p = save_p.wrapping_add(1);

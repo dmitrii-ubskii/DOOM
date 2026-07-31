@@ -43,7 +43,6 @@ pub(crate) const CF_GODMODE: usize = 2;
 pub(crate) const CF_NOMOMENTUM: usize = 4;
 
 // Extended player object info: player_t
-#[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct player_t {
 	pub(crate) mo: *mut mobj_t,
@@ -80,7 +79,7 @@ pub(crate) struct player_t {
 	// Is wp_nochange if not changing.
 	pub(crate) pendingweapon: Option<weapontype_t>,
 
-	pub(crate) weaponowned: [i32; NUMWEAPONS],
+	pub(crate) weaponowned: [bool; NUMWEAPONS],
 	pub(crate) ammo: [usize; NUMAMMO],
 	pub(crate) maxammo: [usize; NUMAMMO],
 
@@ -117,10 +116,6 @@ pub(crate) struct player_t {
 	//  can be set to REDCOLORMAP for pain, etc.
 	pub(crate) fixedcolormap: usize,
 
-	// Player skin colorshift,
-	//  0-3 for which color to draw player.
-	pub(crate) colormap: i32,
-
 	// Overlay view sprites (gun, etc).
 	pub(crate) psprites: [pspdef_t; psprnum_t::NUMPSPRITES.to_usize()],
 
@@ -154,7 +149,7 @@ impl player_t {
 			frags: [0; 4],
 			readyweapon: weapontype_t::wp_pistol,
 			pendingweapon: Some(weapontype_t::wp_fist),
-			weaponowned: [0; 9],
+			weaponowned: [false; 9],
 			ammo: [0; 4],
 			maxammo: [0; 4],
 			attackdown: 0,
@@ -170,7 +165,6 @@ impl player_t {
 			attacker: null_mut(),
 			extralight: 0,
 			fixedcolormap: 0,
-			colormap: 0,
 			psprites: [pspdef_t { state: null_mut(), tics: 0, sx: 0, sy: 0 }; 2],
 			didsecret: 0,
 		}

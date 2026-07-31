@@ -65,10 +65,10 @@ pub(crate) struct st_multicon_t {
 	pub(crate) y: usize,
 
 	// last icon number
-	pub(crate) oldinum: i32,
+	pub(crate) oldinum: i8,
 
 	// pointer to current icon
-	pub(crate) inum: *mut i32,
+	pub(crate) inum: *mut i8,
 
 	// pointer to i32ean stating
 	//  whether to update icon
@@ -240,7 +240,7 @@ pub(crate) fn STlib_initMultIcon(
 	x: usize,
 	y: usize,
 	il: *mut *mut patch_t,
-	inum: *mut i32,
+	inum: *mut i8,
 	on: *mut bool,
 ) {
 	i.x = x;
