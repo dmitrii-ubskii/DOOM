@@ -250,10 +250,10 @@ fn F_TextWrite() {
 			}
 
 			let w = (*hu_font[usize::from(c)]).width;
-			if cx + w > i16::try_from(SCREENWIDTH).unwrap() {
+			if cx + w > u16::try_from(SCREENWIDTH).unwrap() {
 				break;
 			}
-			V_DrawPatch(usize::try_from(cx).unwrap(), cy, 0, hu_font[usize::from(c)]);
+			V_DrawPatch(usize::from(cx), cy, 0, hu_font[usize::from(c)]);
 			cx += w;
 			count -= 1;
 		}
@@ -494,7 +494,7 @@ fn F_CastPrint(text: *const c_char) {
 			}
 
 			let w = (*hu_font[usize::from(c)]).width;
-			V_DrawPatch(usize::try_from(cx).unwrap(), 180, 0, hu_font[usize::from(c)]);
+			V_DrawPatch(usize::from(cx), 180, 0, hu_font[usize::from(c)]);
 			cx += w;
 		}
 	}

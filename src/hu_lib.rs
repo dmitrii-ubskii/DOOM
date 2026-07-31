@@ -118,7 +118,7 @@ pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, drawcursor: bool) {
 			.unwrap();
 			if c != i32::from(b' ') && c >= l.sc && c <= i32::from(b'_') {
 				let font = *l.f.wrapping_add(usize::try_from(c - l.sc).unwrap());
-				let w = usize::try_from((*font).width).unwrap();
+				let w = usize::from((*font).width);
 				if x + w > SCREENWIDTH {
 					break;
 				}
@@ -135,9 +135,7 @@ pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, drawcursor: bool) {
 
 		// draw the cursor if requested
 		let underscore = usize::from(b'_') - usize::try_from(l.sc).unwrap();
-		if drawcursor
-			&& x + usize::try_from((**l.f.wrapping_add(underscore)).width).unwrap() <= SCREENWIDTH
-		{
+		if drawcursor && x + usize::from((**l.f.wrapping_add(underscore)).width) <= SCREENWIDTH {
 			V_DrawPatchDirect(x, l.y, FG, *l.f.wrapping_add(underscore));
 		}
 	}
@@ -150,7 +148,7 @@ pub(crate) fn HUlib_eraseTextLine(l: &mut hu_textline_t) {
 		// and the text must either need updating or refreshing
 		// (because of a recent change back from the automap)
 		if automapactive && viewwindowx != 0 && l.needsupdate != 0 {
-			let lh = usize::try_from((**l.f).height).unwrap() + 1;
+			let lh = usize::from((**l.f).height) + 1;
 			for y in l.y..l.y + lh {
 				let yoffset = y * SCREENWIDTH;
 				if y < viewwindowy || y >= viewwindowy + viewheight {
@@ -187,7 +185,7 @@ pub(crate) fn HUlib_initSText(
 			HUlib_initTextLine(
 				&mut s.l[i],
 				x,
-				y - i * (usize::try_from((**font).height).unwrap() + 1),
+				y - i * usize::from((**font).height + 1),
 				font,
 				startchar,
 			);

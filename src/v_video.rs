@@ -153,8 +153,8 @@ pub(crate) unsafe fn V_DrawPatch(mut x: usize, mut y: usize, scrn: usize, patch:
 		y = y.checked_add_signed(isize::from(-(*patch).topoffset)).unwrap();
 		x = x.checked_add_signed(isize::from(-(*patch).leftoffset)).unwrap();
 		// #ifdef RANGECHECK
-		if x + usize::try_from((*patch).width).unwrap() > SCREENWIDTH
-			|| y + usize::try_from((*patch).height).unwrap() > SCREENHEIGHT
+		if x + usize::from((*patch).width) > SCREENWIDTH
+			|| y + usize::from((*patch).height) > SCREENHEIGHT
 			|| scrn > 4
 		{
 			eprintln!("Patch at {x},{y} exceeds LFB");
@@ -165,18 +165,13 @@ pub(crate) unsafe fn V_DrawPatch(mut x: usize, mut y: usize, scrn: usize, patch:
 		// #endif
 
 		if scrn == 0 {
-			V_MarkRect(
-				x,
-				y,
-				usize::try_from((*patch).width).unwrap(),
-				usize::try_from((*patch).height).unwrap(),
-			);
+			V_MarkRect(x, y, usize::from((*patch).width), usize::from((*patch).height));
 		}
 
 		let mut col = 0;
 		let mut desttop = screens[scrn].wrapping_byte_add(y * SCREENWIDTH + x);
 
-		let w = usize::try_from((*patch).width).unwrap();
+		let w = usize::from((*patch).width);
 		while col < w {
 			let count = *((*patch).columnofs.as_ptr()).wrapping_add(col);
 			let mut column = patch.wrapping_byte_add(count).cast::<column_t>();
@@ -214,8 +209,8 @@ pub(crate) unsafe fn V_DrawPatchFlipped(
 		y = y.checked_add_signed(isize::from(-(*patch).topoffset)).unwrap();
 		x = x.checked_add_signed(isize::from(-(*patch).leftoffset)).unwrap();
 		// #ifdef RANGECHECK
-		if x + usize::try_from((*patch).width).unwrap() > SCREENWIDTH
-			|| y + usize::try_from((*patch).height).unwrap() > SCREENHEIGHT
+		if x + usize::from((*patch).width) > SCREENWIDTH
+			|| y + usize::from((*patch).height) > SCREENHEIGHT
 			|| scrn > 4
 		{
 			eprintln!("Patch origin {x},{y} exceeds LFB",);
@@ -224,18 +219,13 @@ pub(crate) unsafe fn V_DrawPatchFlipped(
 		// #endif
 
 		if scrn == 0 {
-			V_MarkRect(
-				x,
-				y,
-				usize::try_from((*patch).width).unwrap(),
-				usize::try_from((*patch).height).unwrap(),
-			);
+			V_MarkRect(x, y, usize::from((*patch).width), usize::from((*patch).height));
 		}
 
 		let mut col = 0;
 		let mut desttop = screens[scrn].wrapping_byte_add(y * SCREENWIDTH + x);
 
-		let w = usize::try_from((*patch).width).unwrap();
+		let w = usize::from((*patch).width);
 
 		while col < w {
 			let count = *((*patch).columnofs.as_ptr()).wrapping_add(w - 1 - col);

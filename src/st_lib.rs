@@ -147,8 +147,8 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: bool) {
 		let mut numdigits = n.width;
 		let mut num = *n.num;
 
-		let w = usize::try_from((**n.p).width).unwrap();
-		let h = usize::try_from((**n.p).height).unwrap();
+		let w = usize::from((**n.p).width);
+		let h = usize::from((**n.p).height);
 
 		n.oldnum = *n.num;
 
@@ -265,14 +265,10 @@ pub(crate) fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 						-(**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).topoffset,
 					))
 					.unwrap();
-				let w = usize::try_from(
-					(**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).width,
-				)
-				.unwrap();
-				let h = usize::try_from(
-					(**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).height,
-				)
-				.unwrap();
+				let w =
+					usize::from((**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).width);
+				let h =
+					usize::from((**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).height);
 
 				if y < ST_Y {
 					I_Error!(c"updateMultIcon: y - ST_Y < 0".as_ptr());
@@ -309,8 +305,8 @@ pub(crate) fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
 		if *bi.on && (bi.oldval != *bi.val || refresh) {
 			let x = bi.x.checked_add_signed(isize::from(-((*bi.p).leftoffset))).unwrap();
 			let y = bi.y.checked_add_signed(isize::from(-((*bi.p).topoffset))).unwrap();
-			let w = usize::try_from((*bi.p).width).unwrap();
-			let h = usize::try_from((*bi.p).height).unwrap();
+			let w = usize::from((*bi.p).width);
+			let h = usize::from((*bi.p).height);
 
 			if y < ST_Y {
 				I_Error!(c"updateBinIcon: y - ST_Y < 0".as_ptr());

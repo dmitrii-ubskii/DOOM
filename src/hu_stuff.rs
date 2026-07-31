@@ -77,13 +77,13 @@ fn HU_TITLE2() -> *const c_char {
 // }
 const HU_TITLEX: usize = 0;
 fn HU_TITLEY() -> usize {
-	unsafe { 167 - usize::try_from((*hu_font[0]).height).unwrap() }
+	unsafe { 167 - usize::from((*hu_font[0]).height) }
 }
 
 const HU_INPUTTOGGLE: u8 = b't';
 const HU_INPUTX: usize = HU_MSGX;
 fn HU_INPUTY() -> usize {
-	unsafe { HU_MSGY + HU_MSGHEIGHT * (usize::try_from((*hu_font[0]).height).unwrap() + 1) }
+	unsafe { HU_MSGY + HU_MSGHEIGHT * usize::from((*hu_font[0]).height + 1) }
 }
 
 pub(crate) static mut chat_macros: [Smuggle<c_char>; 10] = [

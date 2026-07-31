@@ -1223,7 +1223,7 @@ fn M_StringWidth(string: *const c_char) -> usize {
 			if c < 0 || c >= i32::from(HU_FONTSIZE) {
 				w += 4;
 			} else {
-				w += usize::try_from((*hu_font[usize::try_from(c).unwrap()]).width).unwrap();
+				w += usize::from((*hu_font[usize::try_from(c).unwrap()]).width);
 			}
 		}
 
@@ -1234,7 +1234,7 @@ fn M_StringWidth(string: *const c_char) -> usize {
 //      Find string height from hu_font chars
 fn M_StringHeight(string: *const c_char) -> usize {
 	unsafe {
-		let height = usize::try_from((*hu_font[0]).height).unwrap();
+		let height = usize::from((*hu_font[0]).height);
 
 		let mut h = height;
 		for i in 0..libc::strlen(string) {
@@ -1272,7 +1272,7 @@ fn M_WriteText(x: usize, y: usize, string: *const c_char) {
 				continue;
 			}
 
-			let w = usize::try_from((*hu_font[usize::try_from(c).unwrap()]).width).unwrap();
+			let w = usize::from((*hu_font[usize::try_from(c).unwrap()]).width);
 			if cx + w > SCREENWIDTH {
 				break;
 			}
@@ -1744,7 +1744,7 @@ pub(crate) fn M_Drawer() {
 					usize::try_from(i16::max(y, 0)).unwrap(),
 					string.as_ptr(),
 				);
-				y += (*hu_font[0]).height;
+				y += i16::try_from((*hu_font[0]).height).unwrap();
 			}
 			return;
 		}

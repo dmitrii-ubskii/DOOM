@@ -269,8 +269,8 @@ pub(crate) struct drawseg_t {
 #[repr(C)]
 #[derive(Debug)]
 pub(crate) struct patch_t {
-	pub(crate) width: i16, // bounding box size
-	pub(crate) height: i16,
+	pub(crate) width: u16, // bounding box size
+	pub(crate) height: u16,
 	pub(crate) leftoffset: i16, // pixels to the left of origin
 	pub(crate) topoffset: i16,  // pixels below the origin
 	pub(crate) columnofs: [usize; 8], // only [width] used
