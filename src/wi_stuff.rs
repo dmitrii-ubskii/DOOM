@@ -704,9 +704,9 @@ fn WI_drawOnLnode(n: usize, c: *mut *mut patch_t) {
 		let mut i = 0;
 		loop {
 			let left =
-				lnodes[(*wbs).epsd][n].x.wrapping_sub(usize::try_from(c(i).leftoffset).unwrap());
+				lnodes[(*wbs).epsd][n].x.wrapping_sub_signed(isize::from(c(i).leftoffset));
 			let top =
-				lnodes[(*wbs).epsd][n].y.wrapping_sub(usize::try_from(c(i).topoffset).unwrap());
+				lnodes[(*wbs).epsd][n].y.wrapping_sub_signed(isize::from(c(i).topoffset));
 			let right = left + usize::try_from(c(i).width).unwrap();
 			let bottom = top + usize::try_from(c(i).height).unwrap();
 
