@@ -114,7 +114,7 @@ static mut sttminus: *mut patch_t = null_mut();
 //  everything else is done somewhere else.
 pub(crate) fn STlib_init() {
 	unsafe {
-		sttminus = W_CacheLumpName(c"STTMINUS".as_ptr(), PU_STATIC).cast();
+		sttminus = W_CacheLumpName(c"STTMINUS", PU_STATIC).cast();
 	}
 }
 

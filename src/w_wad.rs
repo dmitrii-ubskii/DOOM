@@ -293,12 +293,12 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 
 // W_CheckNumForName
 // Returns -1 if name not found.
-pub(crate) unsafe fn W_CheckNumForName(name: *const c_char) -> isize {
+pub(crate) fn W_CheckNumForName(name: &CStr) -> Option<usize> {
 	unsafe {
 		let mut name8 = [0; 9];
 
 		// make the name into two integers for easy compares
-		libc::strncpy(name8.as_mut_ptr(), name, 8);
+		libc::strncpy(name8.as_mut_ptr(), name.as_ptr(), 8);
 
 		// in case the name was a fill 8 chars
 		name8[8] = 0;
@@ -312,27 +312,22 @@ pub(crate) unsafe fn W_CheckNumForName(name: *const c_char) -> isize {
 		while lump_p != lumpinfo {
 			lump_p = lump_p.wrapping_sub(1);
 			if (&*lump_p).name[..] == name8[..8] {
-				return lump_p.offset_from(lumpinfo);
+				return Some(lump_p.offset_from_unsigned(lumpinfo));
 			}
 		}
 
 		// TFB. Not found.
-		-1
+		None
 	}
 }
 
 // W_GetNumForName
 // Calls W_CheckNumForName, but bombs out if not found.
-pub(crate) unsafe fn W_GetNumForName(name: *const c_char) -> isize {
-	unsafe {
-		match W_CheckNumForName(name) {
-			-1 => I_Error(format_args!(
-				"W_GetNumForName: {} not found!",
-				CStr::from_ptr(name).to_str().unwrap(),
-			)),
-			i => i,
-		}
-	}
+pub(crate) fn W_GetNumForName(name: &CStr) -> usize {
+	let Some(num) = W_CheckNumForName(name) else {
+		I_Error(format_args!("W_GetNumForName: {} not found!", name.to_str().unwrap()));
+	};
+	num
 }
 
 // W_LumpLength
@@ -414,6 +409,6 @@ pub(crate) fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
 }
 
 // W_CacheLumpName
-pub(crate) unsafe fn W_CacheLumpName(name: *const c_char, tag: usize) -> *mut c_void {
-	unsafe { W_CacheLumpNum(usize::try_from(W_GetNumForName(name)).unwrap(), tag) }
+pub(crate) unsafe fn W_CacheLumpName(name: &CStr, tag: usize) -> *mut c_void {
+	W_CacheLumpNum(W_GetNumForName(name), tag)
 }

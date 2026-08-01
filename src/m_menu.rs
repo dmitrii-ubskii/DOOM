@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::c_char,
+	ffi::{CStr, c_char},
 	ptr::{null, null_mut},
 };
 
@@ -612,7 +612,7 @@ fn M_ReadSaveStrings() {
 // M_LoadGame & Cie.
 fn M_DrawLoad() {
 	unsafe {
-		V_DrawPatchDirect(72, 28, 0, W_CacheLumpName(c"M_LOADG".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(72, 28, 0, W_CacheLumpName(c"M_LOADG", PU_CACHE).cast());
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..usize::from(load_e::load_end) {
 			M_DrawSaveLoadBorder(
@@ -631,14 +631,14 @@ fn M_DrawLoad() {
 // Draw border for the savegame description
 fn M_DrawSaveLoadBorder(mut x: usize, y: usize) {
 	unsafe {
-		V_DrawPatchDirect(x - 8, y + 7, 0, W_CacheLumpName(c"M_LSLEFT".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(x - 8, y + 7, 0, W_CacheLumpName(c"M_LSLEFT", PU_CACHE).cast());
 
 		for _ in 0..24 {
-			V_DrawPatchDirect(x, y + 7, 0, W_CacheLumpName(c"M_LSCNTR".as_ptr(), PU_CACHE).cast());
+			V_DrawPatchDirect(x, y + 7, 0, W_CacheLumpName(c"M_LSCNTR", PU_CACHE).cast());
 			x += 8;
 		}
 
-		V_DrawPatchDirect(x, y + 7, 0, W_CacheLumpName(c"M_LSRGHT".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(x, y + 7, 0, W_CacheLumpName(c"M_LSRGHT", PU_CACHE).cast());
 	}
 }
 
@@ -677,7 +677,7 @@ fn M_LoadGame(_choice: i32) {
 //  M_SaveGame & Cie.
 fn M_DrawSave() {
 	unsafe {
-		V_DrawPatchDirect(72, 28, 0, W_CacheLumpName(c"M_SAVEG".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(72, 28, 0, W_CacheLumpName(c"M_SAVEG", PU_CACHE).cast());
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..usize::from(load_e::load_end) {
 			M_DrawSaveLoadBorder(
@@ -823,10 +823,10 @@ fn M_DrawReadThis1() {
 		inhelpscreens = true;
 		match gamemode {
 			GameMode_t::commercial => {
-				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"HELP".as_ptr(), PU_CACHE).cast())
+				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"HELP", PU_CACHE).cast())
 			}
 			GameMode_t::shareware | GameMode_t::registered | GameMode_t::retail => {
-				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"HELP1".as_ptr(), PU_CACHE).cast())
+				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"HELP1", PU_CACHE).cast())
 			}
 			GameMode_t::indetermined => (),
 		}
@@ -839,10 +839,10 @@ fn M_DrawReadThis2() {
 		inhelpscreens = true;
 		match gamemode {
 			GameMode_t::retail | GameMode_t::commercial => {
-				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"CREDIT".as_ptr(), PU_CACHE).cast())
+				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"CREDIT", PU_CACHE).cast())
 			}
 			GameMode_t::shareware | GameMode_t::registered => {
-				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"HELP2".as_ptr(), PU_CACHE).cast())
+				V_DrawPatchDirect(0, 0, 0, W_CacheLumpName(c"HELP2", PU_CACHE).cast())
 			}
 			GameMode_t::indetermined => (),
 		}
@@ -852,7 +852,7 @@ fn M_DrawReadThis2() {
 // Change Sfx & Music volumes
 fn M_DrawSound() {
 	unsafe {
-		V_DrawPatchDirect(60, 38, 0, W_CacheLumpName(c"M_SVOL".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(60, 38, 0, W_CacheLumpName(c"M_SVOL", PU_CACHE).cast());
 
 		M_DrawThermo(
 			usize::try_from(SoundDef.x).unwrap(),
@@ -902,15 +902,15 @@ fn M_MusicVol(choice: i32) {
 // M_DrawMainMenu
 fn M_DrawMainMenu() {
 	unsafe {
-		V_DrawPatchDirect(94, 2, 0, W_CacheLumpName(c"M_DOOM".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(94, 2, 0, W_CacheLumpName(c"M_DOOM", PU_CACHE).cast());
 	}
 }
 
 // M_NewGame
 fn M_DrawNewGame() {
 	unsafe {
-		V_DrawPatchDirect(96, 14, 0, W_CacheLumpName(c"M_NEWG".as_ptr(), PU_CACHE).cast());
-		V_DrawPatchDirect(54, 38, 0, W_CacheLumpName(c"M_SKILL".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(96, 14, 0, W_CacheLumpName(c"M_NEWG", PU_CACHE).cast());
+		V_DrawPatchDirect(54, 38, 0, W_CacheLumpName(c"M_SKILL", PU_CACHE).cast());
 	}
 }
 
@@ -934,7 +934,7 @@ static mut epi: usize = 0;
 
 fn M_DrawEpisode() {
 	unsafe {
-		V_DrawPatchDirect(54, 38, 0, W_CacheLumpName(c"M_EPISOD".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(54, 38, 0, W_CacheLumpName(c"M_EPISOD", PU_CACHE).cast());
 	}
 }
 
@@ -979,33 +979,25 @@ fn M_Episode(mut choice: i32) {
 }
 
 // M_Options
-const detailNames: [[u8; 9]; 2] = [*b"M_GDHIGH\0", *b"M_GDLOW\0\0"];
-const msgNames: [[u8; 9]; 2] = [*b"M_MSGOFF\0", *b"M_MSGON\0\0"];
+const detailNames: [&CStr; 2] = [c"M_GDHIGH", c"M_GDLOW"];
+const msgNames: [&CStr; 2] = [c"M_MSGOFF", c"M_MSGON"];
 
 fn M_DrawOptions() {
 	unsafe {
-		V_DrawPatchDirect(108, 15, 0, W_CacheLumpName(c"M_OPTTTL".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(108, 15, 0, W_CacheLumpName(c"M_OPTTTL", PU_CACHE).cast());
 
 		V_DrawPatchDirect(
 			usize::try_from(OptionsDef.x).unwrap() + 175,
 			usize::try_from(OptionsDef.y).unwrap() + LINEHEIGHT * usize::from(options_e::detail),
 			0,
-			W_CacheLumpName(
-				detailNames[usize::try_from(detailLevel).unwrap()].as_ptr().cast(),
-				PU_CACHE,
-			)
-			.cast(),
+			W_CacheLumpName(detailNames[usize::try_from(detailLevel).unwrap()], PU_CACHE).cast(),
 		);
 
 		V_DrawPatchDirect(
 			usize::try_from(OptionsDef.x).unwrap() + 120,
 			usize::try_from(OptionsDef.y).unwrap() + LINEHEIGHT * usize::from(options_e::messages),
 			0,
-			W_CacheLumpName(
-				msgNames[usize::try_from(showMessages).unwrap()].as_ptr().cast(),
-				PU_CACHE,
-			)
-			.cast(),
+			W_CacheLumpName(msgNames[usize::try_from(showMessages).unwrap()], PU_CACHE).cast(),
 		);
 
 		M_DrawThermo(
@@ -1185,19 +1177,19 @@ fn M_SizeDisplay(choice: i32) {
 fn M_DrawThermo(x: usize, y: usize, thermWidth: usize, thermDot: usize) {
 	unsafe {
 		let mut xx = x;
-		V_DrawPatchDirect(xx, y, 0, W_CacheLumpName(c"M_THERML".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(xx, y, 0, W_CacheLumpName(c"M_THERML", PU_CACHE).cast());
 		xx += 8;
 		for _ in 0..thermWidth {
-			V_DrawPatchDirect(xx, y, 0, W_CacheLumpName(c"M_THERMM".as_ptr(), PU_CACHE).cast());
+			V_DrawPatchDirect(xx, y, 0, W_CacheLumpName(c"M_THERMM", PU_CACHE).cast());
 			xx += 8;
 		}
-		V_DrawPatchDirect(xx, y, 0, W_CacheLumpName(c"M_THERMR".as_ptr(), PU_CACHE).cast());
+		V_DrawPatchDirect(xx, y, 0, W_CacheLumpName(c"M_THERMR", PU_CACHE).cast());
 
 		V_DrawPatchDirect(
 			(x + 8) + thermDot * 8,
 			y,
 			0,
-			W_CacheLumpName(c"M_THERMO".as_ptr(), PU_CACHE).cast(),
+			W_CacheLumpName(c"M_THERMO", PU_CACHE).cast(),
 		);
 	}
 }
@@ -1545,7 +1537,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 						usegamma = 0;
 					}
 					players[consoleplayer].message = gammamsg[usegamma].as_ptr().cast();
-					I_SetPalette(W_CacheLumpName(c"PLAYPAL".as_ptr(), PU_CACHE).cast());
+					I_SetPalette(W_CacheLumpName(c"PLAYPAL", PU_CACHE).cast());
 					return true;
 				}
 
@@ -1767,7 +1759,9 @@ pub(crate) fn M_Drawer() {
 					usize::try_from(y).unwrap(),
 					0,
 					W_CacheLumpName(
-						(*(*currentMenu).menuitems.wrapping_add(i)).name.as_ptr().cast(),
+						CStr::from_ptr(
+							(*(*currentMenu).menuitems.wrapping_add(i)).name.as_ptr().cast(),
+						),
 						PU_CACHE,
 					)
 					.cast(),
@@ -1783,7 +1777,7 @@ pub(crate) fn M_Drawer() {
 				+ usize::try_from(itemOn).unwrap() * LINEHEIGHT,
 			0,
 			W_CacheLumpName(
-				skullName[usize::try_from(whichSkull).unwrap()].as_ptr().cast(),
+				CStr::from_ptr(skullName[usize::try_from(whichSkull).unwrap()].as_ptr().cast()),
 				PU_CACHE,
 			)
 			.cast(),

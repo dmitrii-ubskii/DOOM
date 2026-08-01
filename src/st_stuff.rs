@@ -4,7 +4,10 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 #![allow(static_mut_refs)]
 
-use std::ptr::{self, null_mut};
+use std::{
+	ffi::CStr,
+	ptr::{self, null_mut},
+};
 
 use crate::{
 	am_map::{AM_MSGENTERED, AM_MSGEXITED, AM_MSGHEADER, automapactive},
@@ -977,42 +980,38 @@ pub(crate) fn ST_Drawer(fullscreen: bool, refresh: bool) {
 
 fn ST_loadGraphics() {
 	unsafe {
-		// int		i;
-		// int		j;
-		// int		facenum;
-
 		// char	namebuf[9];
 		let mut namebuf = [0; 9];
 
 		// Load the numbers, tall and short
 		for i in 0..10 {
 			libc::sprintf(namebuf.as_mut_ptr(), c"STTNUM%d".as_ptr(), i);
-			tallnum[i] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			tallnum[i] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 
 			libc::sprintf(namebuf.as_mut_ptr(), c"STYSNUM%d".as_ptr(), i);
-			shortnum[i] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			shortnum[i] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 		}
 
 		// Load percent key.
 		//Note: why not load STMINUS here, too?
-		tallpercent = W_CacheLumpName(c"STTPRCNT".as_ptr(), PU_STATIC).cast();
+		tallpercent = W_CacheLumpName(c"STTPRCNT", PU_STATIC).cast();
 
 		// key cards
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..NUMCARDS {
 			libc::sprintf(namebuf.as_mut_ptr(), c"STKEYS%d".as_ptr(), i);
-			keys[i] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			keys[i] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 		}
 
 		// arms background
-		armsbg = W_CacheLumpName(c"STARMS".as_ptr(), PU_STATIC).cast();
+		armsbg = W_CacheLumpName(c"STARMS", PU_STATIC).cast();
 
 		// arms ownership widgets
 		for i in 0..6 {
 			libc::sprintf(namebuf.as_mut_ptr(), c"STGNUM%d".as_ptr(), i + 2);
 
 			// gray #
-			arms[i][0] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			arms[i][0] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 
 			// yellow #
 			arms[i][1] = shortnum[i + 2];
@@ -1020,44 +1019,45 @@ fn ST_loadGraphics() {
 
 		// face backgrounds for different color players
 		libc::sprintf(namebuf.as_mut_ptr(), c"STFB%d".as_ptr(), consoleplayer);
-		faceback = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+		faceback = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 
 		// status bar background bits
-		sbar = W_CacheLumpName(c"STBAR".as_ptr(), PU_STATIC).cast();
+		sbar = W_CacheLumpName(c"STBAR", PU_STATIC).cast();
 
 		// face states
 		let mut facenum = 0;
 		for i in 0..ST_NUMPAINFACES {
 			for j in 0..ST_NUMSTRAIGHTFACES {
 				libc::sprintf(namebuf.as_mut_ptr(), c"STFST%d%d".as_ptr(), i, j);
-				faces[facenum] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+				faces[facenum] =
+					W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 				facenum += 1;
 			}
 			libc::sprintf(namebuf.as_mut_ptr(), c"STFTR%d0".as_ptr(), i); // turn right
-			faces[facenum] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			faces[facenum] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 			facenum += 1;
 			libc::sprintf(namebuf.as_mut_ptr(), c"STFTL%d0".as_ptr(), i); // turn left
-			faces[facenum] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			faces[facenum] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 			facenum += 1;
 			libc::sprintf(namebuf.as_mut_ptr(), c"STFOUCH%d".as_ptr(), i); // ouch!
-			faces[facenum] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			faces[facenum] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 			facenum += 1;
 			libc::sprintf(namebuf.as_mut_ptr(), c"STFEVL%d".as_ptr(), i); // evil grin ;
-			faces[facenum] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			faces[facenum] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 			facenum += 1;
 			libc::sprintf(namebuf.as_mut_ptr(), c"STFKILL%d".as_ptr(), i); // pissed off
-			faces[facenum] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			faces[facenum] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 			facenum += 1;
 		}
-		faces[facenum] = W_CacheLumpName(c"STFGOD0".as_ptr(), PU_STATIC).cast();
+		faces[facenum] = W_CacheLumpName(c"STFGOD0", PU_STATIC).cast();
 		facenum += 1;
-		faces[facenum] = W_CacheLumpName(c"STFDEAD0".as_ptr(), PU_STATIC).cast();
+		faces[facenum] = W_CacheLumpName(c"STFDEAD0", PU_STATIC).cast();
 	}
 }
 
 fn ST_loadData() {
 	unsafe {
-		lu_palette = usize::try_from(W_GetNumForName(c"PLAYPAL".as_ptr())).unwrap();
+		lu_palette = W_GetNumForName(c"PLAYPAL");
 		ST_loadGraphics();
 	}
 }

@@ -42,7 +42,7 @@ pub(crate) struct sfxinfo_t {
 	pub(crate) usefulness: i32,
 
 	// lump number of sfx
-	pub(crate) lumpnum: isize,
+	pub(crate) lumpnum: usize,
 }
 unsafe impl Sync for sfxinfo_t {}
 

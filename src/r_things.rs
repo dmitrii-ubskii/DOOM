@@ -73,7 +73,7 @@ static mut spritename: *const i8 = null();
 
 // R_InstallSpriteLump
 // Local function for R_InitSprites.
-fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
+fn R_InstallSpriteLump(lump: usize, frame: u8, rotation: u8, flipped: bool) {
 	unsafe {
 		if frame >= 29 || rotation > 8 {
 			I_Error(format_args!("R_InstallSpriteLump: Bad frame characters in lump {}", lump));
@@ -107,7 +107,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 
 			for r in 0..8 {
 				sprtemp[frame_index].lump[r] =
-					i16::try_from(lump - isize::try_from(firstspritelump).unwrap()).unwrap();
+					i16::try_from(lump.checked_signed_diff(firstspritelump).unwrap()).unwrap();
 				sprtemp[frame_index].flip[r] = i8::from(flipped);
 			}
 			return;
@@ -136,7 +136,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 		}
 
 		sprtemp[frame_index].lump[rotation] =
-			i16::try_from(lump - isize::try_from(firstspritelump).unwrap()).unwrap();
+			i16::try_from(lump.checked_signed_diff(firstspritelump).unwrap()).unwrap();
 		sprtemp[frame_index].flip[rotation] = i8::from(flipped);
 	}
 }
@@ -190,9 +190,9 @@ fn R_InitSpriteDefs(namelist: *const *const i8) {
 						u8::try_from((*lumpinfo.wrapping_add(l)).name[5]).unwrap() - b'0';
 
 					let patched = if modifiedgame != 0 {
-						W_GetNumForName((*lumpinfo.wrapping_add(l)).name.as_ptr())
+						W_GetNumForName(CStr::from_ptr((*lumpinfo.wrapping_add(l)).name.as_ptr()))
 					} else {
-						isize::try_from(l).unwrap()
+						l
 					};
 
 					R_InstallSpriteLump(patched, frame, rotation, false);
@@ -202,7 +202,7 @@ fn R_InitSpriteDefs(namelist: *const *const i8) {
 							u8::try_from((*lumpinfo.wrapping_add(l)).name[6]).unwrap() - b'A';
 						let rotation =
 							u8::try_from((*lumpinfo.wrapping_add(l)).name[7]).unwrap() - b'0';
-						R_InstallSpriteLump(isize::try_from(l).unwrap(), frame, rotation, true);
+						R_InstallSpriteLump(l, frame, rotation, true);
 					}
 				}
 			}

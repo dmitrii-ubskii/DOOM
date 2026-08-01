@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::c_char,
+	ffi::{CStr, c_char},
 	ptr::{null, null_mut},
 };
 
@@ -68,7 +68,7 @@ static mut t6text: *const c_char = T6TEXT;
 */
 
 static mut finaletext: *const c_char = null();
-static mut finaleflat: *const c_char = null();
+static mut finaleflat: &CStr = c"";
 
 // F_StartFinale
 pub(crate) fn F_StartFinale() {
@@ -88,19 +88,19 @@ pub(crate) fn F_StartFinale() {
 
 				match gameepisode {
 					1 => {
-						finaleflat = c"FLOOR4_8".as_ptr();
+						finaleflat = c"FLOOR4_8";
 						finaletext = e1text;
 					}
 					2 => {
-						finaleflat = c"SFLR6_1".as_ptr();
+						finaleflat = c"SFLR6_1";
 						finaletext = e2text;
 					}
 					3 => {
-						finaleflat = c"MFLR8_4".as_ptr();
+						finaleflat = c"MFLR8_4";
 						finaletext = e3text;
 					}
 					4 => {
-						finaleflat = c"MFLR8_3".as_ptr();
+						finaleflat = c"MFLR8_3";
 						finaletext = e4text;
 					}
 					_ => (), // Ouch.
@@ -113,27 +113,27 @@ pub(crate) fn F_StartFinale() {
 
 				match gamemap {
 					6 => {
-						finaleflat = c"SLIME16".as_ptr();
+						finaleflat = c"SLIME16";
 						finaletext = c1text;
 					}
 					11 => {
-						finaleflat = c"RROCK14".as_ptr();
+						finaleflat = c"RROCK14";
 						finaletext = c2text;
 					}
 					20 => {
-						finaleflat = c"RROCK07".as_ptr();
+						finaleflat = c"RROCK07";
 						finaletext = c3text;
 					}
 					30 => {
-						finaleflat = c"RROCK17".as_ptr();
+						finaleflat = c"RROCK17";
 						finaletext = c4text;
 					}
 					15 => {
-						finaleflat = c"RROCK13".as_ptr();
+						finaleflat = c"RROCK13";
 						finaletext = c5text;
 					}
 					31 => {
-						finaleflat = c"RROCK19".as_ptr();
+						finaleflat = c"RROCK19";
 						finaletext = c6text;
 					}
 					_ => (), // Ouch.
@@ -143,7 +143,7 @@ pub(crate) fn F_StartFinale() {
 			// Indeterminate.
 			_ => {
 				S_ChangeMusic(musicenum_t::mus_read_m, true);
-				finaleflat = c"F_SKY1".as_ptr(); // Not used anywhere else.
+				finaleflat = c"F_SKY1"; // Not used anywhere else.
 				finaletext = c1text; // FIXME - other text, music?
 			}
 		}
@@ -504,7 +504,7 @@ fn F_CastPrint(text: *const c_char) {
 fn F_CastDrawer() {
 	unsafe {
 		// erase the entire screen to a background
-		V_DrawPatch(0, 0, 0, W_CacheLumpName(c"BOSSBACK".as_ptr(), PU_CACHE).cast());
+		V_DrawPatch(0, 0, 0, W_CacheLumpName(c"BOSSBACK", PU_CACHE).cast());
 
 		F_CastPrint(castorder[castnum].name);
 
@@ -549,8 +549,8 @@ fn F_BunnyScroll() {
 	unsafe {
 		static mut laststage: i32 = 0;
 
-		let p1 = W_CacheLumpName(c"PFUB2".as_ptr(), PU_LEVEL).cast();
-		let p2 = W_CacheLumpName(c"PFUB1".as_ptr(), PU_LEVEL).cast();
+		let p1 = W_CacheLumpName(c"PFUB2", PU_LEVEL).cast();
+		let p2 = W_CacheLumpName(c"PFUB1", PU_LEVEL).cast();
 
 		V_MarkRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
@@ -572,7 +572,7 @@ fn F_BunnyScroll() {
 				(SCREENWIDTH - 13 * 8) / 2,
 				(SCREENHEIGHT - 8 * 8) / 2,
 				0,
-				W_CacheLumpName(c"END0".as_ptr(), PU_CACHE).cast(),
+				W_CacheLumpName(c"END0", PU_CACHE).cast(),
 			);
 			laststage = 0;
 			return;
@@ -593,7 +593,7 @@ fn F_BunnyScroll() {
 			(SCREENWIDTH - 13 * 8) / 2,
 			(SCREENHEIGHT - 8 * 8) / 2,
 			0,
-			W_CacheLumpName(name.as_ptr(), PU_CACHE).cast(),
+			W_CacheLumpName(CStr::from_ptr(name.as_ptr()), PU_CACHE).cast(),
 		);
 	}
 }
@@ -611,12 +611,12 @@ pub(crate) fn F_Drawer() {
 		} else {
 			match gameepisode {
 				1 if gamemode == GameMode_t::retail => {
-					V_DrawPatch(0, 0, 0, W_CacheLumpName(c"CREDIT".as_ptr(), PU_CACHE).cast())
+					V_DrawPatch(0, 0, 0, W_CacheLumpName(c"CREDIT", PU_CACHE).cast())
 				}
-				1 => V_DrawPatch(0, 0, 0, W_CacheLumpName(c"HELP2".as_ptr(), PU_CACHE).cast()),
-				2 => V_DrawPatch(0, 0, 0, W_CacheLumpName(c"VICTORY2".as_ptr(), PU_CACHE).cast()),
+				1 => V_DrawPatch(0, 0, 0, W_CacheLumpName(c"HELP2", PU_CACHE).cast()),
+				2 => V_DrawPatch(0, 0, 0, W_CacheLumpName(c"VICTORY2", PU_CACHE).cast()),
 				3 => F_BunnyScroll(),
-				4 => V_DrawPatch(0, 0, 0, W_CacheLumpName(c"ENDPIC".as_ptr(), PU_CACHE).cast()),
+				4 => V_DrawPatch(0, 0, 0, W_CacheLumpName(c"ENDPIC", PU_CACHE).cast()),
 				_ => (),
 			}
 		}

@@ -883,8 +883,7 @@ pub(crate) fn G_ExitLevel() {
 pub(crate) fn G_SecretExitLevel() {
 	unsafe {
 		// IF NO WOLF3D LEVELS, NO SECRET EXIT!
-		secretexit =
-			gamemode != GameMode_t::commercial || W_CheckNumForName(c"map31".as_ptr()) >= 0;
+		secretexit = gamemode != GameMode_t::commercial || W_CheckNumForName(c"map31").is_some();
 		gameaction = gameaction_t::ga_completed;
 	}
 }
@@ -1417,7 +1416,7 @@ pub(crate) fn G_DeferedPlayDemo(name: *const c_char) {
 fn G_DoPlayDemo() {
 	unsafe {
 		gameaction = gameaction_t::ga_nothing;
-		demo_p = W_CacheLumpName(defdemoname, PU_STATIC).cast();
+		demo_p = W_CacheLumpName(CStr::from_ptr(defdemoname), PU_STATIC).cast();
 		demobuffer = demo_p;
 		if *demo_p != u8::try_from(VERSION).unwrap() {
 			eprintln!(

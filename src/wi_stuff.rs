@@ -2,7 +2,7 @@
 
 // States for the intermission
 
-use std::ptr::null_mut;
+use std::{ffi::CStr, ptr::null_mut};
 
 use crate::{
 	d_event::{BT_ATTACK, BT_USE},
@@ -1654,7 +1654,7 @@ fn WI_loadData() {
 		}
 
 		// background
-		bg = W_CacheLumpName(name.as_mut_ptr(), PU_CACHE).cast();
+		bg = W_CacheLumpName(CStr::from_ptr(name.as_ptr()), PU_CACHE).cast();
 		V_DrawPatch(0, 0, 1, bg);
 
 		// UNUSED unsigned char *pic = screens[1];
@@ -1673,23 +1673,25 @@ fn WI_loadData() {
 			lnames = Z_Malloc(size_of::<*mut patch_t>() * NUMCMAPS, PU_STATIC, null_mut()).cast();
 			for i in 0..NUMCMAPS {
 				libc::sprintf(name.as_mut_ptr(), c"CWILV%2.2d".as_ptr(), i);
-				*lnames.wrapping_add(i) = W_CacheLumpName(name.as_mut_ptr(), PU_STATIC).cast();
+				*lnames.wrapping_add(i) =
+					W_CacheLumpName(CStr::from_ptr(name.as_ptr()), PU_STATIC).cast();
 			}
 		} else {
 			lnames = Z_Malloc(size_of::<*mut patch_t>() * NUMMAPS, PU_STATIC, null_mut()).cast();
 			for i in 0..NUMMAPS {
 				libc::sprintf(name.as_mut_ptr(), c"WILV%d%d".as_ptr(), (*wbs).epsd, i);
-				*lnames.wrapping_add(i) = W_CacheLumpName(name.as_mut_ptr(), PU_STATIC).cast();
+				*lnames.wrapping_add(i) =
+					W_CacheLumpName(CStr::from_ptr(name.as_ptr()), PU_STATIC).cast();
 			}
 
 			// you are here
-			yah[0] = W_CacheLumpName(c"WIURH0".as_ptr(), PU_STATIC).cast();
+			yah[0] = W_CacheLumpName(c"WIURH0", PU_STATIC).cast();
 
 			// you are here (alt.)
-			yah[1] = W_CacheLumpName(c"WIURH1".as_ptr(), PU_STATIC).cast();
+			yah[1] = W_CacheLumpName(c"WIURH1", PU_STATIC).cast();
 
 			// splat
-			splat = W_CacheLumpName(c"WISPLAT".as_ptr(), PU_STATIC).cast();
+			splat = W_CacheLumpName(c"WISPLAT", PU_STATIC).cast();
 
 			if (*wbs).epsd < 3 {
 				for j in 0..NUMANIMS[(*wbs).epsd] {
@@ -1705,7 +1707,8 @@ fn WI_loadData() {
 								j,
 								i,
 							);
-							a.p[i] = W_CacheLumpName(name.as_mut_ptr(), PU_STATIC).cast();
+							a.p[i] =
+								W_CacheLumpName(CStr::from_ptr(name.as_ptr()), PU_STATIC).cast();
 						} else {
 							// HACK ALERT!
 							a.p[i] = (*anims[1].wrapping_add(4)).p[i];
@@ -1716,83 +1719,83 @@ fn WI_loadData() {
 		}
 
 		// More hacks on minus sign.
-		wiminus = W_CacheLumpName(c"WIMINUS".as_ptr(), PU_STATIC).cast();
+		wiminus = W_CacheLumpName(c"WIMINUS", PU_STATIC).cast();
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..10 {
 			// numbers 0-9
 			libc::sprintf(name.as_mut_ptr(), c"WINUM%d".as_ptr(), i);
-			num[i] = W_CacheLumpName(name.as_mut_ptr(), PU_STATIC).cast();
+			num[i] = W_CacheLumpName(CStr::from_ptr(name.as_ptr()), PU_STATIC).cast();
 		}
 
 		// percent sign
-		percent = W_CacheLumpName(c"WIPCNT".as_ptr(), PU_STATIC).cast();
+		percent = W_CacheLumpName(c"WIPCNT", PU_STATIC).cast();
 
-		// c"finished".as_ptr()
-		finished = W_CacheLumpName(c"WIF".as_ptr(), PU_STATIC).cast();
+		// c"finished"
+		finished = W_CacheLumpName(c"WIF", PU_STATIC).cast();
 
-		// c"entering".as_ptr()
-		entering = W_CacheLumpName(c"WIENTER".as_ptr(), PU_STATIC).cast();
+		// c"entering"
+		entering = W_CacheLumpName(c"WIENTER", PU_STATIC).cast();
 
-		// c"kills".as_ptr()
-		kills = W_CacheLumpName(c"WIOSTK".as_ptr(), PU_STATIC).cast();
+		// c"kills"
+		kills = W_CacheLumpName(c"WIOSTK", PU_STATIC).cast();
 
-		// c"scrt".as_ptr()
-		secret = W_CacheLumpName(c"WIOSTS".as_ptr(), PU_STATIC).cast();
+		// c"scrt"
+		secret = W_CacheLumpName(c"WIOSTS", PU_STATIC).cast();
 
-		// c"secret".as_ptr()
-		sp_secret = W_CacheLumpName(c"WISCRT2".as_ptr(), PU_STATIC).cast();
+		// c"secret"
+		sp_secret = W_CacheLumpName(c"WISCRT2", PU_STATIC).cast();
 
 		// Yuck.
 		items = /* if french {
-			// c"items".as_ptr()
+			// c"items"
 			if (netgame && !deathmatch) {
-				 W_CacheLumpName(c"WIOBJ".as_ptr(), PU_STATIC)
+				 W_CacheLumpName(c"WIOBJ", PU_STATIC)
 			} else {
-				 W_CacheLumpName(c"WIOSTI".as_ptr(), PU_STATIC)
+				 W_CacheLumpName(c"WIOSTI", PU_STATIC)
 			}
 		} else { */
-			 W_CacheLumpName(c"WIOSTI".as_ptr(), PU_STATIC).cast()
+			 W_CacheLumpName(c"WIOSTI", PU_STATIC).cast()
 		/*}*/;
 
-		// c"frgs".as_ptr()
-		frags = W_CacheLumpName(c"WIFRGS".as_ptr(), PU_STATIC).cast();
+		// c"frgs"
+		frags = W_CacheLumpName(c"WIFRGS", PU_STATIC).cast();
 
-		// c":".as_ptr()
-		colon = W_CacheLumpName(c"WICOLON".as_ptr(), PU_STATIC).cast();
+		// c":"
+		colon = W_CacheLumpName(c"WICOLON", PU_STATIC).cast();
 
-		// c"time".as_ptr()
-		time = W_CacheLumpName(c"WITIME".as_ptr(), PU_STATIC).cast();
+		// c"time"
+		time = W_CacheLumpName(c"WITIME", PU_STATIC).cast();
 
-		// c"sucks".as_ptr()
-		sucks = W_CacheLumpName(c"WISUCKS".as_ptr(), PU_STATIC).cast();
+		// c"sucks"
+		sucks = W_CacheLumpName(c"WISUCKS", PU_STATIC).cast();
 
-		// c"par".as_ptr()
-		par = W_CacheLumpName(c"WIPAR".as_ptr(), PU_STATIC).cast();
+		// c"par"
+		par = W_CacheLumpName(c"WIPAR", PU_STATIC).cast();
 
-		// c"killers".as_ptr() (vertical)
-		killers = W_CacheLumpName(c"WIKILRS".as_ptr(), PU_STATIC).cast();
+		// c"killers" (vertical)
+		killers = W_CacheLumpName(c"WIKILRS", PU_STATIC).cast();
 
-		// c"victims".as_ptr() (horiz)
-		victims = W_CacheLumpName(c"WIVCTMS".as_ptr(), PU_STATIC).cast();
+		// c"victims" (horiz)
+		victims = W_CacheLumpName(c"WIVCTMS", PU_STATIC).cast();
 
-		// c"total".as_ptr()
-		total = W_CacheLumpName(c"WIMSTT".as_ptr(), PU_STATIC).cast();
+		// c"total"
+		total = W_CacheLumpName(c"WIMSTT", PU_STATIC).cast();
 
 		// your face
-		star = W_CacheLumpName(c"STFST01".as_ptr(), PU_STATIC).cast();
+		star = W_CacheLumpName(c"STFST01", PU_STATIC).cast();
 
 		// dead face
-		bstar = W_CacheLumpName(c"STFDEAD0".as_ptr(), PU_STATIC).cast();
+		bstar = W_CacheLumpName(c"STFDEAD0", PU_STATIC).cast();
 
 		for i in 0..MAXPLAYERS {
 			// c"1,2,3,4".as_ptr()
 			libc::sprintf(name.as_mut_ptr(), c"STPB%d".as_ptr(), i);
-			p[i] = W_CacheLumpName(name.as_mut_ptr(), PU_STATIC).cast();
+			p[i] = W_CacheLumpName(CStr::from_ptr(name.as_ptr()), PU_STATIC).cast();
 
 			// c"1,2,3,4".as_ptr()
 			libc::sprintf(name.as_mut_ptr(), c"WIBP%d".as_ptr(), i + 1);
-			bp[i] = W_CacheLumpName(name.as_mut_ptr(), PU_STATIC).cast();
+			bp[i] = W_CacheLumpName(CStr::from_ptr(name.as_ptr()), PU_STATIC).cast();
 		}
 	}
 }

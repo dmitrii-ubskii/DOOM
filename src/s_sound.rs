@@ -1,6 +1,10 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, num::Wrapping, ptr::null_mut};
+use std::{
+	ffi::{CStr, c_void},
+	num::Wrapping,
+	ptr::null_mut,
+};
 
 use crate::{
 	doomdef::GameMode_t,
@@ -107,7 +111,7 @@ pub(crate) fn S_Init(sfxVolume: u32, musicVolume: u32) {
 		// Note that sounds have not been cached (yet).
 		#[allow(clippy::needless_range_loop)]
 		for i in 1..usize::from(sfxenum_t::NUMSFX) {
-			S_sfx[i].lumpnum = -1;
+			S_sfx[i].lumpnum = usize::MAX;
 			S_sfx[i].usefulness = -1;
 		}
 	}
@@ -252,7 +256,7 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u3
 		//  each time the sound is needed?
 
 		// get lumpnum if necessary
-		if sfx.lumpnum < 0 {
+		if sfx.lumpnum == usize::MAX {
 			sfx.lumpnum = I_GetSfxLumpNum(sfx);
 		}
 
@@ -412,7 +416,7 @@ pub(crate) fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 		if music.lumpnum == 0 {
 			let mut namebuf = [0; 9];
 			libc::sprintf(namebuf.as_mut_ptr(), c"d_%s".as_ptr(), music.name);
-			music.lumpnum = usize::try_from(W_GetNumForName(namebuf.as_ptr())).unwrap();
+			music.lumpnum = W_GetNumForName(CStr::from_ptr(namebuf.as_ptr()));
 		}
 
 		// load & register it

@@ -407,12 +407,16 @@ pub(crate) fn P_InitPicAnims() {
 				(*lastanim).picnum = R_TextureNumForName(animdefs[i].endname.as_ptr().cast());
 				(*lastanim).basepic = R_TextureNumForName(animdefs[i].startname.as_ptr().cast());
 			} else {
-				if W_CheckNumForName(animdefs[i].startname.as_ptr().cast()) == -1 {
+				if W_CheckNumForName(CStr::from_ptr(animdefs[i].startname.as_ptr().cast()))
+					.is_none()
+				{
 					continue;
 				}
 
-				(*lastanim).picnum = R_FlatNumForName(animdefs[i].endname.as_ptr().cast());
-				(*lastanim).basepic = R_FlatNumForName(animdefs[i].startname.as_ptr().cast());
+				(*lastanim).picnum =
+					R_FlatNumForName(CStr::from_ptr(animdefs[i].endname.as_ptr().cast()));
+				(*lastanim).basepic =
+					R_FlatNumForName(CStr::from_ptr(animdefs[i].startname.as_ptr().cast()));
 			}
 
 			(*lastanim).istexture = animdefs[i].istexture;

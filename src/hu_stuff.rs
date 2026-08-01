@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::{c_char, c_int},
+	ffi::{CStr, c_char, c_int},
 	ptr::{null, null_mut},
 };
 
@@ -364,7 +364,7 @@ pub(crate) fn HU_Init() {
 		for i in 0..usize::from(HU_FONTSIZE) {
 			libc::sprintf(buffer.as_mut_ptr(), c"STCFN%.3d".as_ptr(), c_int::from(j));
 			j += 1;
-			hu_font[i] = W_CacheLumpName(buffer.as_mut_ptr(), PU_STATIC).cast();
+			hu_font[i] = W_CacheLumpName(CStr::from_ptr(buffer.as_ptr()), PU_STATIC).cast();
 		}
 	}
 }

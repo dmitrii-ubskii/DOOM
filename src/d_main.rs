@@ -98,7 +98,7 @@ pub(crate) fn D_PostEvent(ev: &mut event_t) {
 pub(crate) fn D_ProcessEvents() {
 	unsafe {
 		// IF STORE DEMO, DO NOT ACCEPT INPUT
-		if gamemode == GameMode_t::commercial && W_CheckNumForName(c"map01".as_ptr()) < 0 {
+		if gamemode == GameMode_t::commercial && W_CheckNumForName(c"map01").is_none() {
 			return;
 		}
 
@@ -192,7 +192,7 @@ fn D_Display() {
 
 		// clean up border stuff
 		if gamestate != oldgamestate && gamestate != gamestate_t::GS_LEVEL {
-			I_SetPalette(W_CacheLumpName(c"PLAYPAL".as_ptr(), PU_CACHE).cast());
+			I_SetPalette(W_CacheLumpName(c"PLAYPAL", PU_CACHE).cast());
 		}
 
 		// see if the border needs to be initially drawn
@@ -223,7 +223,7 @@ fn D_Display() {
 			let y = if automapactive { 4 } else { viewwindowy + 4 };
 			let x = viewwindowx
 				.wrapping_add_signed((isize::try_from(scaledviewwidth).unwrap() - 68) / 2);
-			V_DrawPatchDirect(x, y, 0, W_CacheLumpName(c"M_PAUSE".as_ptr(), PU_CACHE).cast());
+			V_DrawPatchDirect(x, y, 0, W_CacheLumpName(c"M_PAUSE", PU_CACHE).cast());
 		}
 
 		// menus go directly to the screen
@@ -319,7 +319,7 @@ pub(crate) fn D_DoomLoop() {
 //  DEMO LOOP
 static mut demosequence: i32 = 0;
 static mut pagetic: i32 = 0;
-static mut pagename: *const c_char = null_mut();
+static mut pagename: &CStr = c"";
 
 // D_PageTicker
 // Handles timing for warped projection
@@ -371,7 +371,7 @@ pub(crate) fn D_DoAdvanceDemo() {
 					pagetic = 170;
 				}
 				gamestate = gamestate_t::GS_DEMOSCREEN;
-				pagename = c"TITLEPIC".as_ptr();
+				pagename = c"TITLEPIC";
 				if gamemode == GameMode_t::commercial {
 					S_StartMusic(musicenum_t::mus_dm2ttl);
 				} else {
@@ -384,7 +384,7 @@ pub(crate) fn D_DoAdvanceDemo() {
 			2 => {
 				pagetic = 200;
 				gamestate = gamestate_t::GS_DEMOSCREEN;
-				pagename = c"CREDIT".as_ptr();
+				pagename = c"CREDIT";
 			}
 			3 => {
 				G_DeferedPlayDemo(c"demo2".as_ptr());
@@ -393,15 +393,15 @@ pub(crate) fn D_DoAdvanceDemo() {
 				gamestate = gamestate_t::GS_DEMOSCREEN;
 				if gamemode == GameMode_t::commercial {
 					pagetic = 35 * 11;
-					pagename = c"TITLEPIC".as_ptr();
+					pagename = c"TITLEPIC";
 					S_StartMusic(musicenum_t::mus_dm2ttl);
 				} else {
 					pagetic = 200;
 
 					if gamemode == GameMode_t::retail {
-						pagename = c"CREDIT".as_ptr();
+						pagename = c"CREDIT";
 					} else {
-						pagename = c"HELP2".as_ptr();
+						pagename = c"HELP2";
 					}
 				}
 			}
@@ -957,7 +957,7 @@ pub(crate) fn D_DoomMain() {
 			// but w/o all the lumps of the registered version.
 			if gamemode == GameMode_t::registered {
 				for n in name {
-					if W_CheckNumForName(n) < 0 {
+					if W_CheckNumForName(CStr::from_ptr(n)).is_none() {
 						I_Error("\nThis is not the registered version.");
 					}
 				}

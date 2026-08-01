@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::{c_int, c_void},
+	ffi::{CStr, c_int, c_void},
 	process::exit,
 	ptr::null_mut,
 	time::Duration,
@@ -109,6 +109,7 @@ fn getsfx(sfxname: *const c_char, len: *mut usize) -> *mut c_void {
 		//  in zone memory.
 		let mut name = [0; 20];
 		libc::sprintf(name.as_mut_ptr(), c"ds%s".as_ptr(), sfxname);
+		let name = CStr::from_ptr(name.as_ptr());
 
 		// Now, there is a severe problem with the
 		//  sound handling, in it is not (yet/anymore)
@@ -120,10 +121,10 @@ fn getsfx(sfxname: *const c_char, len: *mut usize) -> *mut c_void {
 		// I do not do runtime patches to that
 		//  variable. Instead, we will use a
 		//  default sound for replacement.
-		let sfxlump = if W_CheckNumForName(name.as_ptr()) == -1 {
-			usize::try_from(W_GetNumForName(c"dspistol".as_ptr())).unwrap()
+		let sfxlump = if W_CheckNumForName(name).is_none() {
+			W_GetNumForName(c"dspistol")
 		} else {
-			usize::try_from(W_GetNumForName(name.as_ptr())).unwrap()
+			W_GetNumForName(name)
 		};
 
 		let size = W_LumpLength(sfxlump);
@@ -316,11 +317,11 @@ pub(crate) fn I_SetMusicVolume(volume: u32) {
 
 // Retrieve the raw data lump index
 //  for a given SFX name.
-pub(crate) unsafe fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> isize {
+pub(crate) unsafe fn I_GetSfxLumpNum(sfx: *mut sfxinfo_t) -> usize {
 	unsafe {
 		let mut namebuf = [0; 9];
 		libc::sprintf(namebuf.as_mut_ptr(), c"ds%s".as_ptr(), (*sfx).name);
-		W_GetNumForName(namebuf.as_ptr())
+		W_GetNumForName(CStr::from_ptr(namebuf.as_ptr()))
 	}
 }
 

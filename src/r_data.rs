@@ -75,7 +75,7 @@ struct texpatch_t {
 	// for the internal origin of the patch.
 	pub(crate) originx: int,
 	pub(crate) originy: int,
-	pub(crate) patch: isize,
+	pub(crate) patch: usize,
 }
 
 // A maptexturedef_t describes a rectangular texture,
@@ -190,8 +190,7 @@ fn R_GenerateComposite(texnum: usize) {
 		let patch = texture.patches.as_ptr();
 		for i in 0..usize::try_from(texture.patchcount).unwrap() {
 			let patch = &*patch.wrapping_add(i);
-			let realpatch: &mut patch_t =
-				&mut *W_CacheLumpNum(usize::try_from(patch.patch).unwrap(), PU_CACHE).cast();
+			let realpatch: &mut patch_t = &mut *W_CacheLumpNum(patch.patch, PU_CACHE).cast();
 			let x1 = patch.originx;
 			let mut x2 = x1 + i32::from(realpatch.width);
 
@@ -257,8 +256,7 @@ fn R_GenerateLookup(texnum: usize) {
 		let patch = texture.patches.as_ptr();
 		for i in 0..usize::try_from(texture.patchcount).unwrap() {
 			let patch = &*patch.wrapping_add(i);
-			let realpatch = &mut *(W_CacheLumpNum(usize::try_from(patch.patch).unwrap(), PU_CACHE)
-				.cast::<patch_t>());
+			let realpatch = &mut *(W_CacheLumpNum(patch.patch, PU_CACHE).cast::<patch_t>());
 			let x1 = patch.originx;
 			let mut x2 = x1 + i32::from(realpatch.width);
 
@@ -336,35 +334,34 @@ fn R_InitTextures() {
 	unsafe {
 		// Load the patch names from pnames.lmp.
 		let mut name = [0; 9];
-		let names = W_CacheLumpName(c"PNAMES".as_ptr(), PU_STATIC).cast::<c_char>();
+		let names = W_CacheLumpName(c"PNAMES", PU_STATIC).cast::<c_char>();
 		let nummappatches = *names.cast::<usize>();
 		let name_p = names.wrapping_add(4);
-		let mut patchlookup = vec![0isize; nummappatches];
+		let mut patchlookup = vec![0usize; nummappatches];
 
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..nummappatches {
 			libc::strncpy(name.as_mut_ptr().cast(), name_p.wrapping_add(i * 8), 8);
-			patchlookup[i] = W_CheckNumForName(name.as_ptr());
+			patchlookup[i] = W_CheckNumForName(CStr::from_ptr(name.as_ptr())).unwrap();
 		}
 		Z_Free(names.cast());
 
 		// Load the map texture definitions from textures.lmp.
 		// The data is contained in one or two lumps,
 		//  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
-		let mut maptex = W_CacheLumpName(c"TEXTURE1".as_ptr(), PU_STATIC).cast::<usize>();
+		let mut maptex = W_CacheLumpName(c"TEXTURE1", PU_STATIC).cast::<usize>();
 		let maptex1 = maptex;
 		let numtextures1 = *maptex;
-		let mut maxoff =
-			W_LumpLength(usize::try_from(W_GetNumForName(c"TEXTURE1".as_ptr())).unwrap());
+		let mut maxoff = W_LumpLength(W_GetNumForName(c"TEXTURE1"));
 		let mut directory = maptex.wrapping_add(1);
 
 		let maptex2;
 		let numtextures2;
 		let maxoff2;
-		if W_CheckNumForName(c"TEXTURE2".as_ptr()) != -1 {
-			maptex2 = W_CacheLumpName(c"TEXTURE2".as_ptr(), PU_STATIC).cast::<usize>();
+		if W_CheckNumForName(c"TEXTURE2").is_some() {
+			maptex2 = W_CacheLumpName(c"TEXTURE2", PU_STATIC).cast::<usize>();
 			numtextures2 = *maptex2;
-			maxoff2 = W_LumpLength(usize::try_from(W_GetNumForName(c"TEXTURE2".as_ptr())).unwrap());
+			maxoff2 = W_LumpLength(W_GetNumForName(c"TEXTURE2"));
 		} else {
 			maptex2 = null_mut();
 			numtextures2 = 0;
@@ -381,9 +378,9 @@ fn R_InitTextures() {
 		textureheight = Z_Malloc(numtextures * 4, PU_STATIC, null_mut()).cast();
 
 		//	Really complex printing shit...
-		let temp1 = W_GetNumForName(c"S_START".as_ptr()); // P_???????
-		let temp2 = W_GetNumForName(c"S_END".as_ptr()) - 1;
-		let temp3 = (usize::try_from(temp2 - temp1 + 63).unwrap() / 64) + numtextures.div_ceil(64);
+		let temp1 = W_GetNumForName(c"S_START"); // P_???????
+		let temp2 = W_GetNumForName(c"S_END") - 1;
+		let temp3 = (temp2 - temp1).div_ceil(64) + numtextures.div_ceil(64);
 		print!("[");
 		for _ in 0..temp3 {
 			print!(" ");
@@ -440,12 +437,12 @@ fn R_InitTextures() {
 				patch.originx = i32::from(mpatch.originx);
 				patch.originy = i32::from(mpatch.originy);
 				patch.patch = patchlookup[usize::try_from(mpatch.patch).unwrap()];
-				if patch.patch == -1 {
-					I_Error(format_args!(
-						"R_InitTextures: Missing patch in texture {}",
-						CStr::from_ptr(texture.name.as_ptr().cast()).to_str().unwrap(),
-					));
-				}
+				// if patch.patch == -1 {
+				// 	I_Error(format_args!(
+				// 		"R_InitTextures: Missing patch in texture {}",
+				// 		CStr::from_ptr(texture.name.as_ptr().cast()).to_str().unwrap(),
+				// 	));
+				// }
 			}
 
 			*texturecolumnlump.wrapping_add(i) =
@@ -486,8 +483,8 @@ fn R_InitTextures() {
 // R_InitFlats
 fn R_InitFlats() {
 	unsafe {
-		firstflat = usize::try_from(W_GetNumForName(c"F_START".as_ptr())).unwrap() + 1;
-		lastflat = usize::try_from(W_GetNumForName(c"F_END".as_ptr())).unwrap() - 1;
+		firstflat = W_GetNumForName(c"F_START") + 1;
+		lastflat = W_GetNumForName(c"F_END") - 1;
 		numflats = lastflat - firstflat + 1;
 
 		// Create translation table for global animation.
@@ -505,8 +502,8 @@ fn R_InitFlats() {
 //  just for having the header info ready during rendering.
 fn R_InitSpriteLumps() {
 	unsafe {
-		firstspritelump = usize::try_from(W_GetNumForName(c"S_START".as_ptr())).unwrap() + 1;
-		lastspritelump = usize::try_from(W_GetNumForName(c"S_END".as_ptr())).unwrap() - 1;
+		firstspritelump = W_GetNumForName(c"S_START") + 1;
+		lastspritelump = W_GetNumForName(c"S_END") - 1;
 
 		numspritelumps = lastspritelump - firstspritelump + 1;
 		spritewidth = Z_Malloc(numspritelumps * 4, PU_STATIC, null_mut()).cast();
@@ -531,7 +528,7 @@ fn R_InitColormaps() {
 	unsafe {
 		// Load in the light tables,
 		//  256 byte align tables.
-		let lump = usize::try_from(W_GetNumForName(c"COLORMAP".as_ptr())).unwrap();
+		let lump = W_GetNumForName(c"COLORMAP");
 		let length = W_LumpLength(lump) + 255;
 		let p = Z_Malloc(length, PU_STATIC, null_mut());
 		colormaps = p.wrapping_byte_add(p.align_offset(0x100)).cast();
@@ -556,19 +553,19 @@ pub(crate) fn R_InitData() {
 
 // R_FlatNumForName
 // Retrieval, get a flat number for a flat name.
-pub(crate) fn R_FlatNumForName(name: *const c_char) -> usize {
+pub(crate) fn R_FlatNumForName(name: &CStr) -> usize {
 	unsafe {
 		let mut namet = [0i8; 9];
 		let i = W_CheckNumForName(name);
-		if i == -1 {
+		let Some(i) = i else {
 			namet[8] = 0;
-			libc::memcpy(namet.as_mut_ptr().cast(), name.cast(), 8);
+			libc::memcpy(namet.as_mut_ptr().cast(), name.as_ptr().cast(), 8);
 			I_Error(format_args!(
 				"R_FlatNumForName: {} not found",
 				CStr::from_ptr(namet.as_ptr()).to_str().unwrap()
 			));
-		}
-		usize::try_from(i).unwrap() - firstflat
+		};
+		i - firstflat
 	}
 }
 
@@ -666,8 +663,7 @@ pub(crate) fn R_PrecacheLevel() {
 			let texture = &mut **textures.wrapping_add(i);
 
 			for j in 0..usize::try_from(texture.patchcount).unwrap() {
-				let lump =
-					usize::try_from((*texture.patches.as_ptr().wrapping_add(j)).patch).unwrap();
+				let lump = (*texture.patches.as_ptr().wrapping_add(j)).patch;
 				texturememory += (*lumpinfo.wrapping_add(lump)).size;
 				W_CacheLumpNum(lump, PU_CACHE);
 			}

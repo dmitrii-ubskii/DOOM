@@ -444,7 +444,7 @@ pub(crate) fn R_FillBackScreen() {
 
 		let name = if gamemode == GameMode_t::commercial { name2 } else { name1 };
 
-		let src = W_CacheLumpName(name.as_ptr(), PU_CACHE).cast::<c_void>();
+		let src = W_CacheLumpName(name, PU_CACHE).cast::<c_void>();
 		let mut dest = screens[1].cast();
 
 		for y in 0..SCREENHEIGHT - SBARHEIGHT {
@@ -459,22 +459,22 @@ pub(crate) fn R_FillBackScreen() {
 			}
 		}
 
-		let patch = W_CacheLumpName(c"brdr_t".as_ptr(), PU_CACHE).cast();
+		let patch = W_CacheLumpName(c"brdr_t", PU_CACHE).cast();
 		for x in (0..usize::try_from(scaledviewwidth).unwrap()).step_by(8) {
 			V_DrawPatch(viewwindowx + x, viewwindowy - 8, 1, patch);
 		}
 
-		let patch = W_CacheLumpName(c"brdr_b".as_ptr(), PU_CACHE).cast();
+		let patch = W_CacheLumpName(c"brdr_b", PU_CACHE).cast();
 		for x in (0..usize::try_from(scaledviewwidth).unwrap()).step_by(8) {
 			V_DrawPatch(viewwindowx + x, viewwindowy + viewheight, 1, patch);
 		}
 
-		let patch = W_CacheLumpName(c"brdr_l".as_ptr(), PU_CACHE).cast();
+		let patch = W_CacheLumpName(c"brdr_l", PU_CACHE).cast();
 		for y in (0..viewheight).step_by(8) {
 			V_DrawPatch(viewwindowx - 8, viewwindowy + y, 1, patch);
 		}
 
-		let patch = W_CacheLumpName(c"brdr_r".as_ptr(), PU_CACHE).cast();
+		let patch = W_CacheLumpName(c"brdr_r", PU_CACHE).cast();
 		for y in (0..viewheight).step_by(8) {
 			V_DrawPatch(
 				viewwindowx + usize::try_from(scaledviewwidth).unwrap(),
@@ -489,28 +489,28 @@ pub(crate) fn R_FillBackScreen() {
 			viewwindowx - 8,
 			viewwindowy - 8,
 			1,
-			W_CacheLumpName(c"brdr_tl".as_ptr(), PU_CACHE).cast(),
+			W_CacheLumpName(c"brdr_tl", PU_CACHE).cast(),
 		);
 
 		V_DrawPatch(
 			viewwindowx + usize::try_from(scaledviewwidth).unwrap(),
 			viewwindowy - 8,
 			1,
-			W_CacheLumpName(c"brdr_tr".as_ptr(), PU_CACHE).cast(),
+			W_CacheLumpName(c"brdr_tr", PU_CACHE).cast(),
 		);
 
 		V_DrawPatch(
 			viewwindowx - 8,
 			viewwindowy + viewheight,
 			1,
-			W_CacheLumpName(c"brdr_bl".as_ptr(), PU_CACHE).cast(),
+			W_CacheLumpName(c"brdr_bl", PU_CACHE).cast(),
 		);
 
 		V_DrawPatch(
 			viewwindowx + usize::try_from(scaledviewwidth).unwrap(),
 			viewwindowy + viewheight,
 			1,
-			W_CacheLumpName(c"brdr_br".as_ptr(), PU_CACHE).cast(),
+			W_CacheLumpName(c"brdr_br", PU_CACHE).cast(),
 		);
 	}
 }

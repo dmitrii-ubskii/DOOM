@@ -2,7 +2,7 @@
 #![allow(clippy::as_conversions)]
 
 use std::{
-	ffi::c_char,
+	ffi::{CStr, c_char},
 	ptr::{self, null_mut},
 };
 
@@ -494,7 +494,7 @@ fn AM_loadPics() {
 		#[allow(clippy::needless_range_loop)]
 		for i in 0..10 {
 			libc::sprintf(namebuf.as_mut_ptr(), c"AMMNUM%d".as_ptr(), i);
-			marknums[i] = W_CacheLumpName(namebuf.as_ptr(), PU_STATIC).cast();
+			marknums[i] = W_CacheLumpName(CStr::from_ptr(namebuf.as_ptr()), PU_STATIC).cast();
 		}
 	}
 }

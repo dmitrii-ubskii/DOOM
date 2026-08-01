@@ -521,7 +521,7 @@ pub(crate) fn M_ScreenShot() {
 			linear,
 			SCREENWIDTH,
 			SCREENHEIGHT,
-			W_CacheLumpName(c"PLAYPAL".as_ptr(), PU_CACHE).cast(),
+			W_CacheLumpName(c"PLAYPAL", PU_CACHE).cast(),
 		);
 
 		players[consoleplayer].message = c"screen shot".as_ptr();

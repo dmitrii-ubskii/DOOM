@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::c_char,
+	ffi::{CStr, c_char},
 	num::Wrapping,
 	ptr::{self, null_mut},
 };
@@ -203,8 +203,10 @@ fn P_LoadSectors(lump: usize) {
 		for _ in 0..numsectors {
 			(*ss).floorheight = i32::from((*ms).floorheight) << FRACBITS;
 			(*ss).ceilingheight = i32::from((*ms).ceilingheight) << FRACBITS;
-			(*ss).floorpic = i16::try_from(R_FlatNumForName((*ms).floorpic.as_ptr())).unwrap();
-			(*ss).ceilingpic = i16::try_from(R_FlatNumForName((*ms).ceilingpic.as_ptr())).unwrap();
+			(*ss).floorpic =
+				i16::try_from(R_FlatNumForName(CStr::from_ptr((*ms).floorpic.as_ptr()))).unwrap();
+			(*ss).ceilingpic =
+				i16::try_from(R_FlatNumForName(CStr::from_ptr((*ms).ceilingpic.as_ptr()))).unwrap();
 			(*ss).lightlevel = (*ms).lightlevel;
 			(*ss).special = (*ms).special;
 			(*ss).tag = (*ms).tag;
@@ -537,7 +539,7 @@ pub(crate) fn P_SetupLevel(episode: usize, map: usize, _playermask: i32, _skill:
 			lumpname[4] = 0;
 		}
 
-		let lumpnum = usize::try_from(W_GetNumForName(lumpname.as_ptr())).unwrap();
+		let lumpnum = W_GetNumForName(CStr::from_ptr(lumpname.as_ptr()));
 
 		leveltime = 0;
 
