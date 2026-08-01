@@ -132,7 +132,7 @@ fn P_StartButton(line: *mut line_t, w: bwhere_e, texture: i32, time: u32) {
 			}
 		}
 
-		I_Error!(c"P_StartButton: no button slots left!".as_ptr());
+		I_Error("P_StartButton: no button slots left!");
 	}
 }
 

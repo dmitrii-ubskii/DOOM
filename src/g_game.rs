@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::{c_char, c_int, c_void},
+	ffi::{CStr, c_char, c_void},
 	num::Wrapping,
 	ptr::{self, null, null_mut},
 };
@@ -619,11 +619,11 @@ pub(crate) fn G_Ticker() {
 
 				if netgame && !netdemo && gametic.is_multiple_of(ticdup) {
 					if gametic > BACKUPTICS && consistancy[i][buf] != (*cmd).consistancy {
-						I_Error!(
-							c"consistency failure (%i should be %i)".as_ptr(),
-							c_int::from((*cmd).consistancy),
-							c_int::from(consistancy[i][buf]),
-						);
+						I_Error(format_args!(
+							"consistency failure ({} should be {})",
+							(*cmd).consistancy,
+							consistancy[i][buf],
+						));
 					}
 					if !players[i].mo.is_null() {
 						consistancy[i][buf] = i16::try_from(players[i].mo().x).unwrap();
@@ -791,7 +791,7 @@ pub(crate) fn G_DeathMatchSpawnPlayer(playernum: usize) {
 	unsafe {
 		let selections = deathmatch_p.offset_from(deathmatchstarts.as_mut_ptr());
 		if selections < 4 {
-			I_Error!(c"Only %i deathmatch spots, 4 required".as_ptr(), selections);
+			I_Error(format_args!("Only {} deathmatch spots, 4 required", selections));
 		}
 
 		for _ in 0..20 {
@@ -1078,7 +1078,7 @@ fn G_DoLoadGame() {
 		P_UnArchiveSpecials(&mut save_p);
 
 		if *save_p != 0x1d {
-			I_Error!(c"Bad savegame".as_ptr());
+			I_Error("Bad savegame");
 		}
 
 		// done
@@ -1163,7 +1163,7 @@ fn G_DoSaveGame() {
 
 		let length = save_p.offset_from(savebuffer);
 		if usize::try_from(length).unwrap() > SAVEGAMESIZE {
-			I_Error!(c"Savegame buffer overrun".as_ptr());
+			I_Error("Savegame buffer overrun");
 		}
 
 		M_WriteFile(name.as_ptr(), savebuffer.cast(), usize::try_from(length).unwrap());
@@ -1495,7 +1495,7 @@ pub(crate) fn G_CheckDemoStatus() {
 	unsafe {
 		if timingdemo {
 			let endtime = I_GetTime();
-			I_Error!(c"timed %i gametics in %i realtics".as_ptr(), gametic, endtime - starttime);
+			I_Error(format_args!("timed {} gametics in {} realtics", gametic, endtime - starttime));
 		}
 
 		if demoplayback {
@@ -1529,7 +1529,10 @@ pub(crate) fn G_CheckDemoStatus() {
 			);
 			Z_Free(demobuffer.cast());
 			demorecording = false;
-			I_Error!(c"Demo %s recorded".as_ptr(), demoname);
+			I_Error(format_args!(
+				"Demo {} recorded",
+				CStr::from_ptr(demoname.as_ptr()).to_str().unwrap()
+			));
 		}
 	}
 }

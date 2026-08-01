@@ -7,7 +7,7 @@
 // a patch or sprite is composed of zero or more columns.
 
 use std::{
-	ffi::c_char,
+	ffi::{CStr, c_char},
 	ptr::{self, null_mut, read_unaligned},
 };
 
@@ -298,7 +298,7 @@ fn R_GenerateLookup(texnum: usize) {
 				if *texturecompositesize.wrapping_add(texnum)
 					> 0x10000 - usize::try_from(texture.height).unwrap()
 				{
-					I_Error!(c"R_GenerateLookup: texture %i is >64k".as_ptr(), texnum);
+					I_Error(format_args!("R_GenerateLookup: texture {} is >64k", texnum));
 				}
 
 				*texturecompositesize.wrapping_add(texnum) +=
@@ -409,7 +409,7 @@ fn R_InitTextures() {
 			let offset = *directory;
 
 			if offset > maxoff {
-				I_Error!(c"R_InitTextures: bad texture directory".as_ptr());
+				I_Error("R_InitTextures: bad texture directory");
 			}
 
 			let mtexture: *mut maptexture_t = maptex.wrapping_byte_add(offset).cast();
@@ -441,10 +441,10 @@ fn R_InitTextures() {
 				patch.originy = i32::from(mpatch.originy);
 				patch.patch = patchlookup[usize::try_from(mpatch.patch).unwrap()];
 				if patch.patch == -1 {
-					I_Error!(
-						c"R_InitTextures: Missing patch in texture %s".as_ptr(),
-						texture.name.as_ptr(),
-					);
+					I_Error(format_args!(
+						"R_InitTextures: Missing patch in texture {}",
+						CStr::from_ptr(texture.name.as_ptr().cast()).to_str().unwrap(),
+					));
 				}
 			}
 
@@ -563,7 +563,10 @@ pub(crate) fn R_FlatNumForName(name: *const c_char) -> usize {
 		if i == -1 {
 			namet[8] = 0;
 			libc::memcpy(namet.as_mut_ptr().cast(), name.cast(), 8);
-			I_Error!(c"R_FlatNumForName: %s not found".as_ptr(), namet.as_ptr());
+			I_Error(format_args!(
+				"R_FlatNumForName: {} not found",
+				CStr::from_ptr(namet.as_ptr()).to_str().unwrap()
+			));
 		}
 		usize::try_from(i).unwrap() - firstflat
 	}
@@ -595,7 +598,12 @@ pub(crate) fn R_CheckTextureNumForName(name: *const c_char) -> i32 {
 pub(crate) fn R_TextureNumForName(name: *const c_char) -> usize {
 	let i = R_CheckTextureNumForName(name);
 	if i == -1 {
-		unsafe { I_Error!(c"R_TextureNumForName: %s not found".as_ptr(), name) };
+		unsafe {
+			I_Error(format_args!(
+				"R_TextureNumForName: {} not found",
+				CStr::from_ptr(name).to_str().unwrap()
+			))
+		};
 	}
 	usize::try_from(i).unwrap()
 }

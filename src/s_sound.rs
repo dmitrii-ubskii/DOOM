@@ -174,8 +174,8 @@ fn S_StartSoundAtVolume(origin_p: *mut c_void, sfx_id: sfxenum_t, mut volume: u3
 		sfx_id, S_sfx[sfx_id].name );*/
 
 		// check for bogus sound #
-		if (usize::from(sfx_id)) < 1 || usize::from(sfx_id) > usize::from(sfxenum_t::NUMSFX) {
-			I_Error!(c"Bad sfx #: %d".as_ptr(), sfx_id);
+		if usize::from(sfx_id) < 1 || usize::from(sfx_id) > usize::from(sfxenum_t::NUMSFX) {
+			I_Error(format_args!("Bad sfx #: {}", sfx_id.to_usize()));
 		}
 
 		let sfx = &mut S_sfx[usize::from(sfx_id)];
@@ -365,7 +365,7 @@ pub(crate) fn S_UpdateSounds(listener_p: *mut c_void) {
 pub(crate) fn S_SetMusicVolume(volume: u32) {
 	unsafe {
 		if !(0..=127).contains(&volume) {
-			I_Error!(c"Attempt to set music volume at %d".as_ptr(), volume);
+			I_Error(format_args!("Attempt to set music volume at {}", volume));
 		}
 
 		I_SetMusicVolume(127);
@@ -377,7 +377,7 @@ pub(crate) fn S_SetMusicVolume(volume: u32) {
 pub(crate) fn S_SetSfxVolume(volume: u32) {
 	unsafe {
 		if !(0..=127).contains(&volume) {
-			I_Error!(c"Attempt to set sfx volume at %d".as_ptr(), volume);
+			I_Error(format_args!("Attempt to set sfx volume at {}", volume));
 		}
 
 		snd_SfxVolume = volume;
@@ -393,10 +393,10 @@ pub(crate) fn S_StartMusic(m_id: musicenum_t) {
 //  and set whether looping
 pub(crate) fn S_ChangeMusic(musicnum: musicenum_t, looping: bool) {
 	unsafe {
-		let music = if (usize::from(musicnum)) <= usize::from(musicenum_t::mus_None)
+		let music = if usize::from(musicnum) <= usize::from(musicenum_t::mus_None)
 			|| usize::from(musicnum) >= usize::from(musicenum_t::NUMMUSIC)
 		{
-			I_Error!(c"Bad music number %d".as_ptr(), musicnum);
+			I_Error(format_args!("Bad music number {}", usize::from(musicnum)));
 		} else {
 			&mut S_music[usize::from(musicnum)]
 		};

@@ -183,7 +183,7 @@ pub(crate) fn R_FindPlane(
 		}
 
 		if lastvisplane.offset_from_unsigned(visplanes.as_ptr()) == MAXVISPLANES {
-			I_Error!(c"R_FindPlane: no more visplanes".as_ptr());
+			I_Error("R_FindPlane: no more visplanes");
 		}
 
 		lastvisplane = lastvisplane.wrapping_add(1);

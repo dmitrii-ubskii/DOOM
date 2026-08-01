@@ -59,11 +59,11 @@ pub(crate) fn M_ReadFile(name: *const c_char, buffer: *mut *mut u8) -> usize {
 	unsafe {
 		let handle = libc::open(name, O_RDONLY, 0o666);
 		if handle == -1 {
-			I_Error!(c"Couldn't read file %s".as_ptr(), name);
+			I_Error(format_args!("Couldn't read file {}", CStr::from_ptr(name).to_str().unwrap()));
 		}
 		let mut fileinfo = MaybeUninit::uninit();
 		if libc::fstat(handle, fileinfo.as_mut_ptr()) == -1 {
-			I_Error!(c"Couldn't read file %s".as_ptr(), name);
+			I_Error(format_args!("Couldn't read file {}", CStr::from_ptr(name).to_str().unwrap()));
 		}
 		let length = usize::try_from(fileinfo.assume_init().st_size).unwrap();
 		let buf = Z_Malloc(length, PU_STATIC, null_mut());
@@ -71,7 +71,7 @@ pub(crate) fn M_ReadFile(name: *const c_char, buffer: *mut *mut u8) -> usize {
 		libc::close(handle);
 
 		if count < isize::try_from(length).unwrap() {
-			I_Error!(c"Couldn't read file %s".as_ptr(), name);
+			I_Error(format_args!("Couldn't read file {}", CStr::from_ptr(name).to_str().unwrap()));
 		}
 
 		*buffer = buf.cast();
@@ -512,7 +512,7 @@ pub(crate) fn M_ScreenShot() {
 			i += 1;
 		}
 		if i == 100 {
-			I_Error!(c"M_ScreenShot: Couldn't create a PCX".as_ptr());
+			I_Error("M_ScreenShot: Couldn't create a PCX");
 		}
 
 		// save the pcx file

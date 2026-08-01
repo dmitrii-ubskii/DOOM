@@ -286,7 +286,7 @@ pub(crate) fn I_NetCmd() {
 		} else if (*doomcom).command == command_t::CMD_GET {
 			netget();
 		} else {
-			I_Error!(c"Bad net cmd: %i\n".as_ptr(), (*doomcom).command);
+			I_Error(format_args!("Bad net cmd: {}\n", u8::from((*doomcom).command)));
 		}
 	}
 }

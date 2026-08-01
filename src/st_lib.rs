@@ -168,7 +168,7 @@ fn STlib_drawNum(n: &mut st_number_t, _refresh: bool) {
 		let mut x = n.x - numdigits * w;
 
 		if n.y < ST_Y {
-			I_Error!(c"drawNum: n.y - ST_Y < 0".as_ptr());
+			I_Error("drawNum: n.y - ST_Y < 0");
 		}
 
 		V_CopyRect(x, n.y - ST_Y, BG, w * numdigits, h, x, n.y, FG);
@@ -271,7 +271,7 @@ pub(crate) fn STlib_updateMultIcon(mi: &mut st_multicon_t, refresh: bool) {
 					usize::from((**mi.p.wrapping_add(usize::try_from(mi.oldinum).unwrap())).height);
 
 				if y < ST_Y {
-					I_Error!(c"updateMultIcon: y - ST_Y < 0".as_ptr());
+					I_Error("updateMultIcon: y - ST_Y < 0");
 				}
 
 				V_CopyRect(x, y - ST_Y, BG, w, h, x, y, FG);
@@ -309,7 +309,7 @@ pub(crate) fn STlib_updateBinIcon(bi: &mut st_binicon_t, refresh: bool) {
 			let h = usize::from((*bi.p).height);
 
 			if y < ST_Y {
-				I_Error!(c"updateBinIcon: y - ST_Y < 0".as_ptr());
+				I_Error("updateBinIcon: y - ST_Y < 0");
 			}
 
 			if *bi.val {

@@ -73,7 +73,7 @@ pub(crate) fn R_DrawColumn() {
 			|| dc_yl < 0
 			|| dc_yh >= SCREENHEIGHT.try_into().unwrap()
 		{
-			I_Error!(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
+			I_Error(format_args!("R_DrawColumn: {} to {} at {}", dc_yl, dc_yh, dc_x));
 		}
 
 		// Framebuffer destination address.
@@ -103,6 +103,7 @@ pub(crate) fn R_DrawColumn() {
 	}
 }
 
+#[allow(static_mut_refs)]
 pub(crate) fn R_DrawColumnLow() {
 	unsafe {
 		let count = dc_yh - dc_yl;
@@ -116,7 +117,7 @@ pub(crate) fn R_DrawColumnLow() {
 			|| dc_yl < 0
 			|| dc_yh >= SCREENHEIGHT.try_into().unwrap()
 		{
-			I_Error!(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
+			I_Error(format_args!("R_DrawColumn: {} to {} at {}", dc_yl, dc_yh, dc_x));
 		}
 
 		// Blocky mode, need to multiply by 2.
@@ -163,6 +164,7 @@ static mut fuzzpos: usize = 0;
 // Used with an all black colormap, this
 //  could create the SHADOW effect,
 //  i.e. spectres and invisible players.
+#[allow(static_mut_refs)]
 pub(crate) fn R_DrawFuzzColumn() {
 	unsafe {
 		// Adjust borders. Low...
@@ -186,7 +188,7 @@ pub(crate) fn R_DrawFuzzColumn() {
 			|| dc_yl < 0
 			|| dc_yh >= SCREENHEIGHT.try_into().unwrap()
 		{
-			I_Error!(c"R_DrawFuzzColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
+			I_Error(format_args!("R_DrawFuzzColumn: {} to {} at {}", dc_yl, dc_yh, dc_x));
 		}
 
 		// Does not work with blocky mode.
@@ -230,6 +232,7 @@ pub(crate) fn R_DrawFuzzColumn() {
 pub(crate) static mut dc_translation: *mut u8 = null_mut();
 pub(crate) static mut translationtables: *mut u8 = null_mut();
 
+#[allow(static_mut_refs)]
 pub(crate) fn R_DrawTranslatedColumn() {
 	unsafe {
 		let count = dc_yh - dc_yl;
@@ -241,7 +244,7 @@ pub(crate) fn R_DrawTranslatedColumn() {
 			|| dc_yl < 0
 			|| dc_yh >= SCREENHEIGHT.try_into().unwrap()
 		{
-			I_Error!(c"R_DrawColumn: %i to %i at %i".as_ptr(), dc_yl, dc_yh, dc_x);
+			I_Error(format_args!("R_DrawColumn: {} to {} at {}", dc_yl, dc_yh, dc_x));
 		}
 
 		// FIXME. As above.
@@ -322,10 +325,11 @@ pub(crate) static mut ds_ystep: fixed_t = 0;
 pub(crate) static mut ds_source: *mut u8 = null_mut();
 
 // Draws the actual span.
+#[allow(static_mut_refs)]
 pub(crate) fn R_DrawSpan() {
 	unsafe {
 		if ds_x2 < ds_x1 || ds_x2 >= SCREENWIDTH || ds_y > SCREENHEIGHT {
-			I_Error!(c"R_DrawSpan: %i to %i at %i".as_ptr(), ds_x1, ds_x2, ds_y);
+			I_Error(format_args!("R_DrawSpan: {} to {} at {}", ds_x1, ds_x2, ds_y));
 		}
 
 		let mut xfrac = ds_xfrac;
@@ -354,10 +358,11 @@ pub(crate) fn R_DrawSpan() {
 }
 
 // Again..
+#[allow(static_mut_refs)]
 pub(crate) fn R_DrawSpanLow() {
 	unsafe {
 		if ds_x2 < ds_x1 || ds_x2 >= SCREENWIDTH || ds_y > SCREENHEIGHT {
-			I_Error!(c"R_DrawSpan: %i to %i at %i".as_ptr(), ds_x1, ds_x2, ds_y);
+			I_Error(format_args!("R_DrawSpan: {} to {} at {}", ds_x1, ds_x2, ds_y));
 		}
 
 		let mut xfrac = ds_xfrac;

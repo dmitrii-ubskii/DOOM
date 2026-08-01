@@ -251,11 +251,11 @@ fn addsfx(sfxid: sfxenum_t, volume: u32, step: u32, mut seperation: i32) -> usiz
 
 		// Sanity check, clamp volume.
 		if rightvol > 127 {
-			I_Error!(c"rightvol out of bounds".as_ptr());
+			I_Error("rightvol out of bounds");
 		}
 
 		if leftvol > 127 {
-			I_Error!(c"leftvol out of bounds".as_ptr());
+			I_Error("leftvol out of bounds");
 		}
 
 		// Get the proper lookup table piece

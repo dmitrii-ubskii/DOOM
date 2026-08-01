@@ -37,6 +37,15 @@ pub(crate) enum command_t {
 	CMD_GET = 2,
 }
 
+impl From<command_t> for u8 {
+	fn from(value: command_t) -> Self {
+		match value {
+			command_t::CMD_SEND => 1,
+			command_t::CMD_GET => 2,
+		}
+	}
+}
+
 // Network packet data.
 #[derive(Clone, Copy)]
 pub(crate) struct doomdata_t {
@@ -194,7 +203,7 @@ fn HSendPacket(node: usize, flags: u32) {
 		}
 
 		if !netgame {
-			I_Error!(c"Tried to transmit to another node".as_ptr());
+			I_Error("Tried to transmit to another node");
 		}
 
 		todo!()
@@ -337,7 +346,7 @@ fn GetPackets() {
 
 			// check for a remote game kill
 			if (*netbuffer).checksum & NCMD_KILL != 0 {
-				I_Error!(c"Killed by network driver".as_ptr());
+				I_Error("Killed by network driver");
 			}
 
 			nodeforplayer[netconsole] = netnode;
@@ -447,7 +456,7 @@ pub(crate) fn NetUpdate() {
 				(*netbuffer).starttic = u8::try_from(realstart & 0xff).unwrap();
 				(*netbuffer).numtics = u8::try_from(maketic - realstart).unwrap();
 				if usize::from((*netbuffer).numtics) > BACKUPTICS {
-					I_Error!(c"NetUpdate: (*netbuffer).numtics > BACKUPTICS".as_ptr());
+					I_Error("NetUpdate: (*netbuffer).numtics > BACKUPTICS");
 				}
 
 				resendto[i] = maketic - usize::from((*doomcom).extratics);
@@ -582,7 +591,7 @@ pub(crate) fn D_CheckNetGame() {
 		// I_InitNetwork sets doomcom and netgame
 		I_InitNetwork();
 		if (*doomcom).id != DOOMCOM_ID {
-			I_Error!(c"Doomcom buffer invalid!".as_ptr());
+			I_Error("Doomcom buffer invalid!");
 		}
 
 		netbuffer = &raw mut (*doomcom).data;
@@ -734,7 +743,7 @@ pub(crate) fn TryRunTics() {
 			}
 
 			if lowtic < gametic / ticdup {
-				I_Error!(c"TryRunTics: lowtic < gametic".as_ptr());
+				I_Error("TryRunTics: lowtic < gametic");
 			}
 
 			// don't stay in here forever -- give the menu a chance to work
@@ -748,7 +757,7 @@ pub(crate) fn TryRunTics() {
 		for _ in 0..counts {
 			for i in 0..ticdup {
 				if gametic / ticdup > lowtic {
-					I_Error!(c"gametic>lowtic".as_ptr());
+					I_Error("gametic>lowtic");
 				}
 				if advancedemo {
 					D_DoAdvanceDemo();

@@ -2,6 +2,7 @@
 //	Refresh of things, i.e. objects represented by sprites.
 
 use std::{
+	ffi::CStr,
 	mem,
 	num::Wrapping,
 	ptr::{self, null, null_mut},
@@ -68,75 +69,75 @@ pub(crate) static mut numsprites: usize = 0;
 
 static mut sprtemp: [spriteframe_t; 29] = unsafe { mem::zeroed() };
 static mut maxframe: i32 = 0;
-static mut spritename: *const u8 = null();
+static mut spritename: *const i8 = null();
 
 // R_InstallSpriteLump
 // Local function for R_InitSprites.
 fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 	unsafe {
 		if frame >= 29 || rotation > 8 {
-			I_Error!(c"R_InstallSpriteLump: Bad frame characters in lump %i".as_ptr(), lump);
+			I_Error(format_args!("R_InstallSpriteLump: Bad frame characters in lump {}", lump));
 		}
 
 		if i32::from(frame) > maxframe {
 			maxframe = i32::from(frame);
 		}
 
-		let frame = usize::from(frame);
+		let frame_index = usize::from(frame);
 
 		if rotation == 0 {
 			// the lump should be used for all rotations
-			if sprtemp[frame].rotate == 0 {
-				I_Error!(
-					c"R_InitSprites: Sprite %s frame %c has multip rot=0 lump".as_ptr(),
-					spritename,
-					usize::from(b'A') + frame,
-				);
+			if sprtemp[frame_index].rotate == 0 {
+				I_Error(format_args!(
+					"R_InitSprites: Sprite {} frame {} has multip rot=0 lump",
+					CStr::from_ptr(spritename).to_str().unwrap(),
+					char::from(b'A' + frame),
+				));
 			}
 
-			if sprtemp[frame].rotate == 1 {
-				I_Error!(
-					c"R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump".as_ptr(),
-					spritename,
-					usize::from(b'A') + frame,
-				);
+			if sprtemp[frame_index].rotate == 1 {
+				I_Error(format_args!(
+					"R_InitSprites: Sprite {} frame {} has rotations and a rot=0 lump",
+					CStr::from_ptr(spritename).to_str().unwrap(),
+					char::from(b'A' + frame),
+				));
 			}
 
-			sprtemp[frame].rotate = 0;
+			sprtemp[frame_index].rotate = 0;
 
 			for r in 0..8 {
-				sprtemp[frame].lump[r] =
+				sprtemp[frame_index].lump[r] =
 					i16::try_from(lump - isize::try_from(firstspritelump).unwrap()).unwrap();
-				sprtemp[frame].flip[r] = i8::from(flipped);
+				sprtemp[frame_index].flip[r] = i8::from(flipped);
 			}
 			return;
 		}
 
 		// the lump is only used for one rotation
-		if sprtemp[frame].rotate == 0 {
-			I_Error!(
-				c"R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump".as_ptr(),
-				spritename,
-				usize::from(b'A') + frame,
-			);
+		if sprtemp[frame_index].rotate == 0 {
+			I_Error(format_args!(
+				"R_InitSprites: Sprite {} frame {} has rotations and a rot=0 lump",
+				CStr::from_ptr(spritename).to_str().unwrap(),
+				char::from(b'A' + frame),
+			));
 		}
 
-		sprtemp[frame].rotate = 1;
+		sprtemp[frame_index].rotate = 1;
 
 		// make 0 based
 		let rotation = usize::from(rotation) - 1;
-		if sprtemp[frame].lump[rotation] != -1 {
-			I_Error!(
-				c"R_InitSprites: Sprite %s : %c : %c has two lumps mapped to it".as_ptr(),
-				spritename,
-				usize::from(b'A') + frame,
+		if sprtemp[frame_index].lump[rotation] != -1 {
+			I_Error(format_args!(
+				"R_InitSprites: Sprite {} : {} : {} has two lumps mapped to it",
+				CStr::from_ptr(spritename).to_str().unwrap(),
+				char::from(b'A' + frame),
 				usize::from(b'1') + rotation,
-			);
+			));
 		}
 
-		sprtemp[frame].lump[rotation] =
+		sprtemp[frame_index].lump[rotation] =
 			i16::try_from(lump - isize::try_from(firstspritelump).unwrap()).unwrap();
-		sprtemp[frame].flip[rotation] = i8::from(flipped);
+		sprtemp[frame_index].flip[rotation] = i8::from(flipped);
 	}
 }
 
@@ -154,7 +155,7 @@ fn R_InstallSpriteLump(lump: isize, frame: u8, rotation: u8, flipped: bool) {
 //  letter/number appended.
 // The rotation character can be 0 to signify no rotations.
 #[allow(static_mut_refs)]
-fn R_InitSpriteDefs(namelist: *const *const u8) {
+fn R_InitSpriteDefs(namelist: *const *const i8) {
 	unsafe {
 		// count the number of sprite names
 		numsprites = spritenum_t::NUMSPRITES.into();
@@ -219,23 +220,22 @@ fn R_InitSpriteDefs(namelist: *const *const u8) {
 				match sprtemp[frame].rotate {
 					-1 => {
 						// no rotations were found for that frame at all
-						I_Error!(
-							c"R_InitSprites: No patches found for %s frame %c".as_ptr(),
-							*namelist.wrapping_add(i),
+						I_Error(format_args!(
+							"R_InitSprites: No patches found for {} frame {}",
+							CStr::from_ptr(*namelist.wrapping_add(i)).to_str().unwrap(),
 							frame + usize::from(b'A'),
-						)
+						))
 					}
 					0 => (), // only the first rotation is needed
 					1 => {
 						// must have all 8 frames
 						for rotation in 0..8 {
 							if sprtemp[frame].lump[rotation] == -1 {
-								I_Error!(
-									c"R_InitSprites: Sprite %s frame %c is missing rotations"
-										.as_ptr(),
-									*namelist.wrapping_add(i),
+								I_Error(format_args!(
+									"R_InitSprites: Sprite {} frame {} is missing rotations",
+									CStr::from_ptr(*namelist.wrapping_add(i)).to_str().unwrap(),
 									frame + usize::from(b'A'),
-								);
+								));
 							}
 						}
 					}
@@ -266,7 +266,7 @@ static mut vissprite_p: *mut vissprite_t = null_mut();
 
 // R_InitSprites
 // Called at program start.
-pub(crate) fn R_InitSprites(namelist: *const *const u8) {
+pub(crate) fn R_InitSprites(namelist: *const *const i8) {
 	unsafe {
 		negonearray = [-1; SCREENWIDTH];
 		R_InitSpriteDefs(namelist);

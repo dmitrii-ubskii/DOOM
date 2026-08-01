@@ -59,7 +59,7 @@ fn P_GiveAmmo(player: *mut player_t, ammo: Option<ammotype_t>, mut num: usize) -
 		let Some(ammo) = ammo else { return false };
 
 		// if (ammo < 0 || ammo > NUMAMMO) {
-		// 	I_Error!("P_GiveAmmo: bad type %i", ammo);
+		// 	I_Error("P_GiveAmmo: bad type %i", ammo);
 		// }
 
 		if (&(*player).ammo)[ammo] == (&(*player).maxammo)[ammo] {
@@ -593,9 +593,7 @@ pub(crate) fn P_TouchSpecialThing(special: &mut mobj_t, toucher: &mut mobj_t) {
 			sound = sfxenum_t::sfx_wpnup;
 		}
 
-		_ => unsafe {
-			I_Error!(c"P_SpecialThing: Unknown gettable thing".as_ptr());
-		},
+		_ => I_Error("P_SpecialThing: Unknown gettable thing"),
 	}
 
 	if special.flags & MF_COUNTITEM != 0 {

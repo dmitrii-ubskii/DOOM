@@ -24,7 +24,7 @@ fn fixed_div_2(a: fixed_t, b: fixed_t) -> fixed_t {
 	let c = (a as f64) / (b as f64) * FRACUNIT as f64;
 
 	if !(-2147483648.0..2147483648.0).contains(&c) {
-		unsafe { I_Error!(c"FixedDiv: divide by zero".as_ptr()) };
+		I_Error("FixedDiv: divide by zero");
 	}
 	c as fixed_t
 }

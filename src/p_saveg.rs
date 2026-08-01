@@ -4,7 +4,6 @@
 //	Archiving: SaveGame I/O.
 
 use std::{
-	ffi::c_int,
 	mem::MaybeUninit,
 	ptr::{self, null_mut},
 };
@@ -320,7 +319,7 @@ pub(crate) fn P_UnArchiveThinkers(p: &mut *mut u8, players: &mut [player_t; MAXP
 					P_AddThinker(&mut (*mobj).thinker);
 				}
 
-				_ => I_Error!(c"Unknown tclass %i in savegame".as_ptr(), c_int::from(tclass)),
+				_ => I_Error(format_args!("Unknown tclass {} in savegame", tclass)),
 			}
 		}
 	}

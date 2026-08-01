@@ -453,7 +453,7 @@ fn P_GroupLines() {
 			if linebuffer.offset_from((*sector).lines)
 				!= isize::try_from((*sector).linecount).unwrap()
 			{
-				I_Error!(c"P_GroupLines: miscounted".as_ptr());
+				I_Error("P_GroupLines: miscounted");
 			}
 
 			// set the degenmobj_t to the middle of the bounding box

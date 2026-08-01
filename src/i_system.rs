@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{process::exit, ptr::null_mut};
+use std::{fmt, process::exit, ptr::null_mut};
 
 use libc::{calloc, gettimeofday, malloc, timeval};
 
@@ -8,6 +8,7 @@ use crate::{
 	d_net::D_QuitNetGame,
 	d_ticcmd::ticcmd_t,
 	doomdef::TICRATE,
+	g_game::{G_CheckDemoStatus, demorecording},
 	i_sound::{I_InitSound, I_ShutdownMusic, I_ShutdownSound},
 	i_video::I_ShutdownGraphics,
 	m_misc::M_SaveDefaults,
@@ -81,25 +82,18 @@ pub(crate) fn I_AllocLow(length: usize) -> *mut u8 {
 	unsafe { calloc(length, 1).cast() }
 }
 
-macro_rules! I_Error {
-	($formatstr:expr $(, $arg:expr)* $(,)?) => {{
-		unsafe extern "C" { static stderr: *mut libc::FILE; }
+pub(crate) fn I_Error(message: impl fmt::Display) -> ! {
+	eprintln!("Error: {message}");
 
-		eprint!("Error: ");
-		libc::fprintf(stderr, $formatstr, $($arg),*);
-		eprintln!();
-
-		libc::fflush(stderr);
-
+	unsafe {
 		// Shutdown. Here might be other errors.
-		if crate::g_game::demorecording {
-			crate::g_game::G_CheckDemoStatus();
+		if demorecording {
+			G_CheckDemoStatus();
 		}
+	}
 
-		crate::d_net::D_QuitNetGame();
-		crate::i_video::I_ShutdownGraphics();
+	D_QuitNetGame();
+	I_ShutdownGraphics();
 
-		libc::exit(-1);
-	}};
+	exit(1)
 }
-pub(crate) use I_Error;

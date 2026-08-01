@@ -130,7 +130,7 @@ pub(crate) fn V_CopyRect(
 			|| srcscrn > 4
 			|| destscrn > 4
 		{
-			I_Error!(c"Bad V_CopyRect".as_ptr());
+			I_Error("Bad V_CopyRect");
 		}
 		// #endif
 		V_MarkRect(destx, desty, width, height);
@@ -213,8 +213,8 @@ pub(crate) unsafe fn V_DrawPatchFlipped(
 			|| y + usize::from((*patch).height) > SCREENHEIGHT
 			|| scrn > 4
 		{
-			eprintln!("Patch origin {x},{y} exceeds LFB",);
-			I_Error!(c"Bad V_DrawPatch in V_DrawPatchFlipped".as_ptr());
+			eprintln!("Patch origin {x},{y} exceeds LFB");
+			I_Error("Bad V_DrawPatch in V_DrawPatchFlipped");
 		}
 		// #endif
 
@@ -272,7 +272,7 @@ pub(crate) fn V_DrawBlock(
 	unsafe {
 		// #ifdef RANGECHECK
 		if x + width > SCREENWIDTH || y + height > SCREENHEIGHT || scrn > 4 {
-			I_Error!(c"Bad V_DrawBlock".as_ptr());
+			I_Error("Bad V_DrawBlock");
 		}
 		// #endif
 

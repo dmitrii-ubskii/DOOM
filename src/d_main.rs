@@ -495,7 +495,7 @@ fn IdentifyVersion() {
 		let doom2fwad = format!("{doomwaddir}/doom2f.wad\0");
 
 		let Ok(home) = env::var("HOME") else {
-			I_Error!(c"Please set $HOME to your home directory".as_ptr());
+			I_Error("Please set $HOME to your home directory");
 		};
 		let home = CString::from_str(&home).unwrap();
 		sprintf(basedefault.as_mut_ptr(), c"%s/.doomrc".as_ptr(), home.as_ptr());
@@ -950,7 +950,7 @@ pub(crate) fn D_DoomMain() {
 			];
 
 			if gamemode == GameMode_t::shareware {
-				I_Error!(c"\nYou cannot -file with the shareware version. Register!".as_ptr());
+				I_Error("\nYou cannot -file with the shareware version. Register!");
 			}
 
 			// Check for fake IWAD with right name,
@@ -958,7 +958,7 @@ pub(crate) fn D_DoomMain() {
 			if gamemode == GameMode_t::registered {
 				for n in name {
 					if W_CheckNumForName(n) < 0 {
-						I_Error!(c"\nThis is not the registered version.".as_ptr());
+						I_Error("\nThis is not the registered version.");
 					}
 				}
 			}

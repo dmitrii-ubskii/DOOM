@@ -348,7 +348,7 @@ pub(crate) fn R_StoreWallRange(start: u32, stop: u32) {
 		}
 
 		if usize::try_from(start).unwrap() >= viewwidth || start > stop {
-			I_Error!(c"Bad R_RenderWallRange: %i to %i".as_ptr(), start, stop);
+			I_Error(format_args!("Bad R_RenderWallRange: {} to {}", start, stop));
 		}
 
 		sidedef = (*curline).sidedef;

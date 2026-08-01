@@ -2,6 +2,7 @@
 //	DOOM graphics stuff for X11, UNIX.
 
 use std::{
+	ffi::CStr,
 	mem::{self, MaybeUninit},
 	ptr::null_mut,
 };
@@ -128,7 +129,7 @@ pub(crate) fn I_ShutdownGraphics() {
 	unsafe {
 		// Detach from X server
 		if XShmDetach(X_display, X_shminfo.as_mut_ptr()) == 0 {
-			I_Error!(c"XShmDetach() failed in I_ShutdownGraphics()".as_ptr());
+			I_Error("XShmDetach() failed in I_ShutdownGraphics()");
 		}
 
 		// Release shared memory.
@@ -423,7 +424,7 @@ pub(crate) fn I_FinishUpdate() {
 				True,
 			) == 0
 			{
-				I_Error!(c"XShmPutImage() failed\n".as_ptr());
+				I_Error("XShmPutImage() failed\n");
 			}
 
 			// wait for it to finish and processes all input events
@@ -545,12 +546,12 @@ fn grabsharedmemory(size: i32) {
 							if rc == 0 {
 								eprintln!("Was able to kill my old shared memory");
 							} else {
-								I_Error!(c"Was NOT able to kill my old shared memory".as_ptr());
+								I_Error("Was NOT able to kill my old shared memory");
 							}
 
 							id = shmget(key, size, IPC_CREAT | 0o777);
 							if id == -1 {
-								I_Error!(c"Could not get shared memory".as_ptr());
+								I_Error("Could not get shared memory");
 							}
 
 							_ = shmctl(id, IPC_STAT, &raw mut shminfo);
@@ -569,13 +570,13 @@ fn grabsharedmemory(size: i32) {
 						}
 					}
 				} else {
-					I_Error!(c"could not get stats on key=%d".as_ptr(), key);
+					I_Error(format_args!("could not get stats on key={}", key));
 				}
 			} else {
 				id = shmget(key, size, IPC_CREAT | 0o777);
 				if id == -1 {
 					// eprintln!("errno={}", errno);
-					I_Error!(c"Could not get any shared memory".as_ptr());
+					I_Error("Could not get any shared memory");
 				}
 				break;
 			}
@@ -586,7 +587,7 @@ fn grabsharedmemory(size: i32) {
 		}
 
 		if pollution == 0 {
-			I_Error!(c"Sorry, system too polluted with stale shared memory segments.\n".as_ptr());
+			I_Error("Sorry, system too polluted with stale shared memory segments.\n");
 		}
 
 		X_shminfo.assume_init_mut().shmid = id;
@@ -667,7 +668,7 @@ pub(crate) fn I_InitGraphics() {
 					y = -y;
 				}
 			} else {
-				I_Error!(c"bad -geom parameter".as_ptr());
+				I_Error("bad -geom parameter");
 			}
 		}
 
@@ -675,19 +676,22 @@ pub(crate) fn I_InitGraphics() {
 		X_display = XOpenDisplay(displayname);
 		if X_display.is_null() {
 			if !displayname.is_null() {
-				I_Error!(c"Could not open display [%s]".as_ptr(), displayname);
+				I_Error(format_args!(
+					"Could not open display [{}]",
+					CStr::from_ptr(displayname).to_str().unwrap(),
+				));
 			} else {
-				I_Error!(
-					c"Could not open display (DISPLAY=[%s])".as_ptr(),
-					getenv(c"DISPLAY".as_ptr()),
-				);
+				I_Error(format_args!(
+					"Could not open display (DISPLAY=[{}])",
+					std::env::var("DISPLAY").unwrap(),
+				));
 			}
 		}
 
 		// use the default visual
 		X_screen = XDefaultScreen(X_display);
 		if XMatchVisualInfo(X_display, X_screen, 8, PseudoColor, X_visualinfo.as_mut_ptr()) == 0 {
-			I_Error!(c"xdoom currently only supports 256-color PseudoColor screens".as_ptr());
+			I_Error("xdoom currently only supports 256-color PseudoColor screens");
 		}
 		X_visual = X_visualinfo.assume_init_ref().visual;
 
@@ -798,12 +802,12 @@ pub(crate) fn I_InitGraphics() {
 			grabsharedmemory((*image).bytes_per_line * (*image).height);
 
 			if (*image).data.is_null() {
-				I_Error!(c"shmat() failed in InitGraphics()".as_ptr());
+				I_Error("shmat() failed in InitGraphics()");
 			}
 
 			// get the X server to attach to it
 			if XShmAttach(X_display, X_shminfo.as_mut_ptr()) == 0 {
-				I_Error!(c"XShmAttach() failed in InitGraphics()".as_ptr());
+				I_Error("XShmAttach() failed in InitGraphics()");
 			}
 		} else {
 			image = XCreateImage(

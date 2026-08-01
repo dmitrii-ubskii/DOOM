@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::c_int,
+	ffi::CStr,
 	ptr::{self, null_mut},
 };
 
@@ -419,11 +419,11 @@ pub(crate) fn P_InitPicAnims() {
 			(*lastanim).numpics = (*lastanim).picnum - (*lastanim).basepic + 1;
 
 			if (*lastanim).numpics < 2 {
-				I_Error!(
-					c"P_InitPicAnims: bad cycle from %s to %s".as_ptr(),
-					animdefs[i].startname,
-					animdefs[i].endname,
-				);
+				I_Error(format_args!(
+					"P_InitPicAnims: bad cycle from {} to {}",
+					CStr::from_ptr(animdefs[i].startname.as_ptr().cast()).to_str().unwrap(),
+					CStr::from_ptr(animdefs[i].endname.as_ptr().cast()).to_str().unwrap(),
+				));
 			}
 
 			(*lastanim).speed = animdefs[i].speed;
@@ -1194,10 +1194,10 @@ pub(crate) fn P_PlayerInSpecialSector(player: &mut player_t) {
 			}
 
 			_ => {
-				I_Error!(
-					c"P_PlayerInSpecialSector: unknown special %i".as_ptr(),
-					c_int::from(sector.special),
-				);
+				I_Error(format_args!(
+					"P_PlayerInSpecialSector: unknown special {}",
+					sector.special,
+				));
 			}
 		};
 	}

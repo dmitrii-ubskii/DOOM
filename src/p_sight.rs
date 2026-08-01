@@ -80,12 +80,13 @@ fn P_InterceptVector2(v2: &mut divline_t, v1: &mut divline_t) -> fixed_t {
 // P_CrossSubsector
 // Returns true
 //  if strace crosses the given subsector successfully.
+#[allow(static_mut_refs)]
 fn P_CrossSubsector(num: i32) -> bool {
 	let mut divl = divline_t { x: 0, y: 0, dx: 0, dy: 0 };
 
 	unsafe {
 		if num >= i32::try_from(numsubsectors).unwrap() {
-			I_Error!(c"P_CrossSubsector: ss %i with numss = %i".as_ptr(), num, numsubsectors);
+			I_Error(format_args!("P_CrossSubsector: ss {} with numss = {}", num, numsubsectors));
 		}
 
 		let sub = &mut *subsectors.wrapping_add(usize::try_from(num).unwrap());

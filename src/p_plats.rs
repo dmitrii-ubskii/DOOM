@@ -238,7 +238,7 @@ pub(crate) fn P_AddActivePlat(plat: *mut plat_t) {
 				return;
 			}
 		}
-		I_Error!(c"P_AddActivePlat: no more plats!".as_ptr());
+		I_Error("P_AddActivePlat: no more plats!");
 	}
 }
 
@@ -254,6 +254,6 @@ fn P_RemoveActivePlat(plat: *mut plat_t) {
 				return;
 			}
 		}
-		I_Error!(c"P_RemoveActivePlat: can't find plat!".as_ptr());
+		I_Error("P_RemoveActivePlat: can't find plat!");
 	}
 }

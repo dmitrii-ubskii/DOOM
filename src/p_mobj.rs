@@ -919,12 +919,10 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		}
 
 		if i == mobjtype_t::NUMMOBJTYPES {
-			I_Error!(
-				c"P_SpawnMapThing: Unknown ty %i at (%i, %i)".as_ptr(),
-				i32::from(mthing.ty),
-				i32::from(mthing.x),
-				i32::from(mthing.y),
-			);
+			I_Error(format_args!(
+				"P_SpawnMapThing: Unknown ty {} at ({}, {})",
+				mthing.ty, mthing.x, mthing.y,
+			));
 		}
 
 		// don't spawn keycards and players in deathmatch
