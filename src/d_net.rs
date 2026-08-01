@@ -4,7 +4,7 @@
 
 use std::{mem, num::Saturating, ptr::null_mut};
 
-use libc::c_char;
+use libc::{c_char, fclose};
 
 use crate::{
 	d_event::*, d_main::*, d_ticcmd::ticcmd_t, doomdef::*, g_game::*, i_net::I_InitNetwork,
@@ -627,27 +627,27 @@ pub(crate) fn D_CheckNetGame() {
 // Called before quitting to leave a net game
 // without hanging the other players
 pub(crate) fn D_QuitNetGame() {
-	todo!()
-	/*
-	int             i, j;
+	unsafe {
+		if !debugfile.is_null() {
+			fclose(debugfile);
+		}
 
-	if (debugfile)
-	fclose (debugfile);
+		if !netgame || !usergame || consoleplayer == usize::MAX || demoplayback {
+			return;
+		}
 
-	if (!netgame || !usergame || consoleplayer == -1 || demoplayback)
-	return;
-
-	// send a bunch of packets for security
-	(*netbuffer).player = consoleplayer;
-	(*netbuffer).numtics = 0;
-	for (i=0 ; i<4 ; i++)
-	{
-	for (j=1 ; j<(*doomcom).numnodes ; j++)
-		if (nodeingame[j])
-		HSendPacket (j, NCMD_EXIT);
-	I_WaitVBL (1);
+		// send a bunch of packets for security
+		(*netbuffer).player = u8::try_from(consoleplayer).unwrap();
+		(*netbuffer).numtics = 0;
+		for _ in 0..4 {
+			for (j, &node) in nodeingame[1..].iter().enumerate() {
+				if node {
+					HSendPacket(j, NCMD_EXIT);
+				}
+			}
+			I_WaitVBL(1);
+		}
 	}
-	*/
 }
 
 // TryRunTics

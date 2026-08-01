@@ -4,7 +4,7 @@ use std::{
 	env,
 	ffi::{CStr, CString, c_char, c_int},
 	mem::transmute,
-	ptr::{self, null, null_mut},
+	ptr::{self, null_mut},
 	str::FromStr,
 };
 
@@ -78,7 +78,7 @@ pub(crate) static mut startepisode: usize = 0;
 pub(crate) static mut startmap: usize = 0;
 pub(crate) static mut autostart: bool = false;
 
-pub(crate) static mut debugfile: *const libc::FILE = null();
+pub(crate) static mut debugfile: *mut libc::FILE = null_mut();
 
 pub(crate) static mut advancedemo: bool = false;
 
