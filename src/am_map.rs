@@ -240,9 +240,9 @@ const thintriangle_guy: [mline_t; NUMTHINTRIANGLEGUYLINES] = [
 ];
 
 static mut cheating: int = 0;
-static mut grid: int = 0;
+static mut grid: bool = false;
 
-static mut leveljuststarted: int = 1; // kluge until AM_LevelInit() is called
+static mut leveljuststarted: bool = true; // kluge until AM_LevelInit() is called
 
 pub(crate) static mut automapactive: bool = false;
 static mut finit_width: fixed_t = SCREENWIDTH as fixed_t;
@@ -522,7 +522,7 @@ fn AM_clearMarks() {
 // right now, i figure it out myself
 fn AM_LevelInit() {
 	unsafe {
-		leveljuststarted = 0;
+		leveljuststarted = false;
 
 		f_x = 0;
 		f_y = 0;
@@ -677,8 +677,8 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 					(*plr).message = if followplayer { AMSTR_FOLLOWON } else { AMSTR_FOLLOWOFF };
 				}
 				AM_GRIDKEY => {
-					grid = if grid == 0 { 1 } else { 0 };
-					(*plr).message = if grid != 0 { AMSTR_GRIDON } else { AMSTR_GRIDOFF };
+					grid = !grid;
+					(*plr).message = if grid { AMSTR_GRIDON } else { AMSTR_GRIDOFF };
 				}
 				AM_MARKKEY => {
 					libc::sprintf(
@@ -1281,7 +1281,7 @@ pub(crate) fn AM_Drawer() {
 		}
 
 		AM_clearFB(BACKGROUND);
-		if grid != 0 {
+		if grid {
 			AM_drawGrid(GRIDCOLORS);
 		}
 		AM_drawWalls();
