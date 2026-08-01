@@ -568,9 +568,9 @@ static mut bcnt: usize = 0;
 // signals to refresh everything for one frame
 static mut firstrefresh: int = 0;
 
-static mut cnt_kills: [i32; MAXPLAYERS] = [0; MAXPLAYERS];
-static mut cnt_items: [i32; MAXPLAYERS] = [0; MAXPLAYERS];
-static mut cnt_secret: [i32; MAXPLAYERS] = [0; MAXPLAYERS];
+static mut cnt_kills: [u32; MAXPLAYERS] = [0; MAXPLAYERS];
+static mut cnt_items: [u32; MAXPLAYERS] = [0; MAXPLAYERS];
+static mut cnt_secret: [u32; MAXPLAYERS] = [0; MAXPLAYERS];
 static mut cnt_time: i32 = 0;
 static mut cnt_par: i32 = 0;
 static mut cnt_pause: usize = 0;
@@ -870,13 +870,9 @@ fn WI_drawNum(mut x: usize, y: usize, mut n: i32, mut digits: i32) -> usize {
 	}
 }
 
-fn WI_drawPercent(x: usize, y: usize, pc: i32) {
-	if pc < 0 {
-		return;
-	}
-
+fn WI_drawPercent(x: usize, y: usize, pc: u32) {
 	unsafe { V_DrawPatch(x, y, FB, percent) };
-	WI_drawNum(x, y, pc, -1);
+	WI_drawNum(x, y, i32::try_from(pc).unwrap(), -1);
 }
 
 // Display level completion time and par,
@@ -1451,9 +1447,9 @@ fn WI_initStats() {
 		state = stateenum_t::StatCount;
 		acceleratestage = 0;
 		sp_state = 1;
-		cnt_kills[0] = -1;
-		cnt_items[0] = -1;
-		cnt_secret[0] = -1;
+		cnt_kills[0] = 0;
+		cnt_items[0] = 0;
+		cnt_secret[0] = 0;
 		cnt_time = -1;
 		cnt_par = -1;
 		cnt_pause = TICRATE;

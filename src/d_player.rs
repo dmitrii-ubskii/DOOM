@@ -95,9 +95,9 @@ pub(crate) struct player_t {
 	pub(crate) refire: i32,
 
 	// For intermission stats.
-	pub(crate) killcount: i32,
-	pub(crate) itemcount: i32,
-	pub(crate) secretcount: i32,
+	pub(crate) killcount: u32,
+	pub(crate) itemcount: u32,
+	pub(crate) secretcount: u32,
 
 	// Hint messages.
 	pub(crate) message: *const c_char,
@@ -193,9 +193,9 @@ pub(crate) struct wbplayerstruct_t {
 	pub(crate) in_: i32, // whether the player is in game
 
 	// Player stats, kills, collected items etc.
-	pub(crate) skills: i32,
-	pub(crate) sitems: i32,
-	pub(crate) ssecret: i32,
+	pub(crate) skills: u32,
+	pub(crate) sitems: u32,
+	pub(crate) ssecret: u32,
 	pub(crate) stime: usize,
 	pub(crate) frags: [i32; 4],
 	pub(crate) score: i32, // current score on entry, modified on return
@@ -212,10 +212,10 @@ pub(crate) struct wbstartstruct_t {
 	pub(crate) last: usize,
 	pub(crate) next: usize,
 
-	pub(crate) maxkills: i32,
-	pub(crate) maxitems: i32,
-	pub(crate) maxsecret: i32,
-	pub(crate) maxfrags: i32,
+	pub(crate) maxkills: u32,
+	pub(crate) maxitems: u32,
+	pub(crate) maxsecret: u32,
+	pub(crate) maxfrags: u32,
 
 	// the par time
 	pub(crate) partime: usize,

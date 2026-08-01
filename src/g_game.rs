@@ -97,9 +97,9 @@ pub(crate) static mut gametic: usize = 0;
 static mut levelstarttic: usize = 0; // gametic at level start 
 
 // for intermission
-pub(crate) static mut totalkills: int = 0;
-pub(crate) static mut totalitems: int = 0;
-pub(crate) static mut totalsecret: int = 0;
+pub(crate) static mut totalkills: u32 = 0;
+pub(crate) static mut totalitems: u32 = 0;
+pub(crate) static mut totalsecret: u32 = 0;
 
 static mut demoname: [c_char; 32] = [0; 32];
 pub(crate) static mut demorecording: bool = false;
