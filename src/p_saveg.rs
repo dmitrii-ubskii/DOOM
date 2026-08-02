@@ -717,7 +717,7 @@ impl From<player_t_saveg> for player_t {
 		Self {
 			// will be set when unarc thinker
 			mo: null_mut(),
-			message: null_mut(),
+			message: c"",
 			attacker: null_mut(),
 			pendingweapon: match value.pendingweapon {
 				0 => Some(weapontype_t::wp_fist),

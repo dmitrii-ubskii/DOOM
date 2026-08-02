@@ -32,9 +32,7 @@ use crate::{
 	hu_stuff::{HU_Drawer, HU_Erase, HU_Init},
 	i_sound::I_UpdateSound,
 	i_system::{I_Error, I_GetTime, I_Init},
-	i_video::{
-		I_FinishUpdate, I_InitGraphics, I_SetPalette, I_StartFrame, I_StartTic, I_UpdateNoBlit,
-	},
+	i_video::{I_FinishUpdate, I_InitGraphics, I_SetPalette, I_StartTic, I_UpdateNoBlit},
 	m_argv::M_CheckParm,
 	m_menu::{M_Drawer, M_Init, M_Responder, M_Ticker, inhelpscreens, menuactive},
 	m_misc::M_LoadDefaults,
@@ -279,9 +277,6 @@ pub(crate) fn D_DoomLoop() {
 		I_InitGraphics();
 
 		loop {
-			// frame syncronous IO operations
-			I_StartFrame();
-
 			// process one or more tics
 			if singletics {
 				I_StartTic();

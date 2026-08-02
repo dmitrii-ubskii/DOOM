@@ -835,7 +835,7 @@ pub(crate) fn P_SpawnPlayer(mthing: &mut mapthing_t) {
 		p.mo = mobj;
 		p.playerstate = playerstate_t::PST_LIVE;
 		p.refire = 0;
-		p.message = null_mut();
+		p.message = c"";
 		p.damagecount = 0;
 		p.bonuscount = 0;
 		p.extralight = 0;

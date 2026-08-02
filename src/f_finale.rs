@@ -39,17 +39,17 @@ static mut finalecount: i32 = 0;
 const TEXTSPEED: usize = 3;
 const TEXTWAIT: usize = 250;
 
-static mut e1text: *const c_char = E1TEXT;
-static mut e2text: *const c_char = E2TEXT;
-static mut e3text: *const c_char = E3TEXT;
-static mut e4text: *const c_char = E4TEXT;
+const e1text: &CStr = E1TEXT;
+const e2text: &CStr = E2TEXT;
+const e3text: &CStr = E3TEXT;
+const e4text: &CStr = E4TEXT;
 
-static mut c1text: *const c_char = C1TEXT;
-static mut c2text: *const c_char = C2TEXT;
-static mut c3text: *const c_char = C3TEXT;
-static mut c4text: *const c_char = C4TEXT;
-static mut c5text: *const c_char = C5TEXT;
-static mut c6text: *const c_char = C6TEXT;
+const c1text: &CStr = C1TEXT;
+const c2text: &CStr = C2TEXT;
+const c3text: &CStr = C3TEXT;
+const c4text: &CStr = C4TEXT;
+const c5text: &CStr = C5TEXT;
+const c6text: &CStr = C6TEXT;
 
 /*
 static mut p1text: *const c_char = P1TEXT;
@@ -67,7 +67,7 @@ static mut t5text: *const c_char = T5TEXT;
 static mut t6text: *const c_char = T6TEXT;
 */
 
-static mut finaletext: *const c_char = null();
+static mut finaletext: &CStr = c"";
 static mut finaleflat: &CStr = c"";
 
 // F_StartFinale
@@ -158,6 +158,7 @@ pub(crate) fn F_Responder(event: *mut event_t) -> bool {
 }
 
 // F_Ticker
+#[allow(static_mut_refs)]
 pub(crate) fn F_Ticker() {
 	unsafe {
 		// check for skipping
@@ -188,7 +189,7 @@ pub(crate) fn F_Ticker() {
 
 		if finalestage == 0
 			&& usize::try_from(finalecount).unwrap()
-				> libc::strlen(finaletext) * TEXTSPEED + TEXTWAIT
+				> finaletext.count_bytes() * TEXTSPEED + TEXTWAIT
 		{
 			finalecount = 0;
 			finalestage = 1;
@@ -230,8 +231,8 @@ fn F_TextWrite() {
 			count = 0;
 		}
 		while count != 0 {
-			let c = u8::try_from(*ch).unwrap();
-			ch = ch.wrapping_add(1);
+			let c = ch.to_bytes()[0];
+			ch = &ch[1..];
 			if c == 0 {
 				break;
 			}

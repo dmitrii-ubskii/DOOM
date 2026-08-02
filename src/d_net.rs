@@ -3,6 +3,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
+	ffi::CStr,
 	mem::{self, offset_of},
 	num::Saturating,
 	os::raw::c_int,
@@ -352,7 +353,7 @@ fn GetPackets() {
 				playeringame[netconsole] = false;
 				libc::strcpy(exitmsg.as_mut_ptr(), c"Player 1 left the game".as_ptr());
 				exitmsg[7] += i8::try_from(netconsole).unwrap();
-				players[consoleplayer].message = exitmsg.as_ptr();
+				players[consoleplayer].message = CStr::from_ptr(exitmsg.as_ptr());
 				if demorecording {
 					G_CheckDemoStatus();
 				}

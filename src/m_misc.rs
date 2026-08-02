@@ -254,52 +254,52 @@ static mut defaults: [default_t; 39] = [
 	default_t {
 		name: c"chatmacro0".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[0] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO0.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO0.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro1".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[1] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO1.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO1.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro2".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[2] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO2.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO2.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro3".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[3] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO3.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO3.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro4".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[4] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO4.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO4.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro5".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[5] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO5.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO5.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro6".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[6] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO6.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO6.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro7".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[7] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO7.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO7.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro8".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[8] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO8.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO8.as_ptr().cast(),
 	},
 	default_t {
 		name: c"chatmacro9".as_ptr(),
 		location: unsafe { { &raw mut chat_macros[9] }.cast() },
-		defaultvalue: HUSTR_CHATMACRO9.0.cast(),
+		defaultvalue: HUSTR_CHATMACRO9.as_ptr().cast(),
 	},
 ];
 
@@ -524,6 +524,6 @@ pub(crate) fn M_ScreenShot() {
 			W_CacheLumpName(c"PLAYPAL", PU_CACHE).cast(),
 		);
 
-		players[consoleplayer].message = c"screen shot".as_ptr();
+		players[consoleplayer].message = c"screen shot";
 	}
 }

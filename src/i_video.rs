@@ -141,11 +141,6 @@ pub(crate) fn I_ShutdownGraphics() {
 	}
 }
 
-// I_StartFrame
-pub(crate) fn I_StartFrame() {
-	// er?
-}
-
 static mut lastmousex: i32 = 0;
 static mut lastmousey: i32 = 0;
 static mut mousemoved: bool = false;

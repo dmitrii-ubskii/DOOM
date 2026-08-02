@@ -2,7 +2,7 @@
 
 use std::{
 	ffi::{CStr, c_char},
-	ptr::{null, null_mut},
+	ptr::null_mut,
 };
 
 use libc::O_RDONLY;
@@ -62,7 +62,7 @@ static mut quickSaveSlot: int = 0;
 // 1 = message to be printed
 static mut messageToPrint: int = 0;
 // ...and here is the message string!
-static mut messageString: *const c_char = null_mut();
+static mut messageString: &CStr = c"";
 
 // message x & y
 static mut messageLastMenuActive: bool = false;
@@ -73,7 +73,7 @@ static mut messageRoutine: Option<fn(i32)> = None;
 
 const SAVESTRINGSIZE: usize = 24;
 
-pub(crate) static mut gammamsg: [[u8; 26]; 5] =
+pub(crate) static mut gammamsg: [&CStr; 5] =
 	[GAMMALVL0, GAMMALVL1, GAMMALVL2, GAMMALVL3, GAMMALVL4];
 
 // we are going to be entering a savegame string
@@ -598,7 +598,7 @@ fn M_ReadSaveStrings() {
 
 			let handle = libc::open(name.as_ptr(), O_RDONLY, 0o666);
 			if handle == -1 {
-				libc::strcpy(savegamestrings[i].as_mut_ptr(), EMPTYSTRING);
+				libc::strcpy(savegamestrings[i].as_mut_ptr(), EMPTYSTRING.as_ptr());
 				LoadMenu[i].status = 0;
 				continue;
 			}
@@ -725,7 +725,7 @@ fn M_SaveSelect(choice: i32) {
 		let choice = usize::try_from(choice).unwrap();
 		saveSlot = choice;
 		libc::strcpy(saveOldString.as_mut_ptr(), savegamestrings[choice].as_ptr());
-		if libc::strcmp(savegamestrings[choice].as_ptr(), EMPTYSTRING) == 0 {
+		if libc::strcmp(savegamestrings[choice].as_ptr(), EMPTYSTRING.as_ptr()) == 0 {
 			savegamestrings[choice][0] = 0;
 		}
 		saveCharIndex = libc::strlen(savegamestrings[choice].as_ptr());
@@ -779,10 +779,10 @@ fn M_QuickSave() {
 		}
 		libc::sprintf(
 			tempstring.as_mut_ptr(),
-			QSPROMPT,
+			QSPROMPT.as_ptr(),
 			savegamestrings[usize::try_from(quickSaveSlot).unwrap()],
 		);
-		M_StartMessage(tempstring.as_ptr(), Some(M_QuickSaveResponse), true);
+		M_StartMessage(CStr::from_ptr(tempstring.as_ptr()), Some(M_QuickSaveResponse), true);
 	}
 }
 
@@ -809,10 +809,10 @@ fn M_QuickLoad() {
 
 		libc::sprintf(
 			tempstring.as_mut_ptr(),
-			QLPROMPT,
+			QLPROMPT.as_ptr(),
 			savegamestrings[usize::try_from(quickSaveSlot).unwrap()],
 		);
-		M_StartMessage(tempstring.as_ptr(), Some(M_QuickLoadResponse), true);
+		M_StartMessage(CStr::from_ptr(tempstring.as_ptr()), Some(M_QuickLoadResponse), true);
 	}
 }
 
@@ -1122,17 +1122,22 @@ fn M_QuitDOOM(_choice: i32) {
 		// We pick index 0 which is language sensitive,
 		//  or one at random, between 1 and maximum number.
 		if language != Language_t::english {
-			libc::sprintf(endstring.as_mut_ptr(), c"%s\n\n%s".as_ptr(), endmsg[0], DOSY!());
+			libc::sprintf(
+				endstring.as_mut_ptr(),
+				c"%s\n\n%s".as_ptr(),
+				endmsg[0].as_ptr(),
+				DOSY!(),
+			);
 		} else {
 			libc::sprintf(
 				endstring.as_mut_ptr(),
 				c"%s\n\n%s".as_ptr(),
-				endmsg[(gametic % (NUM_QUITMESSAGES - 2)) + 1],
+				endmsg[(gametic % (NUM_QUITMESSAGES - 2)) + 1].as_ptr(),
 				DOSY!(),
 			);
 		}
 
-		M_StartMessage(endstring.as_ptr(), Some(M_QuitResponse), true);
+		M_StartMessage(CStr::from_ptr(endstring.as_ptr()), Some(M_QuitResponse), true);
 	}
 }
 
@@ -1194,7 +1199,7 @@ fn M_DrawThermo(x: usize, y: usize, thermWidth: usize, thermDot: usize) {
 	}
 }
 
-fn M_StartMessage(string: *const c_char, routine: Option<fn(i32)>, input: bool) {
+fn M_StartMessage(string: &'static CStr, routine: Option<fn(i32)>, input: bool) {
 	unsafe {
 		messageLastMenuActive = menuactive;
 		messageToPrint = 1;
@@ -1224,18 +1229,11 @@ fn M_StringWidth(string: *const c_char) -> usize {
 }
 
 //      Find string height from hu_font chars
-fn M_StringHeight(string: *const c_char) -> usize {
+fn M_StringHeight(string: &CStr) -> usize {
 	unsafe {
 		let height = usize::from((*hu_font[0]).height);
 
-		let mut h = height;
-		for i in 0..libc::strlen(string) {
-			if *string.wrapping_add(i) == c_char::try_from(b'\n').unwrap() {
-				h += height;
-			}
-		}
-
-		h
+		(1 + string.to_bytes().iter().filter(|&&c| c == b'\n').count()) * height
 	}
 }
 
@@ -1536,7 +1534,7 @@ pub(crate) fn M_Responder(ev: &mut event_t) -> bool {
 					if usegamma > 4 {
 						usegamma = 0;
 					}
-					players[consoleplayer].message = gammamsg[usegamma].as_ptr().cast();
+					players[consoleplayer].message = gammamsg[usegamma];
 					I_SetPalette(W_CacheLumpName(c"PLAYPAL", PU_CACHE).cast());
 					return true;
 				}
@@ -1701,6 +1699,7 @@ pub(crate) fn M_StartControlPanel() {
 // M_Drawer
 // Called after the view has been rendered,
 // but before it has been blitted.
+#[allow(static_mut_refs)]
 pub(crate) fn M_Drawer() {
 	unsafe {
 		static mut x: short = 0;
@@ -1713,20 +1712,19 @@ pub(crate) fn M_Drawer() {
 		if messageToPrint != 0 {
 			let mut start = 0;
 			y = 100 - i16::try_from(M_StringHeight(messageString) / 2).unwrap();
-			while *messageString.wrapping_add(start) != 0 {
+			while start < messageString.count_bytes() {
 				let mut i = 0;
-				for _ in 0..libc::strlen(messageString.wrapping_add(start)) {
-					if *(messageString.wrapping_add(start + i)) == c_char::try_from(b'\n').unwrap()
-					{
+				for _ in 0..messageString[start..].count_bytes() {
+					if messageString.to_bytes()[start + i] == b'\n' {
 						string = [0; 40];
-						libc::strncpy(string.as_mut_ptr(), messageString.wrapping_add(start), i);
+						libc::strncpy(string.as_mut_ptr(), messageString[start..].as_ptr(), i);
 						start += i + 1;
 						break;
 					}
 					i += 1;
 				}
-				if i == libc::strlen(messageString.wrapping_add(start)) {
-					libc::strcpy(string.as_mut_ptr(), messageString.wrapping_add(start));
+				if i == messageString[start..].count_bytes() {
+					libc::strcpy(string.as_mut_ptr(), messageString[start..].as_ptr());
 					start += i;
 				}
 
@@ -1821,7 +1819,7 @@ pub(crate) fn M_Init() {
 		skullAnimCounter = 10;
 		screenSize = screenblocks - 3;
 		messageToPrint = 0;
-		messageString = null();
+		messageString = c"";
 		messageLastMenuActive = menuactive;
 		quickSaveSlot = -1;
 

@@ -687,7 +687,7 @@ pub(crate) fn AM_Responder(ev: *mut event_t) -> bool {
 						AMSTR_MARKEDSPOT,
 						markpointnum,
 					);
-					(*plr).message = buffer.as_ptr();
+					(*plr).message = CStr::from_ptr(buffer.as_ptr());
 					AM_addMark();
 				}
 				AM_CLEARMARKKEY => {

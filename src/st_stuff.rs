@@ -584,7 +584,7 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 						players[consoleplayer].mo().x,
 						players[consoleplayer].mo().y,
 					);
-					(*plyr).message = buf.as_ptr();
+					(*plyr).message = CStr::from_ptr(buf.as_ptr());
 				}
 			}
 

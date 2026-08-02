@@ -30,7 +30,6 @@ use crate::{
 		GameMode_t, KEY_ENTER, KEY_ESCAPE, KEY_LALT, KEY_RALT, KEY_RSHIFT, MAXPLAYERS, TICRATE,
 	},
 	doomstat::gamemode,
-	dstrings::Smuggle,
 	g_game::{consoleplayer, gameepisode, gamemap, netgame, playeringame, players},
 	hu_lib::{
 		HU_MAXLINELENGTH, HUlib_addCharToTextLine, HUlib_addMessageToSText, HUlib_drawIText,
@@ -63,10 +62,10 @@ pub(crate) const HU_MSGHEIGHT: usize = 1; // in lines
 pub(crate) const HU_MSGTIMEOUT: usize = 4 * TICRATE;
 
 // Locally used constants, shortcuts.
-fn HU_TITLE() -> *const c_char {
+fn HU_TITLE() -> &'static CStr {
 	unsafe { mapnames[(gameepisode - 1) * 9 + gamemap - 1] }
 }
-fn HU_TITLE2() -> *const c_char {
+fn HU_TITLE2() -> &'static CStr {
 	unsafe { mapnames2[gamemap - 1] }
 }
 // fn HU_TITLEP() -> *const c_char {
@@ -86,7 +85,7 @@ fn HU_INPUTY() -> usize {
 	unsafe { HU_MSGY + HU_MSGHEIGHT * usize::from((*hu_font[0]).height + 1) }
 }
 
-pub(crate) static mut chat_macros: [Smuggle<c_char>; 10] = [
+pub(crate) static mut chat_macros: [&CStr; 10] = [
 	HUSTR_CHATMACRO0,
 	HUSTR_CHATMACRO1,
 	HUSTR_CHATMACRO2,
@@ -99,7 +98,7 @@ pub(crate) static mut chat_macros: [Smuggle<c_char>; 10] = [
 	HUSTR_CHATMACRO9,
 ];
 
-pub(crate) const player_names: [*const c_char; 4] =
+pub(crate) const player_names: [&CStr; 4] =
 	[HUSTR_PLRGREEN, HUSTR_PLRINDIGO, HUSTR_PLRBROWN, HUSTR_PLRRED];
 
 static mut plr: *mut player_t = null_mut();
@@ -171,7 +170,7 @@ static mut headsupactive: bool = false;
 
 // Builtin map names.
 // The actual names can be found in DStrings.h.
-const mapnames: [*const c_char; 45] = // DOOM shareware/registered/retail (Ultimate) names.
+const mapnames: [&CStr; 45] = // DOOM shareware/registered/retail (Ultimate) names.
 	[
 		HUSTR_E1M1,
 		HUSTR_E1M2,
@@ -209,18 +208,18 @@ const mapnames: [*const c_char; 45] = // DOOM shareware/registered/retail (Ultim
 		HUSTR_E4M7,
 		HUSTR_E4M8,
 		HUSTR_E4M9,
-		c"NEWLEVEL".as_ptr(),
-		c"NEWLEVEL".as_ptr(),
-		c"NEWLEVEL".as_ptr(),
-		c"NEWLEVEL".as_ptr(),
-		c"NEWLEVEL".as_ptr(),
-		c"NEWLEVEL".as_ptr(),
-		c"NEWLEVEL".as_ptr(),
-		c"NEWLEVEL".as_ptr(),
-		c"NEWLEVEL".as_ptr(),
+		c"NEWLEVEL",
+		c"NEWLEVEL",
+		c"NEWLEVEL",
+		c"NEWLEVEL",
+		c"NEWLEVEL",
+		c"NEWLEVEL",
+		c"NEWLEVEL",
+		c"NEWLEVEL",
+		c"NEWLEVEL",
 	];
 
-const mapnames2: [*const c_char; 32] = // DOOM 2 map names.
+const mapnames2: [&CStr; 32] = // DOOM 2 map names.
 	[
 		HUSTR_1, HUSTR_2, HUSTR_3, HUSTR_4, HUSTR_5, HUSTR_6, HUSTR_7, HUSTR_8, HUSTR_9, HUSTR_10,
 		HUSTR_11, HUSTR_12, HUSTR_13, HUSTR_14, HUSTR_15, HUSTR_16, HUSTR_17, HUSTR_18, HUSTR_19,
@@ -423,9 +422,9 @@ pub(crate) fn HU_Start() {
 			_ => HU_TITLE2(),
 		};
 
-		while *s != 0 {
-			HUlib_addCharToTextLine(&mut w_title, *s);
-			s = s.wrapping_add(1);
+		while !s.is_empty() {
+			HUlib_addCharToTextLine(&mut w_title, s.to_bytes()[0]);
+			s = &s[1..];
 		}
 
 		// create the chat widget
@@ -482,9 +481,10 @@ pub(crate) fn HU_Ticker() {
 
 		if showMessages != 0 || message_dontfuckwithme {
 			// display message if necessary
-			if !(*plr).message.is_null() && (!message_nottobefuckedwith || message_dontfuckwithme) {
-				HUlib_addMessageToSText(&mut w_message, null(), (*plr).message);
-				(*plr).message = null();
+			if !(*plr).message.is_empty() && (!message_nottobefuckedwith || message_dontfuckwithme)
+			{
+				HUlib_addMessageToSText(&mut w_message, c"", (*plr).message);
+				(*plr).message = c"";
 				message_on = true;
 				message_counter = HU_MSGTIMEOUT;
 				message_nottobefuckedwith = message_dontfuckwithme;
@@ -515,7 +515,7 @@ pub(crate) fn HU_Ticker() {
 								HUlib_addMessageToSText(
 									&mut w_message,
 									player_names[i],
-									w_inputbuffer[i].l.l.as_ptr(),
+									CStr::from_ptr(w_inputbuffer[i].l.l.as_ptr().cast()),
 								);
 
 								message_nottobefuckedwith = true;
@@ -539,11 +539,11 @@ pub(crate) fn HU_Ticker() {
 
 pub(crate) const QUEUESIZE: usize = 128;
 
-static mut chatchars: [c_char; QUEUESIZE] = [0; QUEUESIZE];
+static mut chatchars: [u8; QUEUESIZE] = [0; QUEUESIZE];
 static mut head: usize = 0;
 static mut tail: usize = 0;
 
-fn HU_queueChatChar(c: c_char) {
+fn HU_queueChatChar(c: u8) {
 	unsafe {
 		if ((head + 1) & (QUEUESIZE - 1)) == tail {
 			(*plr).message = HUSTR_MSGU;
@@ -554,7 +554,7 @@ fn HU_queueChatChar(c: c_char) {
 	}
 }
 
-pub(crate) fn HU_dequeueChatChar() -> c_char {
+pub(crate) fn HU_dequeueChatChar() -> u8 {
 	unsafe {
 		if head != tail {
 			let c = chatchars[tail];
@@ -608,7 +608,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 				eatkey = true;
 				chat_on = true;
 				HUlib_resetIText(&mut w_chat);
-				HU_queueChatChar(c_char::try_from(HU_BROADCAST).unwrap());
+				HU_queueChatChar(HU_BROADCAST);
 			} else if netgame && numplayers > 2 {
 				for i in 0..MAXPLAYERS {
 					if ev.data1 == i32::from(destination_keys[i]) {
@@ -616,7 +616,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 							eatkey = true;
 							chat_on = true;
 							HUlib_resetIText(&mut w_chat);
-							HU_queueChatChar(c_char::try_from(i).unwrap() + 1);
+							HU_queueChatChar(u8::try_from(i).unwrap() + 1);
 							break;
 						} else if i == consoleplayer {
 							num_nobrainers += 1;
@@ -644,22 +644,22 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 					return false;
 				}
 				// fprintf(stderr, "got here\n");
-				let Smuggle(mut macromessage) = chat_macros[usize::from(c)];
+				let mut macromessage = chat_macros[usize::from(c)];
 
 				// kill last message with a '\n'
-				HU_queueChatChar(c_char::try_from(KEY_ENTER).unwrap()); // DEBUG!!!
+				HU_queueChatChar(KEY_ENTER); // DEBUG!!!
 
 				// send the macro message
-				while *macromessage != 0 {
-					HU_queueChatChar(*macromessage);
-					macromessage = macromessage.wrapping_add(1);
+				while !macromessage.is_empty() {
+					HU_queueChatChar(macromessage.to_bytes()[0]);
+					macromessage = &macromessage[1..];
 				}
-				HU_queueChatChar(c_char::try_from(KEY_ENTER).unwrap());
+				HU_queueChatChar(KEY_ENTER);
 
 				// leave chat mode and notify that it was sent
 				chat_on = false;
-				libc::strcpy(lastmessage.as_mut_ptr(), chat_macros[usize::from(c)].u());
-				(*plr).message = lastmessage.as_mut_ptr();
+				libc::strcpy(lastmessage.as_mut_ptr(), chat_macros[usize::from(c)].as_ptr());
+				(*plr).message = CStr::from_ptr(lastmessage.as_ptr());
 				eatkey = true;
 			} else {
 				// if french {
@@ -671,7 +671,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 				eatkey = HUlib_keyInIText(&mut w_chat, c);
 				if eatkey {
 					// static unsigned char buf[20]; // DEBUG
-					HU_queueChatChar(c_char::try_from(c).unwrap());
+					HU_queueChatChar(c);
 
 					// sprintf(buf, "KEY: %d => %d", ev.data1, c);
 					//      plr.message = buf;
@@ -679,8 +679,8 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 				if c == KEY_ENTER {
 					chat_on = false;
 					if w_chat.l.len != 0 {
-						libc::strcpy(lastmessage.as_mut_ptr(), w_chat.l.l.as_ptr());
-						(*plr).message = lastmessage.as_mut_ptr();
+						libc::strcpy(lastmessage.as_mut_ptr(), w_chat.l.l.as_ptr().cast());
+						(*plr).message = CStr::from_ptr(lastmessage.as_ptr());
 					}
 				} else if c == KEY_ESCAPE {
 					chat_on = false;

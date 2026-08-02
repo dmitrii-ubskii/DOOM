@@ -12,7 +12,7 @@
 
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{ffi::c_char, ptr::null_mut};
+use std::{ffi::CStr, ptr::null_mut};
 
 use crate::{
 	d_ticcmd::ticcmd_t,
@@ -100,7 +100,7 @@ pub(crate) struct player_t {
 	pub(crate) secretcount: u32,
 
 	// Hint messages.
-	pub(crate) message: *const c_char,
+	pub(crate) message: &'static CStr,
 
 	// For screen flashing (red or bright).
 	pub(crate) damagecount: i32,
@@ -159,7 +159,7 @@ impl player_t {
 			killcount: 0,
 			itemcount: 0,
 			secretcount: 0,
-			message: null_mut(),
+			message: c"",
 			damagecount: 0,
 			bonuscount: 0,
 			attacker: null_mut(),

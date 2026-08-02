@@ -297,7 +297,7 @@ pub(crate) unsafe fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		// buttons
-		(*cmd).chatchar = u8::try_from(HU_dequeueChatChar()).unwrap();
+		(*cmd).chatchar = HU_dequeueChatChar();
 
 		if gamekeydown[key_fire]
 			|| *mousebuttons.wrapping_offset(mousebfire)
@@ -614,7 +614,7 @@ pub(crate) fn G_Ticker() {
 						c"%s is turbo!".as_ptr(),
 						player_names[i],
 					);
-					players[consoleplayer].message = turbomessage.as_mut_ptr();
+					players[consoleplayer].message = CStr::from_ptr(turbomessage.as_ptr());
 				}
 
 				if netgame && !netdemo && gametic.is_multiple_of(ticdup) {

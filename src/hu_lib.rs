@@ -1,6 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::ffi::c_char;
+use std::ffi::CStr;
 
 use crate::{
 	am_map::automapactive,
@@ -29,10 +29,10 @@ pub(crate) struct hu_textline_t {
 	pub(crate) x: usize,
 	pub(crate) y: usize,
 
-	pub(crate) f: *mut *mut patch_t,              // font
-	pub(crate) sc: i32,                           // start character
-	pub(crate) l: [c_char; HU_MAXLINELENGTH + 1], // line of text
-	pub(crate) len: usize,                        // current line length
+	pub(crate) f: *mut *mut patch_t,          // font
+	pub(crate) sc: i32,                       // start character
+	pub(crate) l: [u8; HU_MAXLINELENGTH + 1], // line of text
+	pub(crate) len: usize,                    // current line length
 
 	// whether this line needs to be udpated
 	pub(crate) needsupdate: i32,
@@ -84,7 +84,7 @@ pub(crate) fn HUlib_initTextLine(
 	HUlib_clearTextLine(t);
 }
 
-pub(crate) fn HUlib_addCharToTextLine(t: &mut hu_textline_t, ch: c_char) -> bool {
+pub(crate) fn HUlib_addCharToTextLine(t: &mut hu_textline_t, ch: u8) -> bool {
 	if t.len == HU_MAXLINELENGTH {
 		false
 	} else {
@@ -112,10 +112,7 @@ pub(crate) fn HUlib_drawTextLine(l: &mut hu_textline_t, drawcursor: bool) {
 		// draw the new stuff
 		let mut x = l.x;
 		for i in 0..l.len {
-			let c = i32::try_from(u32::from(
-				char::from(u8::try_from(l.l[i]).unwrap()).to_ascii_uppercase(),
-			))
-			.unwrap();
+			let c = i32::try_from(u32::from(char::from(l.l[i]).to_ascii_uppercase())).unwrap();
 			if c != i32::from(b' ') && c >= l.sc && c <= i32::from(b'_') {
 				let font = *l.f.wrapping_add(usize::try_from(c - l.sc).unwrap());
 				let w = usize::from((*font).width);
@@ -207,23 +204,15 @@ fn HUlib_addLineToSText(s: &mut hu_stext_t) {
 	}
 }
 
-pub(crate) fn HUlib_addMessageToSText(
-	s: &mut hu_stext_t,
-	mut prefix: *const c_char,
-	mut msg: *const c_char,
-) {
-	unsafe {
-		HUlib_addLineToSText(s);
-		if !prefix.is_null() {
-			while *prefix != 0 {
-				HUlib_addCharToTextLine(&mut s.l[s.cl], *prefix);
-				prefix = prefix.wrapping_add(1);
-			}
-		}
-		while *msg != 0 {
-			HUlib_addCharToTextLine(&mut s.l[s.cl], *msg);
-			msg = msg.wrapping_add(1);
-		}
+pub(crate) fn HUlib_addMessageToSText(s: &mut hu_stext_t, mut prefix: &CStr, mut msg: &CStr) {
+	HUlib_addLineToSText(s);
+	while !prefix.is_empty() {
+		HUlib_addCharToTextLine(&mut s.l[s.cl], prefix.to_bytes()[0]);
+		prefix = &prefix[1..];
+	}
+	while !msg.is_empty() {
+		HUlib_addCharToTextLine(&mut s.l[s.cl], msg.to_bytes()[0]);
+		msg = &msg[1..];
 	}
 }
 
@@ -290,7 +279,7 @@ pub(crate) fn HUlib_resetIText(it: &mut hu_itext_t) {
 // returns true if it ate the key
 pub(crate) fn HUlib_keyInIText(it: &mut hu_itext_t, ch: u8) -> bool {
 	if (b' '..=b'_').contains(&ch) {
-		HUlib_addCharToTextLine(&mut it.l, c_char::try_from(ch).unwrap());
+		HUlib_addCharToTextLine(&mut it.l, ch);
 	} else if ch == KEY_BACKSPACE {
 		HUlib_delCharFromIText(it);
 	} else if ch != KEY_ENTER {
