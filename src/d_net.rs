@@ -2,13 +2,31 @@
 //	all OS independend parts.
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{mem, num::Saturating, ptr::null_mut};
+use std::{
+	mem::{self, offset_of},
+	num::Saturating,
+	os::raw::c_int,
+	ptr::null_mut,
+};
 
 use libc::{c_char, fclose};
 
 use crate::{
-	d_event::*, d_main::*, d_ticcmd::ticcmd_t, doomdef::*, g_game::*, i_net::I_InitNetwork,
-	i_system::*, i_video::*, m_menu::*,
+	d_event::{BT_SPECIAL, MAXEVENTS, eventhead, events, eventtail, evtype_t},
+	d_main::{
+		D_DoAdvanceDemo, D_ProcessEvents, advancedemo, autostart, debugfile, nomonsters,
+		respawnparm, singletics, startepisode, startmap, startskill,
+	},
+	d_ticcmd::ticcmd_t,
+	doomdef::{KEY_ESCAPE, MAXPLAYERS, VERSION, skill_t},
+	g_game::{
+		G_BuildTiccmd, G_CheckDemoStatus, G_Ticker, consoleplayer, deathmatch, demoplayback,
+		demorecording, displayplayer, gametic, netgame, playeringame, players, usergame,
+	},
+	i_net::{I_InitNetwork, I_NetCmd},
+	i_system::{I_Error, I_GetTime, I_WaitVBL},
+	i_video::I_StartTic,
+	m_menu::M_Ticker,
 };
 
 type short = i16;
@@ -29,7 +47,6 @@ pub(crate) const MAXNETNODES: usize = 8;
 // Networking and tick handling related.
 pub(crate) const BACKUPTICS: usize = 12;
 
-#[expect(unused, reason = "used in unimplemented functions")]
 #[repr(i16)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum command_t {
@@ -47,17 +64,17 @@ impl From<command_t> for u8 {
 }
 
 // Network packet data.
-#[derive(Clone, Copy)]
+#[derive(Default, Clone, Copy)]
 pub(crate) struct doomdata_t {
 	// High bit is retransmit request.
-	checksum: unsigned,
+	pub(crate) checksum: unsigned,
 	// Only valid if NCMD_RETRANSMIT.
-	retransmitfrom: byte,
+	pub(crate) retransmitfrom: byte,
 
-	starttic: byte,
-	player: byte,
-	numtics: byte,
-	cmds: [ticcmd_t; BACKUPTICS],
+	pub(crate) starttic: byte,
+	pub(crate) player: byte,
+	pub(crate) numtics: byte,
+	pub(crate) cmds: [ticcmd_t; BACKUPTICS],
 }
 
 #[expect(unused, reason = "used in unimplemented functions")]
@@ -71,10 +88,10 @@ pub(crate) struct doomcom_t {
 	// Is CMD_SEND or CMD_GET.
 	pub(crate) command: command_t,
 	// Is dest for send, set by get (-1 = no packet).
-	pub(crate) remotenode: u16,
+	pub(crate) remotenode: i16,
 
 	// Number of bytes in doomdata to be sent
-	pub(crate) datalength: short,
+	pub(crate) datalength: u16,
 
 	// Info common to all nodes.
 	// Console is allways node 0.
@@ -113,7 +130,7 @@ const NCMD_EXIT: u32 = 0x80000000;
 const NCMD_RETRANSMIT: u32 = 0x40000000;
 const NCMD_SETUP: u32 = 0x20000000;
 const NCMD_KILL: u32 = 0x10000000; // kill game
-// const NCMD_CHECKSUM: u32 = 0x0fffffff;
+const NCMD_CHECKSUM: u32 = 0x0fffffff;
 
 pub(crate) static mut doomcom: *mut doomcom_t = null_mut();
 pub(crate) static mut netbuffer: *mut doomdata_t = null_mut(); // points inside doomcom
@@ -148,12 +165,11 @@ pub(crate) static mut maxsend: usize = 0; // BACKUPTICS/(2*ticdup)-1
 static mut reboundpacket: bool = false;
 static mut reboundstore: doomdata_t = unsafe { mem::zeroed() };
 
-/*
-int NetbufferSize (void)
-{
-	return (int)&(((doomdata_t *)0)->cmds[(*netbuffer).numtics]);
+fn NetbufferSize() -> usize {
+	unsafe {
+		offset_of!(doomdata_t, cmds) + usize::from((*netbuffer).numtics) * size_of::<ticcmd_t>()
+	}
 }
-*/
 
 // Checksum
 #[allow(clippy::needless_return, reason = "might need to reimpl this")]
@@ -206,12 +222,11 @@ fn HSendPacket(node: usize, flags: u32) {
 			I_Error("Tried to transmit to another node");
 		}
 
-		todo!()
-		/*
-		(*doomcom).command = CMD_SEND;
-		(*doomcom).remotenode = node;
-		(*doomcom).datalength = NetbufferSize ();
+		(*doomcom).command = command_t::CMD_SEND;
+		(*doomcom).remotenode = i16::try_from(node).unwrap();
+		(*doomcom).datalength = u16::try_from(NetbufferSize()).unwrap();
 
+		/*
 		if (debugfile)
 		{
 		int		i;
@@ -230,9 +245,9 @@ fn HSendPacket(node: usize, flags: u32) {
 
 		fprintf (debugfile,"\n");
 		}
-
-		I_NetCmd ();
 		*/
+
+		I_NetCmd();
 	}
 }
 
@@ -251,57 +266,61 @@ fn HGetPacket() -> bool {
 			return false;
 		}
 
-		todo!();
+		if demoplayback {
+			return false;
+		}
+
+		(*doomcom).command = command_t::CMD_GET;
+		I_NetCmd();
+
+		if (*doomcom).remotenode == -1 {
+			return false;
+		}
+
+		if usize::from((*doomcom).datalength) != NetbufferSize() {
+			if !debugfile.is_null() {
+				libc::fprintf(
+					debugfile,
+					c"bad packet length %i\n".as_ptr(),
+					c_int::from((*doomcom).datalength),
+				);
+			}
+			return false;
+		}
+
+		if NetbufferChecksum() != (*netbuffer).checksum & NCMD_CHECKSUM {
+			if !debugfile.is_null() {
+				libc::fprintf(debugfile, c"bad packet checksum\n".as_ptr());
+			}
+			return false;
+		}
+
 		/*
-		if (demoplayback)
-		return false;
+		if (debugfile) {
+			int		realretrans;
+			int	i;
 
-		(*doomcom).command = CMD_GET;
-		I_NetCmd ();
+			if ((*netbuffer).checksum & NCMD_SETUP)
+			fprintf (debugfile,"setup packet\n");
+			else
+			{
+			if ((*netbuffer).checksum & NCMD_RETRANSMIT)
+			realretrans = ExpandTics ((*netbuffer).retransmitfrom);
+			else
+			realretrans = -1;
 
-		if ((*doomcom).remotenode == -1)
-		return false;
+			fprintf (debugfile,"get %i = (%i + %i, R %i)[%i] ",
+			(*doomcom).remotenode,
+			ExpandTics((*netbuffer).starttic),
+			(*netbuffer).numtics, realretrans, (*doomcom).datalength);
 
-		if ((*doomcom).datalength != NetbufferSize ())
-		{
-		if (debugfile)
-		fprintf (debugfile,"bad packet length %i\n",(*doomcom).datalength);
-		return false;
+			for (i=0 ; i<(*doomcom).datalength ; i++)
+			fprintf (debugfile,"%i ",((byte *)netbuffer)[i]);
+			fprintf (debugfile,"\n");
+			}
 		}
-
-		if (NetbufferChecksum () != ((*netbuffer).checksum&NCMD_CHECKSUM) )
-		{
-		if (debugfile)
-		fprintf (debugfile,"bad packet checksum\n");
-		return false;
-		}
-
-		if (debugfile)
-		{
-		int		realretrans;
-		int	i;
-
-		if ((*netbuffer).checksum & NCMD_SETUP)
-		fprintf (debugfile,"setup packet\n");
-		else
-		{
-		if ((*netbuffer).checksum & NCMD_RETRANSMIT)
-		realretrans = ExpandTics ((*netbuffer).retransmitfrom);
-		else
-		realretrans = -1;
-
-		fprintf (debugfile,"get %i = (%i + %i, R %i)[%i] ",
-		(*doomcom).remotenode,
-		ExpandTics((*netbuffer).starttic),
-		(*netbuffer).numtics, realretrans, (*doomcom).datalength);
-
-		for (i=0 ; i<(*doomcom).datalength ; i++)
-		fprintf (debugfile,"%i ",((byte *)netbuffer)[i]);
-		fprintf (debugfile,"\n");
-		}
-		}
-		return true;
 		*/
+		true
 	}
 }
 
@@ -311,17 +330,13 @@ static mut exitmsg: [c_char; 80] = [0; 80];
 #[allow(static_mut_refs)]
 fn GetPackets() {
 	unsafe {
-		/*
-		   ticcmd_t	*src, *dest;
-		*/
-
 		while HGetPacket() {
 			if (*netbuffer).checksum & NCMD_SETUP != 0 {
 				continue; // extra setup packet
 			}
 
 			let netconsole = usize::from((*netbuffer).player & !PL_DRONE);
-			let netnode = usize::from((*doomcom).remotenode);
+			let netnode = usize::try_from((*doomcom).remotenode).unwrap();
 
 			// to save bytes, only the low byte of tic numbers are sent
 			// Figure out what the rest of the bytes are
@@ -477,103 +492,98 @@ pub(crate) fn NetUpdate() {
 	}
 }
 
-/*
 // CheckAbort
-//
-void CheckAbort (void)
-{
-	event_t *ev;
-	int		stoptic;
+fn CheckAbort() {
+	unsafe {
+		let stoptic = I_GetTime() + 2;
+		while I_GetTime() < stoptic {
+			I_StartTic();
+		}
 
-	stoptic = I_GetTime () + 2;
-	while (I_GetTime() < stoptic)
-	I_StartTic ();
-
-	I_StartTic ();
-	for ( ; eventtail != eventhead
-		  ; eventtail = (++eventtail)&(MAXEVENTS-1) )
-	{
-	ev = &events[eventtail];
-	if (ev->type == ev_keydown && ev->data1 == KEY_ESCAPE)
-		I_Error ("Network game synchronization aborted.");
+		I_StartTic();
+		while eventtail != eventhead {
+			let ev = &events[eventtail];
+			if ev.ty == evtype_t::ev_keydown && ev.data1 == i32::from(KEY_ESCAPE) {
+				I_Error("Network game synchronization aborted.");
+			}
+			eventtail = (eventtail + 1) & (MAXEVENTS - 1);
+		}
 	}
 }
-*/
 
 // D_ArbitrateNetStart
 fn D_ArbitrateNetStart() {
-	todo!()
-	/*
-	int		i;
-	boolean	gotinfo[MAXNETNODES];
+	unsafe {
+		let mut gotinfo = [false; MAXNETNODES];
 
-	autostart = true;
-	memset (gotinfo,0,sizeof(gotinfo));
+		autostart = true;
 
-	if ((*doomcom).consoleplayer)
-	{
-	// listen for setup info from key player
-	printf ("listening for network start info...\n");
-	while (1)
-	{
-		CheckAbort ();
-		if (!HGetPacket ())
-		continue;
-		if ((*netbuffer).checksum & NCMD_SETUP)
-		{
-		if ((*netbuffer).player != VERSION)
-			I_Error ("Different DOOM versions cannot play a net game!");
-		startskill = (*netbuffer).retransmitfrom & 15;
-		deathmatch = ((*netbuffer).retransmitfrom & 0xc0) >> 6;
-		nomonsters = ((*netbuffer).retransmitfrom & 0x20) > 0;
-		respawnparm = ((*netbuffer).retransmitfrom & 0x10) > 0;
-		startmap = (*netbuffer).starttic & 0x3f;
-		startepisode = (*netbuffer).starttic >> 6;
-		return;
+		if (*doomcom).consoleplayer != 0 {
+			// listen for setup info from key player
+			println!("listening for network start info...");
+			loop {
+				CheckAbort();
+				if !HGetPacket() {
+					continue;
+				}
+				if (*netbuffer).checksum & NCMD_SETUP != 0 {
+					if i32::from((*netbuffer).player) != VERSION {
+						I_Error("Different DOOM versions cannot play a net game!");
+					}
+					startskill = skill_t::from((*netbuffer).retransmitfrom & 15);
+					deathmatch = ((*netbuffer).retransmitfrom & 0xc0) >> 6;
+					nomonsters = ((*netbuffer).retransmitfrom & 0x20) > 0;
+					respawnparm = ((*netbuffer).retransmitfrom & 0x10) > 0;
+					startmap = usize::from((*netbuffer).starttic & 0x3f);
+					startepisode = usize::from((*netbuffer).starttic >> 6);
+					return;
+				}
+			}
+		} else {
+			// key player, send the setup info
+			println!("sending network start info...");
+			loop {
+				CheckAbort();
+				for i in 0..usize::from((*doomcom).numnodes) {
+					(*netbuffer).retransmitfrom = u8::from(startskill);
+					if deathmatch != 0 {
+						(*netbuffer).retransmitfrom |= deathmatch << 6;
+					}
+					if nomonsters {
+						(*netbuffer).retransmitfrom |= 0x20;
+					}
+					if respawnparm {
+						(*netbuffer).retransmitfrom |= 0x10;
+					}
+					(*netbuffer).starttic = u8::try_from(startepisode * 64 + startmap).unwrap();
+					(*netbuffer).player = u8::try_from(VERSION).unwrap();
+					(*netbuffer).numtics = 0;
+					HSendPacket(i, NCMD_SETUP);
+				}
+
+				for _ in 0..10 {
+					if !HGetPacket() {
+						break;
+					}
+					if usize::from((*netbuffer).player & 0x7f) < MAXNETNODES {
+						gotinfo[usize::from((*netbuffer).player & 0x7f)] = true;
+					}
+				}
+
+				let mut i = 1;
+				while i < usize::from((*doomcom).numnodes) {
+					if !gotinfo[i] {
+						break;
+					}
+					i += 1;
+				}
+
+				if i >= usize::from((*doomcom).numnodes) {
+					break;
+				}
+			}
 		}
 	}
-	}
-	else
-	{
-	// key player, send the setup info
-	printf ("sending network start info...\n");
-	do
-	{
-		CheckAbort ();
-		for (i=0 ; i<(*doomcom).numnodes ; i++)
-		{
-		(*netbuffer).retransmitfrom = startskill;
-		if (deathmatch)
-			(*netbuffer).retransmitfrom |= (deathmatch<<6);
-		if (nomonsters)
-			(*netbuffer).retransmitfrom |= 0x20;
-		if (respawnparm)
-			(*netbuffer).retransmitfrom |= 0x10;
-		(*netbuffer).starttic = startepisode * 64 + startmap;
-		(*netbuffer).player = VERSION;
-		(*netbuffer).numtics = 0;
-		HSendPacket (i, NCMD_SETUP);
-		}
-
-	#if 1
-		for(i = 10 ; i  &&  HGetPacket(); --i)
-		{
-		if(((*netbuffer).player&0x7f) < MAXNETNODES)
-			gotinfo[(*netbuffer).player&0x7f] = true;
-		}
-	#else
-		while (HGetPacket ())
-		{
-		gotinfo[(*netbuffer).player&0x7f] = true;
-		}
-	#endif
-
-		for (i=1 ; i<(*doomcom).numnodes ; i++)
-		if (!gotinfo[i])
-			break;
-	} while (i < (*doomcom).numnodes);
-	}
-	*/
 }
 
 // D_CheckNetGame

@@ -1,200 +1,216 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use crate::{d_net::*, g_game::*, i_system::*, m_argv::*, *};
+use std::{
+	ffi::{CStr, c_char},
+	mem,
+};
 
-/*
+use libc::{
+	AF_INET, EWOULDBLOCK, FIONBIO, INADDR_ANY, IPPROTO_UDP, PF_INET, SOCK_DGRAM, bind, hostent,
+	in_addr, in_addr_t, ioctl, recvfrom, sendto, sockaddr_in, socket, strerror,
+};
+
+use crate::{
+	d_net::{
+		BACKUPTICS, DOOMCOM_ID, MAXNETNODES, command_t, doomcom, doomcom_t, doomdata_t, netbuffer,
+	},
+	d_ticcmd::ticcmd_t,
+	g_game::netgame,
+	i_system::I_Error,
+	m_argv::M_CheckParm,
+	myargc, myargv,
+};
+
 // For some odd reason...
-#define ntohl(x) \
-		((unsigned long int)((((unsigned long int)(x) & 0x000000ffU) << 24) | \
-							 (((unsigned long int)(x) & 0x0000ff00U) <<  8) | \
-							 (((unsigned long int)(x) & 0x00ff0000U) >>  8) | \
-							 (((unsigned long int)(x) & 0xff000000U) >> 24)))
+fn htonl(x: u32) -> u32 {
+	x.swap_bytes()
+}
 
-#define ntohs(x) \
-		((unsigned short int)((((unsigned short int)(x) & 0x00ff) << 8) | \
-							  (((unsigned short int)(x) & 0xff00) >> 8))) \
+fn ntohl(x: u32) -> u32 {
+	x.swap_bytes()
+}
 
-#define htonl(x) ntohl(x)
-#define htons(x) ntohs(x)
+fn htonus(x: u16) -> u16 {
+	x.swap_bytes()
+}
 
-void	NetSend (void);
-boolean NetListen (void);
-*/
+fn htons(x: i16) -> i16 {
+	x.swap_bytes()
+}
+
+fn ntohs(x: i16) -> i16 {
+	x.swap_bytes()
+}
 
 // NETWORKING
 const IPPORT_USERRESERVED: u16 = 5000;
 static mut DOOMPORT: u16 = IPPORT_USERRESERVED + 0x1d;
 
-/*
-int			sendsocket;
-int			insocket;
+static mut sendsocket: i32 = 0;
+static mut insocket: i32 = 0;
 
-struct	sockaddr_in	sendaddress[MAXNETNODES];
-*/
+static mut sendaddress: [sockaddr_in; MAXNETNODES] = unsafe { mem::zeroed() };
 
 static mut netget: fn() = PacketGet;
 static mut netsend: fn() = PacketSend;
 
-/*
+unsafe extern "C" {
+	static errno: i32;
+}
+
 // UDPsocket
-//
-int UDPsocket (void)
-{
-	int	s;
-
-	// allocate a socket
-	s = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (s<0)
-	I_Error ("can't create socket: %s",strerror(errno));
-
-	return s;
+fn UDPsocket() -> i32 {
+	unsafe {
+		let s = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+		if s < 0 {
+			I_Error(format_args!(
+				"can't create socket: {}",
+				CStr::from_ptr(strerror(errno)).to_str().unwrap()
+			));
+		}
+		s
+	}
 }
 
-//
 // BindToLocalPort
-//
-void
-BindToLocalPort
-( int	s,
-  int	port )
-{
-	int			v;
-	struct sockaddr_in	address;
+fn BindToLocalPort(s: i32, port: u16) {
+	unsafe {
+		let address = sockaddr_in {
+			sin_family: u16::try_from(AF_INET).unwrap(),
+			sin_port: port,
+			sin_addr: in_addr { s_addr: INADDR_ANY },
+			sin_zero: [0; 8],
+		};
 
-	memset (&address, 0, sizeof(address));
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = port;
-
-	v = bind (s, (void *)&address, sizeof(address));
-	if (v == -1)
-	I_Error ("BindToPort: bind: %s", strerror(errno));
+		let v =
+			bind(s, (&raw const address).cast(), u32::try_from(size_of::<sockaddr_in>()).unwrap());
+		if v == -1 {
+			I_Error(format_args!(
+				"BindToPort: bind: {}",
+				CStr::from_ptr(strerror(errno)).to_str().unwrap()
+			));
+		}
+	}
 }
-*/
 
 // PacketSend
 fn PacketSend() {
-	/*
-	int		c;
-	doomdata_t	sw;
+	unsafe {
+		let mut sw = doomdata_t {
+			checksum: htonl((*netbuffer).checksum),
+			retransmitfrom: (*netbuffer).retransmitfrom,
+			starttic: (*netbuffer).starttic,
+			player: (*netbuffer).player,
+			numtics: (*netbuffer).numtics,
+			cmds: [ticcmd_t::default(); BACKUPTICS],
+		};
 
-	// byte swap
-	sw.checksum = htonl(netbuffer->checksum);
-	sw.player = netbuffer->player;
-	sw.retransmitfrom = netbuffer->retransmitfrom;
-	sw.starttic = netbuffer->starttic;
-	sw.numtics = netbuffer->numtics;
-	for (c=0 ; c< netbuffer->numtics ; c++)
-	{
-	sw.cmds[c].forwardmove = netbuffer->cmds[c].forwardmove;
-	sw.cmds[c].sidemove = netbuffer->cmds[c].sidemove;
-	sw.cmds[c].angleturn = htons(netbuffer->cmds[c].angleturn);
-	sw.cmds[c].consistancy = htons(netbuffer->cmds[c].consistancy);
-	sw.cmds[c].chatchar = netbuffer->cmds[c].chatchar;
-	sw.cmds[c].buttons = netbuffer->cmds[c].buttons;
+		for c in 0..usize::from((*netbuffer).numtics) {
+			sw.cmds[c].forwardmove = (*netbuffer).cmds[c].forwardmove;
+			sw.cmds[c].sidemove = (*netbuffer).cmds[c].sidemove;
+			sw.cmds[c].angleturn = htons((*netbuffer).cmds[c].angleturn);
+			sw.cmds[c].consistancy = htons((*netbuffer).cmds[c].consistancy);
+			sw.cmds[c].chatchar = (*netbuffer).cmds[c].chatchar;
+			sw.cmds[c].buttons = (*netbuffer).cmds[c].buttons;
+		}
+
+		//printf ("sending %i\n",gametic);
+		sendto(
+			sendsocket,
+			(&raw const sw).cast(),
+			usize::from((*doomcom).datalength),
+			0,
+			(&raw const sendaddress[usize::try_from((*doomcom).remotenode).unwrap()]).cast(),
+			2,
+		);
 	}
-
-	//printf ("sending %i\n",gametic);
-	c = sendto (sendsocket , &sw, doomcom->datalength
-		,0,(void *)&sendaddress[doomcom->remotenode]
-		,sizeof(sendaddress[doomcom->remotenode]));
-
-	//	if (c == -1)
-	//		I_Error ("SendPacket error: %s",strerror(errno));
-	*/
 }
 
 // PacketGet
 fn PacketGet() {
-	/*
-	int			i;
-	int			c;
-	struct sockaddr_in	fromaddress;
-	int			fromlen;
-	doomdata_t		sw;
+	unsafe {
+		let mut fromlen = size_of::<sockaddr_in>();
+		let mut fromaddress = mem::zeroed::<sockaddr_in>();
+		let mut sw = doomdata_t::default();
 
-	fromlen = sizeof(fromaddress);
-	c = recvfrom (insocket, &sw, sizeof(sw), 0
-		  , (struct sockaddr *)&fromaddress, &fromlen );
-	if (c == -1 )
-	{
-	if (errno != EWOULDBLOCK)
-		I_Error ("GetPacket: %s",strerror(errno));
-	doomcom->remotenode = -1;		// no packet
-	return;
+		let c = recvfrom(
+			insocket,
+			(&raw mut sw).cast(),
+			size_of_val(&sw),
+			0,
+			(&raw mut fromaddress).cast(),
+			(&raw mut fromlen).cast(),
+		);
+
+		if c == -1 {
+			if errno != EWOULDBLOCK {
+				I_Error(format_args!(
+					"GetPacket: {}",
+					CStr::from_ptr(strerror(errno)).to_str().unwrap()
+				));
+			}
+			(*doomcom).remotenode = -1; // no packet
+			return;
+		}
+
+		{
+			static mut first: bool = true;
+			if first {
+				println!(
+					"len={}:p=[0x{:08x} 0x{:08x}] ",
+					c,
+					sw.checksum,
+					u32::from_ne_bytes([sw.retransmitfrom, sw.starttic, sw.player, sw.numtics]),
+				);
+			}
+			first = false;
+		}
+
+		// find remote node number
+		let mut i = 0;
+		while i < (*doomcom).numnodes {
+			if fromaddress.sin_addr.s_addr == sendaddress[usize::from(i)].sin_addr.s_addr {
+				break;
+			}
+			i += 1;
+		}
+
+		if i == (*doomcom).numnodes {
+			// packet is not from one of the players (new game broadcast)
+			(*doomcom).remotenode = -1; // no packet
+			return;
+		}
+
+		(*doomcom).remotenode = i16::try_from(i).unwrap(); // good packet from a game player
+		(*doomcom).datalength = u16::try_from(c).unwrap();
+
+		// byte swap
+		(*netbuffer).checksum = ntohl(sw.checksum);
+		(*netbuffer).player = sw.player;
+		(*netbuffer).retransmitfrom = sw.retransmitfrom;
+		(*netbuffer).starttic = sw.starttic;
+		(*netbuffer).numtics = sw.numtics;
+
+		for c in 0..usize::from((*netbuffer).numtics) {
+			(*netbuffer).cmds[c].forwardmove = sw.cmds[c].forwardmove;
+			(*netbuffer).cmds[c].sidemove = sw.cmds[c].sidemove;
+			(*netbuffer).cmds[c].angleturn = ntohs(sw.cmds[c].angleturn);
+			(*netbuffer).cmds[c].consistancy = ntohs(sw.cmds[c].consistancy);
+			(*netbuffer).cmds[c].chatchar = sw.cmds[c].chatchar;
+			(*netbuffer).cmds[c].buttons = sw.cmds[c].buttons;
+		}
 	}
-
-	{
-	static int first=1;
-	if (first)
-		printf("len=%d:p=[0x%x 0x%x] \n", c, *(int*)&sw, *((int*)&sw+1));
-	first = 0;
-	}
-
-	// find remote node number
-	for (i=0 ; i<doomcom->numnodes ; i++)
-	if ( fromaddress.sin_addr.s_addr == sendaddress[i].sin_addr.s_addr )
-		break;
-
-	if (i == doomcom->numnodes)
-	{
-	// packet is not from one of the players (new game broadcast)
-	doomcom->remotenode = -1;		// no packet
-	return;
-	}
-
-	doomcom->remotenode = i;			// good packet from a game player
-	doomcom->datalength = c;
-
-	// byte swap
-	netbuffer->checksum = ntohl(sw.checksum);
-	netbuffer->player = sw.player;
-	netbuffer->retransmitfrom = sw.retransmitfrom;
-	netbuffer->starttic = sw.starttic;
-	netbuffer->numtics = sw.numtics;
-
-	for (c=0 ; c< netbuffer->numtics ; c++)
-	{
-	netbuffer->cmds[c].forwardmove = sw.cmds[c].forwardmove;
-	netbuffer->cmds[c].sidemove = sw.cmds[c].sidemove;
-	netbuffer->cmds[c].angleturn = ntohs(sw.cmds[c].angleturn);
-	netbuffer->cmds[c].consistancy = ntohs(sw.cmds[c].consistancy);
-	netbuffer->cmds[c].chatchar = sw.cmds[c].chatchar;
-	netbuffer->cmds[c].buttons = sw.cmds[c].buttons;
-	}
-	*/
 }
 
-/*
-int GetLocalAddress (void)
-{
-	char		hostname[1024];
-	struct hostent*	hostentry;	// host information entry
-	int			v;
-
-	// get local address
-	v = gethostname (hostname, sizeof(hostname));
-	if (v == -1)
-	I_Error ("GetLocalAddress : gethostname: errno %d",errno);
-
-	hostentry = gethostbyname (hostname);
-	if (!hostentry)
-	I_Error ("GetLocalAddress : gethostbyname: couldn't get local host");
-
-	return *(int *)hostentry->h_addr_list[0];
+unsafe extern "C" {
+	fn gethostbyname(name: *const c_char) -> *const hostent;
+	fn inet_addr(cp: *const c_char) -> in_addr_t;
 }
-*/
 
 // I_InitNetwork
 #[allow(static_mut_refs)]
 pub(crate) fn I_InitNetwork() {
 	unsafe {
-		/*
-		boolean		trueval = true;
-		int			p;
-		struct hostent*	hostentry;	// host information entry
-		*/
-
 		doomcom = libc::malloc(size_of::<doomcom_t>()).cast();
 		libc::memset(doomcom.cast(), 0, size_of::<doomcom_t>());
 
@@ -222,7 +238,7 @@ pub(crate) fn I_InitNetwork() {
 
 		// parse network game options,
 		//  -net <consoleplayer> <host> <host> ...
-		let i = M_CheckParm(c"-net".as_ptr());
+		let mut i = M_CheckParm(c"-net".as_ptr());
 		if i == 0 {
 			// single player game
 			netgame = false;
@@ -238,47 +254,50 @@ pub(crate) fn I_InitNetwork() {
 		netget = PacketGet;
 		netgame = true;
 
-		/*
 		// parse player number and host list
-		doomcom->consoleplayer = myargv[i+1][0]-'1';
+		(*doomcom).consoleplayer =
+			u16::from(u8::try_from(*(*myargv.wrapping_add(i + 1))).unwrap() - b'1');
 
-		doomcom->numnodes = 1;	// this node for sure
+		(*doomcom).numnodes = 1; // this node for sure
 
-		i++;
-		while (++i < myargc && myargv[i][0] != '-')
+		i += 1;
+		while {
+			i += 1;
+			i
+		} < myargc && **myargv.wrapping_add(i) != i8::try_from(b'-').unwrap()
 		{
-		sendaddress[doomcom->numnodes].sin_family = AF_INET;
-		sendaddress[doomcom->numnodes].sin_port = htons(DOOMPORT);
-		if (myargv[i][0] == '.')
-		{
-		sendaddress[doomcom->numnodes].sin_addr.s_addr
-		= inet_addr (myargv[i]+1);
-		}
-		else
-		{
-		hostentry = gethostbyname (myargv[i]);
-		if (!hostentry)
-		I_Error ("gethostbyname: couldn't find %s", myargv[i]);
-		sendaddress[doomcom->numnodes].sin_addr.s_addr
-		= *(int *)hostentry->h_addr_list[0];
-		}
-		doomcom->numnodes++;
+			sendaddress[usize::from((*doomcom).numnodes)].sin_family =
+				u16::try_from(AF_INET).unwrap();
+			sendaddress[usize::from((*doomcom).numnodes)].sin_port = htonus(DOOMPORT);
+			if **myargv.wrapping_add(i) == i8::try_from(b'.').unwrap() {
+				sendaddress[usize::from((*doomcom).numnodes)].sin_addr.s_addr =
+					inet_addr((*myargv.wrapping_add(i)).wrapping_add(1));
+			} else {
+				let hostentry = gethostbyname(*myargv.wrapping_add(i));
+				if hostentry.is_null() {
+					I_Error(format_args!(
+						"gethostbyname: couldn't find {}",
+						CStr::from_ptr(*myargv.wrapping_add(i)).to_str().unwrap()
+					));
+				}
+				sendaddress[usize::from((*doomcom).numnodes)].sin_addr.s_addr =
+					u32::try_from(**(*hostentry).h_addr_list).unwrap();
+			}
+			(*doomcom).numnodes += 1;
 		}
 
-		doomcom->id = DOOMCOM_ID;
-		doomcom->numplayers = doomcom->numnodes;
+		(*doomcom).id = DOOMCOM_ID;
+		(*doomcom).numplayers = (*doomcom).numnodes;
 
 		// build message to receive
-		insocket = UDPsocket ();
-		BindToLocalPort (insocket,htons(DOOMPORT));
-		ioctl (insocket, FIONBIO, &trueval);
+		insocket = UDPsocket();
+		BindToLocalPort(insocket, htonus(DOOMPORT));
+		ioctl(insocket, FIONBIO, &true);
 
-		sendsocket = UDPsocket ();
-		*/
+		sendsocket = UDPsocket();
 	}
 }
 
-#[expect(unused, reason = "used in unimplemented functions")]
 pub(crate) fn I_NetCmd() {
 	unsafe {
 		if (*doomcom).command == command_t::CMD_SEND {
