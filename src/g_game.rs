@@ -16,7 +16,7 @@ use crate::{
 	d_main::{
 		D_AdvanceDemo, D_PageTicker, fastparm, nomonsters, respawnparm, singletics, wipegamestate,
 	},
-	d_net::*,
+	d_net::{BACKUPTICS, maketic, netcmds, ticdup},
 	d_player::{player_t, playerstate_t, wbplayerstruct_t, wbstartstruct_t},
 	d_ticcmd::ticcmd_t,
 	doomdata::mapthing_t,

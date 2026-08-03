@@ -10,7 +10,7 @@ use std::{
 use libc::{O_WRONLY, c_char, ioctl};
 
 use crate::{
-	const_conv::*,
+	const_conv::{u32_from_u8, u32_from_usize},
 	doomdef::TICRATE,
 	g_game::gametic,
 	i_system::I_Error,

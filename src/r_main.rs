@@ -3,7 +3,7 @@
 use std::{num::Wrapping, ops::Index, ptr::null_mut};
 
 use crate::{
-	d_net::*,
+	d_net::NetUpdate,
 	d_player::player_t,
 	doomdata::NF_SUBSECTOR,
 	doomdef::{SCREENHEIGHT, SCREENWIDTH},

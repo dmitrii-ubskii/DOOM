@@ -17,7 +17,7 @@ use crate::{
 	am_map::{AM_Drawer, automapactive},
 	d_englsh::{D_CDROM, D_DEVSTR},
 	d_event::{MAXEVENTS, event_t, eventhead, events, eventtail, gameaction_t},
-	d_net::*,
+	d_net::{BACKUPTICS, D_CheckNetGame, NetUpdate, TryRunTics, maketic, netcmds},
 	d_player::playerstate_t,
 	doomdef::{GameMode_t, Language_t, SCREENHEIGHT, SCREENWIDTH, VERSION, gamestate_t, skill_t},
 	doomstat::{gamemode, language, modifiedgame},

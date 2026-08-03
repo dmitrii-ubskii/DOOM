@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-	const_conv::*,
+	const_conv::{i32_from_usize, usize_from_u8},
 	d_englsh::{
 		AMSTR_FOLLOWOFF, AMSTR_FOLLOWON, AMSTR_GRIDOFF, AMSTR_GRIDON, AMSTR_MARKEDSPOT,
 		AMSTR_MARKSCLEARED,
