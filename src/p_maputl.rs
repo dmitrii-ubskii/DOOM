@@ -387,19 +387,19 @@ static mut earlyout: bool = false;
 fn PIT_AddLineIntercepts(ld: &mut line_t) -> bool {
 	unsafe {
 		// avoid precision problems with two routines
-		let s1;
-		let s2;
-		if trace.dx > FRACUNIT * 16
+		let (s1, s2) = if trace.dx > FRACUNIT * 16
 			|| trace.dy > FRACUNIT * 16
 			|| trace.dx < -FRACUNIT * 16
 			|| trace.dy < -FRACUNIT * 16
 		{
-			s1 = P_PointOnDivlineSide((*ld.v1).x, (*ld.v1).y, &trace);
-			s2 = P_PointOnDivlineSide((*ld.v2).x, (*ld.v2).y, &trace);
+			let s1 = P_PointOnDivlineSide((*ld.v1).x, (*ld.v1).y, &trace);
+			let s2 = P_PointOnDivlineSide((*ld.v2).x, (*ld.v2).y, &trace);
+			(s1, s2)
 		} else {
-			s1 = P_PointOnLineSide(trace.x, trace.y, ld);
-			s2 = P_PointOnLineSide(trace.x + trace.dx, trace.y + trace.dy, ld);
-		}
+			let s1 = P_PointOnLineSide(trace.x, trace.y, ld);
+			let s2 = P_PointOnLineSide(trace.x + trace.dx, trace.y + trace.dy, ld);
+			(s1, s2)
+		};
 
 		if s1 == s2 {
 			return true; // line isn't crossed
@@ -554,41 +554,41 @@ pub(crate) fn P_PathTraverse(
 		let xt2 = x2 >> MAPBLOCKSHIFT;
 		let yt2 = y2 >> MAPBLOCKSHIFT;
 
-		let mapxstep;
-		let partial;
-		let ystep;
-		if xt2 > xt1 {
-			mapxstep = 1;
-			partial = FRACUNIT - ((x1 >> MAPBTOFRAC) & (FRACUNIT - 1));
-			ystep = FixedDiv(y2 - y1, i32::abs(x2 - x1));
+		let (mapxstep, partial, ystep) = if xt2 > xt1 {
+			let mapxstep = 1;
+			let partial = FRACUNIT - ((x1 >> MAPBTOFRAC) & (FRACUNIT - 1));
+			let ystep = FixedDiv(y2 - y1, i32::abs(x2 - x1));
+			(mapxstep, partial, ystep)
 		} else if xt2 < xt1 {
-			mapxstep = -1;
-			partial = (x1 >> MAPBTOFRAC) & (FRACUNIT - 1);
-			ystep = FixedDiv(y2 - y1, i32::abs(x2 - x1));
+			let mapxstep = -1;
+			let partial = (x1 >> MAPBTOFRAC) & (FRACUNIT - 1);
+			let ystep = FixedDiv(y2 - y1, i32::abs(x2 - x1));
+			(mapxstep, partial, ystep)
 		} else {
-			mapxstep = 0;
-			partial = FRACUNIT;
-			ystep = 256 * FRACUNIT;
-		}
+			let mapxstep = 0;
+			let partial = FRACUNIT;
+			let ystep = 256 * FRACUNIT;
+			(mapxstep, partial, ystep)
+		};
 
 		let mut yintercept = (y1 >> MAPBTOFRAC) + FixedMul(partial, ystep);
 
-		let mapystep;
-		let partial;
-		let xstep;
-		if yt2 > yt1 {
-			mapystep = 1;
-			partial = FRACUNIT - ((y1 >> MAPBTOFRAC) & (FRACUNIT - 1));
-			xstep = FixedDiv(x2 - x1, i32::abs(y2 - y1));
+		let (mapystep, partial, xstep) = if yt2 > yt1 {
+			let mapystep = 1;
+			let partial = FRACUNIT - ((y1 >> MAPBTOFRAC) & (FRACUNIT - 1));
+			let xstep = FixedDiv(x2 - x1, i32::abs(y2 - y1));
+			(mapystep, partial, xstep)
 		} else if yt2 < yt1 {
-			mapystep = -1;
-			partial = (y1 >> MAPBTOFRAC) & (FRACUNIT - 1);
-			xstep = FixedDiv(x2 - x1, i32::abs(y2 - y1));
+			let mapystep = -1;
+			let partial = (y1 >> MAPBTOFRAC) & (FRACUNIT - 1);
+			let xstep = FixedDiv(x2 - x1, i32::abs(y2 - y1));
+			(mapystep, partial, xstep)
 		} else {
-			mapystep = 0;
-			partial = FRACUNIT;
-			xstep = 256 * FRACUNIT;
-		}
+			let mapystep = 0;
+			let partial = FRACUNIT;
+			let xstep = 256 * FRACUNIT;
+			(mapystep, partial, xstep)
+		};
 		let mut xintercept = (x1 >> MAPBTOFRAC) + FixedMul(partial, xstep);
 
 		// Step through map blocks.

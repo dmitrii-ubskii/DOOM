@@ -349,16 +349,15 @@ fn R_InitTextureMapping() {
 		let focallength = FixedDiv(centerxfrac, finetangent[FINEANGLES / 4 + FIELDOFVIEW / 2]);
 
 		for i in 0..FINEANGLES / 2 {
-			let t: u32;
-			if finetangent[i] > FRACUNIT * 2 {
-				t = u32::MAX;
+			let t = if finetangent[i] > FRACUNIT * 2 {
+				u32::MAX
 			} else if finetangent[i] < -FRACUNIT * 2 {
-				t = u32::try_from(viewwidth).unwrap() + 1;
+				u32::try_from(viewwidth).unwrap() + 1
 			} else {
 				let t_ = FixedMul(finetangent[i], focallength);
 				let t_ = (centerxfrac - t_ + FRACUNIT - 1) >> FRACBITS;
-				t = t_.clamp(-1, i32::try_from(viewwidth).unwrap() + 1).cast_unsigned();
-			}
+				t_.clamp(-1, i32::try_from(viewwidth).unwrap() + 1).cast_unsigned()
+			};
 			viewangletox[i] = t;
 		}
 

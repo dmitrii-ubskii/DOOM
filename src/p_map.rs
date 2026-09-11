@@ -628,25 +628,18 @@ pub(crate) fn P_SlideMove(mo: &mut mobj_t) {
 			}
 
 			// trace along the three leading corners
-			let leadx;
-			let trailx;
-			if mo.momx > 0 {
-				leadx = mo.x + mo.radius;
-				trailx = mo.x - mo.radius;
-			} else {
-				leadx = mo.x - mo.radius;
-				trailx = mo.x + mo.radius;
-			}
 
-			let leady;
-			let traily;
-			if mo.momy > 0 {
-				leady = mo.y + mo.radius;
-				traily = mo.y - mo.radius;
+			let (leadx, trailx) = if mo.momx > 0 {
+				(mo.x + mo.radius, mo.x - mo.radius)
 			} else {
-				leady = mo.y - mo.radius;
-				traily = mo.y + mo.radius;
-			}
+				(mo.x - mo.radius, mo.x + mo.radius)
+			};
+
+			let (leady, traily) = if mo.momy > 0 {
+				(mo.y + mo.radius, mo.y - mo.radius)
+			} else {
+				(mo.y - mo.radius, mo.y + mo.radius)
+			};
 
 			bestslidefrac = FRACUNIT + 1;
 

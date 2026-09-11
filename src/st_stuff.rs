@@ -590,19 +590,18 @@ pub(crate) fn ST_Responder(ev: &mut event_t) -> bool {
 
 			// 'clev' change-level cheat
 			if cht_CheckCheat(&mut cheat_clev, u8::try_from(ev.data1).unwrap()) {
-				let epsd;
-				let map;
-
 				let mut buf = [0; 3];
 				cht_GetParam(&mut cheat_clev, &mut buf);
 
-				if gamemode == GameMode_t::commercial {
-					epsd = 0;
-					map = (buf[0] - b'0') * 10 + buf[1] - b'0';
+				let (epsd, map) = if gamemode == GameMode_t::commercial {
+					let epsd = 0;
+					let map = (buf[0] - b'0') * 10 + buf[1] - b'0';
+					(epsd, map)
 				} else {
-					epsd = buf[0] - b'0';
-					map = buf[1] - b'0';
-				}
+					let epsd = buf[0] - b'0';
+					let map = buf[1] - b'0';
+					(epsd, map)
+				};
 
 				// Catch invalid maps.
 				if epsd < 1 {
@@ -714,17 +713,17 @@ fn ST_updateFaceWidget() {
 						(*(*plyr).attacker).y,
 					);
 
-					let diffang;
-					let i;
-					if badguyangle > (*plyr).mo().angle {
+					let (diffang, i) = if badguyangle > (*plyr).mo().angle {
 						// whether right or left
-						diffang = badguyangle - (*plyr).mo().angle;
-						i = diffang > ANG180;
+						let diffang = badguyangle - (*plyr).mo().angle;
+						let i = diffang > ANG180;
+						(diffang, i)
 					} else {
 						// whether left or right
-						diffang = (*plyr).mo().angle - badguyangle;
-						i = diffang <= ANG180;
-					} // confusing, aint it?
+						let diffang = (*plyr).mo().angle - badguyangle;
+						let i = diffang <= ANG180;
+						(diffang, i)
+					}; // confusing, aint it?
 
 					st_facecount = ST_TURNCOUNT;
 					st_faceindex = ST_calcPainOffset();
