@@ -141,7 +141,7 @@ pub(crate) static mut colormaps: *mut lighttable_t = null_mut();
 fn R_DrawColumnInCache(mut patch: &mut column_t, cache: &mut u8, originy: i32, cacheheight: isize) {
 	unsafe {
 		while patch.topdelta != 0xff {
-			let source = ptr::from_mut(patch).wrapping_byte_add(3);
+			let source = ptr::from_ref(patch).wrapping_byte_add(3);
 			let mut count = isize::from(patch.length);
 			let mut position = isize::try_from(originy).unwrap() + isize::from(patch.topdelta);
 
@@ -155,11 +155,9 @@ fn R_DrawColumnInCache(mut patch: &mut column_t, cache: &mut u8, originy: i32, c
 			}
 
 			if count > 0 {
-				libc::memcpy(
-					ptr::from_mut(cache)
-						.wrapping_byte_add(usize::try_from(position).unwrap())
-						.cast(),
+				ptr::copy_nonoverlapping(
 					source.cast(),
+					ptr::from_mut(cache).wrapping_byte_offset(position),
 					usize::try_from(count).unwrap(),
 				);
 			}
@@ -559,7 +557,7 @@ pub(crate) fn R_FlatNumForName(name: &CStr) -> usize {
 		let i = W_CheckNumForName(name);
 		let Some(i) = i else {
 			namet[8] = 0;
-			libc::memcpy(namet.as_mut_ptr().cast(), name.as_ptr().cast(), 8);
+			ptr::copy_nonoverlapping(name.as_ptr(), namet.as_mut_ptr(), 8);
 			I_Error(format_args!(
 				"R_FlatNumForName: {} not found",
 				CStr::from_ptr(namet.as_ptr()).to_str().unwrap()

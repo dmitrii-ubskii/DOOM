@@ -2,7 +2,10 @@
 
 // States for the intermission
 
-use std::{ffi::CStr, ptr::null_mut};
+use std::{
+	ffi::CStr,
+	ptr::{self, null_mut},
+};
 
 use crate::{
 	d_event::{BT_ATTACK, BT_USE},
@@ -644,7 +647,7 @@ static mut lnames: *mut *mut patch_t = null_mut();
 
 fn WI_slamBackground() {
 	unsafe {
-		libc::memcpy(screens[0].cast(), screens[1].cast(), SCREENWIDTH * SCREENHEIGHT);
+		ptr::copy_nonoverlapping(screens[1], screens[0], SCREENWIDTH * SCREENHEIGHT);
 	}
 	V_MarkRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 }

@@ -974,7 +974,7 @@ fn G_DoCompleted() {
 		automapactive = false;
 
 		if !statcopy.is_null() {
-			libc::memcpy(statcopy, (&raw mut wminfo).cast(), size_of::<wbstartstruct_t>());
+			wminfo = ptr::read(statcopy.cast());
 		}
 
 		WI_Start(&mut wminfo);
@@ -1119,12 +1119,12 @@ fn G_DoSaveGame() {
 		savebuffer = screens[1].wrapping_add(0x4000);
 		let mut save_p = savebuffer;
 
-		libc::memcpy(save_p.cast(), (&raw const description).cast(), SAVESTRINGSIZE);
+		ptr::copy_nonoverlapping(description.as_ptr(), save_p.cast(), SAVESTRINGSIZE);
 		save_p = save_p.wrapping_add(SAVESTRINGSIZE);
 
 		let mut name2 = [0; VERSIONSIZE];
 		libc::sprintf(name2.as_mut_ptr(), c"version %i".as_ptr(), VERSION);
-		libc::memcpy(save_p.cast(), (name2.as_ptr()).cast(), VERSIONSIZE);
+		ptr::copy_nonoverlapping(name2.as_ptr(), save_p.cast(), VERSIONSIZE);
 		save_p = save_p.wrapping_add(VERSIONSIZE);
 
 		*save_p = u8::from(gameskill);

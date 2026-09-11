@@ -2,7 +2,7 @@
 
 use std::{
 	ffi::{CStr, c_char},
-	ptr::{null, null_mut},
+	ptr::{self, null, null_mut},
 };
 
 use crate::{
@@ -205,16 +205,16 @@ pub(crate) fn F_Ticker() {
 fn F_TextWrite() {
 	unsafe {
 		// erase the entire screen to a tiled background
-		let src = W_CacheLumpName(finaleflat, PU_CACHE);
+		let src = W_CacheLumpName(finaleflat, PU_CACHE).cast::<u8>().cast_const();
 		let mut dest = screens[0];
 
 		for y in 0..SCREENHEIGHT {
 			for _x in 0..SCREENWIDTH / 64 {
-				libc::memcpy(dest.cast(), src.wrapping_add((y & 63) << 6), 64);
+				ptr::copy_nonoverlapping(src.wrapping_add((y & 63) << 6), dest, 64);
 				dest = dest.wrapping_add(64);
 			}
 			if SCREENWIDTH & 63 != 0 {
-				libc::memcpy(dest.cast(), src.wrapping_add((y & 63) << 6), SCREENWIDTH & 63);
+				ptr::copy_nonoverlapping(src.wrapping_add((y & 63) << 6), dest, SCREENWIDTH & 63);
 				dest = dest.wrapping_add(SCREENWIDTH & 63);
 			}
 		}

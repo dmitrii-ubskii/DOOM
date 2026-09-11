@@ -3,9 +3,7 @@
 //	Here find the main potential for optimization,
 //	 e.g. inline assembly, different algorithms.
 
-use std::{ffi::c_void, ptr::null_mut};
-
-use libc::memcpy;
+use std::ptr::{self, null_mut};
 
 use crate::{
 	const_conv::i32_from_usize,
@@ -444,17 +442,17 @@ pub(crate) fn R_FillBackScreen() {
 
 		let name = if gamemode == GameMode_t::commercial { name2 } else { name1 };
 
-		let src = W_CacheLumpName(name, PU_CACHE).cast::<c_void>();
+		let src = W_CacheLumpName(name, PU_CACHE).cast_const();
 		let mut dest = screens[1].cast();
 
 		for y in 0..SCREENHEIGHT - SBARHEIGHT {
 			for _x in 0..SCREENWIDTH / 64 {
-				memcpy(dest, src.wrapping_add((y & 63) << 6), 64);
+				ptr::copy_nonoverlapping(src.wrapping_add((y & 63) << 6), dest, 64);
 				dest = dest.wrapping_add(64);
 			}
 
 			if SCREENWIDTH & 63 != 0 {
-				memcpy(dest, src.wrapping_add((y & 63) << 6), SCREENWIDTH & 63);
+				ptr::copy_nonoverlapping(src.wrapping_add((y & 63) << 6), dest, SCREENWIDTH & 63);
 				dest = dest.wrapping_add(SCREENWIDTH & 63);
 			}
 		}
@@ -524,7 +522,7 @@ pub(crate) fn R_VideoErase(ofs: usize, count: usize) {
 	//  a 32bit CPU, as GNU GCC/Linux libc did
 	//  at one point.
 	unsafe {
-		memcpy(screens[0].wrapping_add(ofs).cast(), screens[1].wrapping_add(ofs).cast(), count);
+		ptr::copy_nonoverlapping(screens[1].wrapping_add(ofs), screens[0].wrapping_add(ofs), count);
 	}
 }
 

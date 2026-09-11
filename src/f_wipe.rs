@@ -3,9 +3,10 @@
 // DESCRIPTION:
 //	Mission start screen wipe/melt, special effects.
 
-use std::{ptr::null_mut, slice};
-
-use libc::memcpy;
+use std::{
+	ptr::{self, null_mut},
+	slice,
+};
 
 use crate::{
 	i_video::I_ReadScreen,
@@ -26,22 +27,22 @@ static mut wipe_scr: *mut u8 = null_mut();
 
 fn wipe_shittyColMajorXform(array: *mut i16, width: usize, height: usize) {
 	unsafe {
-		let dest = Z_Malloc(width * height * 2, PU_STATIC, null_mut()).cast::<i16>();
+		let buf = Z_Malloc(width * height * 2, PU_STATIC, null_mut()).cast::<i16>();
 
 		for y_ in 0..height {
 			for x in 0..width {
-				*dest.wrapping_add(x * height + y_) = *array.wrapping_add(y_ * width + x);
+				*buf.wrapping_add(x * height + y_) = *array.wrapping_add(y_ * width + x);
 			}
 		}
 
-		memcpy(array.cast(), dest.cast(), width * height * 2);
+		ptr::copy_nonoverlapping(buf, array, width * height);
 
-		Z_Free(dest.cast());
+		Z_Free(buf.cast());
 	}
 }
 
 fn wipe_initColorXForm(width: usize, height: usize, _ticks: usize) -> bool {
-	unsafe { memcpy(wipe_scr.cast(), wipe_scr_start.cast(), width * height) };
+	unsafe { ptr::copy_nonoverlapping(wipe_scr_start, wipe_scr, width * height) };
 	false
 }
 
@@ -88,7 +89,7 @@ static mut y: *mut i32 = null_mut();
 fn wipe_initMelt(width: usize, height: usize, _ticks: usize) -> bool {
 	unsafe {
 		// copy start screen to main screen
-		memcpy(wipe_scr.cast(), wipe_scr_start.cast(), width * height);
+		ptr::copy_nonoverlapping(wipe_scr_start, wipe_scr, width * height);
 
 		// makes this wipe faster (in theory)
 		// to have stuff in column-major format

@@ -1,9 +1,10 @@
 //	All the clipping: columns, horizontal spans, sky columns.
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{num::Wrapping, ptr::null_mut};
-
-use libc::memcpy;
+use std::{
+	num::Wrapping,
+	ptr::{self, null_mut},
+};
 
 use crate::{
 	doomdata::{ML_DONTPEGBOTTOM, ML_DONTPEGTOP, ML_MAPPED},
@@ -652,10 +653,10 @@ pub(crate) fn R_StoreWallRange(start: u32, stop: u32) {
 
 		// save sprite clipping info
 		if ((*ds_p).silhouette & SIL_TOP != 0 || maskedtexture) && (*ds_p).sprtopclip.is_null() {
-			memcpy(
-				lastopening.cast(),
-				ceilingclip.as_ptr().wrapping_add(start.try_into().unwrap()).cast(),
-				2 * usize::try_from(rw_stopx - start).unwrap(),
+			ptr::copy_nonoverlapping(
+				ceilingclip.as_ptr().wrapping_add(start.try_into().unwrap()),
+				lastopening,
+				usize::try_from(rw_stopx - start).unwrap(),
 			);
 			(*ds_p).sprtopclip = lastopening.wrapping_sub(start.try_into().unwrap());
 			lastopening = lastopening.wrapping_add((rw_stopx - start).try_into().unwrap());
@@ -664,10 +665,10 @@ pub(crate) fn R_StoreWallRange(start: u32, stop: u32) {
 		if (((*ds_p).silhouette & SIL_BOTTOM) != 0 || maskedtexture)
 			&& (*ds_p).sprbottomclip.is_null()
 		{
-			memcpy(
-				lastopening.cast(),
-				floorclip.as_ptr().wrapping_add(start.try_into().unwrap()).cast(),
-				2 * usize::try_from(rw_stopx - start).unwrap(),
+			ptr::copy_nonoverlapping(
+				floorclip.as_ptr().wrapping_add(start.try_into().unwrap()),
+				lastopening,
+				usize::try_from(rw_stopx - start).unwrap(),
 			);
 			(*ds_p).sprbottomclip = lastopening.wrapping_sub(start.try_into().unwrap());
 			lastopening = lastopening.wrapping_add((rw_stopx - start).try_into().unwrap());

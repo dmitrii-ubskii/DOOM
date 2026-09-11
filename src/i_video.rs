@@ -4,7 +4,7 @@
 use std::{
 	ffi::CStr,
 	mem::{self, MaybeUninit},
-	ptr::null_mut,
+	ptr::{self, null_mut},
 };
 
 use libc::{
@@ -453,7 +453,7 @@ pub(crate) fn I_FinishUpdate() {
 
 // I_ReadScreen
 pub(crate) fn I_ReadScreen(scr: *mut u8) {
-	unsafe { libc::memcpy(scr.cast(), screens[0].cast(), SCREENWIDTH * SCREENHEIGHT) };
+	unsafe { ptr::copy_nonoverlapping(screens[0], scr, SCREENWIDTH * SCREENHEIGHT) };
 }
 
 // Palette stuff.

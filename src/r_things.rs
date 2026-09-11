@@ -251,10 +251,10 @@ fn R_InitSpriteDefs(namelist: *const *const i8) {
 				null_mut(),
 			)
 			.cast();
-			libc::memcpy(
-				(*sprites.wrapping_add(i)).spriteframes.cast(),
-				sprtemp.as_mut_ptr().cast(),
-				usize::try_from(maxframe).unwrap() * size_of::<spriteframe_t>(),
+			ptr::copy_nonoverlapping(
+				sprtemp.as_ptr().cast(),
+				(*sprites.wrapping_add(i)).spriteframes,
+				usize::try_from(maxframe).unwrap(),
 			);
 		}
 	}

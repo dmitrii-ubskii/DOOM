@@ -3,7 +3,7 @@
 use std::{
 	ffi::{CStr, c_int, c_void},
 	process::exit,
-	ptr::null_mut,
+	ptr::{self, null_mut},
 	time::Duration,
 };
 
@@ -135,7 +135,7 @@ fn getsfx(sfxname: *const c_char, len: *mut usize) -> *mut c_void {
 		//		 sfxname, sfxlump, size );
 		//fflush( stderr );
 
-		let sfx = W_CacheLumpNum(sfxlump, PU_STATIC).cast();
+		let sfx = W_CacheLumpNum(sfxlump, PU_STATIC);
 
 		// Pads the sound effect out to the mixing buffer size.
 		// The original realloc would interfere with zone memory.
@@ -148,7 +148,7 @@ fn getsfx(sfxname: *const c_char, len: *mut usize) -> *mut c_void {
 		//  which does not kick in in the soundserver.
 
 		// Now copy and pad.
-		libc::memcpy(paddedsfx.cast(), sfx, size);
+		ptr::copy_nonoverlapping(sfx.cast(), paddedsfx, size);
 		for i in size..paddedsize + 8 {
 			*paddedsfx.wrapping_add(i) = 128;
 		}

@@ -1,8 +1,6 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::ptr::null_mut;
-
-use libc::memcpy;
+use std::ptr::{self, null_mut};
 
 use crate::{
 	doomdef::{SCREENHEIGHT, SCREENWIDTH},
@@ -135,11 +133,11 @@ pub(crate) fn V_CopyRect(
 		// #endif
 		V_MarkRect(destx, desty, width, height);
 
-		let mut src = screens[srcscrn].wrapping_byte_add(SCREENWIDTH * srcy + srcx);
+		let mut src = screens[srcscrn].wrapping_byte_add(SCREENWIDTH * srcy + srcx).cast_const();
 		let mut dest = screens[destscrn].wrapping_byte_add(SCREENWIDTH * desty + destx);
 
 		for _ in 0..height {
-			memcpy(dest.cast(), src.cast(), width);
+			ptr::copy_nonoverlapping(src, dest, width);
 			src = src.wrapping_byte_add(SCREENWIDTH);
 			dest = dest.wrapping_byte_add(SCREENWIDTH);
 		}
@@ -267,7 +265,7 @@ pub(crate) fn V_DrawBlock(
 	scrn: usize,
 	width: usize,
 	height: usize,
-	mut src: *mut u8,
+	mut src: *const u8,
 ) {
 	unsafe {
 		// #ifdef RANGECHECK
@@ -281,7 +279,7 @@ pub(crate) fn V_DrawBlock(
 		let mut dest = screens[scrn].wrapping_byte_add(y * SCREENWIDTH + x);
 
 		for _ in 0..height {
-			memcpy(dest.cast(), src.cast(), width);
+			ptr::copy_nonoverlapping(src, dest, width);
 			src = src.wrapping_byte_add(width);
 			dest = dest.wrapping_byte_add(SCREENWIDTH);
 		}
