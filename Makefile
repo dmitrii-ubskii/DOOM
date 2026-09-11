@@ -1,7 +1,9 @@
-.PHONY: run
+.PHONY: run build
 
-run:
+build:
 	cargo build
+
+run: build
 	Xephyr :1 -screen 960x600x8 2>/dev/null &
 	bash -c "\
 		trap 'killall Xephyr' EXIT; \
