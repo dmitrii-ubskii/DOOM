@@ -5,8 +5,8 @@ use std::ffi::{CStr, c_char};
 //	Printed strings for translation
 
 // D_Main.C
-pub(crate) const D_DEVSTR: &CStr = c"Development mode ON.\n";
-pub(crate) const D_CDROM: &CStr = c"CD-ROM Version: default.cfg from c:\\doomdata\n";
+pub(crate) const D_DEVSTR: &str = "Development mode ON.";
+pub(crate) const D_CDROM: &str = r"CD-ROM Version: default.cfg from c:\doomdata";
 
 macro_rules! c_concat {
 	($($str:expr),* $(,)?) => {

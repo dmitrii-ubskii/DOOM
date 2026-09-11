@@ -9,8 +9,8 @@ use std::{
 };
 
 use libc::{
-	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fread, fseek, ftell, malloc, mkdir, printf,
-	sprintf, strcpy,
+	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fread, fseek, ftell, malloc, mkdir, sprintf,
+	strcpy,
 };
 
 use crate::{
@@ -270,7 +270,7 @@ pub(crate) fn D_DoomLoop() {
 		if M_CheckParm(c"-debugfile".as_ptr()) != 0 {
 			let mut filename = [0; 20];
 			sprintf(filename.as_mut_ptr(), c"debug%i.txt".as_ptr(), consoleplayer);
-			libc::printf(c"debug output to: %s\n".as_ptr(), filename);
+			println!("debug output to: {}", CStr::from_ptr(filename.as_ptr()).to_str().unwrap());
 			debugfile = libc::fopen(filename.as_mut_ptr(), c"w".as_ptr());
 		}
 
@@ -758,14 +758,14 @@ pub(crate) fn D_DoomMain() {
 			}
 		}
 
-		printf(c"%s\n".as_ptr(), title.as_ptr());
+		println!("{}", CStr::from_ptr(title.as_ptr()).to_str().unwrap());
 
 		if devparm {
-			printf(D_DEVSTR.as_ptr());
+			println!("{D_DEVSTR}");
 		}
 
 		if M_CheckParm(c"-cdrom".as_ptr()) != 0 {
-			printf(D_CDROM.as_ptr());
+			println!("{D_CDROM}");
 			mkdir(c"c:\\doomdata".as_ptr(), 0);
 			strcpy(basedefault.as_mut_ptr(), c"c:/doomdata/default.cfg".as_ptr());
 		}
@@ -779,7 +779,7 @@ pub(crate) fn D_DoomMain() {
 			}
 			scale = scale.clamp(10, 400);
 
-			printf(c"turbo scale: %i%%\n".as_ptr(), scale);
+			println!("turbo scale: {scale}%");
 			forwardmove[0] = forwardmove[0] * scale / 100;
 			forwardmove[1] = forwardmove[1] * scale / 100;
 			sidemove[0] = sidemove[0] * scale / 100;
@@ -810,7 +810,11 @@ pub(crate) fn D_DoomMain() {
 						c_int::from(*argvp1),
 						c_int::from(*argvp2),
 					);
-					printf(c"Warping to Episode %s, Map %s.\n".as_ptr(), argvp1, argvp2);
+					println!(
+						"Warping to Episode {}, Map {}.",
+						CStr::from_ptr(argvp1).to_str().unwrap(),
+						CStr::from_ptr(argvp2).to_str().unwrap(),
+					);
 				}
 				GameMode_t::commercial | _ => {
 					let p = usize::try_from(atoi(argvp1)).unwrap();
@@ -848,7 +852,7 @@ pub(crate) fn D_DoomMain() {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			sprintf(file.as_mut_ptr(), c"%s.lmp".as_ptr(), argvp1);
 			D_AddFile(file.as_ptr());
-			printf(c"Playing demo %s.lmp.\n".as_ptr(), argvp1);
+			println!("Playing demo {}.lmp.", CStr::from_ptr(argvp1).to_str().unwrap());
 		}
 
 		// get skill / episode / map from parms
@@ -876,16 +880,16 @@ pub(crate) fn D_DoomMain() {
 		if p != 0 && p < myargc - 1 && deathmatch != 0 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			let time = atoi(argvp1);
-			printf(c"Levels will end after %d minute".as_ptr(), time);
+			print!("Levels will end after {time} minute");
 			if time > 1 {
-				printf(c"s".as_ptr());
+				print!("s");
 			}
-			printf(c".\n".as_ptr());
+			println!(".");
 		}
 
 		let p = M_CheckParm(c"-avg".as_ptr());
 		if p != 0 && p < myargc - 1 && deathmatch != 0 {
-			printf(c"Austin Virtual Gaming: Levels will end after 20 minutes\n".as_ptr());
+			println!("Austin Virtual Gaming: Levels will end after 20 minutes");
 		}
 
 		let p = M_CheckParm(c"-warp".as_ptr());
@@ -902,16 +906,16 @@ pub(crate) fn D_DoomMain() {
 		}
 
 		// init subsystems
-		printf(c"V_Init: allocate screens.\n".as_ptr());
+		println!("V_Init: allocate screens.");
 		V_Init();
 
-		printf(c"M_LoadDefaults: Load system defaults.\n".as_ptr());
+		println!("M_LoadDefaults: Load system defaults.");
 		M_LoadDefaults(); // load before initing other systems
 
-		printf(c"Z_Init: Init zone memory allocation daemon. \n".as_ptr());
+		println!("Z_Init: Init zone memory allocation daemon. ");
 		Z_Init();
 
-		printf(c"W_Init: Init WADfiles.\n".as_ptr());
+		println!("W_Init: Init WADfiles.");
 		W_InitMultipleFiles(wadfiles.as_ptr().cast());
 
 		// Check for -file in shareware
@@ -993,28 +997,28 @@ pub(crate) fn D_DoomMain() {
 			}
 		}
 
-		printf(c"M_Init: Init miscellaneous info.\n".as_ptr());
+		println!("M_Init: Init miscellaneous info.");
 		M_Init();
 
-		printf(c"R_Init: Init DOOM refresh daemon - ".as_ptr());
+		print!("R_Init: Init DOOM refresh daemon - ");
 		R_Init();
 
-		printf(c"\nP_Init: Init Playloop state.\n".as_ptr());
+		println!("\nP_Init: Init Playloop state.");
 		P_Init();
 
-		printf(c"I_Init: Setting up machine state.\n".as_ptr());
+		println!("I_Init: Setting up machine state.");
 		I_Init();
 
-		printf(c"D_CheckNetGame: Checking network game status.\n".as_ptr());
+		println!("D_CheckNetGame: Checking network game status.");
 		D_CheckNetGame();
 
-		printf(c"S_Init: Setting up sound.\n".as_ptr());
+		println!("S_Init: Setting up sound.");
 		S_Init(snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/);
 
-		printf(c"HU_Init: Setting up heads up display.\n".as_ptr());
+		println!("HU_Init: Setting up heads up display.");
 		HU_Init();
 
-		printf(c"ST_Init: Init status bar.\n".as_ptr());
+		println!("ST_Init: Init status bar.");
 		ST_Init();
 
 		// check for a driver that wants intermission stats
@@ -1022,7 +1026,7 @@ pub(crate) fn D_DoomMain() {
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			statcopy = ptr::without_provenance_mut(usize::try_from(atoi(argvp1)).unwrap());
-			printf(c"External statistics registered.\n".as_ptr());
+			println!("External statistics registered.");
 		}
 
 		// start the apropriate game based on parms
