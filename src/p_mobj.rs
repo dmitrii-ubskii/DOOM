@@ -870,11 +870,7 @@ pub(crate) fn P_SpawnMapThing(mthing: &mut mapthing_t) {
 		// count deathmatch start positions
 		if mthing.ty == 11 {
 			if deathmatch_p.offset_from(deathmatchstarts.as_ptr()) < 10 {
-				libc::memcpy(
-					deathmatch_p.cast(),
-					ptr::from_mut(mthing).cast(),
-					size_of::<mapthing_t>(),
-				);
+				*deathmatch_p = ptr::read(ptr::from_mut(mthing).cast());
 				deathmatch_p = deathmatch_p.wrapping_add(1);
 			}
 			return;

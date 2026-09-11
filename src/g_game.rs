@@ -213,7 +213,7 @@ pub(crate) static mut statcopy: *mut c_void = null_mut(); // for statistics driv
 pub(crate) unsafe fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 	unsafe {
 		let base = I_BaseTiccmd(); // empty, or external driver
-		libc::memcpy(cmd.cast(), base.cast(), size_of::<ticcmd_t>());
+		*cmd = ptr::read(base.cast());
 
 		(*cmd).consistancy = consistancy[consoleplayer][maketic % BACKUPTICS];
 
@@ -589,12 +589,7 @@ pub(crate) fn G_Ticker() {
 		for i in 0..MAXPLAYERS {
 			if playeringame[i] {
 				let cmd = &raw mut players[i].cmd;
-
-				libc::memcpy(
-					cmd.cast(),
-					(&raw const netcmds[i][buf]).cast(),
-					size_of::<ticcmd_t>(),
-				);
+				*cmd = netcmds[i][buf];
 
 				if demoplayback {
 					G_ReadDemoTiccmd(cmd);
