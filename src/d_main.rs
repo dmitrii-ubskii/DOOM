@@ -29,7 +29,7 @@ use crate::{
 		forwardmove, gameaction, gamestate, gametic, netgame, nodrawers, paused, players, sidemove,
 		singledemo, statcopy, usergame, viewactive,
 	},
-	hu_stuff::{HU_Drawer, HU_Erase, HU_Init},
+	hu_stuff::{ChatQueue, HU_Drawer, HU_Erase, HU_Init},
 	i_sound::I_UpdateSound,
 	i_system::{I_Error, I_GetTime, I_Init},
 	i_video::{I_FinishUpdate, I_InitGraphics, I_SetPalette, I_StartTic, I_UpdateNoBlit},
@@ -93,7 +93,7 @@ pub(crate) fn D_PostEvent(ev: &mut event_t) {
 
 // D_ProcessEvents
 // Send all the events of the given timestamp down the responder chain
-pub(crate) fn D_ProcessEvents() {
+pub(crate) fn D_ProcessEvents(chat: &mut ChatQueue) {
 	unsafe {
 		// IF STORE DEMO, DO NOT ACCEPT INPUT
 		if gamemode == GameMode_t::commercial && W_CheckNumForName(c"map01").is_none() {
@@ -106,7 +106,7 @@ pub(crate) fn D_ProcessEvents() {
 				eventtail = (eventtail + 1) & (MAXEVENTS - 1);
 				continue; // menu ate the event
 			}
-			G_Responder(ev);
+			G_Responder(ev, chat);
 			eventtail = (eventtail + 1) & (MAXEVENTS - 1);
 		}
 	}
@@ -118,7 +118,7 @@ pub(crate) fn D_ProcessEvents() {
 // wipegamestate can be set to -1 to force a wipe on the next draw
 pub(crate) static mut wipegamestate: gamestate_t = gamestate_t::GS_DEMOSCREEN;
 
-fn D_Display() {
+fn D_Display(chat: &mut ChatQueue) {
 	unsafe {
 		static mut viewactivestate: bool = false;
 		static mut menuactivestate: bool = false;
@@ -181,7 +181,7 @@ fn D_Display() {
 
 		// draw the view directly
 		if gamestate == gamestate_t::GS_LEVEL && !automapactive && gametic != 0 {
-			R_RenderPlayerView(&mut players[displayplayer]);
+			R_RenderPlayerView(&mut players[displayplayer], chat);
 		}
 
 		if gamestate == gamestate_t::GS_LEVEL && gametic != 0 {
@@ -226,7 +226,7 @@ fn D_Display() {
 
 		// menus go directly to the screen
 		M_Drawer(); // menu is drawn even on top of everything
-		NetUpdate(); // send out any new accumulation
+		NetUpdate(chat); // send out any new accumulation
 
 		// normal update
 		if !wipe {
@@ -261,7 +261,7 @@ fn D_Display() {
 	}
 }
 
-pub(crate) fn D_DoomLoop() {
+pub(crate) fn D_DoomLoop(mut chat: ChatQueue) -> ! {
 	unsafe {
 		if demorecording {
 			G_BeginRecording();
@@ -280,8 +280,8 @@ pub(crate) fn D_DoomLoop() {
 			// process one or more tics
 			if singletics {
 				I_StartTic();
-				D_ProcessEvents();
-				G_BuildTiccmd(&raw mut netcmds[consoleplayer][maketic % BACKUPTICS]);
+				D_ProcessEvents(&mut chat);
+				G_BuildTiccmd(&mut chat, &raw mut netcmds[consoleplayer][maketic % BACKUPTICS]);
 				if advancedemo {
 					D_DoAdvanceDemo();
 				}
@@ -290,13 +290,13 @@ pub(crate) fn D_DoomLoop() {
 				gametic += 1;
 				maketic += 1;
 			} else {
-				TryRunTics(); // will run at least one tic
+				TryRunTics(&mut chat); // will run at least one tic
 			}
 
 			S_UpdateSounds(players[consoleplayer].mo.cast()); // move positional sounds
 
 			// Update display, next frame, with current state.
-			D_Display();
+			D_Display(&mut chat);
 
 			// #ifndef SNDSERV
 			// // Sound mixing for the buffer is snychronous.
@@ -1017,7 +1017,7 @@ pub(crate) fn D_DoomMain() {
 		S_Init(snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/);
 
 		println!("HU_Init: Setting up heads up display.");
-		HU_Init();
+		let chat = HU_Init();
 
 		println!("ST_Init: Init status bar.");
 		ST_Init();
@@ -1044,14 +1044,14 @@ pub(crate) fn D_DoomMain() {
 			singledemo = true; // quit after one demo
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			G_DeferedPlayDemo(argvp1);
-			D_DoomLoop(); // never returns
+			D_DoomLoop(chat); // never returns
 		}
 
 		let p = M_CheckParm(c"-timedemo".as_ptr());
 		if p != 0 && p < myargc - 1 {
 			let argvp1 = *myargv.wrapping_add(p + 1);
 			G_TimeDemo(argvp1);
-			D_DoomLoop(); // never returns
+			D_DoomLoop(chat); // never returns
 		}
 
 		let p = M_CheckParm(c"-loadgame".as_ptr());
@@ -1073,6 +1073,6 @@ pub(crate) fn D_DoomMain() {
 			}
 		}
 
-		D_DoomLoop(); // never returns
+		D_DoomLoop(chat); // never returns
 	}
 }

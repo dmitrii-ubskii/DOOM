@@ -2,7 +2,10 @@
 #![allow(clippy::as_conversions)]
 
 use std::{
-	alloc::{Layout, alloc}, ffi::{CStr, c_char, c_void}, mem::MaybeUninit, ptr::{null, null_mut},
+	alloc::{Layout, alloc},
+	ffi::{CStr, c_char, c_void},
+	mem::MaybeUninit,
+	ptr::{null, null_mut},
 };
 
 use libc::{O_CREAT, O_RDONLY, O_TRUNC, O_WRONLY};

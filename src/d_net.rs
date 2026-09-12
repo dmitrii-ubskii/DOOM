@@ -24,6 +24,7 @@ use crate::{
 		G_BuildTiccmd, G_CheckDemoStatus, G_Ticker, consoleplayer, deathmatch, demoplayback,
 		demorecording, displayplayer, gametic, netgame, playeringame, players, usergame,
 	},
+	hu_stuff::ChatQueue,
 	i_net::{I_InitNetwork, I_NetCmd},
 	i_system::{I_Error, I_GetTime, I_WaitVBL},
 	i_video::I_StartTic,
@@ -424,7 +425,7 @@ fn GetPackets() {
 // sends out a packet
 static mut gametime: usize = 0;
 
-pub(crate) fn NetUpdate() {
+pub(crate) fn NetUpdate(chat: &mut ChatQueue) {
 	unsafe {
 		// check time
 		let nowtime = I_GetTime() / ticdup;
@@ -452,12 +453,12 @@ pub(crate) fn NetUpdate() {
 		let gameticdiv = gametic / ticdup;
 		for _ in 0..newtics {
 			I_StartTic();
-			D_ProcessEvents();
+			D_ProcessEvents(chat);
 			if maketic - gameticdiv >= BACKUPTICS / 2 - 1 {
 				break; // can't hold any more
 			}
 
-			G_BuildTiccmd(&raw mut localcmds[maketic % BACKUPTICS]);
+			G_BuildTiccmd(chat, &raw mut localcmds[maketic % BACKUPTICS]);
 			maketic += 1;
 		}
 
@@ -675,7 +676,7 @@ static mut frameon: usize = 0;
 static mut frameskip: [bool; 4] = [false; 4];
 static mut oldnettics: usize = 0;
 
-pub(crate) fn TryRunTics() {
+pub(crate) fn TryRunTics(chat: &mut ChatQueue) {
 	static mut oldentertics: usize = 0;
 
 	unsafe {
@@ -685,7 +686,7 @@ pub(crate) fn TryRunTics() {
 		oldentertics = entertic;
 
 		// get available tics
-		NetUpdate();
+		NetUpdate(chat);
 
 		let mut lowtic = usize::MAX;
 
@@ -744,7 +745,7 @@ pub(crate) fn TryRunTics() {
 
 		// wait for new tics if needed
 		while lowtic < gametic / ticdup + counts {
-			NetUpdate();
+			NetUpdate(chat);
 			lowtic = usize::MAX;
 
 			for i in 0..usize::from((*doomcom).numnodes) {
@@ -790,7 +791,7 @@ pub(crate) fn TryRunTics() {
 					}
 				}
 			}
-			NetUpdate(); // check for new console commands
+			NetUpdate(chat); // check for new console commands
 		}
 	}
 }

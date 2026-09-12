@@ -65,15 +65,19 @@ pub(crate) const HU_MSGTIMEOUT: usize = 4 * TICRATE;
 fn HU_TITLE() -> &'static CStr {
 	unsafe { mapnames[(gameepisode - 1) * 9 + gamemap - 1] }
 }
+
 fn HU_TITLE2() -> &'static CStr {
 	unsafe { mapnames2[gamemap - 1] }
 }
+
 // fn HU_TITLEP() -> *const c_char {
 // 	unsafe { mapnamesp[gamemap - 1] }
 // }
+
 // fn HU_TITLET() -> *const c_char {
 // 	unsafe { mapnamest[gamemap - 1] }
 // }
+
 const HU_TITLEX: usize = 0;
 fn HU_TITLEY() -> usize {
 	unsafe { 167 - usize::from((*hu_font[0]).height) }
@@ -234,7 +238,7 @@ const mapnames2: [&CStr; 32] = // DOOM 2 map names.
 // 		PHUSTR_18, PHUSTR_19, PHUSTR_20, PHUSTR_21, PHUSTR_22, PHUSTR_23, PHUSTR_24, PHUSTR_25,
 // 		PHUSTR_26, PHUSTR_27, PHUSTR_28, PHUSTR_29, PHUSTR_30, PHUSTR_31, PHUSTR_32,
 // 	];
-//
+
 // const mapnamest: [*const c_char; 32] = // TNT WAD map names.
 // 	[
 // 		THUSTR_1, THUSTR_2, THUSTR_3, THUSTR_4, THUSTR_5, THUSTR_6, THUSTR_7, THUSTR_8, THUSTR_9,
@@ -346,7 +350,7 @@ const english_shiftxform:[u8; 128] = [
 // 	(if ch < 128 { frenchKeyMap[ch as usize] } else { ch }) as c_char
 // }
 
-pub(crate) fn HU_Init() {
+pub(crate) fn HU_Init() -> ChatQueue {
 	unsafe {
 		let mut buffer = [0; 9];
 
@@ -366,6 +370,8 @@ pub(crate) fn HU_Init() {
 			hu_font[i] = W_CacheLumpName(CStr::from_ptr(buffer.as_ptr()), PU_STATIC).cast();
 		}
 	}
+
+	ChatQueue { chars: [0; QUEUESIZE], head: 0, tail: 0 }
 }
 
 fn HU_Stop() {
@@ -539,35 +545,35 @@ pub(crate) fn HU_Ticker() {
 
 pub(crate) const QUEUESIZE: usize = 128;
 
-static mut chatchars: [u8; QUEUESIZE] = [0; QUEUESIZE];
-static mut head: usize = 0;
-static mut tail: usize = 0;
+pub(crate) struct ChatQueue {
+	pub(crate) chars: [u8; QUEUESIZE],
+	pub(crate) head: usize,
+	pub(crate) tail: usize,
+}
 
-fn HU_queueChatChar(c: u8) {
+fn HU_queueChatChar(chat: &mut ChatQueue, c: u8) {
 	unsafe {
-		if ((head + 1) & (QUEUESIZE - 1)) == tail {
+		if ((chat.head + 1) & (QUEUESIZE - 1)) == chat.tail {
 			(*plr).message = HUSTR_MSGU;
 		} else {
-			chatchars[head] = c;
-			head = (head + 1) & (QUEUESIZE - 1);
+			chat.chars[chat.head] = c;
+			chat.head = (chat.head + 1) & (QUEUESIZE - 1);
 		}
 	}
 }
 
-pub(crate) fn HU_dequeueChatChar() -> u8 {
-	unsafe {
-		if head != tail {
-			let c = chatchars[tail];
-			tail = (tail + 1) & (QUEUESIZE - 1);
-			c
-		} else {
-			0
-		}
+pub(crate) fn HU_dequeueChatChar(chat: &mut ChatQueue) -> u8 {
+	if chat.head != chat.tail {
+		let c = chat.chars[chat.tail];
+		chat.tail = (chat.tail + 1) & (QUEUESIZE - 1);
+		c
+	} else {
+		0
 	}
 }
 
 #[allow(static_mut_refs)]
-pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
+pub(crate) fn HU_Responder(chat: &mut ChatQueue, ev: &mut event_t) -> bool {
 	unsafe {
 		static mut lastmessage: [c_char; HU_MAXLINELENGTH + 1] = [0; HU_MAXLINELENGTH + 1];
 		static mut shiftdown: bool = false;
@@ -608,7 +614,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 				eatkey = true;
 				chat_on = true;
 				HUlib_resetIText(&mut w_chat);
-				HU_queueChatChar(HU_BROADCAST);
+				HU_queueChatChar(chat, HU_BROADCAST);
 			} else if netgame && numplayers > 2 {
 				for i in 0..MAXPLAYERS {
 					if ev.data1 == i32::from(destination_keys[i]) {
@@ -616,7 +622,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 							eatkey = true;
 							chat_on = true;
 							HUlib_resetIText(&mut w_chat);
-							HU_queueChatChar(u8::try_from(i).unwrap() + 1);
+							HU_queueChatChar(chat, u8::try_from(i).unwrap() + 1);
 							break;
 						} else if i == consoleplayer {
 							num_nobrainers += 1;
@@ -647,14 +653,14 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 				let mut macromessage = chat_macros[usize::from(c)];
 
 				// kill last message with a '\n'
-				HU_queueChatChar(KEY_ENTER); // DEBUG!!!
+				HU_queueChatChar(chat, KEY_ENTER); // DEBUG!!!
 
 				// send the macro message
 				while !macromessage.is_empty() {
-					HU_queueChatChar(macromessage.to_bytes()[0]);
+					HU_queueChatChar(chat, macromessage.to_bytes()[0]);
 					macromessage = &macromessage[1..];
 				}
-				HU_queueChatChar(KEY_ENTER);
+				HU_queueChatChar(chat, KEY_ENTER);
 
 				// leave chat mode and notify that it was sent
 				chat_on = false;
@@ -671,7 +677,7 @@ pub(crate) fn HU_Responder(ev: &mut event_t) -> bool {
 				eatkey = HUlib_keyInIText(&mut w_chat, c);
 				if eatkey {
 					// static unsigned char buf[20]; // DEBUG
-					HU_queueChatChar(c);
+					HU_queueChatChar(chat, c);
 
 					// sprintf(buf, "KEY: %d => %d", ev.data1, c);
 					//      plr.message = buf;

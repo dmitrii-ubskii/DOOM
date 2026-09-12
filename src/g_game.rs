@@ -27,7 +27,7 @@ use crate::{
 	doomstat::{gamemission, gamemode},
 	dstrings::SAVEGAMENAME,
 	f_finale::{F_Responder, F_StartFinale, F_Ticker},
-	hu_stuff::{HU_Responder, HU_Ticker, HU_dequeueChatChar, player_names},
+	hu_stuff::{ChatQueue, HU_Responder, HU_Ticker, HU_dequeueChatChar, player_names},
 	i_system::{I_BaseTiccmd, I_Error, I_GetTime, I_Quit},
 	info::{mobjinfo, mobjtype_t, statenum_t, states},
 	m_argv::M_CheckParm,
@@ -210,7 +210,7 @@ pub(crate) static mut statcopy: *mut c_void = null_mut(); // for statistics driv
 // Builds a ticcmd from all of the available inputs
 // or reads it from the demo buffer.
 // If recording a demo, write it out
-pub(crate) unsafe fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
+pub(crate) unsafe fn G_BuildTiccmd(chat: &mut ChatQueue, cmd: *mut ticcmd_t) {
 	unsafe {
 		let base = I_BaseTiccmd(); // empty, or external driver
 		*cmd = ptr::read(base.cast());
@@ -297,7 +297,7 @@ pub(crate) unsafe fn G_BuildTiccmd(cmd: *mut ticcmd_t) {
 		}
 
 		// buttons
-		(*cmd).chatchar = HU_dequeueChatChar();
+		(*cmd).chatchar = HU_dequeueChatChar(chat);
 
 		if gamekeydown[key_fire]
 			|| *mousebuttons.wrapping_offset(mousebfire)
@@ -461,7 +461,7 @@ fn G_DoLoadLevel() {
 
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
-pub(crate) fn G_Responder(ev: &mut event_t) -> bool {
+pub(crate) fn G_Responder(ev: &mut event_t, chat: &mut ChatQueue) -> bool {
 	unsafe {
 		// allow spy mode changes even during the demo
 		if gamestate == gamestate_t::GS_LEVEL
@@ -498,7 +498,7 @@ pub(crate) fn G_Responder(ev: &mut event_t) -> bool {
 		}
 
 		if gamestate == gamestate_t::GS_LEVEL {
-			if HU_Responder(ev) {
+			if HU_Responder(chat, ev) {
 				return true; // chat ate the event
 			}
 			if ST_Responder(ev) {

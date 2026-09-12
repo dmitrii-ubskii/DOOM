@@ -7,6 +7,7 @@ use crate::{
 	d_player::player_t,
 	doomdata::NF_SUBSECTOR,
 	doomdef::{SCREENHEIGHT, SCREENWIDTH},
+	hu_stuff::ChatQueue,
 	m_fixed::{FRACBITS, FRACUNIT, FixedDiv, FixedMul, fixed_t},
 	m_menu::{detailLevel, screenblocks},
 	p_setup::{nodes, numnodes, subsectors},
@@ -598,7 +599,7 @@ fn R_SetupFrame(player: &mut player_t) {
 }
 
 // R_RenderView
-pub(crate) fn R_RenderPlayerView(player: &mut player_t) {
+pub(crate) fn R_RenderPlayerView(player: &mut player_t, chat: &mut ChatQueue) {
 	unsafe {
 		R_SetupFrame(player);
 
@@ -609,22 +610,22 @@ pub(crate) fn R_RenderPlayerView(player: &mut player_t) {
 		R_ClearSprites();
 
 		// check for new console commands.
-		NetUpdate();
+		NetUpdate(chat);
 
 		// The head node is the last node output.
 		R_RenderBSPNode(numnodes.wrapping_sub(1));
 
 		// Check for new console commands.
-		NetUpdate();
+		NetUpdate(chat);
 
 		R_DrawPlanes();
 
 		// Check for new console commands.
-		NetUpdate();
+		NetUpdate(chat);
 
 		R_DrawMasked();
 
 		// Check for new console commands.
-		NetUpdate();
+		NetUpdate(chat);
 	}
 }
