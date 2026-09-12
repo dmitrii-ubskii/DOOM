@@ -1,6 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
+	alloc::{Layout, alloc},
 	ffi::{CStr, c_void},
 	fs::File,
 	io::{Read, Seek, SeekFrom},
@@ -153,7 +154,7 @@ fn W_AddFile(mut filename: &'static str) {
 		}
 
 		// Fill in lumpinfo
-		lumpinfo = libc::realloc(lumpinfo.cast(), numlumps * size_of::<lumpinfo_t>()).cast();
+		lumpinfo = alloc(Layout::array::<lumpinfo_t>(numlumps).unwrap()).cast();
 
 		if lumpinfo.is_null() {
 			I_Error("Couldn't realloc lumpinfo");
@@ -232,7 +233,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const &'static str) {
 		numlumps = 0;
 
 		// will be realloced as lumps are added
-		lumpinfo = libc::malloc(1).cast();
+		lumpinfo = null_mut();
 
 		while !(&*filenames).is_empty() {
 			W_AddFile(*filenames);
@@ -244,8 +245,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const &'static str) {
 		}
 
 		// set up caching
-		let size = numlumps * size_of::<*mut c_void>();
-		lumpcache = libc::malloc(size).cast();
+		lumpcache = alloc(Layout::array::<*mut c_void>(numlumps).unwrap()).cast();
 
 		if lumpcache.is_null() {
 			I_Error("Couldn't allocate lumpcache");

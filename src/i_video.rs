@@ -2,6 +2,7 @@
 //	DOOM graphics stuff for X11, UNIX.
 
 use std::{
+	alloc::{Layout, alloc},
 	ffi::CStr,
 	mem::{self, MaybeUninit},
 	ptr::{self, null_mut},
@@ -811,7 +812,7 @@ pub(crate) fn I_InitGraphics() {
 				8,
 				ZPixmap,
 				0,
-				libc::malloc(X_width * X_height).cast(),
+				alloc(Layout::array::<u8>(X_width * X_height).unwrap()).cast(),
 				X_width as u32,
 				X_height as u32,
 				8,
@@ -822,7 +823,7 @@ pub(crate) fn I_InitGraphics() {
 		if multiply == 1 {
 			screens[0] = (*image).data.cast();
 		} else {
-			screens[0] = libc::malloc(SCREENWIDTH * SCREENHEIGHT).cast();
+			screens[0] = alloc(Layout::array::<u8>(SCREENWIDTH * SCREENHEIGHT).unwrap()).cast();
 		}
 	}
 }

@@ -1,8 +1,13 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
-use std::{fmt, process::exit, ptr::null_mut};
+use std::{
+	alloc::{Layout, alloc, alloc_zeroed},
+	fmt,
+	process::exit,
+	ptr::null_mut,
+};
 
-use libc::{calloc, gettimeofday, malloc, timeval};
+use libc::{gettimeofday, timeval};
 
 use crate::{
 	d_net::D_QuitNetGame,
@@ -29,7 +34,7 @@ pub(crate) fn I_BaseTiccmd() -> *const ticcmd_t {
 pub(crate) fn I_ZoneBase(size: &mut usize) -> *mut u8 {
 	unsafe {
 		*size = mb_used * 1024 * 1024;
-		malloc(*size).cast()
+		alloc(Layout::array::<u8>(*size).unwrap()).cast()
 	}
 }
 
@@ -79,7 +84,7 @@ pub(crate) fn I_WaitVBL(_count: i32) {
 }
 
 pub(crate) fn I_AllocLow(length: usize) -> *mut u8 {
-	unsafe { calloc(length, 1).cast() }
+	unsafe { alloc_zeroed(Layout::array::<u8>(length).unwrap()).cast() }
 }
 
 pub(crate) fn I_Error(message: impl fmt::Display) -> ! {

@@ -2,9 +2,7 @@
 #![allow(clippy::as_conversions)]
 
 use std::{
-	ffi::{CStr, c_char, c_void},
-	mem::MaybeUninit,
-	ptr::{null, null_mut},
+	alloc::{Layout, alloc}, ffi::{CStr, c_char, c_void}, mem::MaybeUninit, ptr::{null, null_mut},
 };
 
 use libc::{O_CREAT, O_RDONLY, O_TRUNC, O_WRONLY};
@@ -375,7 +373,7 @@ pub(crate) fn M_LoadDefaults() {
 						// get a string default
 						isstring = true;
 						let len = libc::strlen(strparm.as_ptr().cast());
-						newstring = libc::malloc(len).cast();
+						newstring = alloc(Layout::array::<i8>(len).unwrap()).cast();
 						strparm[len - 1] = 0;
 						libc::strcpy(newstring, strparm[1..].as_ptr().cast());
 					} else if strparm[0] == b'0' && strparm[1] == b'x' {

@@ -1,6 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
+	alloc::{Layout, alloc},
 	env,
 	ffi::{CStr, CString, c_char, c_int},
 	mem::transmute,
@@ -9,8 +10,7 @@ use std::{
 };
 
 use libc::{
-	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fread, fseek, ftell, malloc, mkdir, sprintf,
-	strcpy,
+	R_OK, SEEK_END, SEEK_SET, access, atoi, fclose, fread, fseek, ftell, mkdir, sprintf, strcpy,
 };
 
 use crate::{
@@ -605,7 +605,7 @@ fn FindResponseFile() {
 				fseek(handle, 0, SEEK_END);
 				let size = usize::try_from(ftell(handle)).unwrap();
 				fseek(handle, 0, SEEK_SET);
-				let file = libc::malloc(size).cast::<c_char>();
+				let file = alloc(Layout::array::<c_char>(size).unwrap()).cast::<c_char>();
 				fread(file.cast(), size, 1, handle);
 				fclose(handle);
 
@@ -618,7 +618,8 @@ fn FindResponseFile() {
 				}
 
 				let firstargv = *myargv.wrapping_add(0);
-				myargv = malloc(size_of::<*const char>() * MAXARGVS).cast::<*mut c_char>();
+				myargv =
+					alloc(Layout::array::<*const char>(MAXARGVS).unwrap()).cast::<*mut c_char>();
 				ptr::write_bytes(myargv, 0, MAXARGVS);
 				*myargv = firstargv;
 

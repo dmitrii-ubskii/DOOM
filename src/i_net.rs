@@ -11,9 +11,7 @@ use libc::{
 };
 
 use crate::{
-	d_net::{
-		BACKUPTICS, DOOMCOM_ID, MAXNETNODES, command_t, doomcom, doomcom_t, doomdata_t, netbuffer,
-	},
+	d_net::{BACKUPTICS, DOOMCOM_ID, MAXNETNODES, command_t, doomcom, doomdata_t, netbuffer},
 	d_ticcmd::ticcmd_t,
 	g_game::netgame,
 	i_system::I_Error,
@@ -211,8 +209,7 @@ unsafe extern "C" {
 #[allow(static_mut_refs)]
 pub(crate) fn I_InitNetwork() {
 	unsafe {
-		doomcom = libc::malloc(size_of::<doomcom_t>()).cast();
-		libc::memset(doomcom.cast(), 0, size_of::<doomcom_t>());
+		doomcom = Box::into_raw(Box::new_zeroed().assume_init());
 
 		// set up for network
 		let i = M_CheckParm(c"-dup".as_ptr());
