@@ -1,43 +1,47 @@
 #![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
 
 use std::{
-	ffi::{CStr, c_char, c_void},
-	mem::MaybeUninit,
+	ffi::{CStr, c_void},
+	fs::File,
+	io::{Read, Seek, SeekFrom},
+	mem::{self, MaybeUninit},
+	os::{
+		fd::{FromRawFd, IntoRawFd, RawFd},
+		unix::ffi::OsStrExt,
+	},
+	path::Path,
 	ptr::{self, null_mut},
+	slice,
 };
-
-use libc::{O_RDONLY, SEEK_SET, open};
 
 use crate::{
 	i_system::I_Error,
 	z_zone::{Z_ChangeTag, Z_Free, Z_Malloc},
 };
 
-type int = i32;
-
 // TYPES
 #[repr(C)]
 pub(crate) struct wadinfo_t {
 	// Should be "IWAD" or "PWAD".
-	pub(crate) identification: [c_char; 4],
+	pub(crate) identification: [u8; 4],
 	pub(crate) numlumps: usize,
-	pub(crate) infotableofs: int,
+	pub(crate) infotableofs: u32,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub(crate) struct filelump_t {
-	pub(crate) filepos: int,
+	pub(crate) filepos: u32,
 	pub(crate) size: usize,
-	pub(crate) name: [c_char; 8],
+	pub(crate) name: [u8; 8],
 }
 
 // WADFILE I/O related stuff.
 #[repr(C)]
 pub(crate) struct lumpinfo_t {
-	pub(crate) name: [c_char; 8],
-	pub(crate) handle: int,
-	pub(crate) position: int,
+	pub(crate) name: [u8; 8],
+	pub(crate) handle: Option<RawFd>,
+	pub(crate) position: u32,
 	pub(crate) size: usize,
 }
 
@@ -49,63 +53,28 @@ pub(crate) static mut numlumps: usize = 0;
 
 static mut lumpcache: *mut *mut c_void = null_mut();
 
-// #define strcmpi	strcasecmp
-const strcmpi: unsafe extern "C" fn(*const i8, *const i8) -> i32 = libc::strcasecmp;
+fn filelength(handle: &File) -> usize {
+	let Ok(metadata) = handle.metadata() else {
+		I_Error("Error fstating");
+	};
 
-fn toupper(c: c_char) -> i8 {
-	c_char::try_from(u32::from(char::from(u8::try_from(c).unwrap()).to_ascii_uppercase())).unwrap()
+	usize::try_from(metadata.len()).unwrap()
 }
 
-fn strupr(mut s: *mut c_char) {
-	unsafe {
-		while *s != 0 {
-			*s = toupper(*s);
-			s = s.wrapping_byte_add(1);
-		}
-	}
-}
+fn ExtractFileBase(path: &Path, dest: &mut [u8; 8]) {
+	*dest = [0; 8];
 
-fn filelength(handle: i32) -> usize {
-	unsafe {
-		let mut fileinfo = MaybeUninit::uninit();
-
-		if libc::fstat(handle, fileinfo.as_mut_ptr()) == -1 {
-			I_Error("Error fstating");
+	let Some(stem) = path.file_stem() else { return };
+	for (index, &c) in stem.as_bytes().iter().enumerate() {
+		if c == b'.' {
+			break;
 		}
 
-		usize::try_from(fileinfo.assume_init().st_size).unwrap()
-	}
-}
-
-fn ExtractFileBase(path: *const c_char, mut dest: *mut c_char) {
-	unsafe {
-		let mut src = path.wrapping_byte_add(libc::strlen(path) - 1);
-
-		// back up until a \ or the start
-		while src != path
-			&& *(src.wrapping_sub(1)) != i8::try_from(b'\\').unwrap()
-			&& *(src.wrapping_sub(1)) != i8::try_from(b'/').unwrap()
-		{
-			src = src.wrapping_byte_offset(-1);
+		if index >= 8 {
+			I_Error(format_args!("Filename base of {} >8 chars", path.display()));
 		}
 
-		// copy up to eight characters
-		ptr::write_bytes(dest, 0, 8);
-		let mut length = 0;
-
-		while *src != 0 && *src != i8::try_from(b'.').unwrap() {
-			length += 1;
-			if length == 9 {
-				I_Error(format_args!(
-					"Filename base of {} >8 chars",
-					CStr::from_ptr(path).to_str().unwrap(),
-				));
-			}
-
-			*dest = toupper(*src);
-			dest = dest.wrapping_byte_add(1);
-			src = src.wrapping_byte_add(1);
-		}
+		dest[index] = c.to_ascii_uppercase();
 	}
 }
 
@@ -124,50 +93,53 @@ fn ExtractFileBase(path: *const c_char, mut dest: *mut c_char) {
 // But: the reload feature is a fragile hack...
 
 static mut reloadlump: usize = 0;
-static mut reloadname: *const c_char = null_mut();
+static mut reloadname: Option<&str> = None;
 
-fn W_AddFile(mut filename: *const c_char) {
+#[allow(static_mut_refs)]
+fn W_AddFile(mut filename: &'static str) {
 	unsafe {
 		// open the file and add to directory
 
 		// handle reload indicator.
-		if *filename == c_char::try_from(b'~').unwrap() {
-			filename = filename.wrapping_byte_add(1);
-			reloadname = filename;
+		if filename.starts_with('~') {
+			filename = &filename[1..];
+			reloadname = Some(filename);
 			reloadlump = numlumps;
 		}
-		let handle = open(filename, O_RDONLY /*| O_BINARY*/);
-		if handle == -1 {
-			println!(" couldn't open {}", CStr::from_ptr(filename).to_str().unwrap());
-			return;
-		}
 
-		println!(" adding {}", CStr::from_ptr(filename).to_str().unwrap());
+		let Ok(mut handle) = File::open(filename) else {
+			println!(" couldn't open {}", filename);
+			return;
+		};
+
+		println!(" adding {}", filename);
 		let startlump = numlumps;
 
 		let mut fileinfo;
 		let mut singleinfo = filelump_t { filepos: 0, size: 0, name: [0; 8] };
 		let mut lumps;
 
-		if strcmpi(filename.wrapping_add((libc::strlen(filename)) - 3), c"wad".as_ptr()) != 0 {
+		if !filename[filename.len() - 3..].eq_ignore_ascii_case("wad") {
 			// single lump file
 			fileinfo = &raw mut singleinfo;
 			singleinfo.filepos = 0;
-			singleinfo.size = filelength(handle);
-			ExtractFileBase(filename, singleinfo.name.as_mut_ptr());
+			singleinfo.size = filelength(&handle);
+			ExtractFileBase(Path::new(filename), &mut singleinfo.name);
 			numlumps += 1;
 		} else {
 			// WAD file
 			let mut header = MaybeUninit::<wadinfo_t>::uninit();
-			libc::read(handle, header.as_mut_ptr().cast(), size_of_val(&header));
+			handle
+				.read_exact(slice::from_raw_parts_mut(
+					header.as_mut_ptr().cast(),
+					size_of_val(&header),
+				))
+				.unwrap();
 			let header = header.assume_init();
-			if libc::strncmp(header.identification.as_ptr(), c"IWAD".as_ptr(), 4) != 0 {
+			if header.identification != *b"IWAD" {
 				// Homebrew levels?
-				if libc::strncmp(header.identification.as_ptr(), c"PWAD".as_ptr(), 4) != 0 {
-					I_Error(format_args!(
-						"Wad file {} doesn't have IWAD or PWAD id\n",
-						CStr::from_ptr(filename).to_str().unwrap(),
-					));
+				if header.identification != *b"PWAD" {
+					I_Error(format_args!("Wad file {} doesn't have IWAD or PWAD id\n", filename));
 				}
 
 				// ???modifiedgame = true;
@@ -175,8 +147,8 @@ fn W_AddFile(mut filename: *const c_char) {
 			let length = header.numlumps * size_of::<filelump_t>();
 			lumps = vec![filelump_t { filepos: 0, size: 0, name: [0; 8] }; length];
 			fileinfo = lumps.as_mut_ptr();
-			libc::lseek(handle, header.infotableofs, libc::SEEK_SET);
-			libc::read(handle, fileinfo.cast(), length);
+			handle.seek(SeekFrom::Start(u64::from(header.infotableofs))).unwrap();
+			handle.read_exact(slice::from_raw_parts_mut(fileinfo.cast(), length)).unwrap();
 			numlumps += header.numlumps;
 		}
 
@@ -189,19 +161,15 @@ fn W_AddFile(mut filename: *const c_char) {
 
 		let mut lump_p = lumpinfo.wrapping_add(startlump);
 
-		let storehandle = if reloadname.is_null() { handle } else { -1 };
+		let storehandle = if reloadname.is_none() { Some(handle.into_raw_fd()) } else { None };
 
 		for _ in startlump..numlumps {
 			(*lump_p).handle = storehandle;
 			(*lump_p).position = (*fileinfo).filepos;
 			(*lump_p).size = (*fileinfo).size;
-			libc::strncpy((*lump_p).name.as_mut_ptr(), (*fileinfo).name.as_ptr(), 8);
+			(*lump_p).name = (*fileinfo).name;
 			lump_p = lump_p.wrapping_add(1);
 			fileinfo = fileinfo.wrapping_add(1);
-		}
-
-		if !reloadname.is_null() {
-			libc::close(handle);
 		}
 	}
 }
@@ -211,27 +179,25 @@ fn W_AddFile(mut filename: *const c_char) {
 //  and reloads the directory.
 pub(crate) fn W_Reload() {
 	unsafe {
-		if reloadname.is_null() {
+		let Some(reloadname_) = reloadname else {
 			return;
-		}
+		};
 
-		let handle = open(reloadname, O_RDONLY /*| O_BINARY*/);
-		if handle == -1 {
-			I_Error(format_args!(
-				"W_Reload: couldn't open {}",
-				CStr::from_ptr(reloadname).to_str().unwrap(),
-			));
-		}
+		let Ok(mut handle) = File::open(reloadname_) else {
+			I_Error(format_args!("W_Reload: couldn't open {}", reloadname_));
+		};
 
 		let mut header = MaybeUninit::<wadinfo_t>::uninit();
-		libc::read(handle, header.as_mut_ptr().cast(), size_of_val(&header));
+		handle
+			.read_exact(slice::from_raw_parts_mut(header.as_mut_ptr().cast(), size_of_val(&header)))
+			.unwrap();
 		let header = header.assume_init();
 		let lumpcount = header.numlumps;
 		let length = lumpcount * size_of::<filelump_t>();
 		let mut fileinfo = vec![filelump_t { filepos: 0, size: 0, name: [0; 8] }; length];
 		let mut fileinfo = fileinfo.as_mut_ptr();
-		libc::lseek(handle, header.infotableofs, SEEK_SET);
-		libc::read(handle, fileinfo.cast(), length);
+		handle.seek(SeekFrom::Start(u64::from(header.infotableofs))).unwrap();
+		handle.read_exact(slice::from_raw_parts_mut(fileinfo.cast(), length)).unwrap();
 
 		// Fill in lumpinfo
 		let mut lump_p = lumpinfo.wrapping_add(reloadlump);
@@ -246,8 +212,6 @@ pub(crate) fn W_Reload() {
 			lump_p = lump_p.wrapping_add(1);
 			fileinfo = fileinfo.wrapping_add(1)
 		}
-
-		libc::close(handle);
 	}
 }
 
@@ -262,7 +226,7 @@ pub(crate) fn W_Reload() {
 // Lump names can appear multiple times.
 // The name searcher looks backwards, so a later file
 //  does override all earlier ones.
-pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
+pub(crate) fn W_InitMultipleFiles(mut filenames: *const &'static str) {
 	unsafe {
 		// open all the files, load headers, and count lumps
 		numlumps = 0;
@@ -270,7 +234,7 @@ pub(crate) fn W_InitMultipleFiles(mut filenames: *const *const c_char) {
 		// will be realloced as lumps are added
 		lumpinfo = libc::malloc(1).cast();
 
-		while !(*filenames).is_null() {
+		while !(&*filenames).is_empty() {
 			W_AddFile(*filenames);
 			filenames = filenames.wrapping_add(1);
 		}
@@ -297,14 +261,10 @@ pub(crate) fn W_CheckNumForName(name: &CStr) -> Option<usize> {
 	unsafe {
 		let mut name8 = [0; 9];
 
-		// make the name into two integers for easy compares
-		libc::strncpy(name8.as_mut_ptr(), name.as_ptr(), 8);
-
-		// in case the name was a fill 8 chars
-		name8[8] = 0;
-
-		// case insensitive
-		strupr(name8.as_mut_ptr());
+		for (i, &c) in name.to_bytes().iter().enumerate().take(8) {
+			// make the name into two integers for easy compares
+			name8[i] = c.to_ascii_uppercase();
+		}
 
 		// scan backwards so patch lump files take precedence
 		let mut lump_p = lumpinfo.wrapping_add(numlumps);
@@ -345,7 +305,7 @@ pub(crate) fn W_LumpLength(lump: usize) -> usize {
 // W_ReadLump
 // Loads the lump into the given buffer,
 //  which must be >= W_LumpLength().
-pub(crate) unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
+pub(crate) unsafe fn W_ReadLump(lump: usize, dest: *mut u8) {
 	unsafe {
 		if lump >= numlumps {
 			I_Error(format_args!("W_ReadLump: {} >= numlumps", lump));
@@ -354,30 +314,26 @@ pub(crate) unsafe fn W_ReadLump(lump: usize, dest: *mut c_void) {
 		let l = lumpinfo.wrapping_add(lump);
 
 		// ??? I_BeginRead ();
-		let handle;
-
-		if (*l).handle == -1 {
-			// reloadable file, so use open / read / close
-			handle = open(reloadname, O_RDONLY /*| O_BINARY*/);
-			if handle == -1 {
-				I_Error(format_args!(
-					"W_ReadLump: couldn't open {}",
-					CStr::from_ptr(reloadname).to_str().unwrap(),
-				));
-			}
+		let mut handle = if let Some(handle) = (*l).handle {
+			File::from_raw_fd(handle)
 		} else {
-			handle = (*l).handle;
-		}
+			// reloadable file, so use open / read / close
+			File::open(reloadname.unwrap()).unwrap_or_else(|_| {
+				I_Error(format_args!("W_ReadLump: couldn't open {}", reloadname.unwrap()));
+			})
+		};
 
-		libc::lseek(handle, (*l).position, SEEK_SET);
-		let c = libc::read(handle, dest, (*l).size);
+		handle.seek(SeekFrom::Start(u64::from((*l).position))).unwrap();
+		let dest = slice::from_raw_parts_mut(dest, (*l).size);
+		let c = handle.read(dest).unwrap();
 
-		if c < isize::try_from((*l).size).unwrap() {
+		if c < (*l).size {
 			I_Error(format_args!("W_ReadLump: only read {} of {} on lump {}", c, (*l).size, lump));
 		}
 
-		if (*l).handle == -1 {
-			libc::close(handle);
+		if (*l).handle.is_some() {
+			// don't close a shared handle
+			mem::forget(handle);
 		}
 
 		// ??? I_EndRead ();
@@ -398,7 +354,7 @@ pub(crate) fn W_CacheLumpNum(lump: usize, tag: usize) -> *mut c_void {
 			//printf ("cache miss on lump %i\n",lump);
 			// FIXME unused???
 			let _ptr = Z_Malloc(W_LumpLength(lump), tag, lump_p.cast());
-			W_ReadLump(lump, *lump_p);
+			W_ReadLump(lump, (*lump_p).cast());
 		} else {
 			//printf ("cache hit on lump %i\n",lump);
 			Z_ChangeTag!(*lump_p, tag);

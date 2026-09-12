@@ -62,7 +62,7 @@ use crate::{
 
 const MAXWADFILES: usize = 20;
 
-pub(crate) static mut wadfiles: [*mut c_char; MAXWADFILES] = [null_mut(); MAXWADFILES];
+pub(crate) static mut wadfiles: [&str; MAXWADFILES] = [""; MAXWADFILES];
 
 pub(crate) static mut devparm: bool = false; // started game with -devparm
 pub(crate) static mut nomonsters: bool = false; // checkparm of -nomonsters
@@ -429,14 +429,14 @@ fn D_AddFile(file: *const c_char) {
 	unsafe {
 		let mut numwadfiles = 0;
 
-		while !wadfiles[numwadfiles].is_null() {
+		while !wadfiles[numwadfiles].is_empty() {
 			numwadfiles += 1;
 		}
 
-		let newfile = libc::malloc(libc::strlen(file) + 1).cast();
-		libc::strcpy(newfile, file);
+		let newfile = Box::into_raw(vec![0; libc::strlen(file)].into_boxed_slice());
+		libc::strcpy(newfile.cast(), file);
 
-		wadfiles[numwadfiles] = newfile;
+		wadfiles[numwadfiles] = str::from_utf8(&*newfile).unwrap();
 	}
 }
 

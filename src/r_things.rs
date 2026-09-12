@@ -185,12 +185,13 @@ fn R_InitSpriteDefs(namelist: *const *const i8) {
 				if (*lumpinfo.wrapping_add(l)).name.as_ptr().cast::<i32>().read_unaligned()
 					== intname
 				{
-					let frame = u8::try_from((*lumpinfo.wrapping_add(l)).name[4]).unwrap() - b'A';
-					let rotation =
-						u8::try_from((*lumpinfo.wrapping_add(l)).name[5]).unwrap() - b'0';
+					let frame = (*lumpinfo.wrapping_add(l)).name[4] - b'A';
+					let rotation = (*lumpinfo.wrapping_add(l)).name[5] - b'0';
 
 					let patched = if modifiedgame != 0 {
-						W_GetNumForName(CStr::from_ptr((*lumpinfo.wrapping_add(l)).name.as_ptr()))
+						W_GetNumForName(CStr::from_ptr(
+							(*lumpinfo.wrapping_add(l)).name.as_ptr().cast(),
+						))
 					} else {
 						l
 					};
@@ -198,10 +199,8 @@ fn R_InitSpriteDefs(namelist: *const *const i8) {
 					R_InstallSpriteLump(patched, frame, rotation, false);
 
 					if (*lumpinfo.wrapping_add(l)).name[6] != 0 {
-						let frame =
-							u8::try_from((*lumpinfo.wrapping_add(l)).name[6]).unwrap() - b'A';
-						let rotation =
-							u8::try_from((*lumpinfo.wrapping_add(l)).name[7]).unwrap() - b'0';
+						let frame = (*lumpinfo.wrapping_add(l)).name[6] - b'A';
+						let rotation = (*lumpinfo.wrapping_add(l)).name[7] - b'0';
 						R_InstallSpriteLump(l, frame, rotation, true);
 					}
 				}
